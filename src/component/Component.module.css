@@ -1,0 +1,50 @@
+@import "tailwindcss";
+:root{
+    --c: #58c;
+    --b: rgba(255, 255, 255, 0.267);
+    --t: rgba(255, 255, 255, 0.144);
+    --n: transparent;
+}
+.sidebar{
+    @apply w-12 h-full border-[1px];
+}
+
+.canvas{
+    @apply w-full h-full border-t-[1px] border-b-[1px];
+    background-color: rgb(193, 192, 192);
+    background-image:
+            linear-gradient(0deg,
+            var(--n) 0%, var(--n) 9px,
+            var(--b) 9px, var(--b) 10px, var(--n) 10px, var(--n) 19px,
+            var(--t) 19px, var(--t) 20px, var(--n) 20px, var(--n) 29px,
+            var(--t) 29px, var(--t) 30px, var(--n) 30px, var(--n) 39px,
+            var(--t) 39px, var(--t) 40px, var(--n) 40px, var(--n) 49px,
+            var(--t) 49px, var(--t) 50px),
+            linear-gradient(-90deg,
+            var(--n) 0%, var(--n) 9px,
+            var(--b) 9px, var(--b) 10px, var(--n) 10px, var(--n) 19px,
+            var(--t) 19px, var(--t) 20px, var(--n) 20px, var(--n) 29px,
+            var(--t) 29px, var(--t) 30px, var(--n) 30px, var(--n) 39px,
+            var(--t) 39px, var(--t) 40px, var(--n) 40px, var(--n) 49px,
+            var(--t) 49px, var(--t) 50px);
+    background-size: 50px 50px;
+}
+
+.canvasContainer{
+    @apply flex-1 h-full relative;
+}
+.overlay{
+    @apply inset-0 absolute bg-transparent p-4;
+}
+
+.toolbar {
+    @apply absolute bottom-4 left-4 bg-gray-100 rounded-lg;
+    @apply flex items-center gap-2 p-2;
+    @apply select-none;
+    @apply border border-gray-600;
+    @apply z-10 h-10;
+}
+
+.propertybar{
+    @apply w-64 h-full border-[1px];
+}
