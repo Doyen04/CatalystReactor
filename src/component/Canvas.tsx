@@ -14,7 +14,7 @@ function Canvas() {
         async function initCanvasKit() {
 
             const kit = await CanvasKitInit({
-                locateFile: () => import.meta.env.DEV ? canvasKitWasmUrl : '/assets/canvaskit.wasm'
+                locateFile: () => canvasKitWasmUrl 
         });
             setCanvasKit(kit);
         }
