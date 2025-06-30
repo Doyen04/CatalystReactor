@@ -10,3 +10,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+  @apply w-screen h-screen;
+}

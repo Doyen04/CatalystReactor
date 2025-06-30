@@ -1,9 +1,9 @@
-import style from "./Component.module.css"
+import "./Component.css"
 
 function SideBar() {
 
     return (
-        <div className={style.sidebar}>
+        <div className={'sidebar'}>
             
         </div>
     )

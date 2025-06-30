@@ -1,9 +1,9 @@
-import style from "./Component.module.css"
+import "./Component.css"
 
 function PropertyBar() {
 
     return (
-        <div className={style.propertybar}>
+        <div className={'propertybar'}>
             
         </div>
     )

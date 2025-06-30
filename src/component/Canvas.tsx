@@ -1,54 +1,96 @@
-import { useEffect, useRef, useState } from "react"
-import style from "./Component.module.css"
+import { useCallback, useEffect, useRef, useState } from "react"
+import "./Component.css"
 import ToolBar from "./ToolBar"
 
 import CanvasKitInit from "canvaskit-wasm";
 import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url';
-import type { CanvasKit } from 'canvaskit-wasm';
+import type { CanvasKit, Surface, Paint } from 'canvaskit-wasm';
+
+// import { useCanvasResize } from "../hooks/useCanvasResize";
 
 function Canvas() {
+    const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const surfaceRef = useRef<Surface>(null)
+    const paintRef = useRef<Paint>(null)
     const [canvasKit, setCanvasKit] = useState<CanvasKit | null>(null)
 
-    useEffect(() => {
-        async function initCanvasKit() {
 
-            const kit = await CanvasKitInit({
-                locateFile: () => canvasKitWasmUrl 
-        });
-            setCanvasKit(kit);
-        }
-        initCanvasKit();
+    useEffect(() => {
+        CanvasKitInit({ locateFile: () => canvasKitWasmUrl }).then(setCanvasKit)
     }, [])
 
     useEffect(() => {
-        if (canvasKit && canvasRef.current) {
-            const surface = canvasKit.MakeWebGLCanvasSurface(canvasRef.current)
-            if (!surface) {
-                console.error('Could not make surface')
-                return
+    
+        if (!canvasKit || !canvasRef.current || !containerRef.current) return
+
+        const canvasEl = canvasRef.current
+        const dpr = window.devicePixelRatio || 1
+
+        // init paint
+        paintRef.current = new canvasKit.Paint()
+        paintRef.current.setColor(canvasKit.RED)
+
+        const makeSurface = () => {
+            // delete old surface
+            if(surfaceRef.current) {
+                surfaceRef.current?.delete()
             }
+            const surf = canvasKit.MakeWebGLCanvasSurface(canvasEl)
+            if (!surf) throw new Error("Could not make surface")
+            surfaceRef.current = surf
+        }
 
-            const canvas = surface.getCanvas()
-            // Your drawing code here
-            const paint = new canvasKit.Paint()
-            paint.setColor(canvasKit.RED)
-            canvas.drawRect(canvasKit.LTRBRect(10, 10, 100, 100), paint)
-            surface.flush()
+        const draw = () => {
+            const surf = surfaceRef.current!
+            const sk = surf.getCanvas()
+            sk.clear(canvasKit.TRANSPARENT)
+            sk.drawRect(canvasKit.LTRBRect(10, 10, 100, 100), paintRef.current!)
+            surf.flush()
+        }
 
-            return () => {
-                paint.delete()
-                surface.delete()
+        const resize = () => {
+            console.log("resizing");
+
+            const { width, height } = getComputedStyle(canvasEl)
+            console.log(width, height, 30900);
+
+            canvasEl.width = parseInt(width) * dpr
+            canvasEl.height = parseInt(height) * dpr // set canvas height
+            makeSurface()
+            draw()
+        }
+        // set canvas size 
+        window.addEventListener('resize', resize)
+
+        // initial
+        resize()
+        // const ro = new ResizeObserver(() => {
+        //     resize()
+        // })
+        // ro.observe(canvasEl)
+
+        return () => {
+            // ro.disconnect()
+            window.removeEventListener("resize", resize)
+            if (paintRef.current) {
+                paintRef.current?.delete()
+            }
+            if (surfaceRef.current) {
+                surfaceRef.current?.delete()
             }
         }
     }, [canvasKit])
 
+    // useCanvasResize(containerRef, canvasRef, resize);
+
+
     return (
-        <div className={style.canvasContainer}>
-            <canvas ref={canvasRef} className={style.canvas}>
+        <div ref={containerRef} className={'canvasContainer'}>
+            <canvas ref={canvasRef} className={'canvas'}>
                 Your browser does not support the HTML5 canvas tag.
             </canvas>
-            <div className={style.overlay}>
+            <div className={'overlay'}>
                 <ToolBar />
             </div>
         </div>

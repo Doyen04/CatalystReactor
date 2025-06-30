@@ -1,4 +1,4 @@
-import styles from './App.module.css'
+import './App.css'
 
 import Canvas from './component/Canvas'
 import PropertyBar from './component/PropertyBar'
@@ -7,10 +7,10 @@ import SideBar from './component/SideBar'
 function App() {
 
     return (
-        <div className={styles.container}>
-            <header className={styles.header}>
+        <div className='main-container'>
+            <header className={'header'}>
             </header>
-            <main className={styles.workspace}>
+            <main className={'workspace'}>
                 <SideBar />
                 <Canvas />
                 <PropertyBar />

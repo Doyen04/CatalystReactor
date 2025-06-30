@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+.main-container{
+    @apply w-screen h-screen max-w-screen max-h-screen bg-red-800 relative;
+}
+.header{
+    @apply w-full h-9 shrink-0;
+}
+.workspace{
+    @apply flex items-center w-screen max-w-screen shrink-0 h-[calc(100vh-(36px))]
+}
