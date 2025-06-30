@@ -34,7 +34,7 @@
     @apply flex-1 h-full relative;
 }
 .overlay{
-    @apply inset-0 absolute bg-transparent p-4;
+    @apply inset-0 absolute bg-transparent p-4 pointer-events-none;
 }
 
 .toolbar {
@@ -42,7 +42,7 @@
     @apply flex items-center gap-2 p-2;
     @apply select-none;
     @apply border border-gray-600;
-    @apply z-10 h-10;
+    @apply z-10 h-10 pointer-events-auto;
 }
 
 .propertybar{
