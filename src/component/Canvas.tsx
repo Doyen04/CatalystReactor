@@ -52,10 +52,10 @@ function Canvas() {
         }
 
         const resize = () => {
-            console.log("resizing");
+            console.log("resizing----5----");
 
             const { width, height } = getComputedStyle(canvasEl)
-            console.log(width, height, 3096530);
+            console.log(width, height);
 
             canvasEl.width = parseInt(width) * dpr
             canvasEl.height = parseInt(height) * dpr // set canvas height
@@ -70,7 +70,6 @@ function Canvas() {
         resize()
 
         return () => {
-            // ro.disconnect()
             window.removeEventListener("resize", resize)
             if (paintRef.current) {
                 paintRef.current?.delete()
@@ -82,8 +81,6 @@ function Canvas() {
             }
         }
     }, [canvasKit])
-
-    // useCanvasResize(containerRef, canvasRef, resize);
 
 
     return (

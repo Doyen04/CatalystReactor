@@ -9,9 +9,9 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
-    server: {
-        watch: {
-          usePolling: true
-        }
-      }
+    // server: {
+    //     watch: {
+    //       usePolling: true
+    //     }
+    //   }
 })
