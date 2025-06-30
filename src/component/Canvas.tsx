@@ -21,7 +21,8 @@ function Canvas() {
     }, [])
 
     useEffect(() => {
-    
+        console.log('hiii ijij ');
+        
         if (!canvasKit || !canvasRef.current || !containerRef.current) return
 
         const canvasEl = canvasRef.current
@@ -35,6 +36,7 @@ function Canvas() {
             // delete old surface
             if(surfaceRef.current) {
                 surfaceRef.current?.delete()
+                surfaceRef.current = null
             }
             const surf = canvasKit.MakeWebGLCanvasSurface(canvasEl)
             if (!surf) throw new Error("Could not make surface")
@@ -53,10 +55,11 @@ function Canvas() {
             console.log("resizing");
 
             const { width, height } = getComputedStyle(canvasEl)
-            console.log(width, height, 30900);
+            console.log(width, height, 3096530);
 
             canvasEl.width = parseInt(width) * dpr
             canvasEl.height = parseInt(height) * dpr // set canvas height
+            
             makeSurface()
             draw()
         }
@@ -65,19 +68,17 @@ function Canvas() {
 
         // initial
         resize()
-        // const ro = new ResizeObserver(() => {
-        //     resize()
-        // })
-        // ro.observe(canvasEl)
 
         return () => {
             // ro.disconnect()
             window.removeEventListener("resize", resize)
             if (paintRef.current) {
                 paintRef.current?.delete()
+                paintRef.current = null
             }
             if (surfaceRef.current) {
                 surfaceRef.current?.delete()
+                surfaceRef.current = null
             }
         }
     }, [canvasKit])
