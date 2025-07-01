@@ -16,12 +16,12 @@ class SceneNode {
         this.worldMatrix = Matrix.identity()
     }
 
-    add(child: SceneNode): void {
+    addChildNode(child: SceneNode): void {
         child.parent = this
         this.children.push(child)
     }
 
-    remove(child: SceneNode): void {
+    removeChildNode(child: SceneNode): void {
         const i = this.children.indexOf(child)
         if (i !== -1) {
             child.parent = null

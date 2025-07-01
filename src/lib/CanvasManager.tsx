@@ -2,22 +2,28 @@ import type { Canvas, CanvasKit, Paint, Surface } from "canvaskit-wasm";
 import SceneNode from "./SceneGraph";
 import type Matrix from "./Matrix";
 import Rectangle from "./Rect";
+import DimensionModifier from "./DimensionModifier";
 
 
 class CanvasManager {
     canvasEl: HTMLCanvasElement;
     canvasKit: CanvasKit | null;
     selected: SceneNode | null;
-    dpr: number;
-    surf: Surface | null;
+    activeShape: SceneNode | null;
+
+    dimensionMod: DimensionModifier;
     // skCnvs: Canvas | null;
+    surf: Surface | null;
     scene: SceneNode;
     paint: Paint;
-    isMouseDown: boolean;
     strokePaint: Paint;
+
+    dpr: number;
+    isMouseDown: boolean;
     isDragging: boolean;
-    dragStart: null;
+    dragStart: { x: number, y: number } | null;
     currentTool: string;
+
     undoStack: never[];
     redoStack: never[];
 
@@ -41,8 +47,10 @@ class CanvasManager {
         this.paint = new this.canvasKit.Paint();
         this.strokePaint = new this.canvasKit.Paint();
         this.scene = new SceneNode();
+        this.dimensionMod = new DimensionModifier();
 
         this.selected = null;
+        this.activeShape = null;
 
         // Input handling state
         this.isDragging = false;
@@ -121,27 +129,27 @@ class CanvasManager {
     }
 
     addNode(node: SceneNode, parent = this.scene) {
-        parent.add(node);
+        parent.addChildNode(node);
         // this.pushHistory();
         // this.render();
     }
 
-    // removeNode(node: SceneNode) {
-    //     if (node.parent) {
-    //         node.parent.remove(node);
-    //         this.pushHistory();
-    //         this.render();
-    //     }
-    // }
+    removeNode(node: SceneNode) {
+        if (node.parent) {
+            node.parent.removeChildNode(node);
+            // this.pushHistory();
+        }
+    }
 
     onPointerDown(e: MouseEvent) {
         console.log('down', this.currentTool);
         this.isMouseDown = true;
+        this.isDragging = false;
+        this.dragStart = { x: e.offsetX, y: e.offsetY };
         switch (this.currentTool) {
             case 'select':
                 break;
             case 'square':
-                console.log(e.offsetX, e.offsetY);
                 this.createShape(e.offsetX, e.offsetY);
                 break;
             case 'text':
@@ -152,12 +160,12 @@ class CanvasManager {
     }
 
     onPointerMove(e: MouseEvent) {
-        console.log('move', e.offsetX, e.offsetY);
+
         if (this.isMouseDown) {
             this.isDragging = true;
         }
-        if (this.isDragging && this.selected && this.currentTool === 'square') {
-            this.selected.shape?.setSize(e.offsetX, e.offsetY);
+        if (this.isDragging && this.activeShape && this.currentTool === 'square') {
+            this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY);
         }
     }
 
@@ -165,13 +173,34 @@ class CanvasManager {
         console.log('up');
 
         this.isMouseDown = false;
-        // this.selected = null;
+        this.isDragging = false;
+        this.discardTinyShapes();
+        this.activeShape = null;
+        console.log(this.scene, this.dimensionMod.getShapeDim());
+
     }
+
+    discardTinyShapes() {
+        if (!this.activeShape || !this.activeShape.shape) return;
+
+        const minSize = 5;
+
+        if (this.activeShape.shape instanceof Rectangle) {
+            const rect = this.activeShape.shape as Rectangle;
+
+            if (rect.width < minSize || rect.height < minSize) {
+                this.removeNode(this.activeShape);
+                console.log('Shape removed: too small');
+            }
+        }
+    }
+
     createShape(mx: number, my: number): void {
         const node: SceneNode = new SceneNode();
         node.shape = new Rectangle(mx, my);
         this.addNode(node);
-        this.selected = node;
+        this.activeShape = node;
+        this.dimensionMod.setShape(node.shape)
         // this.pushHistory();
         // this.render();
     }
@@ -258,11 +287,14 @@ class CanvasManager {
         this.scene.updateWorldMatrix();
 
         const rect = this.canvasKit.LTRBRect(10, 10, 250, 100);
-
         skCnvs!.drawRect(rect, this.paint!);
         skCnvs!.drawRect(rect, this.strokePaint!);
 
         this.renderNode(skCnvs, this.scene);
+        
+        if(this.dimensionMod.hasShape()){
+            this.dimensionMod.draw(skCnvs, this.canvasKit, this.paint!, this.strokePaint!);
+        }
         
         skCnvs!.restore();
         this.surf.flush();
@@ -271,7 +303,7 @@ class CanvasManager {
     renderNode(skCnvs: Canvas, node: SceneNode) {
         // Draw the shape if it exists
         if (node.shape && typeof node.shape.draw === 'function') {
-            node.shape.draw(skCnvs!, this.canvasKit!, this.paint!);
+            node.shape.draw(skCnvs!, this.canvasKit!, this.paint!, this.strokePaint!);
         }
 
         // Render children
