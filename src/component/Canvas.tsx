@@ -4,13 +4,13 @@ import ToolBar from "./ToolBar"
 
 import CanvasKitInit from "canvaskit-wasm";
 import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url';
-import type { CanvasKit} from 'canvaskit-wasm';
+import type { CanvasKit } from 'canvaskit-wasm';
 
 import CanvasManager from "../lib/CanvasManager";
 
 function Canvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const canvasManagerRef = useRef<CanvasManager>(null) 
+    const canvasManagerRef = useRef<CanvasManager>(null)
     const [canvasKit, setCanvasKit] = useState<CanvasKit | null>(null)
     const [tool, setTool] = useState('select')
 
@@ -19,9 +19,15 @@ function Canvas() {
         CanvasKitInit({ locateFile: () => canvasKitWasmUrl }).then(setCanvasKit)
     }, [])
 
-    useEffect(() => {console.log('CanvasKit loaded:', canvasKit);
-    
+    useEffect(() => {
+        console.log('CanvasKit loaded:', canvasKit);
+
         if (!canvasRef.current || !canvasKit) return;
+
+        // Clean up previous instance
+        if (canvasManagerRef.current) {
+            canvasManagerRef.current.removeEventListener();
+        }
 
         canvasManagerRef.current = new CanvasManager(canvasRef.current, canvasKit);
         console.log('Initializing CanvasManager with CanvasKit');
@@ -29,10 +35,15 @@ function Canvas() {
         return () => {
             if (canvasManagerRef.current) {
                 canvasManagerRef.current.removeEventListener();
+                canvasManagerRef.current = null;
             }
         }
-    }, [canvasKit])
+    }, [canvasKit]);
 
+    useEffect(() => {
+        if (!canvasManagerRef.current) return;
+        canvasManagerRef.current.setTool(tool);
+    }, [tool]);
 
     return (
         <div className={'canvasContainer'}>
@@ -45,5 +56,6 @@ function Canvas() {
         </div>
     )
 }
+
 
 export default Canvas

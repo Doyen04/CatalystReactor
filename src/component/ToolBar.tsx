@@ -12,7 +12,6 @@ function ToolBar({ currentTool, setTool }: ToolBarProps) {
     const handleToolClick = (tool: string) => {
         setTool(tool);
         console.log(`Current tool set to: ${tool}`);
-        alert(`Current Tool: ${currentTool}, Selected Tool: ${tool}`)
     }
     return (
         <div className={'toolbar'}>

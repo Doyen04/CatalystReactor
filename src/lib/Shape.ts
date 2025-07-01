@@ -24,37 +24,9 @@ class Shape {
         this.lineWidth = lineWidth;
     }
 
-    // Draw wrapper handling transform & style
-    draw(sk: Canvas, canvasKit: CanvasKit, paint: Paint): void {
-        sk.save();
-
-        // Create transformation matrix
-        const T = canvasKit.Matrix.translated(this.x, this.y);
-        const R = canvasKit.Matrix.rotated(this.rotation, this.x, this.y);
-        const S = canvasKit.Matrix.scaled(this.scale, this.scale, this.x, this.y);
-
-
-        const matrix = canvasKit.Matrix.multiply(T, R, S);
-
-        // Apply the matrix transformation
-        sk.concat(matrix);
-
-        // Set paint properties
-        if (this.fill) {
-            paint.setColor(canvasKit.parseColorString(this.fill));
-            paint.setStyle(canvasKit.PaintStyle.Fill);
-            this._fill(sk, canvasKit, paint);
-        }
-        if (this.stroke) {
-            paint.setColor(canvasKit.parseColorString(this.stroke));
-            paint.setStyle(canvasKit.PaintStyle.Stroke);
-            paint.setStrokeWidth(this.lineWidth);
-            this._stroke(sk, canvasKit, paint);
-        }
-        sk.restore();
-    }
-
     _fill(sk: Canvas, canvasKit: CanvasKit, paint: Paint): void { /* no-op */ }
     _stroke(sk: Canvas, canvasKit: CanvasKit, paint: Paint): void { /* no-op */ }
+    setSize(mx: number, my: number): void {}
+    draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint): void {}
 }
 export default Shape;
