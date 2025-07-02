@@ -9,7 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     moreToolsTips?: string
     icon?: React.ReactNode
     tip?: string
-    toolname?: string
+    toolname: string
     active?: boolean
     moreTools?: Array<{
         toolName: string
@@ -28,8 +28,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
         const activeToolName = useMemo(() => {
             const name = currentTool?.toolName ?? toolname
-            if (name) return name
-            return '';
+            return name
         }, [currentTool?.toolName, toolname])
 
         const buttonStyles = useMemo(() => {
@@ -54,7 +53,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         return (
             <div className='flex items-center gap-0.5 h-fit w-fit'>
                 <div className='relative group'>
-                    <button ref={ref} onClick={() => {console.log(activeToolName);setTool(activeToolName)}}
+                    <button ref={ref} onClick={() => { console.log(activeToolName); setTool(activeToolName) }}
                         className={twMerge(`${buttonStyles}`, className)}
                         {...props}
                     >
