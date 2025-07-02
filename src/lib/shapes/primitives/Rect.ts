@@ -1,4 +1,4 @@
-import { Shape } from '../';
+import { Shape } from '@/lib/shapes';
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 
 class Rectangle extends Shape {

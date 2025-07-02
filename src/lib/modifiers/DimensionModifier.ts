@@ -1,6 +1,6 @@
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
-import type { Shape } from "../shapes";
-import { Oval, Rectangle } from "../shapes";
+import type { Shape } from "@/lib/shapes";
+import { Oval, Rectangle } from "@/lib/shapes";
 
 class DimensionModifier {
     private shape: Shape | null;

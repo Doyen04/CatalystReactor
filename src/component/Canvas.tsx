@@ -6,7 +6,7 @@ import CanvasKitInit from "canvaskit-wasm";
 import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url';
 import type { CanvasKit } from 'canvaskit-wasm';
 
-import CanvasManager from "../lib/core/CanvasManager";
+import { CanvasManager } from "@/lib/core";
 import { useToolStore } from "../hooks/useTool";
 
 function Canvas() {
