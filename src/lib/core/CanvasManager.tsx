@@ -1,6 +1,6 @@
 import type { Canvas, CanvasKit, Paint, Surface } from "canvaskit-wasm";
 import { SceneNode } from '@/lib/core';
-import type Matrix from "./Matrix";
+import type { Matrix } from "@/lib/core";
 import { Rectangle, Oval } from "@/lib/shapes";
 import { DimensionModifier } from "@/lib/modifiers";
 

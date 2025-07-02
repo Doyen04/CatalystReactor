@@ -5,6 +5,8 @@ export * from './modifiers';
 
 // Default exports for direct access
 export { default as CanvasManager } from './core/CanvasManager';
+export { default as SceneGraph } from './core/SceneGraph';
+export { default as Matrix } from './core/Matrix';
 export { default as Shape } from './shapes/base/Shape';
 export { default as Rectangle } from './shapes/primitives/Rect';
 export { default as Oval } from './shapes/primitives/Oval';
