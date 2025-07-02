@@ -1,23 +1,61 @@
-import { MousePointer2, Square, Type } from "lucide-react"
+import { Triangle, Lasso, Maximize2, MousePointer2, Square, Star, Type, Circle } from "lucide-react"
 import "./Component.css"
 import Button from "../ui/Button"
+import { useToolStore } from "../hooks/useTool";
 
-interface ToolBarProps {
-    currentTool: string;
-    setTool: (tool: string) => void;
-}
 
-function ToolBar({ currentTool, setTool }: ToolBarProps) {
+function ToolBar() {
+    const { tool: currentTool, setTool } = useToolStore();
 
     const handleToolClick = (tool: string) => {
         setTool(tool);
         console.log(`Current tool set to: ${tool}`);
     }
+
+    const SelectTools = [
+        {
+            toolName: 'select',
+            icon: <MousePointer2 className={"w-4 h-4"} />,
+            tip: 'Select'
+        },
+        {
+            toolName: 'freeform',
+            icon: <Lasso className={"w-4 h-4"} />,
+            tip: 'Freeform'
+        },
+        {
+            toolName: "scale",
+            icon: <Maximize2 className={"w-4 h-4"} />,
+            tip: 'Scale'
+        }
+    ];
+    const ShapeTools = [
+        {
+            toolName: 'square',
+            icon: <Square className={"w-4 h-4"} />,
+            tip: 'Square'
+        },
+        {
+            toolName: 'oval',
+            icon: <Circle className={"w-4 h-4"} />,
+            tip: 'Circle'
+        },
+        {
+            toolName: 'polygon',
+            icon: <Triangle className={"w-4 h-4"} />,
+            tip: 'Polygon'
+        },
+        {
+            toolName: 'star',
+            icon: <Star className={"w-4 h-4"} />,
+            tip: 'Star'
+        }
+    ];
     return (
         <div className={'toolbar'}>
-            <Button tip={"Move"} icon={<MousePointer2 className={"w-4 h-4"} />} onClick={() => handleToolClick('move')} />
-            <Button tip={"Square"} icon={<Square className={"w-4 h-4"} />} onClick={() => handleToolClick('square')} />
-            <Button tip={"Text"} icon={<Type className={"w-4 h-4"} />} onClick={() => handleToolClick('text')} />
+            <Button moreTools={SelectTools} moreToolsTips={"Select Tools"}/>
+            <Button moreTools={ShapeTools} moreToolsTips={"Draw tools"}/>
+            <Button tip={"Text"} toolname={'text'} icon={<Type className={"w-4 h-4"} />} />
         </div>
     )
 }

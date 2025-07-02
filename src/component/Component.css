@@ -44,6 +44,9 @@
     @apply border border-gray-600;
     @apply z-10 h-10 pointer-events-auto;
 }
+.square-button-group {
+    @apply flex items-center;
+}
 
 .propertybar{
     @apply w-64 h-full border-[1px];

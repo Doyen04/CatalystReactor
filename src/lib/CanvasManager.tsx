@@ -3,6 +3,7 @@ import SceneNode from "./SceneGraph";
 import type Matrix from "./Matrix";
 import Rectangle from "./Rect";
 import DimensionModifier from "./DimensionModifier";
+import Oval from "./Oval";
 
 
 class CanvasManager {
@@ -34,6 +35,7 @@ class CanvasManager {
     private boundOnPointerDown: (e: MouseEvent) => void;
     private boundOnPointerMove: (e: MouseEvent) => void;
     private boundOnPointerUp: (e: MouseEvent) => void;
+    private boundOnKeyDown: (e: KeyboardEvent) => void;
     private boundResize: (e?: Event) => void;
 
 
@@ -63,6 +65,7 @@ class CanvasManager {
         this.boundOnPointerDown = this.onPointerDown.bind(this);
         this.boundOnPointerMove = this.onPointerMove.bind(this);
         this.boundOnPointerUp = this.onPointerUp.bind(this);
+        this.boundOnKeyDown = this.onKeyDown.bind(this)
         this.boundResize = this.resize.bind(this);
 
         this.resize()
@@ -71,6 +74,7 @@ class CanvasManager {
         this.canvasEl.addEventListener('mousedown', this.boundOnPointerDown);
         this.canvasEl.addEventListener('mousemove', this.boundOnPointerMove);
         this.canvasEl.addEventListener('mouseup', this.boundOnPointerUp);
+        this.canvasEl.addEventListener('keydown', this.boundOnKeyDown)
         window.addEventListener('resize', this.boundResize);
     }
 
@@ -141,6 +145,9 @@ class CanvasManager {
         }
     }
 
+    onKeyDown(e: KeyboardEvent){
+
+    }
     onPointerDown(e: MouseEvent) {
         console.log('down', this.currentTool);
         this.isMouseDown = true;
@@ -150,9 +157,12 @@ class CanvasManager {
             case 'select':
                 break;
             case 'square':
-                this.createShape(e.offsetX, e.offsetY);
+                console.log(e);
+                this.createRect(e.offsetX, e.offsetY);
                 break;
-            case 'text':
+            case 'oval':
+                console.log(e);
+                this.createOval(e.offsetX, e.offsetY);
                 break;
             default:
                 break
@@ -165,7 +175,9 @@ class CanvasManager {
             this.isDragging = true;
         }
         if (this.isDragging && this.activeShape && this.currentTool === 'square') {
-            this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY);
+            this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
+        }else if (this.isDragging && this.activeShape && this.currentTool === 'oval') {
+            this.activeShape.shape?.setSize(this.dragStart!,e.offsetX, e.offsetY, e.shiftKey);
         }
     }
 
@@ -195,14 +207,21 @@ class CanvasManager {
         }
     }
 
-    createShape(mx: number, my: number): void {
+    createRect(mx: number, my: number): void {
         const node: SceneNode = new SceneNode();
         node.shape = new Rectangle(mx, my);
         this.addNode(node);
         this.activeShape = node;
         this.dimensionMod.setShape(node.shape)
         // this.pushHistory();
-        // this.render();
+    }
+    createOval(mx: number, my: number): void {
+        const node: SceneNode = new SceneNode();
+        node.shape = new Oval(mx, my);
+        this.addNode(node);
+        this.activeShape = node;
+        this.dimensionMod.setShape(node.shape)
+        // this.pushHistory();
     }
 
     hitTest(node: SceneNode, pt: string) {
@@ -324,6 +343,7 @@ class CanvasManager {
         this.canvasEl.removeEventListener('mousedown', this.boundOnPointerDown);
         this.canvasEl.removeEventListener('mousemove', this.boundOnPointerMove);
         this.canvasEl.removeEventListener('mouseup', this.boundOnPointerUp);
+        this.canvasEl.removeEventListener('keydown', this.boundOnKeyDown)
         window.removeEventListener('resize', this.boundResize);
         this.stopLoop();
     }

@@ -29,7 +29,7 @@ class Shape {
     _setFill(sk: Canvas, canvasKit: CanvasKit, paint: Paint): void { /* no-op */ }
     _setStroke(sk: Canvas, canvasKit: CanvasKit, paint: Paint): void { /* no-op */ }
     setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {}
-    setSize(dragStart: {x: number, y: number}, mx: number, my: number): void {}
+    setSize(dragStart: {x: number, y: number}, mx: number, my: number, shiftKey:boolean): void {}
     draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {}
 }
 export default Shape;

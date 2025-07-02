@@ -7,12 +7,13 @@ import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url';
 import type { CanvasKit } from 'canvaskit-wasm';
 
 import CanvasManager from "../lib/CanvasManager";
+import { useToolStore } from "../hooks/useTool";
 
 function Canvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const canvasManagerRef = useRef<CanvasManager>(null)
     const [canvasKit, setCanvasKit] = useState<CanvasKit | null>(null)
-    const [tool, setTool] = useState('select')
+    const { tool } = useToolStore()
 
 
     useEffect(() => {
@@ -51,7 +52,7 @@ function Canvas() {
                 Your browser does not support the HTML5 canvas tag.
             </canvas>
             <div className={'overlay'}>
-                <ToolBar currentTool={tool} setTool={setTool} />
+                <ToolBar />
             </div>
         </div>
     )
