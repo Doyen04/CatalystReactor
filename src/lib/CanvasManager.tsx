@@ -204,6 +204,13 @@ class CanvasManager {
                 this.removeNode(this.activeShape);
                 console.log('Shape removed: too small');
             }
+        }else if (this.activeShape.shape instanceof Oval) {
+            const oval = this.activeShape.shape as Oval;
+
+            if (oval.radius < minSize) {
+                this.removeNode(this.activeShape);
+                console.log('Shape removed: too small');
+            }
         }
     }
 

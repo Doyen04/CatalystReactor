@@ -5,7 +5,7 @@ class Rectangle extends Shape {
     width: number;
     height: number;
     bdradius: number;
-    
+
     originalX: number;
     originalY: number;
     isFlippedX: boolean;
@@ -26,6 +26,44 @@ class Rectangle extends Shape {
         // this.y = Math.min(my , this.y);
     }
     setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
+        if (shiftKey) {
+            this.setSquareSize(dragStart, mx, my);
+        } else {
+            this.setRectSize(dragStart, mx, my);
+        }
+    }
+
+    setSquareSize(dragStart: { x: number; y: number; }, mx: number, my: number): void {
+        // Calculate dimensions
+        const deltaX = mx - dragStart.x;
+        const deltaY = my - dragStart.y;
+
+        // Use the smaller dimension to create a perfect square
+        const dimension = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+
+        this.width = dimension;
+        this.height = dimension;
+
+        this.isFlippedX = deltaX < 0;
+        this.isFlippedY = deltaY < 0;
+
+        // Set position based on drag direction
+        this.x = this.isFlippedX ? dragStart.x - dimension : dragStart.x;
+        this.y = this.isFlippedY ? dragStart.y - dimension : dragStart.y;
+
+        // Keep original coordinates for property bar
+        this.originalX = dragStart.x;
+        this.originalY = dragStart.y;
+
+        this.boundingRect = {
+            top: this.y,
+            left: this.x,
+            bottom: this.y + dimension,
+            right: this.x + dimension
+        };
+    }
+
+    setRectSize(dragStart: { x: number; y: number; }, mx: number, my: number): void {
         // Calculate dimensions
         const deltaX = mx - dragStart.x;
         const deltaY = my - dragStart.y;
