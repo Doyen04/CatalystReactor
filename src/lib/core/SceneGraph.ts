@@ -1,5 +1,5 @@
 import Matrix from './Matrix';
-import type Shape from './Shape';
+import type { Shape } from '../shapes';
 
 class SceneNode {
     shape: Shape | null;

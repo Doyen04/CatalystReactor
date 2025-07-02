@@ -1,9 +1,8 @@
 import type { Canvas, CanvasKit, Paint, Surface } from "canvaskit-wasm";
 import SceneNode from "./SceneGraph";
 import type Matrix from "./Matrix";
-import Rectangle from "./Rect";
-import DimensionModifier from "./DimensionModifier";
-import Oval from "./Oval";
+import { Rectangle, Oval } from "../shapes";
+import { DimensionModifier } from "../modifiers";
 
 
 class CanvasManager {
@@ -145,7 +144,7 @@ class CanvasManager {
         }
     }
 
-    onKeyDown(e: KeyboardEvent){
+    onKeyDown(e: KeyboardEvent) {
 
     }
     onPointerDown(e: MouseEvent) {
@@ -176,8 +175,8 @@ class CanvasManager {
         }
         if (this.isDragging && this.activeShape && this.currentTool === 'square') {
             this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
-        }else if (this.isDragging && this.activeShape && this.currentTool === 'oval') {
-            this.activeShape.shape?.setSize(this.dragStart!,e.offsetX, e.offsetY, e.shiftKey);
+        } else if (this.isDragging && this.activeShape && this.currentTool === 'oval') {
+            this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
         }
     }
 
@@ -204,7 +203,7 @@ class CanvasManager {
                 this.removeNode(this.activeShape);
                 console.log('Shape removed: too small');
             }
-        }else if (this.activeShape.shape instanceof Oval) {
+        } else if (this.activeShape.shape instanceof Oval) {
             const oval = this.activeShape.shape as Oval;
 
             if (oval.radius < minSize) {
@@ -317,11 +316,11 @@ class CanvasManager {
         skCnvs!.drawRect(rect, this.strokePaint!);
 
         this.renderNode(skCnvs, this.scene);
-        
-        if(this.dimensionMod.hasShape()){
+
+        if (this.dimensionMod.hasShape()) {
             this.dimensionMod.draw(skCnvs, this.canvasKit, this.paint!, this.strokePaint!);
         }
-        
+
         skCnvs!.restore();
         this.surf.flush();
     }

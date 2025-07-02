@@ -1,7 +1,6 @@
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
-import type Shape from "./Shape";
-import Oval from "./Oval";
-import Rectangle from "./Rect";
+import type { Shape } from "../shapes";
+import { Oval, Rectangle } from "../shapes";
 
 class DimensionModifier {
     private shape: Shape | null;
@@ -77,8 +76,8 @@ class DimensionModifier {
 
         canvas.drawRect(rect, strokePaint);
 
-        if(this.shape instanceof Rectangle && this.bRadiusResizer.length > 0) {
-            for(const resizer of this.bRadiusResizer) {
+        if (this.shape instanceof Rectangle && this.bRadiusResizer.length > 0) {
+            for (const resizer of this.bRadiusResizer) {
                 resizer.draw(canvas, canvasKit, paint, strokePaint);
             }
         }
