@@ -1,54 +1,60 @@
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 import type { Shape } from "@/lib/shapes";
 import { Oval, Rectangle } from "@/lib/shapes";
+import { Handles } from "@/lib/modifiers";
+
+const ModifierPos = [
+    'top-left',
+    'top-right',
+    'bottom-left',
+    'bottom-right'
+]
 
 class DimensionModifier {
     private shape: Shape | null;
-    private originalDimensions: Shape | null;
-    private isHovered: boolean;
     private strokeColor: string | number[];
     private strokeWidth: number;
-    private bRadiusResizer: Oval[]
+    private size: number = 5; // Default radius for the resizers
+    private handles: Handles[];
 
     constructor() {
         this.shape = null;
-        this.originalDimensions = null;
-        this.isHovered = false;
         this.strokeColor = '#00f';
         this.strokeWidth = 1;
-        this.bRadiusResizer = [];
+        this.handles = [];
     }
     setShape(shape: Shape) {
         this.shape = shape;
         if (this.shape instanceof Rectangle) {
-            for (let i = 0; i < 4; i++) {
-                this.bRadiusResizer.push(new Oval(0, 0));
-                this.bRadiusResizer[i].setRadius(10);
-            }
+            ModifierPos.forEach(pos => {
+                this.handles.push(new Handles(0, 0, this.size, pos, 'size', this.strokeColor))
+            })
+            ModifierPos.forEach(pos => {
+                this.handles.push(new Handles(0, 0, this.size, pos, 'radius', this.strokeColor))
+            })
+        } else if (this.shape instanceof Oval) {
+            ModifierPos.forEach(pos => {
+                this.handles.push(new Handles(0, 0, this.size, pos, 'size', this.strokeColor))
+            })
         }
     }
     updateResizerPositions() {
-        // if (!this.shape || this.bRadiusResizer.length === 0) return;
+        if (!this.shape) return;
 
-        // const bounds = this.shape.boundingRect;
-        // const radius = this.shape.bdradius || 0;
-
-        // // Top-left
-        // this.bRadiusResizer[0].x = bounds.left + radius;
-        // this.bRadiusResizer[0].y = bounds.top + radius;
-
-        // // Top-right
-        // this.bRadiusResizer[1].x = bounds.right - radius;
-        // this.bRadiusResizer[1].y = bounds.top + radius;
-
-        // // Bottom-right
-        // this.bRadiusResizer[2].x = bounds.right - radius;
-        // this.bRadiusResizer[2].y = bounds.bottom - radius;
-
-        // // Bottom-left
-        // this.bRadiusResizer[3].x = bounds.left + radius;
-        // this.bRadiusResizer[3].y = bounds.bottom - radius;
-
+        for (const resizer of this.handles) {
+            if (resizer.type === 'size') {
+                const { x, y } = this.shape.getResizeModifersPos(resizer.pos, this.size);
+                resizer.updatePosition(x, y);
+            }
+        }
+        if (this.shape instanceof Rectangle) {
+            for (const resizer of this.handles) {
+                if (resizer.type === 'radius') {
+                    const { x, y } = this.shape.getRadiusModifiersPos(resizer.pos);
+                    resizer.updatePosition(x, y);
+                }
+            }
+        }
     }
     setPaint(canvasKit: CanvasKit, strokePaint: Paint): void {
 
@@ -62,10 +68,6 @@ class DimensionModifier {
     hasShape() {
         return this.shape !== null;
     }
-    getShapeDim() {
-        // console.log(this.shape?.x,this.shape?.y, this.shape?.width, this.shape?.height);
-        // console.log(this.shape?.boundingRect);
-    }
     draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
         if (!this.shape) return;
 
@@ -76,11 +78,9 @@ class DimensionModifier {
 
         canvas.drawRect(rect, strokePaint);
 
-        if (this.shape instanceof Rectangle && this.bRadiusResizer.length > 0) {
-            for (const resizer of this.bRadiusResizer) {
-                resizer.draw(canvas, canvasKit, paint, strokePaint);
-            }
-        }
+        this.handles.forEach(handle => {
+            handle.draw(canvas, canvasKit, paint, strokePaint);
+        });
     }
 
 

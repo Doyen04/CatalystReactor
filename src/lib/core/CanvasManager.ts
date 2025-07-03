@@ -112,7 +112,7 @@ class CanvasManager {
             this.paint.delete();
         }
         this.paint = new this.canvasKit.Paint();
-        this.paint.setColor(this.canvasKit.Color(0, 0, 0, 255));
+        this.paint.setColor(this.canvasKit.Color(60, 0, 0, 255));
         this.paint.setStyle(this.canvasKit.PaintStyle.Fill);
         this.paint.setAntiAlias(true);
 
@@ -187,7 +187,7 @@ class CanvasManager {
         this.isDragging = false;
         this.discardTinyShapes();
         this.activeShape = null;
-        console.log(this.scene, this.dimensionMod.getShapeDim());
+        console.log(this.scene);
 
     }
 

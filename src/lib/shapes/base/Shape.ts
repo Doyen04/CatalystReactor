@@ -4,7 +4,7 @@
 import type { CanvasKit, Paint, Canvas } from "canvaskit-wasm";
 
 // ════════════════════════════════════
-class Shape {
+abstract class Shape {
     x: number;
     y: number;
     rotation: number;
@@ -25,11 +25,30 @@ class Shape {
         this.strokeWidth = strokeWidth;
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
     }
+    getResizeModifersPos(modifierName: string, size: number): { x: number; y: number; } {
+        const bRect = this.boundingRect
+        size = size / 2
+        switch (modifierName) {
+            case 'top-left':
+                return { x: bRect.left - size, y: bRect.top - size };
+            case 'top-right':
+                return { x: bRect.right - size, y: bRect.top - size };
+            case 'bottom-left':
+                return { x: bRect.left - size, y: bRect.bottom - size };
+            case 'bottom-right':
+                return { x: bRect.right - size, y: bRect.bottom - size };
+            default:
+                return { x: 0, y: 0 };
+        }
+    }
 
-    _setFill(sk: Canvas, canvasKit: CanvasKit, paint: Paint): void { /* no-op */ }
-    _setStroke(sk: Canvas, canvasKit: CanvasKit, paint: Paint): void { /* no-op */ }
-    setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {}
-    setSize(dragStart: {x: number, y: number}, mx: number, my: number, shiftKey:boolean): void {}
-    draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {}
+    abstract moveShape(mx: number, my: number): void;
+    abstract setFill(color: string | number[]): void;
+    abstract setStrokeColor(color: string | number[]): void;
+    abstract setStrokeWidth(width: number): void;
+    abstract calculateBoundingRect(): void;
+    abstract setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void;
+    abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
+    abstract draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void;
 }
 export default Shape;

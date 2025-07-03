@@ -21,75 +21,93 @@ class Rectangle extends Shape {
         this.isFlippedX = false;
         this.isFlippedY = false;
     }
-    movePos(mx: number, my: number): void {
-        // this.x = Math.min(mx , this.x);
-        // this.y = Math.min(my , this.y);
+
+    override moveShape(mx: number, my: number): void {
+        this.x += mx;
+        this.y += my;
+        this.originalX += mx;
+        this.originalY += my;
+        this.calculateBoundingRect();
     }
-    setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
-        if (shiftKey) {
-            this.setSquareSize(dragStart, mx, my);
-        } else {
-            this.setRectSize(dragStart, mx, my);
+
+    getRadiusModifiersPos(modifierName: string): { x: number; y: number; } {
+        const bRect = this.boundingRect
+        const ModPadding = this.bdradius + 10
+
+        switch (modifierName) {
+            case 'top-left':
+                return { x: bRect.left + ModPadding, y: bRect.top + ModPadding };
+            case 'top-right':
+                return { x: bRect.right - ModPadding, y: bRect.top + ModPadding };
+            case 'bottom-left':
+                return { x: bRect.left + ModPadding, y: bRect.bottom - ModPadding };
+            case 'bottom-right':
+                return { x: bRect.right - ModPadding, y: bRect.bottom - ModPadding };
+            default:
+                return { x: 0, y: 0 };
         }
     }
 
-    setSquareSize(dragStart: { x: number; y: number; }, mx: number, my: number): void {
+    override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         // Calculate dimensions
-        const deltaX = mx - dragStart.x;
-        const deltaY = my - dragStart.y;
-
-        // Use the smaller dimension to create a perfect square
-        const dimension = Math.max(Math.abs(deltaX), Math.abs(deltaY));
-
-        this.width = dimension;
-        this.height = dimension;
+        const deltaX = (mx - dragStart.x);
+        const deltaY = (my - dragStart.y);
 
         this.isFlippedX = deltaX < 0;
         this.isFlippedY = deltaY < 0;
 
-        // Set position based on drag direction
-        this.x = this.isFlippedX ? dragStart.x - dimension : dragStart.x;
-        this.y = this.isFlippedY ? dragStart.y - dimension : dragStart.y;
-
-        // Keep original coordinates for property bar
         this.originalX = dragStart.x;
         this.originalY = dragStart.y;
 
+        this.x = Math.min(dragStart.x, mx);
+        this.y = Math.min(dragStart.y, my);
+
+        if (shiftKey) {
+            this.setSquareSize(deltaX, deltaY);
+        } else {
+            this.setRectSize(deltaX, deltaY);
+        }
+        this.calculateBoundingRect();
+    }
+
+    setCoord(x: number, y: number): void {
+        this.x = x;
+        this.y = y;
+    }
+
+    setDim(width: number, height: number): void {
+        this.width = width;
+        this.height = height;
+    }
+
+    override calculateBoundingRect(): void {
         this.boundingRect = {
             top: this.y,
             left: this.x,
-            bottom: this.y + dimension,
-            right: this.x + dimension
+            bottom: this.y + this.height,
+            right: this.x + this.width
         };
+
+        // Update original coordinates for property bar
+        this.originalX = this.x;
+        this.originalY = this.y;
     }
 
-    setRectSize(dragStart: { x: number; y: number; }, mx: number, my: number): void {
-        // Calculate dimensions
-        const deltaX = mx - dragStart.x;
-        const deltaY = my - dragStart.y;
+    setSquareSize(deltaX: number, deltaY: number): void {
+        const size = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+        this.width = size;
+        this.height = size;
 
+        this.x = Math.min(this.originalX, this.originalX + size);
+        this.y = Math.min(this.originalY, this.originalY + size);
+    }
+
+    setRectSize(deltaX: number, deltaY: number): void {
         this.width = Math.abs(deltaX);
         this.height = Math.abs(deltaY);
-
-        this.isFlippedX = deltaX < 0;
-        this.isFlippedY = deltaY < 0;
-
-        // Set position based on drag direction
-        this.x = this.isFlippedX ? mx : dragStart.x;
-        this.y = this.isFlippedY ? my : dragStart.y;
-
-        // Keep original coordinates for property bar
-        this.originalX = dragStart.x;
-        this.originalY = dragStart.y;
-
-        this.boundingRect = {
-            top: this.isFlippedY ? my : dragStart.y,
-            left: this.isFlippedX ? mx : dragStart.x,
-            bottom: this.isFlippedY ? dragStart.y : my,
-            right: this.isFlippedX ? dragStart.x : mx
-        };
     }
-    setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+
+    override setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
         const fill = (Array.isArray(this.fill)) ? this.fill : canvasKit.parseColorString(this.fill)
         const strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : canvasKit.parseColorString(this.strokeColor)
 
@@ -102,7 +120,8 @@ class Rectangle extends Shape {
         strokePaint.setStrokeWidth(this.strokeWidth);
         strokePaint.setAntiAlias(true);
     }
-    draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+
+    override draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
 
         this.setPaint(canvasKit, paint, strokePaint);
 
@@ -112,10 +131,15 @@ class Rectangle extends Shape {
         canvas.drawRect(rect, strokePaint);
     }
 
-    // override _stroke(sk: Canvas, canvasKit: CanvasKit, paint: Paint): void {
-    //     const rect = canvasKit.LTRBRect(0, 0, this.width, this.height);
-    //     sk.drawRect(rect, paint);
-    // }
+    override setStrokeColor(color: string | number[]): void {
+        this.strokeColor = color;
+    }
+    override setStrokeWidth(width: number): void {
+        this.strokeWidth = width;
+    }
+    override setFill(color: string | number[]): void {
+        this.fill = color;
+    }
 }
 
 export default Rectangle;

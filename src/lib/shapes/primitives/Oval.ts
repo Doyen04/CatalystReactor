@@ -4,26 +4,70 @@ import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 class Oval extends Shape {
     radius: number;
 
-    originalX: number;
-    originalY: number;
     isFlippedX: boolean;
     isFlippedY: boolean;
+    centerX: number;
+    centerY: number;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
         this.radius = 0;
-        this.originalX = x;
-        this.originalY = y;
         this.isFlippedX = false;
         this.isFlippedY = false;
+        this.centerX = 0;
+        this.centerY = 0;
     }
-    movePos(mx: number, my: number): void {
-        // this.x = Math.min(mx , this.x);
-        // this.y = Math.min(my , this.y);
+
+    moveShape(mx: number, my: number): void {
+        this.x = mx;
+        this.y = my;
     }
+
     setRadius(radius: number): void {
         this.radius = radius;
     }
+
+    setFill(color: string | number[]): void {
+        this.fill = color;
+    }
+
+    setStrokeColor(color: string | number[]): void {
+        this.strokeColor = color;
+    }
+
+    setStrokeWidth(width: number): void {
+        this.strokeWidth = width;
+    }
+    
+    calculateBoundingRect(): void {
+        if (this.centerX !== 0 || this.centerY !== 0) {
+            this.x = this.centerX - this.radius;
+            this.y = this.centerY - this.radius;
+
+            this.boundingRect = {
+                top: this.centerY - this.radius,
+                left: this.centerX - this.radius,
+                bottom: this.centerY + this.radius,
+                right: this.centerX + this.radius
+            };
+        } else {
+            this.boundingRect = {
+                top: this.y,
+                left: this.x,
+                bottom: this.y + this.radius * 2,
+                right: this.x + this.radius * 2
+            };
+
+            this.centerX = this.x + this.radius;
+            this.centerY = this.y + this.radius;
+        }
+    }
+
+    setCenterPos(centerX: number, centerY: number): void {
+        this.centerX = centerX;
+        this.centerY = centerY;
+    }
+
     setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         if (shiftKey) {
             this.setSizeCircle(dragStart, mx, my);
@@ -31,6 +75,7 @@ class Oval extends Shape {
             this.setSizeOval(dragStart, mx, my);
         }
     }
+
     setSizeOval(dragStart: { x: number; y: number; }, mx: number, my: number): void {
         const deltaX = mx - dragStart.x;
         const deltaY = my - dragStart.y;
@@ -42,8 +87,14 @@ class Oval extends Shape {
         this.x = this.isFlippedX ? mx : dragStart.x;
         this.y = this.isFlippedY ? my : dragStart.y;
 
-        this.originalX = dragStart.x;
-        this.originalY = dragStart.y;
+        // Calculate width and height directly from deltas
+        const width = Math.abs(deltaX);
+        const height = Math.abs(deltaY);
+        this.radius = Math.max(width, height) / 2;
+
+        // Calculate center position directly
+        this.centerX = (dragStart.x + mx) / 2;
+        this.centerY = (dragStart.y + my) / 2;
 
         this.boundingRect = {
             top: this.isFlippedY ? my : dragStart.y,
@@ -51,14 +102,10 @@ class Oval extends Shape {
             bottom: this.isFlippedY ? dragStart.y : my,
             right: this.isFlippedX ? dragStart.x : mx
         };
-
-        const width = Math.abs(this.boundingRect.right - this.boundingRect.left);
-        const height = Math.abs(this.boundingRect.bottom - this.boundingRect.top);
-        this.radius = Math.max(width, height) / 2;
     }
 
     setSizeCircle(dragStart: { x: number; y: number; }, mx: number, my: number): void {
-        // Calculate radius from center point (dragStart) to mouse position
+
         const deltaX = Math.abs(mx - dragStart.x);
         const deltaY = Math.abs(my - dragStart.y);
         const radius = Math.max(deltaX, deltaY); // Use the larger distance for perfect circle
@@ -68,20 +115,15 @@ class Oval extends Shape {
         this.x = dragStart.x - radius;
         this.y = dragStart.y - radius;
 
-        this.originalX = dragStart.x;
-        this.originalY = dragStart.y;
+        this.centerX = dragStart.x;
+        this.centerY = dragStart.y;
 
         this.isFlippedX = false;
         this.isFlippedY = false;
-
-        this.boundingRect = {
-            top: dragStart.y - radius,
-            left: dragStart.x - radius,
-            bottom: dragStart.y + radius,
-            right: dragStart.x + radius
-        };
+        this.calculateBoundingRect();
     }
-    setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+
+    override setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
         const fill = (Array.isArray(this.fill)) ? this.fill : canvasKit.parseColorString(this.fill)
         const strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : canvasKit.parseColorString(this.strokeColor)
 
@@ -94,7 +136,7 @@ class Oval extends Shape {
         strokePaint.setStrokeWidth(this.strokeWidth);
         strokePaint.setAntiAlias(true);
     }
-    draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+    override draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
 
         this.setPaint(canvasKit, paint, strokePaint);
 
