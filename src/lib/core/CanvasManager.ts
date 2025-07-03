@@ -1,7 +1,7 @@
 import type { Canvas, CanvasKit, Paint, Surface } from "canvaskit-wasm";
 import { SceneNode } from '@/lib/core';
 import type { Matrix } from "@/lib/core";
-import { Rectangle, Oval } from "@/lib/shapes";
+import { Rectangle, Oval, ShapeFactory } from "@/lib/shapes";
 import { DimensionModifier } from "@/lib/modifiers";
 
 
@@ -157,11 +157,11 @@ class CanvasManager {
                 break;
             case 'square':
                 console.log(e);
-                this.createRect(e.offsetX, e.offsetY);
+                ShapeFactory.createShape("rectangle", { x: e.offsetX, y: e.offsetY },this);
                 break;
             case 'oval':
                 console.log(e);
-                this.createOval(e.offsetX, e.offsetY);
+                ShapeFactory.createShape("oval", { x: e.offsetX, y: e.offsetY },this);
                 break;
             default:
                 break
@@ -211,23 +211,6 @@ class CanvasManager {
                 console.log('Shape removed: too small');
             }
         }
-    }
-
-    createRect(mx: number, my: number): void {
-        const node: SceneNode = new SceneNode();
-        node.shape = new Rectangle(mx, my);
-        this.addNode(node);
-        this.activeShape = node;
-        this.dimensionMod.setShape(node.shape)
-        // this.pushHistory();
-    }
-    createOval(mx: number, my: number): void {
-        const node: SceneNode = new SceneNode();
-        node.shape = new Oval(mx, my);
-        this.addNode(node);
-        this.activeShape = node;
-        this.dimensionMod.setShape(node.shape)
-        // this.pushHistory();
     }
 
     hitTest(node: SceneNode, pt: string) {

@@ -1,7 +1,7 @@
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 import type { Shape } from "@/lib/shapes";
 import { Oval, Rectangle } from "@/lib/shapes";
-import { Handles } from "@/lib/modifiers";
+import { Handle } from "@/lib/modifiers";
 
 const ModifierPos = [
     'top-left',
@@ -15,7 +15,7 @@ class DimensionModifier {
     private strokeColor: string | number[];
     private strokeWidth: number;
     private size: number = 5; // Default radius for the resizers
-    private handles: Handles[];
+    private handles: Handle[];
 
     constructor() {
         this.shape = null;
@@ -24,17 +24,18 @@ class DimensionModifier {
         this.handles = [];
     }
     setShape(shape: Shape) {
+        this.handles = []
         this.shape = shape;
         if (this.shape instanceof Rectangle) {
             ModifierPos.forEach(pos => {
-                this.handles.push(new Handles(0, 0, this.size, pos, 'size', this.strokeColor))
+                this.handles.push(new Handle(0, 0, this.size, pos, 'size', this.strokeColor))
             })
             ModifierPos.forEach(pos => {
-                this.handles.push(new Handles(0, 0, this.size, pos, 'radius', this.strokeColor))
+                this.handles.push(new Handle(0, 0, this.size, pos, 'radius', this.strokeColor))
             })
         } else if (this.shape instanceof Oval) {
             ModifierPos.forEach(pos => {
-                this.handles.push(new Handles(0, 0, this.size, pos, 'size', this.strokeColor))
+                this.handles.push(new Handle(0, 0, this.size, pos, 'size', this.strokeColor))
             })
         }
     }

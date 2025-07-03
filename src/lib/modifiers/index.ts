@@ -1,2 +1,2 @@
 export { default as DimensionModifier } from './DimensionModifier';
-export { default as Handles } from './Handles';
+export { default as Handle } from './Handles';
