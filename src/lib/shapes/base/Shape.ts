@@ -1,7 +1,9 @@
 // ════════════════════════════════════
 // 📐 Abstract Base Shape Class
 
+import type { Handle } from "@/lib/modifiers";
 import type { CanvasKit, Paint, Canvas } from "canvaskit-wasm";
+type HandleType = "radius" | "size" | "rotate";
 
 // ════════════════════════════════════
 abstract class Shape {
@@ -42,11 +44,13 @@ abstract class Shape {
         }
     }
 
+    abstract getHandles(size: number, color: string | number[]): Handle[];
     abstract moveShape(mx: number, my: number): void;
     abstract setFill(color: string | number[]): void;
     abstract setStrokeColor(color: string | number[]): void;
     abstract setStrokeWidth(width: number): void;
     abstract calculateBoundingRect(): void;
+    abstract getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; };
     abstract setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void;
     abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     abstract draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void;

@@ -3,12 +3,7 @@ import type { Shape } from "@/lib/shapes";
 import { Oval, Rectangle } from "@/lib/shapes";
 import { Handle } from "@/lib/modifiers";
 
-const ModifierPos = [
-    'top-left',
-    'top-right',
-    'bottom-left',
-    'bottom-right'
-]
+
 
 class DimensionModifier {
     private shape: Shape | null;
@@ -26,36 +21,16 @@ class DimensionModifier {
     setShape(shape: Shape) {
         this.handles = []
         this.shape = shape;
-        if (this.shape instanceof Rectangle) {
-            ModifierPos.forEach(pos => {
-                this.handles.push(new Handle(0, 0, this.size, pos, 'size', this.strokeColor))
-            })
-            ModifierPos.forEach(pos => {
-                this.handles.push(new Handle(0, 0, this.size, pos, 'radius', this.strokeColor))
-            })
-        } else if (this.shape instanceof Oval) {
-            ModifierPos.forEach(pos => {
-                this.handles.push(new Handle(0, 0, this.size, pos, 'size', this.strokeColor))
-            })
-        }
+        this.handles = this.shape.getHandles(this.size, this.strokeColor);
     }
     updateResizerPositions() {
         if (!this.shape) return;
 
         for (const resizer of this.handles) {
-            if (resizer.type === 'size') {
-                const { x, y } = this.shape.getResizeModifersPos(resizer.pos, this.size);
-                resizer.updatePosition(x, y);
-            }
+            const { x, y } = this.shape.getModifersPos(resizer.pos, this.size, resizer.type);
+            resizer.updatePosition(x, y);
         }
-        if (this.shape instanceof Rectangle) {
-            for (const resizer of this.handles) {
-                if (resizer.type === 'radius') {
-                    const { x, y } = this.shape.getRadiusModifiersPos(resizer.pos);
-                    resizer.updatePosition(x, y);
-                }
-            }
-        }
+
     }
     setPaint(canvasKit: CanvasKit, strokePaint: Paint): void {
 
@@ -72,7 +47,7 @@ class DimensionModifier {
     draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
         if (!this.shape) return;
 
-        this.updateResizerPositions()
+        this.updateResizerPositions()// bad practice
         this.setPaint(canvasKit, strokePaint);
         const dimen = this.shape.boundingRect;
         const rect = canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);

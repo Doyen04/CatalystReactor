@@ -1,5 +1,8 @@
+import { Handle } from "@/lib/modifiers";
 import { Shape } from "@/lib/shapes"
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
+
+type HandleType = "radius" | "size" | "rotate";
 
 class Oval extends Shape {
     radius: number;
@@ -38,7 +41,7 @@ class Oval extends Shape {
     setStrokeWidth(width: number): void {
         this.strokeWidth = width;
     }
-    
+
     calculateBoundingRect(): void {
         if (this.centerX !== 0 || this.centerY !== 0) {
             this.x = this.centerX - this.radius;
@@ -150,6 +153,22 @@ class Oval extends Shape {
     //     const rect = canvasKit.LTRBRect(0, 0, this.width, this.height);
     //     sk.drawRect(rect, paint);
     // }
+    getHandles(size: number, color: string | number[]): Handle[] {
+        const handles: Handle[] = [];
+        const ModifierPos = [
+            'top-left',
+            'top-right',
+            'bottom-left',
+            'bottom-right'
+        ];
+        ModifierPos.forEach(pos => {
+            handles.push(new Handle(0, 0, size, pos, 'size', color));
+        });
+        return handles;
+    }
+    getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
+        return this.getResizeModifersPos(modifierName, size);
+    }
 }
 
 export default Oval;

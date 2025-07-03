@@ -1,5 +1,8 @@
+import { Handle } from '@/lib/modifiers';
 import { Shape } from '@/lib/shapes';
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
+
+type HandleType = "radius" | "size" | "rotate";
 
 class Rectangle extends Shape {
     width: number;
@@ -46,6 +49,16 @@ class Rectangle extends Shape {
             default:
                 return { x: 0, y: 0 };
         }
+    }
+    getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
+        
+        if (handleType === 'radius') {
+            return this.getRadiusModifiersPos(modifierName);
+            
+        } else if (handleType === 'size') {
+            return this.getResizeModifersPos(modifierName, size);
+        }
+        return { x: 0, y: 0 };
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -139,6 +152,23 @@ class Rectangle extends Shape {
     }
     override setFill(color: string | number[]): void {
         this.fill = color;
+    }
+
+    getHandles(size: number, color: string | number[]): Handle[] {
+        const handles: Handle[] = [];
+        const ModifierPos = [
+            'top-left',
+            'top-right',
+            'bottom-left',
+            'bottom-right'
+        ]
+        ModifierPos.forEach(pos => {
+            handles.push(new Handle(0, 0, size, pos, 'size', color))
+        })
+        ModifierPos.forEach(pos => {
+            handles.push(new Handle(0, 0, size, pos, 'radius', color))
+        })
+        return handles;
     }
 }
 
