@@ -2,8 +2,6 @@
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 import { Oval, Rectangle } from "@/lib/shapes";
 
-type HandleType = "radius" | "size" | "rotate";
-
 export default class Handle {
     x: number;
     y: number;

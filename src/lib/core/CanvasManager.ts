@@ -157,11 +157,16 @@ class CanvasManager {
                 break;
             case 'square':
                 console.log(e);
-                ShapeFactory.createShape("rectangle", { x: e.offsetX, y: e.offsetY },this);
+                this.createShape("rectangle", e.offsetX, e.offsetY);
                 break;
             case 'oval':
-                console.log(e);
-                ShapeFactory.createShape("oval", { x: e.offsetX, y: e.offsetY },this);
+                this.createShape("oval", e.offsetX, e.offsetY);
+                break;
+            case 'polygon':
+                this.createShape("polygon", e.offsetX, e.offsetY);
+                break;
+            case 'star':
+                this.createShape("star", e.offsetX, e.offsetY);
                 break;
             default:
                 break
@@ -173,10 +178,23 @@ class CanvasManager {
         if (this.isMouseDown) {
             this.isDragging = true;
         }
-        if (this.isDragging && this.activeShape && this.currentTool === 'square') {
-            this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
-        } else if (this.isDragging && this.activeShape && this.currentTool === 'oval') {
-            this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
+        if (this.isDragging && this.activeShape) {
+            switch (this.currentTool) {
+                case 'square':
+                    this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
+                    break;
+                case 'oval':
+                    this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
+                    break;
+                case 'polygon':
+                    this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
+                    break;
+                case 'star':
+                    this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -189,6 +207,15 @@ class CanvasManager {
         this.activeShape = null;
         console.log(this.scene);
 
+    }
+    createShape(type: ShapeType, x: number, y: number) {
+
+        // Create a new shape based on the type and add it to the scene
+        const node = ShapeFactory.createShape(type, { x, y });
+        this.addNode(node);
+        this.activeShape = node;
+        this.dimensionMod.setShape(node.shape!);
+        console.log(this.activeShape);
     }
 
     discardTinyShapes() {
@@ -206,7 +233,7 @@ class CanvasManager {
         } else if (this.activeShape.shape instanceof Oval) {
             const oval = this.activeShape.shape as Oval;
 
-            if (oval.radius < minSize) {
+            if (oval.radiusX < minSize) {
                 this.removeNode(this.activeShape);
                 console.log('Shape removed: too small');
             }

@@ -1,8 +1,7 @@
-import { Handle } from '@/lib/modifiers';
+import { Handle, ModifierPos } from '@/lib/modifiers';
 import { Shape } from '@/lib/shapes';
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 
-type HandleType = "radius" | "size" | "rotate";
 
 class Rectangle extends Shape {
     width: number;
@@ -50,13 +49,13 @@ class Rectangle extends Shape {
                 return { x: 0, y: 0 };
         }
     }
-    getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
-        
+
+    override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
+
         if (handleType === 'radius') {
             return this.getRadiusModifiersPos(modifierName);
-            
         } else if (handleType === 'size') {
-            return this.getResizeModifersPos(modifierName, size);
+            return super.getModifersPos(modifierName, size, handleType);
         }
         return { x: 0, y: 0 };
     }
@@ -72,14 +71,29 @@ class Rectangle extends Shape {
         this.originalX = dragStart.x;
         this.originalY = dragStart.y;
 
-        this.x = Math.min(dragStart.x, mx);
-        this.y = Math.min(dragStart.y, my);
-
         if (shiftKey) {
-            this.setSquareSize(deltaX, deltaY);
+            const size = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+            this.width = size;
+            this.height = size;
+
+            if (deltaX >= 0) {
+                this.x = this.originalX;
+            } else {
+                this.x = this.originalX - size;
+            }
+
+            if (deltaY >= 0) {
+                this.y = this.originalY;
+            } else {
+                this.y = this.originalY - size;
+            }
         } else {
-            this.setRectSize(deltaX, deltaY);
+            this.width = Math.abs(deltaX);
+            this.height = Math.abs(deltaY);
+            this.x = Math.min(dragStart.x, mx);
+            this.y = Math.min(dragStart.y, my);
         }
+
         this.calculateBoundingRect();
     }
 
@@ -100,39 +114,8 @@ class Rectangle extends Shape {
             bottom: this.y + this.height,
             right: this.x + this.width
         };
-
-        // Update original coordinates for property bar
-        this.originalX = this.x;
-        this.originalY = this.y;
     }
 
-    setSquareSize(deltaX: number, deltaY: number): void {
-        const size = Math.max(Math.abs(deltaX), Math.abs(deltaY));
-        this.width = size;
-        this.height = size;
-
-        this.x = Math.min(this.originalX, this.originalX + size);
-        this.y = Math.min(this.originalY, this.originalY + size);
-    }
-
-    setRectSize(deltaX: number, deltaY: number): void {
-        this.width = Math.abs(deltaX);
-        this.height = Math.abs(deltaY);
-    }
-
-    override setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
-        const fill = (Array.isArray(this.fill)) ? this.fill : canvasKit.parseColorString(this.fill)
-        const strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : canvasKit.parseColorString(this.strokeColor)
-
-        paint.setColor(fill);
-        paint.setStyle(canvasKit.PaintStyle.Fill);
-        paint.setAntiAlias(true);
-
-        strokePaint.setColor(strokeColor);
-        strokePaint.setStyle(canvasKit.PaintStyle.Stroke);
-        strokePaint.setStrokeWidth(this.strokeWidth);
-        strokePaint.setAntiAlias(true);
-    }
 
     override draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
 
@@ -144,27 +127,8 @@ class Rectangle extends Shape {
         canvas.drawRect(rect, strokePaint);
     }
 
-    override setStrokeColor(color: string | number[]): void {
-        this.strokeColor = color;
-    }
-    override setStrokeWidth(width: number): void {
-        this.strokeWidth = width;
-    }
-    override setFill(color: string | number[]): void {
-        this.fill = color;
-    }
-
     getHandles(size: number, color: string | number[]): Handle[] {
-        const handles: Handle[] = [];
-        const ModifierPos = [
-            'top-left',
-            'top-right',
-            'bottom-left',
-            'bottom-right'
-        ]
-        ModifierPos.forEach(pos => {
-            handles.push(new Handle(0, 0, size, pos, 'size', color))
-        })
+        const handles = super.getHandles(size, color);
         ModifierPos.forEach(pos => {
             handles.push(new Handle(0, 0, size, pos, 'radius', color))
         })

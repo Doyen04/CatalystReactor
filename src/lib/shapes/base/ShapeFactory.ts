@@ -1,16 +1,10 @@
-import { CanvasManager, SceneNode } from "@/lib/core";
-import { Rectangle, Oval } from "@/lib/shapes";
+import { SceneNode } from "@/lib/core";
+import { Rectangle, Oval, Star, Polygon } from "@/lib/shapes";
 import type { Shape } from "@/lib/shapes";
 
-type ShapeType = "rectangle" | "oval";
-
-interface ShapeOptions {
-    x: number;
-    y: number;
-}
 
 export default class ShapeFactory {
-    static createShape(type: ShapeType, options: ShapeOptions, canvasManager:CanvasManager): void {
+    static createShape(type: ShapeType, options: ShapeOptions): SceneNode {
         let shape: Shape;
 
         switch (type) {
@@ -20,14 +14,18 @@ export default class ShapeFactory {
             case "oval":
                 shape = new Oval(options.x, options.y);
                 break;
+            case "polygon":
+                shape = new Polygon(options.x, options.y);
+                break;
+            case "star":
+                shape = new Star(options.x, options.y);
+                break;
             default:
                 throw new Error(`Unsupported shape type: ${type}`);
         }
 
         const node: SceneNode = new SceneNode();
         node.shape = shape
-        canvasManager.addNode(node);
-        canvasManager.activeShape = node;
-        canvasManager.dimensionMod.setShape(node.shape)
+        return node
     }
 }

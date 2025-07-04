@@ -1,9 +1,9 @@
 // ════════════════════════════════════
 // 📐 Abstract Base Shape Class
 
-import type { Handle } from "@/lib/modifiers";
+import { Handle, ModifierPos } from "@/lib/modifiers";
 import type { CanvasKit, Paint, Canvas } from "canvaskit-wasm";
-type HandleType = "radius" | "size" | "rotate";
+
 
 // ════════════════════════════════════
 abstract class Shape {
@@ -27,7 +27,16 @@ abstract class Shape {
         this.strokeWidth = strokeWidth;
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
     }
-    getResizeModifersPos(modifierName: string, size: number): { x: number; y: number; } {
+
+    getHandles(size: number, color: string | number[]): Handle[] {
+        const handles: Handle[] = [];
+        ModifierPos.forEach(pos => {
+            handles.push(new Handle(0, 0, size, pos, 'size', color));
+        });
+        return handles;
+    }
+
+    getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
         const bRect = this.boundingRect
         size = size / 2
         switch (modifierName) {
@@ -44,15 +53,33 @@ abstract class Shape {
         }
     }
 
-    abstract getHandles(size: number, color: string | number[]): Handle[];
     abstract moveShape(mx: number, my: number): void;
-    abstract setFill(color: string | number[]): void;
-    abstract setStrokeColor(color: string | number[]): void;
-    abstract setStrokeWidth(width: number): void;
     abstract calculateBoundingRect(): void;
-    abstract getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; };
-    abstract setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void;
     abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     abstract draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void;
+
+    setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+        const fill = (Array.isArray(this.fill)) ? this.fill : canvasKit.parseColorString(this.fill)
+        const strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : canvasKit.parseColorString(this.strokeColor)
+
+        paint.setColor(fill);
+        paint.setStyle(canvasKit.PaintStyle.Fill);
+        paint.setAntiAlias(true);
+
+        strokePaint.setColor(strokeColor);
+        strokePaint.setStyle(canvasKit.PaintStyle.Stroke);
+        strokePaint.setStrokeWidth(this.strokeWidth);
+        strokePaint.setAntiAlias(true);
+    }
+
+    setStrokeColor(color: string | number[]): void {
+        this.strokeColor = color;
+    }
+    setStrokeWidth(width: number): void {
+        this.strokeWidth = width;
+    }
+    setFill(color: string | number[]): void {
+        this.fill = color;
+    }
 }
 export default Shape;

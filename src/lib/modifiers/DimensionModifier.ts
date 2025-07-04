@@ -1,9 +1,13 @@
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 import type { Shape } from "@/lib/shapes";
-import { Oval, Rectangle } from "@/lib/shapes";
 import { Handle } from "@/lib/modifiers";
 
-
+export const ModifierPos = [
+    'top-left',
+    'top-right',
+    'bottom-left',
+    'bottom-right'
+];
 
 class DimensionModifier {
     private shape: Shape | null;

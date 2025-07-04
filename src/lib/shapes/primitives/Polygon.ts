@@ -1,0 +1,107 @@
+import type { CanvasKit, Paint, Canvas } from "canvaskit-wasm";
+import { Shape } from "@/lib/shapes";
+
+class Polygon extends Shape {
+    centerX: number;
+    centerY: number;
+    bRadius: number;
+    sides: number;
+    point: Points[]
+    radiusX: number;
+    radiusY: number;
+
+    constructor(x: number, y: number, { ...shapeProps } = {}) {
+        super({ x, y, ...shapeProps });
+        this.centerX = 0;
+        this.centerY = 0;
+        this.bRadius = 0;
+        this.sides = 5;
+        this.radiusX = 0;
+        this.radiusY = 0;
+        this.point = this.generateRegularPolygon();
+    }
+
+    private generateRegularPolygon(): Points[] {
+        const points: Points[] = [];
+        const angleStep = (2 * Math.PI) / this.sides;
+
+        for (let i = 0; i < this.sides; i++) {
+            const angle = i * angleStep - (Math.PI / 2); // Start from top
+            const x = this.centerX + this.radiusX * Math.cos(angle);
+            const y = this.centerY + this.radiusY * Math.sin(angle);
+            const res: Points = [x, y];
+            points.push(res);
+        }
+
+        return points;
+    }
+
+    override moveShape(mx: number, my: number): void {
+
+    }
+
+    override calculateBoundingRect(): void {
+        const left = this.x;
+        const top = this.y;
+        const right = this.x + this.radiusX * 2;
+        const bottom = this.y + this.radiusY * 2;
+    
+        this.boundingRect = {
+            left: left,
+            top: top,
+            right: right,
+            bottom: bottom
+        };
+    }
+
+    override setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void {
+        const deltaX = mx - dragStart.x;
+        const deltaY = my - dragStart.y;
+    
+        this.centerX = (dragStart.x + mx) / 2;
+        this.centerY = (dragStart.y + my) / 2;
+    
+        const newRadiusX = Math.abs(deltaX) / 2;
+        const newRadiusY = Math.abs(deltaY) / 2;
+    
+        if (shiftKey) {
+            const maxRadius = Math.max(newRadiusX, newRadiusY);
+            this.radiusX = this.radiusY = maxRadius;
+            
+            this.centerX = dragStart.x + (deltaX >= 0 ? maxRadius : -maxRadius);
+            this.centerY = dragStart.y + (deltaY >= 0 ? maxRadius : -maxRadius);
+        } else {
+            this.radiusX = newRadiusX;
+            this.radiusY = newRadiusY;
+        }
+    
+        this.x = this.centerX - this.radiusX;
+        this.y = this.centerY - this.radiusY;
+    
+        this.point = this.generateRegularPolygon();
+        this.calculateBoundingRect();
+    }
+
+
+    override draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+
+        this.setPaint(canvasKit, paint, strokePaint);
+        const path = new canvasKit.Path();
+        const [startX, startY] = this.point[0];
+        path.moveTo(startX, startY);
+
+        for (let i = 1; i < this.point.length; i++) {
+            const [x, y] = this.point[i];
+            path.lineTo(x, y);
+        }
+
+        path.close();
+
+        canvas.drawPath(path, paint);
+        canvas.drawPath(path, strokePaint);
+
+        path.delete();
+    }
+
+}
+export default Polygon;
