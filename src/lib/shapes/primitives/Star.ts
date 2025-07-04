@@ -24,6 +24,7 @@ class Star extends Shape {
         this.centerX = 0;
         this.centerY = 0;
         this.points = this.generateStarPoints();
+        this.calculateBoundingRect()
     }
 
     private generateStarPoints(): Points[] {

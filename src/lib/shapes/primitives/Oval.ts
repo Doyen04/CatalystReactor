@@ -20,6 +20,7 @@ class Oval extends Shape {
         this.isFlippedY = false;
         this.centerX = 0;
         this.centerY = 0;
+        this.calculateBoundingRect();
     }
 
     override moveShape(mx: number, my: number): void {

@@ -45,8 +45,6 @@ class CanvasManager {
         this.dpr = window.devicePixelRatio || 1;
 
         // this.skCnvs = null;
-        this.paint = new this.canvasKit.Paint();
-        this.strokePaint = new this.canvasKit.Paint();
         this.scene = new SceneNode();
         this.dimensionMod = new DimensionModifier();
 
@@ -60,6 +58,17 @@ class CanvasManager {
         this.currentTool = 'select';
         this.undoStack = [];
         this.redoStack = [];
+
+        this.paint = new this.canvasKit.Paint();
+        this.paint.setColor(this.canvasKit.Color(60, 0, 0, 255));
+        this.paint.setStyle(this.canvasKit.PaintStyle.Fill);
+        this.paint.setAntiAlias(true);
+        
+        this.strokePaint = new this.canvasKit.Paint();
+        this.strokePaint.setColor(this.canvasKit.Color(0, 255, 0, 255));
+        this.strokePaint.setStyle(this.canvasKit.PaintStyle.Stroke);
+        this.strokePaint.setStrokeWidth(2);
+        this.strokePaint.setAntiAlias(true);
 
         this.boundOnPointerDown = this.onPointerDown.bind(this);
         this.boundOnPointerMove = this.onPointerMove.bind(this);
@@ -108,23 +117,6 @@ class CanvasManager {
         if (!this.surf) throw new Error("Could not create CanvasKit surface");
         // this.skCnvs = this.surf.getCanvas();
 
-        if (this.paint) {
-            this.paint.delete();
-        }
-        this.paint = new this.canvasKit.Paint();
-        this.paint.setColor(this.canvasKit.Color(60, 0, 0, 255));
-        this.paint.setStyle(this.canvasKit.PaintStyle.Fill);
-        this.paint.setAntiAlias(true);
-
-
-        if (this.strokePaint) {
-            this.strokePaint.delete();
-        }
-        this.strokePaint = new this.canvasKit.Paint();
-        this.strokePaint.setColor(this.canvasKit.Color(0, 255, 0, 255));
-        this.strokePaint.setStyle(this.canvasKit.PaintStyle.Stroke);
-        this.strokePaint.setStrokeWidth(2);
-        this.strokePaint.setAntiAlias(true);
     }
 
     setTool(tool: string): void {
@@ -179,23 +171,9 @@ class CanvasManager {
             this.isDragging = true;
         }
         if (this.isDragging && this.activeShape) {
-            switch (this.currentTool) {
-                case 'square':
-                    this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
-                    break;
-                case 'oval':
-                    this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
-                    break;
-                case 'polygon':
-                    this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
-                    break;
-                case 'star':
-                    this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
-                    break;
-                default:
-                    break;
-            }
+            this.activeShape.shape?.setSize(this.dragStart!, e.offsetX, e.offsetY, e.shiftKey);
         }
+
     }
 
     onPointerUp(e: MouseEvent) {
@@ -218,25 +196,17 @@ class CanvasManager {
         console.log(this.activeShape);
     }
 
-    discardTinyShapes() {
-        if (!this.activeShape || !this.activeShape.shape) return;
+    discardTinyShapes(): void {
+        if (!this.activeShape?.shape) return;
 
+        const { left, top, right, bottom } = this.activeShape.shape.boundingRect;
+        const width = right - left;
+        const height = bottom - top;
         const minSize = 5;
 
-        if (this.activeShape.shape instanceof Rectangle) {
-            const rect = this.activeShape.shape as Rectangle;
-
-            if (rect.width < minSize || rect.height < minSize) {
-                this.removeNode(this.activeShape);
-                console.log('Shape removed: too small');
-            }
-        } else if (this.activeShape.shape instanceof Oval) {
-            const oval = this.activeShape.shape as Oval;
-
-            if (oval.radiusX < minSize) {
-                this.removeNode(this.activeShape);
-                console.log('Shape removed: too small');
-            }
+        if (width < minSize || height < minSize) {
+            this.removeNode(this.activeShape);
+            console.log('Shape removed: too small');
         }
     }
 

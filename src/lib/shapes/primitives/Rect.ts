@@ -22,6 +22,7 @@ class Rectangle extends Shape {
         this.originalY = y;
         this.isFlippedX = false;
         this.isFlippedY = false;
+        this.calculateBoundingRect()
     }
 
     override moveShape(mx: number, my: number): void {

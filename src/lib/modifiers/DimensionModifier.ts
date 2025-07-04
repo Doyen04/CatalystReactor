@@ -15,12 +15,14 @@ class DimensionModifier {
     private strokeWidth: number;
     private size: number = 5; // Default radius for the resizers
     private handles: Handle[];
+    private isHover: boolean;
 
     constructor() {
         this.shape = null;
         this.strokeColor = '#00f';
         this.strokeWidth = 1;
         this.handles = [];
+        this.isHover = false;
     }
     setShape(shape: Shape) {
         this.handles = []
@@ -48,18 +50,34 @@ class DimensionModifier {
     hasShape() {
         return this.shape !== null;
     }
+    CanDraw(): boolean {
+        if (!this.shape) return false;
+        const { left, top, right, bottom } = this.shape.boundingRect;
+        const width = right - left;
+        const height = bottom - top;
+        const minSize = 5;
+
+        return (width < minSize || height < minSize)
+    }
     draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
-        if (!this.shape) return;
+
+        if (!this.shape || this.CanDraw()) return;
 
         this.updateResizerPositions()// bad practice
         this.setPaint(canvasKit, strokePaint);
         const dimen = this.shape.boundingRect;
+
         const rect = canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);
 
         canvas.drawRect(rect, strokePaint);
 
         this.handles.forEach(handle => {
-            handle.draw(canvas, canvasKit, paint, strokePaint);
+            if (handle.type === 'radius' && this.isHover) {
+                handle.draw(canvas, canvasKit, paint, strokePaint);
+            }
+            else if (handle.type === 'size') {
+                handle.draw(canvas, canvasKit, paint, strokePaint);
+            }
         });
     }
 
