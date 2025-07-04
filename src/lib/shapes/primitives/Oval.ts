@@ -44,9 +44,9 @@ class Oval extends Shape {
         }
     }
 
-    setCenterPos(centerX: number, centerY: number): void {
-        this.centerX = centerX;
-        this.centerY = centerY;
+    setCoord(centerX: number, centerY: number): void {
+        this.x = centerX;
+        this.y = centerY;
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {

@@ -20,7 +20,7 @@ export default class Handle {
         // By default, use Oval for radius, Rect for size
         if (type === "radius") {
             this.shape = new Oval(x, y);
-            this.shape.setRadius(size);
+            this.shape.setRadius(size, size);
             this.shape.setStrokeColor(color)
         } else {
             this.shape = new Rectangle(x, y);
@@ -34,11 +34,8 @@ export default class Handle {
         this.x = x;
         this.y = y;
 
-        if (this.shape instanceof Oval) {
-            this.shape.setCenterPos(x, y);
-        } else if (this.shape instanceof Rectangle) {
-            this.shape.setCoord(x, y);
-        }
+        this.shape.setCoord(x, y);
+        
         this.shape.calculateBoundingRect();
     }
 

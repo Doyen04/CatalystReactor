@@ -32,34 +32,7 @@ class Rectangle extends Shape {
         this.calculateBoundingRect();
     }
 
-    getRadiusModifiersPos(modifierName: string): { x: number; y: number; } {
-        const bRect = this.boundingRect
-        const ModPadding = this.bdradius + 10
-
-        switch (modifierName) {
-            case 'top-left':
-                return { x: bRect.left + ModPadding, y: bRect.top + ModPadding };
-            case 'top-right':
-                return { x: bRect.right - ModPadding, y: bRect.top + ModPadding };
-            case 'bottom-left':
-                return { x: bRect.left + ModPadding, y: bRect.bottom - ModPadding };
-            case 'bottom-right':
-                return { x: bRect.right - ModPadding, y: bRect.bottom - ModPadding };
-            default:
-                return { x: 0, y: 0 };
-        }
-    }
-
-    override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
-
-        if (handleType === 'radius') {
-            return this.getRadiusModifiersPos(modifierName);
-        } else if (handleType === 'size') {
-            return super.getModifersPos(modifierName, size, handleType);
-        }
-        return { x: 0, y: 0 };
-    }
-
+    
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         // Calculate dimensions
         const deltaX = (mx - dragStart.x);
@@ -122,7 +95,7 @@ class Rectangle extends Shape {
         this.setPaint(canvasKit, paint, strokePaint);
 
         const rect = canvasKit.LTRBRect(this.x, this.y, this.x + this.width, this.y + this.height);
-
+        
         canvas.drawRect(rect, paint);
         canvas.drawRect(rect, strokePaint);
     }
@@ -133,6 +106,34 @@ class Rectangle extends Shape {
             handles.push(new Handle(0, 0, size, pos, 'radius', color))
         })
         return handles;
+    }
+
+    getRadiusModifiersPos(modifierName: string, size: number): { x: number; y: number; } {
+        const bRect = this.boundingRect
+        const ModPadding = (this.bdradius + 10)
+        
+        switch (modifierName) {
+            case 'top-left':
+                return { x: (bRect.left + ModPadding) - size, y: (bRect.top + ModPadding) - size };
+            case 'top-right':
+                return { x: (bRect.right - ModPadding) - size, y: (bRect.top + ModPadding) - size };
+            case 'bottom-left':
+                return { x: (bRect.left + ModPadding) - size, y: (bRect.bottom - ModPadding) - size };
+            case 'bottom-right':
+                return { x: (bRect.right - ModPadding) - size, y: (bRect.bottom - ModPadding) - size };
+            default:
+                return { x: 0, y: 0 };
+        }
+    }
+
+    override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
+
+        if (handleType === 'radius') {
+            return this.getRadiusModifiersPos(modifierName, size);
+        } else if (handleType === 'size') {
+            return super.getModifersPos(modifierName, size, handleType);
+        }
+        return { x: 0, y: 0 };
     }
 }
 
