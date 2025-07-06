@@ -16,6 +16,7 @@ export default defineConfig({
           '@/lib/core': path.resolve(__dirname, './src/lib/core/index.ts'),
           '@/lib/shapes': path.resolve(__dirname, './src/lib/shapes/index.ts'),
           '@/lib/modifiers': path.resolve(__dirname, './src/lib/modifiers/index.ts'),
+          '@/lib/tools': path.resolve(__dirname, './src/lib/tools/index.ts'),
         },
       },
 })

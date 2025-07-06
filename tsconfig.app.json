@@ -5,7 +5,8 @@
       "@/lib/*": ["src/lib/*"],
       "@/lib/core": ["src/lib/core/index.ts"],
       "@/lib/shapes": ["src/lib/shapes/index.ts"],
-      "@/lib/modifiers": ["src/lib/modifiers/index.ts"]
+      "@/lib/modifiers": ["src/lib/modifiers/index.ts"],
+      "@/lib/tools": ["src/lib/tools/index.ts"],
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2022",

@@ -11,3 +11,9 @@ type Points = [
     x: number,
     y: number
 ]
+
+enum ToolType{
+    Select = 'select',
+    Oval = 'oval',
+    Rect = 'rect',
+}
