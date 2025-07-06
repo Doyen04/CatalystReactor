@@ -1,4 +1,4 @@
-import {SelectTool, Tool} from '@/lib/tools'
+import {SelectTool, RectTool, Tool, OvalTool} from '@/lib/tools'
 
 class ToolManager{
     currentTool: Tool
@@ -9,11 +9,14 @@ class ToolManager{
 
     setCurrentTool(tool: ToolType){
         switch(tool){
-            case tool.Select:
+            case ToolType.Select:
+                this.currentTool = new SelectTool()
                 break;
-            case tool.Rect:
+            case ToolType.Rect:
+                this.currentTool = new RectTool()
                 break;
-            case tool.Oval:
+            case ToolType.Oval:
+                this.currentTool = new OvalTool
                 break;
         }
     }
