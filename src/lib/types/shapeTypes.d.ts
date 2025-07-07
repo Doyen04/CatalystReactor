@@ -12,8 +12,13 @@ type Points = [
     y: number
 ]
 
-enum ToolType{
+declare enum ToolType{
     Select = 'select',
     Oval = 'oval',
     Rect = 'rect',
+}
+
+interface Coords{
+    x:number;
+    y:number;
 }

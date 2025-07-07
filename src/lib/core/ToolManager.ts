@@ -1,14 +1,21 @@
-import {SelectTool, RectTool, Tool, OvalTool} from '@/lib/tools'
+import { SelectTool, RectTool, Tool, OvalTool } from '@/lib/tools'
+import { EventQueue, EventTypes } from '@/lib/core'
 
-class ToolManager{
+const { PointerDown, PointerMove, PointerUp } = EventTypes
+
+class ToolManager {
     currentTool: Tool
 
-    constructor(){
+    constructor() {
         this.currentTool = new SelectTool()
+
+        EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown)
+        EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove)
+        EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp)
     }
 
-    setCurrentTool(tool: ToolType){
-        switch(tool){
+    setCurrentTool(tool: ToolType) {
+        switch (tool) {
             case ToolType.Select:
                 this.currentTool = new SelectTool()
                 break;
@@ -19,15 +26,6 @@ class ToolManager{
                 this.currentTool = new OvalTool
                 break;
         }
-    }
-    handlePointerUp(){
-
-    }
-    handlePointerDown(){
-
-    }
-    handlePointerMove(){
-
     }
 }
 
