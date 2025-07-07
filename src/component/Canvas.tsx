@@ -7,7 +7,7 @@ import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url';
 import type { CanvasKit } from 'canvaskit-wasm';
 
 import { CanvasManager } from "@/lib/core";
-import { useToolStore } from "../hooks/useTool";
+import { useToolStore } from "@hooks/useTool";
 
 function Canvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null)

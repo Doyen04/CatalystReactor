@@ -1,12 +1,32 @@
 {
-    "files": [],
-    "references": [
-        {
-            "path": "./tsconfig.app.json"
-        },
-        {
-            "path": "./tsconfig.node.json"
+    "compilerOptions": {
+        "moduleResolution": "bundler",
+        "module": "preserve",
+        "target": "ESNext",
+        "jsx": "react-jsx",
+        "baseUrl": ".",
+        "paths": {
+            "@assets/*": [
+                "src/assets/*"
+            ],
+            "@component/*": [
+                "src/component/*"
+            ],
+            "@hooks/*": [
+                "src/hooks/*"
+            ],
+            "@lib/*": [
+                "src/lib/*"
+            ],
+            "@types/*": [
+                "src/types/*"
+            ],
+            "@ui/*": [
+                "src/ui/*"
+            ],
+            "@/*": [
+                "src/*"
+            ]
         }
-    ],
-    
+    }
 }
