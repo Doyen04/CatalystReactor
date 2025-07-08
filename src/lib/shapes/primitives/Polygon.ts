@@ -36,8 +36,14 @@ class Polygon extends Shape {
         return points;
     }
 
-    override moveShape(mx: number, my: number): void {
-
+    override moveShape(dx: number, dy: number): void {
+        this.x += dx;
+        this.y += dy;
+        this.centerX += dx;
+        this.centerY += dy;
+        
+        this.point = this.generateRegularPolygon()
+        this.calculateBoundingRect();
     }
 
     override calculateBoundingRect(): void {

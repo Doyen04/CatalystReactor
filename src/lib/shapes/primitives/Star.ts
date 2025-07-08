@@ -66,6 +66,8 @@ class Star extends Shape {
         this.y += my;
         this.centerX += mx;
         this.centerY += my;
+        
+        this.points = this.generateStarPoints();
         this.calculateBoundingRect();
     }
 

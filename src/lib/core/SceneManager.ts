@@ -3,7 +3,7 @@ import { DimensionModifier } from "@lib/modifiers";
 import { ShapeFactory } from "@lib/shapes";
 import EventQueue, { EventTypes } from './EventQueue'
 
-const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape } = EventTypes
+const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape, DragShape } = EventTypes
 
 
 class SceneManager {
@@ -25,6 +25,7 @@ class SceneManager {
         EventQueue.subscribe(FinalizeShape, this.cleanUp.bind(this))
         EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
         EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
+        EventQueue.subscribe(DragShape, this.dragSelectedShape.bind(this))
     }
 
     getScene(): SceneNode {
@@ -53,12 +54,17 @@ class SceneManager {
             this.selected = null
             this.dimensionMod.setShape(null)
             return
-        }else{
+        } else {
             this.selected = selected
             this.dimensionMod.setShape(this.selected.getShape())
         }
     }
 
+    dragSelectedShape(dx: number, dy: number) {
+        if (!this.selected) return
+
+        this.selected.shape.moveShape(dx, dy)
+    }
 
     getCollidedScene(x: number, y: number): SceneNode | null {
         const flattened = this.flattenScene();

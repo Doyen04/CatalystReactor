@@ -25,11 +25,11 @@ class Rectangle extends Shape {
         this.calculateBoundingRect()
     }
 
-    override moveShape(mx: number, my: number): void {
-        this.x += mx;
-        this.y += my;
-        this.originalX += mx;
-        this.originalY += my;
+    override moveShape(dx: number, dy: number): void {
+        this.x += dx;
+        this.y += dy;
+        this.originalX += dx;
+        this.originalY += dy;
         this.calculateBoundingRect();
     }
 

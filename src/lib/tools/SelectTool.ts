@@ -1,7 +1,7 @@
 import { Tool } from "@/lib/tools";
 import { EventQueue, EventTypes } from "@lib/core";
 
-const { ShowHovered, SelectShape } = EventTypes
+const { ShowHovered, SelectShape,DragShape } = EventTypes
 
 class SelectTool extends Tool {
 
@@ -15,7 +15,11 @@ class SelectTool extends Tool {
         EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
     }
     override handlePointerDrag(dragStart: Coords, e: MouseEvent): void {
-
+        const dx = dragStart.x - e.offsetX
+        const dy = dragStart.y - e.offsetY
+        console.log(dx,dy);
+        
+        EventQueue.trigger(DragShape, dx, dy)
     }
 }
 
