@@ -15,6 +15,7 @@ abstract class Shape {
     strokeWidth: number;
     strokeColor: string | number[];
     boundingRect: { top: number, left: number, bottom: number, right: number };
+    private isHover: boolean;
 
     constructor({ x = 0, y = 0, rotation = 0, scale = 1, fill = "#fff", strokeWidth = 1, strokeColor = '#000' } = {}) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
@@ -26,6 +27,7 @@ abstract class Shape {
         this.strokeColor = strokeColor;
         this.strokeWidth = strokeWidth;
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
+        this.isHover = false;
     }
 
     getHandles(size: number, color: string | number[]): Handle[] {
@@ -53,6 +55,7 @@ abstract class Shape {
         }
     }
 
+    abstract pointInShape(x: number, y: number): boolean;
     abstract moveShape(mx: number, my: number): void;
     abstract calculateBoundingRect(): void;
     abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
@@ -60,7 +63,9 @@ abstract class Shape {
 
     setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
         const fill = (Array.isArray(this.fill)) ? this.fill : canvasKit.parseColorString(this.fill)
-        const strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : canvasKit.parseColorString(this.strokeColor)
+        let strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : canvasKit.parseColorString(this.strokeColor)
+
+        strokeColor = (this.isHover == false )? strokeColor : canvasKit.Color(0,0,255)
 
         paint.setColor(fill);
         paint.setStyle(canvasKit.PaintStyle.Fill);
@@ -81,5 +86,10 @@ abstract class Shape {
     setFill(color: string | number[]): void {
         this.fill = color;
     }
+
+    setHovered(hvr: boolean){
+        this.isHover = hvr
+    }
+
 }
 export default Shape;

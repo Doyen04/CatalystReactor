@@ -45,7 +45,7 @@ class Polygon extends Shape {
         const top = this.y;
         const right = this.x + this.radiusX * 2;
         const bottom = this.y + this.radiusY * 2;
-    
+
         this.boundingRect = {
             left: left,
             top: top,
@@ -57,27 +57,27 @@ class Polygon extends Shape {
     override setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void {
         const deltaX = mx - dragStart.x;
         const deltaY = my - dragStart.y;
-    
+
         this.centerX = (dragStart.x + mx) / 2;
         this.centerY = (dragStart.y + my) / 2;
-    
+
         const newRadiusX = Math.abs(deltaX) / 2;
         const newRadiusY = Math.abs(deltaY) / 2;
-    
+
         if (shiftKey) {
             const maxRadius = Math.max(newRadiusX, newRadiusY);
             this.radiusX = this.radiusY = maxRadius;
-            
+
             this.centerX = dragStart.x + (deltaX >= 0 ? maxRadius : -maxRadius);
             this.centerY = dragStart.y + (deltaY >= 0 ? maxRadius : -maxRadius);
         } else {
             this.radiusX = newRadiusX;
             this.radiusY = newRadiusY;
         }
-    
+
         this.x = this.centerX - this.radiusX;
         this.y = this.centerY - this.radiusY;
-    
+
         this.point = this.generateRegularPolygon();
         this.calculateBoundingRect();
     }
@@ -103,5 +103,26 @@ class Polygon extends Shape {
         path.delete();
     }
 
+    override pointInShape(x: number, y: number): boolean {
+        const pts = this.point;
+        const n = pts.length;
+        if (n < 3) return false;
+
+        let inside = false;
+        for (let i = 0, j = n - 1; i < n; j = i++) {
+            const [xi, yi] = pts[i];
+            const [xj, yj] = pts[j];
+            const intersects =
+                (yi > y) !== (yj > y) &&
+                x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+
+            if (intersects) inside = !inside;
+        }
+
+        return inside;
+    }
+
+
 }
+
 export default Polygon;

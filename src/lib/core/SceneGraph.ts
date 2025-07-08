@@ -21,12 +21,20 @@ class SceneNode {
         this.children.push(child)
     }
 
+    isCollide(x: number, y: number): boolean {
+        return this.shape.pointInShape(x, y)
+    }
+
     removeChildNode(child: SceneNode): void {
         const i = this.children.indexOf(child)
         if (i !== -1) {
             child.parent = null
             this.children.splice(i, 1)
         }
+    }
+
+    getShape(): Shape {
+        return this.shape
     }
 
     setLocalMatrix(matrix: Matrix) {

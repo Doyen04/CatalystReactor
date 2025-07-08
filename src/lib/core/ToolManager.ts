@@ -13,7 +13,6 @@ class ToolManager {
     }
 
     setCurrentTool(tool: ToolType) {
-        console.log(tool);
         switch (tool) {
             case 'select':
                 this.currentTool = new SelectTool()

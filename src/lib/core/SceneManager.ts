@@ -1,9 +1,9 @@
-import  SceneNode  from "./SceneGraph";
+import SceneNode from "./SceneGraph";
 import { DimensionModifier } from "@lib/modifiers";
 import { ShapeFactory } from "@lib/shapes";
-import  EventQueue,{ EventTypes } from './EventQueue'
+import EventQueue, { EventTypes } from './EventQueue'
 
-const { FinalizeShape, DrawShape, CreateShape } = EventTypes
+const { FinalizeShape, DrawShape, CreateShape, ShowHovered } = EventTypes
 
 
 class SceneManager {
@@ -11,16 +11,20 @@ class SceneManager {
     selected: SceneNode | null;
     transientShape: SceneNode | null;
     dimensionMod: DimensionModifier;
+    hoveredScene: SceneNode | null;
 
     constructor() {
         this.scene = new SceneNode()
         this.transientShape = null
         this.selected = null
+        this.hoveredScene = null
         this.dimensionMod = new DimensionModifier()
 
         EventQueue.subscribe(CreateShape, this.createShape.bind(this))
         EventQueue.subscribe(DrawShape, this.updateTransientShape.bind(this))
         EventQueue.subscribe(FinalizeShape, this.cleanUp.bind(this))
+        EventQueue.subscribe(ShowHovered ,this.showHovered.bind(this))
+        // EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
     }
 
     getScene(): SceneNode {
@@ -40,6 +44,50 @@ class SceneManager {
         }
         // this.pushHistory();
         // this.render();
+    }
+
+
+    getCollidedScene(x: number, y: number): SceneNode | null {
+        const flattened = this.flattenScene();
+       
+        for (const node of flattened) {
+            if (node && node.isCollide(x, y)) {
+                return node;
+            }
+        }
+
+        return null;
+    }
+
+    showHovered(x: number, y: number) {
+        const hoveredScene = this.getCollidedScene(x, y)
+
+        if (!hoveredScene || !hoveredScene.getShape()) {
+            if (this.hoveredScene) this.hoveredScene.shape.setHovered(false)
+            this.hoveredScene = null
+            return
+        }
+
+        // Reset previously hovered shape
+        if (this.hoveredScene !== hoveredScene) {
+            if (this.hoveredScene) this.hoveredScene.shape.setHovered(false)
+            this.hoveredScene = hoveredScene
+        }
+
+        this.hoveredScene.shape.setHovered(true)
+
+    }
+
+    flattenScene(): SceneNode[] {
+        const flattened: SceneNode[] = [];
+
+        const traverse = (node: SceneNode) => {
+            flattened.push(node);
+            node.children.forEach(child => traverse(child));
+        };
+
+        this.scene.children.forEach(child => traverse(child));
+        return flattened
     }
 
     removeNode(node: SceneNode) {
@@ -78,6 +126,7 @@ class SceneManager {
 
         if (width < minSize || height < minSize) {
             this.removeNode(this.transientShape);
+            this.dimensionMod.setShape(null)
             console.log('Shape removed: too small');
         }
     }

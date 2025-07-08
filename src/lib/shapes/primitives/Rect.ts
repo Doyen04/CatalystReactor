@@ -33,7 +33,7 @@ class Rectangle extends Shape {
         this.calculateBoundingRect();
     }
 
-    
+
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         // Calculate dimensions
         const deltaX = (mx - dragStart.x);
@@ -96,7 +96,7 @@ class Rectangle extends Shape {
         this.setPaint(canvasKit, paint, strokePaint);
 
         const rect = canvasKit.LTRBRect(this.x, this.y, this.x + this.width, this.y + this.height);
-        
+
         canvas.drawRect(rect, paint);
         canvas.drawRect(rect, strokePaint);
     }
@@ -112,7 +112,7 @@ class Rectangle extends Shape {
     getRadiusModifiersPos(modifierName: string, size: number): { x: number; y: number; } {
         const bRect = this.boundingRect
         const ModPadding = (this.bdradius + 10)
-        
+
         switch (modifierName) {
             case 'top-left':
                 return { x: (bRect.left + ModPadding) - size, y: (bRect.top + ModPadding) - size };
@@ -135,6 +135,13 @@ class Rectangle extends Shape {
             return super.getModifersPos(modifierName, size, handleType);
         }
         return { x: 0, y: 0 };
+    }
+
+    override pointInShape(x: number, y: number): boolean {
+        return x >= this.x &&
+            x <= this.x + this.width &&
+            y >= this.y &&
+            y <= this.y + this.height;
     }
 }
 

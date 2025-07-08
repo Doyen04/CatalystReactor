@@ -27,6 +27,8 @@ class DimensionModifier {
     setShape(shape: Shape) {
         this.handles = []
         this.shape = shape;
+        
+        if (!this.shape) return
         this.handles = this.shape.getHandles(this.size, this.strokeColor);
     }
     updateResizerPositions() {

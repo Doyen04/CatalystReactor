@@ -53,33 +53,33 @@ class Oval extends Shape {
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         const deltaX = mx - dragStart.x;
         const deltaY = my - dragStart.y;
-    
+
         this.isFlippedX = deltaX < 0;
         this.isFlippedY = deltaY < 0;
-    
+
         if (shiftKey) {
             // Circle mode - use the larger distance for perfect circle
             const radius = Math.max(Math.abs(deltaX), Math.abs(deltaY));
             this.radiusX = radius / 2;
             this.radiusY = radius / 2;
-    
+
             this.centerX = dragStart.x + (deltaX >= 0 ? this.radiusX : -this.radiusX);
             this.centerY = dragStart.y + (deltaY >= 0 ? this.radiusY : -this.radiusY);
-    
+
             this.x = deltaX >= 0 ? dragStart.x : dragStart.x - radius;
             this.y = deltaY >= 0 ? dragStart.y : dragStart.y - radius;
         } else {
             // Oval mode
             this.radiusX = Math.abs(deltaX) / 2;
             this.radiusY = Math.abs(deltaY) / 2;
-    
+
             this.centerX = (dragStart.x + mx) / 2;
             this.centerY = (dragStart.y + my) / 2;
-    
+
             this.x = deltaX < 0 ? mx : dragStart.x;
             this.y = deltaY < 0 ? my : dragStart.y;
         }
-    
+
         this.calculateBoundingRect();
     }
 
@@ -100,6 +100,21 @@ class Oval extends Shape {
 
     override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
         return super.getModifersPos(modifierName, size, handleType);
+    }
+
+    override pointInShape(x: number, y: number): boolean {
+        if (this.radiusX <= 0 || this.radiusY <= 0) {
+            return false;
+        }
+
+        const dx = x - this.centerX;
+        const dy = y - this.centerY;
+
+        // (x-cx)²/rx² + (y-cy)²/ry² <= 1
+        const normalizedDistance = (dx * dx) / (this.radiusX * this.radiusX) +
+            (dy * dy) / (this.radiusY * this.radiusY);
+
+        return normalizedDistance <= 1;
     }
 }
 

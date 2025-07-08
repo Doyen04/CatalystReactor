@@ -1,6 +1,6 @@
 import { Handle } from '@/lib/modifiers';
 import { Shape } from '@/lib/shapes';
-import type { Canvas, CanvasKit, Paint,} from "canvaskit-wasm";
+import type { Canvas, CanvasKit, Paint, } from "canvaskit-wasm";
 
 class Star extends Shape {
     outerRadiusX: number;
@@ -72,18 +72,18 @@ class Star extends Shape {
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         const deltaX = mx - dragStart.x;
         const deltaY = my - dragStart.y;
-    
+
         this.centerX = (dragStart.x + mx) / 2;
         this.centerY = (dragStart.y + my) / 2;
-    
+
         const newRadiusX = Math.abs(deltaX) / 2;
         const newRadiusY = Math.abs(deltaY) / 2;
-    
+
         if (shiftKey) {
             const maxRadius = Math.max(newRadiusX, newRadiusY);
             this.outerRadiusX = this.outerRadiusY = maxRadius;
             this.innerRadiusX = this.innerRadiusY = maxRadius * this.ratio;
-            
+
             this.centerX = dragStart.x + (deltaX >= 0 ? maxRadius : -maxRadius);
             this.centerY = dragStart.y + (deltaY >= 0 ? maxRadius : -maxRadius);
         } else {
@@ -93,11 +93,11 @@ class Star extends Shape {
             this.innerRadiusX = newRadiusX * this.ratio;
             this.innerRadiusY = newRadiusY * this.ratio;
         }
-    
+
         // Update position for bounding calculations
         this.x = this.centerX - Math.max(this.outerRadiusX, this.innerRadiusX);
         this.y = this.centerY - Math.max(this.outerRadiusY, this.innerRadiusY);
-    
+
         this.points = this.generateStarPoints();
         this.calculateBoundingRect();
     }
@@ -137,6 +137,24 @@ class Star extends Shape {
     setInnerRadius(radiusX: number, radiusY: number): void {
         this.innerRadiusX = Math.max(1, Math.min(radiusX, this.outerRadiusX - 1));
         this.innerRadiusY = Math.max(1, Math.min(radiusY, this.outerRadiusY - 1));
+    }
+
+    override pointInShape(x: number, y: number): boolean {
+        if (this.points.length < 3) return false;
+
+        let inside = false;
+
+        for (let i = 0, j = this.points.length - 1; i < this.points.length; j = i++) {
+            const [xi, yi] = this.points[i];
+            const [xj, yj] = this.points[j];
+
+            if (((yi > y) !== (yj > y)) &&
+                (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                inside = !inside;
+            }
+        }
+
+        return inside;
     }
 }
 

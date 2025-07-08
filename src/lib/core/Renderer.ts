@@ -145,6 +145,7 @@ class Renderer {
             this.renderNode(skCnvs, child);
         }
     }
+    
     destroy() {
         this.stopLoop()
 

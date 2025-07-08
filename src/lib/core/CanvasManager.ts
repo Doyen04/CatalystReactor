@@ -33,8 +33,6 @@ class CanvasManager {
     }
 
     setTool(tool: string): void {
-        console.log(tool);
-        
         this.toolManager.setCurrentTool(tool as ToolType);
     }
 

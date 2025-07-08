@@ -42,7 +42,7 @@ class InputManager {
         EventQueue.trigger(PointerDown, this.dragStart, e)
     }
 
-    onPointerMove(e: MouseEvent) {//console.log('move');
+    onPointerMove(e: MouseEvent) {console.log('move');
         if (this.isPointerDown) {
             EventQueue.trigger(PointerDrag, this.dragStart, e)
         } else {
@@ -64,9 +64,6 @@ class InputManager {
     resize(e?: Event): void {
         console.log("resizing----5----");
         
-        // this.stopLoop()
-
-        // setTimeout(() => {
         EventQueue.trigger(CreateSurface)
         //     this.startLoop();
         // }, 0);
