@@ -17,7 +17,13 @@ function Canvas() {
 
 
     useEffect(() => {
-        CanvasKitInit({ locateFile: () => canvasKitWasmUrl }).then(setCanvasKit)
+        CanvasKitInit({ locateFile: () => canvasKitWasmUrl })
+            .then((ck) => {
+                setCanvasKit(ck);
+            })
+            .catch((error) => {
+                console.error("Failed to load CanvasKit:", error);
+            });
     }, [])
 
     useEffect(() => {
@@ -25,9 +31,9 @@ function Canvas() {
 
         if (!canvasRef.current || !canvasKit) return;
 
-        // Clean up previous instance
         if (canvasManagerRef.current) {
             canvasManagerRef.current.removeEventListener();
+            canvasManagerRef.current = null;
         }
 
         canvasManagerRef.current = new CanvasManager(canvasRef.current, canvasKit);

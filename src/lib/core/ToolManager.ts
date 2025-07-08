@@ -1,7 +1,7 @@
-import { SelectTool, RectTool, Tool, OvalTool } from '@/lib/tools'
-import { EventQueue, EventTypes } from '@/lib/core'
+import { SelectTool, ShapeTool, Tool } from '@/lib/tools'
+import EventQueue, { EventTypes } from './EventQueue'
 
-const { PointerDown, PointerMove, PointerUp } = EventTypes
+const { PointerDown, PointerMove, PointerUp, PointerDrag } = EventTypes
 
 class ToolManager {
     currentTool: Tool
@@ -9,23 +9,36 @@ class ToolManager {
     constructor() {
         this.currentTool = new SelectTool()
 
-        EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown)
-        EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove)
-        EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp)
+        this.setUpEvent()
     }
 
     setCurrentTool(tool: ToolType) {
         switch (tool) {
-            case ToolType.Select:
+            case 'select':
                 this.currentTool = new SelectTool()
                 break;
-            case ToolType.Rect:
-                this.currentTool = new RectTool()
+            case 'rect':
+                this.currentTool = new ShapeTool('rect')
                 break;
-            case ToolType.Oval:
-                this.currentTool = new OvalTool
+            case 'oval':
+                this.currentTool = new ShapeTool('oval')
+                break;
+            case 'star':
+                this.currentTool = new ShapeTool('star')
                 break;
         }
+        this.setUpEvent()
+    }
+    setUpEvent() {
+        EventQueue.unSubscribeAll(PointerDown)
+        EventQueue.unSubscribeAll(PointerDrag)
+        EventQueue.unSubscribeAll(PointerMove)
+        EventQueue.unSubscribeAll(PointerUp)
+
+        EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown)
+        EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag)
+        EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove)
+        EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp)
     }
 }
 

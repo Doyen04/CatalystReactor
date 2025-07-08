@@ -1,6 +1,6 @@
-import { EventQueue, EventTypes } from "@/lib/core";
+import EventQueue, { EventTypes } from "./EventQueue";
 
-const { PointerDown, PointerMove, PointerUp , PointerDrag} = EventTypes
+const { PointerDown, PointerMove, PointerUp, PointerDrag, CreateSurface } = EventTypes
 
 class InputManager {
     private canvasEl: HTMLCanvasElement
@@ -27,8 +27,6 @@ class InputManager {
         this.boundOnKeyDown = this.onKeyDown.bind(this)
         this.boundResize = this.resize.bind(this);
 
-        this.resize()
-
         // Bind events
         this.canvasEl.addEventListener('mousedown', this.boundOnPointerDown);
         this.canvasEl.addEventListener('mousemove', this.boundOnPointerMove);
@@ -37,27 +35,26 @@ class InputManager {
         window.addEventListener('resize', this.boundResize);
     }
 
-    onPointerDown(e: MouseEvent) {
+    onPointerDown(e: MouseEvent) {console.log('down');
+    
         this.isPointerDown = true
         this.dragStart = { x: e.offsetX, y: e.offsetY }
-        EventQueue.trigger(PointerDown, { coord: this.dragStart, e: e })
+        EventQueue.trigger(PointerDown, this.dragStart, e)
     }
 
-    onPointerMove(e: MouseEvent) {
+    onPointerMove(e: MouseEvent) {console.log('move');
         if (this.isPointerDown) {
-            EventQueue.trigger(PointerDrag, { coord: this.dragStart, e: e })
-        }else {
-            EventQueue.trigger(PointerMove, { coord: this.dragStart, e: e })
+            EventQueue.trigger(PointerDrag, this.dragStart, e)
+        } else {
+            EventQueue.trigger(PointerMove, this.dragStart, e)
         }
 
     }
 
-    onPointerUp(e: MouseEvent) {
-        // console.log('up');
-
+    onPointerUp(e: MouseEvent) {console.log('up');
         this.isPointerDown = false;
 
-        EventQueue.trigger(PointerUp, { coord: this.dragStart, e: e })
+        EventQueue.trigger(PointerUp, this.dragStart, e)
     }
 
     onKeyDown(e: KeyboardEvent) {
@@ -66,19 +63,13 @@ class InputManager {
 
     resize(e?: Event): void {
         console.log("resizing----5----");
-        const dpr = window.devicePixelRatio || 1;
-        const { width, height } = getComputedStyle(this.canvasEl);
-        console.log(width, height);
+        
+        // this.stopLoop()
 
-        this.canvasEl.width = parseInt(width) * dpr;
-        this.canvasEl.height = parseInt(height) * dpr; // set canvas height
-
-        this.stopLoop()
-
-        setTimeout(() => {
-            this.makeSurface();
-            this.startLoop();
-        }, 0);
+        // setTimeout(() => {
+        EventQueue.trigger(CreateSurface)
+        //     this.startLoop();
+        // }, 0);
     }
 
     removeEventListeners() {

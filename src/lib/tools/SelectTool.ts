@@ -1,13 +1,17 @@
-import {Tool} from "@/lib/tools";
+import { Tool } from "@/lib/tools";
+import { EventQueue, EventTypes } from "@lib/core";
 
-class SelectTool extends Tool{
-    override handlePointerDown(){
+const { CreateShape, DrawShape } = EventTypes
+
+class SelectTool extends Tool {
+
+    override handlePointerDown(coord: Coords, e: MouseEvent) {
+        
+    }
+    override handlePointerUp() {
 
     }
-    override handlePointerUp(){
-
-    }
-    override handlePointerMove(){
+    override handlePointerMove() {
 
     }
 }

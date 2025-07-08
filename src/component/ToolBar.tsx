@@ -23,9 +23,9 @@ function ToolBar() {
     ];
     const ShapeTools = [
         {
-            toolName: 'square',
+            toolName: 'rect',
             icon: <Square className={"w-4 h-4"} />,
-            tip: 'Square'
+            tip: 'Rect'
         },
         {
             toolName: 'oval',
@@ -45,8 +45,8 @@ function ToolBar() {
     ];
     return (
         <div className={'toolbar'}>
-            <Button toolname={'select'} moreTools={SelectTools} moreToolsTips={"Select Tools"}/>
-            <Button toolname={'square'} moreTools={ShapeTools} moreToolsTips={"Draw tools"}/>
+            <Button toolname={'select'} moreTools={SelectTools} moreToolsTips={"Select Tools"} />
+            <Button toolname={'rect'} moreTools={ShapeTools} moreToolsTips={"Draw tools"} />
             <Button tip={"Text"} toolname={'text'} icon={<Type className={"w-4 h-4"} />} />
         </div>
     )

@@ -8,7 +8,7 @@ export default class ShapeFactory {
         let shape: Shape;
 
         switch (type) {
-            case "rectangle":
+            case "rect":
                 shape = new Rectangle(options.x, options.y);
                 break;
             case "oval":

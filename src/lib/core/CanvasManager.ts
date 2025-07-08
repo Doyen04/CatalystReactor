@@ -1,5 +1,10 @@
 import type { CanvasKit } from "canvaskit-wasm";
-import { Renderer, SceneManager, SceneNode,InputManager,ToolManager } from '@/lib/core';
+import  EventQueue  from './EventQueue';
+import InputManager from "./InputManger";
+import SceneManager from "./SceneManager";
+import Renderer from "./Renderer";
+import ToolManager from "./ToolManager";
+
 import type { Matrix } from "@/lib/core";
 
 
@@ -9,8 +14,6 @@ class CanvasManager {
     renderer: Renderer;
     toolManager: ToolManager;
 
-    dpr: number;
-
     undoStack: never[];
     redoStack: never[];
 
@@ -18,7 +21,7 @@ class CanvasManager {
 
         // this.skCnvs = null;
         this.sceneManager = new SceneManager();
-        this.renderer = new Renderer(canvasKit, canvas)
+        this.renderer = new Renderer(canvasKit, canvas, this.sceneManager)
         this.inputManager = new InputManager(canvas)
         this.toolManager = new ToolManager()
 
@@ -26,11 +29,12 @@ class CanvasManager {
         this.undoStack = [];
         this.redoStack = [];
 
-
+        // EventQueue.getEventNames()
     }
 
-    setTool(tool: ToolType): void {
-        this.toolManager.setCurrentTool(tool);
+    setTool(tool: string): void {
+
+        this.toolManager.setCurrentTool(tool as ToolType);
     }
 
     pushHistory() {
@@ -75,6 +79,12 @@ class CanvasManager {
     }
     removeEventListener() {
         this.inputManager.removeEventListeners()
+        this.renderer.destroy()
+        EventQueue.removeAllEvent()
+    }
+
+    render(){
+
     }
 }
 
