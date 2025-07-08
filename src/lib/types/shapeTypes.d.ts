@@ -1,4 +1,4 @@
-declare type ToolType = 'select' | 'oval' | 'rect' | 'star' | 'text'
+declare type ToolType = 'select' | 'oval' | 'rect' | 'star' | 'text' | 'polygon'
 
 declare type ShapeType = "rect" | "oval" | "polygon" | "star";
 

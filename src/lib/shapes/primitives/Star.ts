@@ -17,7 +17,7 @@ class Star extends Shape {
         super({ x, y, ...shapeProps });
         this.outerRadiusX = 0;
         this.outerRadiusY = 0;
-        this.spikes = 3;
+        this.spikes = 5;
         this.ratio = 0.5;
         this.innerRadiusX = 0;
         this.innerRadiusY = 0;

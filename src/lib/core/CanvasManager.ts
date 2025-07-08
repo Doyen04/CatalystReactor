@@ -29,11 +29,12 @@ class CanvasManager {
         this.undoStack = [];
         this.redoStack = [];
 
-        // EventQueue.getEventNames()
+        EventQueue.getEventNames()
     }
 
     setTool(tool: string): void {
-
+        console.log(tool);
+        
         this.toolManager.setCurrentTool(tool as ToolType);
     }
 

@@ -9,9 +9,8 @@ class ShapeTool extends Tool {
         super()
         this.shape = shape
     }
-    override handlePointerDown(dragStart: Coords, e: MouseEvent) {console.log(80653);
-    
-        EventQueue.trigger(CreateShape, "rect", dragStart.x, dragStart.y)
+    override handlePointerDown(dragStart: Coords, e: MouseEvent) {
+        EventQueue.trigger(CreateShape, this.shape, dragStart.x, dragStart.y)
     }
     override handlePointerUp(coord: Coords, e: MouseEvent) {
         EventQueue.trigger(FinalizeShape)
@@ -19,7 +18,7 @@ class ShapeTool extends Tool {
     override handlePointerMove(dragStart: Coords, e: MouseEvent) {
         
     }
-    override handlePointerDrag(dragStart: Coords, e:MouseEvent): void {console.log(99);
+    override handlePointerDrag(dragStart: Coords, e:MouseEvent): void {
     
         EventQueue.trigger(DrawShape, dragStart, e.offsetX, e.offsetY, e.shiftKey)
     }

@@ -13,6 +13,7 @@ class ToolManager {
     }
 
     setCurrentTool(tool: ToolType) {
+        console.log(tool);
         switch (tool) {
             case 'select':
                 this.currentTool = new SelectTool()
@@ -26,6 +27,14 @@ class ToolManager {
             case 'star':
                 this.currentTool = new ShapeTool('star')
                 break;
+            case 'polygon':
+                this.currentTool = new ShapeTool('polygon')
+                break;
+            default:
+                console.log('ttool not implemented');
+                
+                this.currentTool = null
+                break;
         }
         this.setUpEvent()
     }
@@ -35,10 +44,10 @@ class ToolManager {
         EventQueue.unSubscribeAll(PointerMove)
         EventQueue.unSubscribeAll(PointerUp)
 
-        EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown)
-        EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag)
-        EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove)
-        EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp)
+        EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown.bind(this.currentTool))
+        EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag.bind(this.currentTool))
+        EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove.bind(this.currentTool))
+        EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp.bind(this.currentTool))
     }
 }
 

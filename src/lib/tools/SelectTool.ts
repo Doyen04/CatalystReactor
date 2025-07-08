@@ -14,6 +14,9 @@ class SelectTool extends Tool {
     override handlePointerMove() {
 
     }
+    override handlePointerDrag(dragStart: Coords, e: MouseEvent): void {
+        
+    }
 }
 
 export default SelectTool;
