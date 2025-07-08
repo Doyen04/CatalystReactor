@@ -1,12 +1,12 @@
 import { Tool } from "@/lib/tools";
 import { EventQueue, EventTypes } from "@lib/core";
 
-const { CreateShape, DrawShape ,ShowHovered} = EventTypes
+const { ShowHovered, SelectShape } = EventTypes
 
 class SelectTool extends Tool {
 
-    override handlePointerDown(coord: Coords, e: MouseEvent) {
-        
+    override handlePointerDown(dragStart: Coords, e: MouseEvent) {
+        EventQueue.trigger(SelectShape, e.offsetX, e.offsetY)
     }
     override handlePointerUp() {
 
@@ -15,7 +15,7 @@ class SelectTool extends Tool {
         EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
     }
     override handlePointerDrag(dragStart: Coords, e: MouseEvent): void {
-        
+
     }
 }
 

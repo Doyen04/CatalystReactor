@@ -7,7 +7,8 @@ enum EventTypes {
     DrawShape = 'draw:shape',
     FinalizeShape = 'finish:draw',
     CreateSurface = 'create:surface',
-    ShowHovered = 'hovered:shape'
+    ShowHovered = 'hovered:shape',
+    SelectShape = 'select:shape',
 }
 
 type Handlers = {
@@ -20,6 +21,7 @@ type Handlers = {
     [EventTypes.FinalizeShape]: () => void;
     [EventTypes.CreateSurface]: () => void;
     [EventTypes.ShowHovered]: (x: number, y: number) => void;
+    [EventTypes.SelectShape]: (x: number, y: number) => void;
 };
 
 class EventBus {

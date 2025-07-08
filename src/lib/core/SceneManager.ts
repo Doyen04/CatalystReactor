@@ -3,7 +3,7 @@ import { DimensionModifier } from "@lib/modifiers";
 import { ShapeFactory } from "@lib/shapes";
 import EventQueue, { EventTypes } from './EventQueue'
 
-const { FinalizeShape, DrawShape, CreateShape, ShowHovered } = EventTypes
+const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape } = EventTypes
 
 
 class SceneManager {
@@ -23,8 +23,8 @@ class SceneManager {
         EventQueue.subscribe(CreateShape, this.createShape.bind(this))
         EventQueue.subscribe(DrawShape, this.updateTransientShape.bind(this))
         EventQueue.subscribe(FinalizeShape, this.cleanUp.bind(this))
-        EventQueue.subscribe(ShowHovered ,this.showHovered.bind(this))
-        // EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
+        EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
+        EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
     }
 
     getScene(): SceneNode {
@@ -46,10 +46,23 @@ class SceneManager {
         // this.render();
     }
 
+    selectShape(x: number, y: number) {
+        const selected = this.getCollidedScene(x, y)
+
+        if (!selected || !selected.getShape()) {
+            this.selected = null
+            this.dimensionMod.setShape(null)
+            return
+        }else{
+            this.selected = selected
+            this.dimensionMod.setShape(this.selected.getShape())
+        }
+    }
+
 
     getCollidedScene(x: number, y: number): SceneNode | null {
         const flattened = this.flattenScene();
-       
+
         for (const node of flattened) {
             if (node && node.isCollide(x, y)) {
                 return node;
