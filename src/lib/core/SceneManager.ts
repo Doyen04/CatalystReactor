@@ -1,6 +1,6 @@
 import SceneNode from "./SceneGraph";
 import { ShapeModifier } from "@lib/modifiers";
-import { ShapeFactory } from "@lib/shapes";
+import { PText, ShapeFactory } from "@lib/shapes";
 import EventQueue, { EventTypes } from './EventQueue'
 
 const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape, DragShape, EditText } = EventTypes
@@ -164,7 +164,10 @@ class SceneManager {
         }
     }
     editText(e: KeyboardEvent) {
-        console.log(e);
+        const shape = this.shapeMod.getShape()
+        if (shape instanceof PText) {
+            shape.setText(e.key);
+        }
     }
 }
 

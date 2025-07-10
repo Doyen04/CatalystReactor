@@ -192,7 +192,7 @@ class PText extends Shape {
     }
 
     setText(text: string): void {
-        this.text = text;
+        this.text += text;
         this.calculateBoundingRect();
     }
 
