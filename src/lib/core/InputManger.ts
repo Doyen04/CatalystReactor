@@ -1,6 +1,6 @@
 import EventQueue, { EventTypes } from "./EventQueue";
 
-const { PointerDown, PointerMove, PointerUp, PointerDrag, CreateSurface } = EventTypes
+const { PointerDown, PointerMove, PointerUp, PointerDrag, CreateSurface, KeyDown, KeyUp } = EventTypes
 
 class InputManager {
     private canvasEl: HTMLCanvasElement
@@ -12,6 +12,7 @@ class InputManager {
     private boundOnPointerMove: (e: MouseEvent) => void;
     private boundOnPointerUp: (e: MouseEvent) => void;
     private boundOnKeyDown: (e: KeyboardEvent) => void;
+    private boundOnKeyUp: (e: KeyboardEvent) => void;
     private boundResize: (e?: Event) => void;
 
     constructor(cnvs: HTMLCanvasElement) {
@@ -25,13 +26,15 @@ class InputManager {
         this.boundOnPointerMove = this.onPointerMove.bind(this);
         this.boundOnPointerUp = this.onPointerUp.bind(this);
         this.boundOnKeyDown = this.onKeyDown.bind(this)
+        this.boundOnKeyUp = this.onKeyUp.bind(this)
         this.boundResize = this.resize.bind(this);
 
         // Bind events
         this.canvasEl.addEventListener('mousedown', this.boundOnPointerDown);
         this.canvasEl.addEventListener('mousemove', this.boundOnPointerMove);
         this.canvasEl.addEventListener('mouseup', this.boundOnPointerUp);
-        this.canvasEl.addEventListener('keydown', this.boundOnKeyDown)
+        window.addEventListener('keydown', this.boundOnKeyDown)
+        window.addEventListener('keyup', this.boundOnKeyUp);
         window.addEventListener('resize', this.boundResize);
     }
 
@@ -58,7 +61,15 @@ class InputManager {
     }
 
     onKeyDown(e: KeyboardEvent) {
+        console.log(e);
+        
+        EventQueue.trigger(KeyDown, e)
+    }
 
+    onKeyUp(e: KeyboardEvent) {
+        console.log(e);
+        
+        EventQueue.trigger(KeyUp, e)
     }
 
     resize(e?: Event): void {
@@ -73,7 +84,8 @@ class InputManager {
         this.canvasEl.removeEventListener('mousedown', this.boundOnPointerDown);
         this.canvasEl.removeEventListener('mousemove', this.boundOnPointerMove);
         this.canvasEl.removeEventListener('mouseup', this.boundOnPointerUp);
-        this.canvasEl.removeEventListener('keydown', this.boundOnKeyDown)
+        window.removeEventListener('keydown', this.boundOnKeyDown)
+        window.removeEventListener('keyup', this.boundOnKeyUp);
         window.removeEventListener('resize', this.boundResize);
     }
 }

@@ -80,7 +80,7 @@ class ShapeModifier {
         canvas.drawRect(rect, strokePaint);
 
         this.handles.forEach(handle => {
-            if (handle.type === 'radius' && this.isHovered) {
+            if (handle.type !== 'size' && this.isHovered) {
                 handle.draw(canvas, canvasKit, paint, strokePaint);
             }
             else if (handle.type === 'size') {

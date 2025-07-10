@@ -1,5 +1,5 @@
 import type { CanvasKit } from "canvaskit-wasm";
-import  EventQueue  from './EventQueue';
+import EventQueue from './EventQueue';
 import InputManager from "./InputManger";
 import SceneManager from "./SceneManager";
 import Renderer from "./Renderer";
@@ -82,7 +82,7 @@ class CanvasManager {
         EventQueue.removeAllEvent()
     }
 
-    render(){
+    render() {
 
     }
 }

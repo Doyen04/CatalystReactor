@@ -3,6 +3,8 @@ enum EventTypes {
     PointerUp = 'pointer:up',
     PointerMove = 'pointer:move',
     PointerDrag = 'pointer:drag',
+    KeyDown = 'key:down',
+    KeyUp = 'key:up',
     CreateShape = 'create:shape',
     DrawShape = 'draw:shape',
     FinalizeShape = 'finish:draw',
@@ -10,6 +12,8 @@ enum EventTypes {
     ShowHovered = 'hovered:shape',
     SelectShape = 'select:shape',
     DragShape = 'drag:shape',
+    EditText = 'insert:text',
+
 }
 
 type Handlers = {
@@ -17,6 +21,8 @@ type Handlers = {
     [EventTypes.PointerUp]: (dragStart: Coords, e: MouseEvent) => void;
     [EventTypes.PointerMove]: (dragStart: Coords, e: MouseEvent) => void;
     [EventTypes.PointerDrag]: (dragStart: Coords, e: MouseEvent) => void;
+    [EventTypes.KeyDown]: (e: KeyboardEvent) => void;
+    [EventTypes.KeyUp]: (e: KeyboardEvent) => void;
     [EventTypes.CreateShape]: (type: ShapeType, x: number, y: number) => void;
     [EventTypes.DrawShape]: (dragStart: Coords, x: number, y: number, shiftKey: boolean) => void;
     [EventTypes.FinalizeShape]: () => void;
@@ -24,6 +30,7 @@ type Handlers = {
     [EventTypes.ShowHovered]: (x: number, y: number) => void;
     [EventTypes.SelectShape]: (x: number, y: number) => void;
     [EventTypes.DragShape]: (dx: number, dy: number) => void;
+    [EventTypes.EditText]: (e: KeyboardEvent) => void;
 };
 
 class EventBus {

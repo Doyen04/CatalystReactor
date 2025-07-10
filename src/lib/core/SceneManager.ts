@@ -3,7 +3,7 @@ import { ShapeModifier } from "@lib/modifiers";
 import { ShapeFactory } from "@lib/shapes";
 import EventQueue, { EventTypes } from './EventQueue'
 
-const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape, DragShape } = EventTypes
+const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape, DragShape, EditText } = EventTypes
 
 
 class SceneManager {
@@ -26,6 +26,7 @@ class SceneManager {
         EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
         EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
         EventQueue.subscribe(DragShape, this.dragSelectedShape.bind(this))
+        EventQueue.subscribe(EditText, this.editText.bind(this))
     }
 
     getScene(): SceneNode {
@@ -96,13 +97,15 @@ class SceneManager {
 
         this.hoveredScene.shape.setHovered(true)
 
-        if (!this.shapeMod.hasShape() || !this.shapeMod) return
+        if (!this.shapeMod || !this.shapeMod.hasShape()) return
 
         if (this.shapeMod.getShape() == this.hoveredScene.getShape()) {
             this.shapeMod.setIsHovered(true)
-        } else if (!this.shapeMod.hasShape() && this.selected == this.hoveredScene) {
+        } else if (this.selected == this.hoveredScene) {
             this.shapeMod.setShape(this.selected.getShape())
             this.shapeMod.setIsHovered(true)
+        } else {
+            this.shapeMod.setIsHovered(false)
         }
 
 
@@ -159,6 +162,9 @@ class SceneManager {
             this.shapeMod.setShape(null)
             console.log('Shape removed: too small');
         }
+    }
+    editText(e: KeyboardEvent) {
+        console.log(e);
     }
 }
 

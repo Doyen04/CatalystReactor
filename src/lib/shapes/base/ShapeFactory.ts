@@ -1,5 +1,5 @@
 import { SceneNode } from "@/lib/core";
-import { Rectangle, Oval, Star, Polygon } from "@/lib/shapes";
+import { Rectangle, Oval, Star, Polygon, PText } from "@/lib/shapes";
 import type { Shape } from "@/lib/shapes";
 
 
@@ -19,6 +19,9 @@ export default class ShapeFactory {
                 break;
             case "star":
                 shape = new Star(options.x, options.y);
+                break;
+            case "text":
+                shape = new PText(options.x, options.y);
                 break;
             default:
                 throw new Error(`Unsupported shape type: ${type}`);

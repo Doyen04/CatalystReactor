@@ -25,6 +25,12 @@ class ShapeTool extends Tool {
     setShape(shape: ShapeType) {
         this.shape = shape
     }
+    override handleKeyDown(e: KeyboardEvent): void {
+        
+    }
+    override handleKeyUp(e: KeyboardEvent): void {
+        
+    }
 }
 
 export default ShapeTool;

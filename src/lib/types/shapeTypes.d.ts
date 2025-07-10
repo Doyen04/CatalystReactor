@@ -1,6 +1,6 @@
 declare type ToolType = 'select' | 'oval' | 'rect' | 'star' | 'text' | 'polygon'
 
-declare type ShapeType = "rect" | "oval" | "polygon" | "star";
+declare type ShapeType = "rect" | "oval" | "polygon" | "star" | "text";
 
 interface ShapeOptions {
     x: number;
