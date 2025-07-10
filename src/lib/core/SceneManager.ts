@@ -1,5 +1,5 @@
 import SceneNode from "./SceneGraph";
-import { DimensionModifier } from "@lib/modifiers";
+import { ShapeModifier } from "@lib/modifiers";
 import { ShapeFactory } from "@lib/shapes";
 import EventQueue, { EventTypes } from './EventQueue'
 
@@ -10,7 +10,7 @@ class SceneManager {
     private scene: SceneNode
     selected: SceneNode | null;
     transientShape: SceneNode | null;
-    dimensionMod: DimensionModifier;
+    shapeMod: ShapeModifier;
     hoveredScene: SceneNode | null;
 
     constructor() {
@@ -18,7 +18,7 @@ class SceneManager {
         this.transientShape = null
         this.selected = null
         this.hoveredScene = null
-        this.dimensionMod = new DimensionModifier()
+        this.shapeMod = new ShapeModifier()
 
         EventQueue.subscribe(CreateShape, this.createShape.bind(this))
         EventQueue.subscribe(DrawShape, this.updateTransientShape.bind(this))
@@ -31,8 +31,8 @@ class SceneManager {
     getScene(): SceneNode {
         return this.scene
     }
-    getDimModifier(): DimensionModifier {
-        return this.dimensionMod
+    getDimModifier(): ShapeModifier {
+        return this.shapeMod
     }
     getTransientShape(): SceneNode {
         return this.transientShape
@@ -52,11 +52,11 @@ class SceneManager {
 
         if (!selected || !selected.getShape()) {
             this.selected = null
-            this.dimensionMod.setShape(null)
+            this.shapeMod.setShape(null)
             return
         } else {
             this.selected = selected
-            this.dimensionMod.setShape(this.selected.getShape())
+            this.shapeMod.setShape(this.selected.getShape())
         }
     }
 
@@ -84,6 +84,7 @@ class SceneManager {
         if (!hoveredScene || !hoveredScene.getShape()) {
             if (this.hoveredScene) this.hoveredScene.shape.setHovered(false)
             this.hoveredScene = null
+            this.shapeMod.setIsHovered(false)
             return
         }
 
@@ -94,6 +95,16 @@ class SceneManager {
         }
 
         this.hoveredScene.shape.setHovered(true)
+
+        if (!this.shapeMod.hasShape() || !this.shapeMod) return
+
+        if (this.shapeMod.getShape() == this.hoveredScene.getShape()) {
+            this.shapeMod.setIsHovered(true)
+        } else if (!this.shapeMod.hasShape() && this.selected == this.hoveredScene) {
+            this.shapeMod.setShape(this.selected.getShape())
+            this.shapeMod.setIsHovered(true)
+        }
+
 
     }
 
@@ -126,7 +137,7 @@ class SceneManager {
         const node = ShapeFactory.createShape(type, { x, y });
         this.addNode(node);
         this.transientShape = node;
-        this.dimensionMod.setShape(node.shape!);
+        this.shapeMod.setShape(node.shape!);
         console.log(this.transientShape);
     }
 
@@ -145,7 +156,7 @@ class SceneManager {
 
         if (width < minSize || height < minSize) {
             this.removeNode(this.transientShape);
-            this.dimensionMod.setShape(null)
+            this.shapeMod.setShape(null)
             console.log('Shape removed: too small');
         }
     }

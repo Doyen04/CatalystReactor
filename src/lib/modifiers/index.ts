@@ -1,3 +1,3 @@
-export { default as DimensionModifier } from './DimensionModifier';
+export { default as ShapeModifier } from './ShapeModifier';
 export { default as Handle } from './Handles';
-export { ModifierPos } from './DimensionModifier';
+export { ModifierPos } from './ShapeModifier';

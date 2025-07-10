@@ -9,20 +9,20 @@ export const ModifierPos = [
     'bottom-right'
 ];
 
-class DimensionModifier {
+class ShapeModifier {
     private shape: Shape | null;
     private strokeColor: string | number[];
     private strokeWidth: number;
     private size: number = 5; // Default radius for the resizers
     private handles: Handle[];
-    private isHover: boolean;
+    private isHovered: boolean;
 
     constructor() {
         this.shape = null;
         this.strokeColor = '#00f';
         this.strokeWidth = 1;
         this.handles = [];
-        this.isHover = false;
+        this.isHovered = false;
     }
     setShape(shape: Shape) {
         this.handles = []
@@ -52,6 +52,12 @@ class DimensionModifier {
     hasShape() {
         return this.shape !== null;
     }
+    getShape(){
+        return this.shape
+    }
+    setIsHovered(bool : boolean){
+        this.isHovered = bool 
+    }
     CanDraw(): boolean {
         if (!this.shape) return false;
         const { left, top, right, bottom } = this.shape.boundingRect;
@@ -74,7 +80,7 @@ class DimensionModifier {
         canvas.drawRect(rect, strokePaint);
 
         this.handles.forEach(handle => {
-            if (handle.type === 'radius' && this.isHover) {
+            if (handle.type === 'radius' && this.isHovered) {
                 handle.draw(canvas, canvasKit, paint, strokePaint);
             }
             else if (handle.type === 'size') {
@@ -87,4 +93,4 @@ class DimensionModifier {
 }
 
 
-export default DimensionModifier;
+export default ShapeModifier;
