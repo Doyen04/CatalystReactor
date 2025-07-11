@@ -29,8 +29,8 @@ class TextCursor {
     setPaint() {
         if (!this.resource) return
 
-        this.resource.paint.setColor(this.resource.canvasKit.BLACK);
-        this.resource.paint.setStyle(this.resource.canvasKit.PaintStyle.Fill);
+        this.resource.strokePaint.setColor(this.resource.canvasKit.BLACK);
+        this.resource.strokePaint.setStrokeWidth(2)
     }
 
     updatePosition(x: number, y: number, height: number): void {
@@ -47,8 +47,9 @@ class TextCursor {
 
     draw(canvas: Canvas): void {
         if (!this.visible || !this.resource) return;
+        this.setPaint()
 
-        canvas.drawLine(this.x, this.y, this.x, this.y + this.height, this.resource.paint);
+        canvas.drawLine(this.x, this.y, this.x, this.y + this.height, this.resource.strokePaint);
     }
 
     destroy(): void {

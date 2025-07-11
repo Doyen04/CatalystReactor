@@ -30,7 +30,7 @@ class PText extends Shape {
         this.builder = null
 
         this.loadInterFont()
-        this.setText(this.text)
+        this.insertText(this.text)
         this.calculateBoundingRect();
     }
 
@@ -193,12 +193,18 @@ class PText extends Shape {
         }
     }
 
-    setText(char: string): void {
+    insertText(char: string): void {
         const textBefore = this.text.slice(0, this.cursorIndex)
         const textAfter = this.text.slice(this.cursorIndex);
         this.text = textBefore + char + textAfter
         this.cursorIndex += char.length;
 
+        this.setUpBuilder()
+        this.calculateCursorPos()
+        this.calculateBoundingRect();
+    }
+
+    setUpBuilder() {
         const [textStyle, paragraphStyle] = this.setStyles();
 
         this.fontMgr = this.resource.fontMgr.FromData(...this.fontData)
@@ -217,29 +223,67 @@ class PText extends Shape {
 
         this.width = (width <= 0) ? 30 : width
         this.height = (height <= 0) ? (this.fontSize * this.lineHeight) : height
-
-
-
-        if (this.cursor) {
-            const cursorPos = this.calculateCursorX();
-            this.cursor.updatePosition(cursorPos[0], this.y, this.fontSize * this.lineHeight);
-        }
-        this.calculateBoundingRect();
     }
 
-    private calculateCursorX(): number[] {
+    deleteText(direction: 'forward' | 'backward'): void {
+        if (direction === 'backward' && this.cursorIndex > 0) {
+            this.text = this.text.slice(0, this.cursorIndex - 1) + this.text.slice(this.cursorIndex);
+            this.cursorIndex--;
+        } else if (direction === 'forward' && this.cursorIndex < this.text.length) {
+            this.text = this.text.slice(0, this.cursorIndex) + this.text.slice(this.cursorIndex + 1);
+        }
+
+        this.setUpBuilder()
+        this.calculateBoundingRect();
+        this.calculateCursorPos()
+    }
+
+    private calculateCursorRect(): number[] {
         if (!this.resource.canvasKit) return [];
 
+        const text = this.text
+        if (text[this.cursorIndex - 1] === "\n") {
+            // Fallback for newline
+            const lineCount = text.slice(0, this.cursorIndex).split("\n").length - 1;
+            const yOffset = lineCount * this.fontSize * this.lineHeight;
+            const caretY = this.y + yOffset;
+            return [this.x, caretY, 2, this.fontSize * this.lineHeight];
+        }
+
         const rects = this.paragraph.getRectsForRange(
+            Math.max(0, this.cursorIndex - 1),
             this.cursorIndex,
-            this.cursorIndex,
-            this.resource.canvasKit.RectHeightStyle.Max,
+            this.resource.canvasKit.RectHeightStyle.IncludeLineSpacingTop,
             this.resource.canvasKit.RectWidthStyle.Tight
         );
-        if (!rects.length) return [];
-        const [x, y, w, h] = rects[0].rect;
+        console.log(rects, this.cursorIndex, this.x);
 
-        return [x, y, w, h];
+        if (!rects.length) return [];
+        let [x, y, w, h] = rects[rects.length - 1].rect;
+        h = (h > this.fontSize * this.lineHeight) ? this.fontSize * this.lineHeight : h
+
+        return [this.x + w, y + this.y, w, h];
+    }
+
+    private calculateCursorPos() {
+        if (this.cursor) {
+            const cursorPos = this.calculateCursorRect();
+            this.cursor.updatePosition(cursorPos[0], cursorPos[1], cursorPos[3]);
+        }
+    }
+
+    moveCursor(direction: 'left' | 'right' | 'up' | 'down'): void {
+        switch (direction) {
+            case 'left':
+                this.cursorIndex = Math.max(0, this.cursorIndex - 1);
+                break;
+            case 'right':
+                this.cursorIndex = Math.min(this.text.length, this.cursorIndex + 1);
+                break;
+            // TODO: Implement up/down for multi-line text
+        }
+
+        this.calculateCursorPos()
     }
 
     getText(): string {

@@ -1,3 +1,5 @@
+import { Shape } from "@lib/shapes";
+
 enum EventTypes {
     PointerDown = 'pointer:down',
     PointerUp = 'pointer:up',
@@ -23,7 +25,7 @@ type Handlers = {
     [EventTypes.PointerDrag]: (dragStart: Coords, e: MouseEvent) => void;
     [EventTypes.KeyDown]: (e: KeyboardEvent) => void;
     [EventTypes.KeyUp]: (e: KeyboardEvent) => void;
-    [EventTypes.CreateShape]: (type: ShapeType, x: number, y: number) => void;
+    [EventTypes.CreateShape]: (type: ShapeType, x: number, y: number) => Shape;
     [EventTypes.DrawShape]: (dragStart: Coords, x: number, y: number, shiftKey: boolean) => void;
     [EventTypes.FinalizeShape]: () => void;
     [EventTypes.CreateSurface]: () => void;
@@ -45,10 +47,14 @@ class EventBus {
         this.handlers.get(event)!.add(handler);
     }
 
-    trigger<T extends EventTypes>(event: T, ...args: Parameters<Handlers[T]>) {
+    trigger<T extends EventTypes>(event: T, ...args: Parameters<Handlers[T]>): ReturnType<Handlers[T]> {
         // console.log(event, 'triggered');
+        let result: ReturnType<Handlers[T]>
 
-        this.handlers.get(event)?.forEach(handler => handler(...args));
+        this.handlers.get(event)?.forEach(handler => {
+            result = handler(...args)
+        });
+        return result
     }
 
     getEventNames() {

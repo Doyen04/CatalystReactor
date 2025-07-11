@@ -1,6 +1,6 @@
 import SceneNode from "./SceneGraph";
 import { ShapeModifier } from "@lib/modifiers";
-import { PText, ShapeFactory } from "@lib/shapes";
+import { PText, Shape, ShapeFactory } from "@lib/shapes";
 import EventQueue, { EventTypes } from './EventQueue'
 
 const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape, DragShape, EditText } = EventTypes
@@ -26,7 +26,6 @@ class SceneManager {
         EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
         EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
         EventQueue.subscribe(DragShape, this.dragSelectedShape.bind(this))
-        EventQueue.subscribe(EditText, this.editText.bind(this))
     }
 
     getScene(): SceneNode {
@@ -134,7 +133,7 @@ class SceneManager {
         this.transientShape.shape.setSize(dragStart, x, y, shiftKey)
     }
 
-    createShape(type: ShapeType, x: number, y: number) {
+    createShape(type: ShapeType, x: number, y: number): Shape {
 
         // Create a new shape based on the type and add it to the scene
         const node = ShapeFactory.createShape(type, { x, y });
@@ -142,6 +141,8 @@ class SceneManager {
         this.transientShape = node;
         this.shapeMod.setShape(node.shape!);
         console.log(this.transientShape);
+
+        return node.shape
     }
 
     cleanUp() {
@@ -161,12 +162,6 @@ class SceneManager {
             this.removeNode(this.transientShape);
             this.shapeMod.setShape(null)
             console.log('Shape removed: too small');
-        }
-    }
-    editText(e: KeyboardEvent) {console.log(888888);
-        const shape = this.shapeMod.getShape()
-        if (shape instanceof PText) {
-            shape.setText(e.key);
         }
     }
 }
