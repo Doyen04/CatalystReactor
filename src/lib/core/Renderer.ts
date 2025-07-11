@@ -16,12 +16,14 @@ class Renderer {
     private isRunning = false;
     private lastTimestamp = 0;
     private fpsInterval = 1000 / 60;
+    private animationId: number;
 
 
     constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager) {
         this.canvasEl = canvasEl;
         this.sceneManager = sceneManager;
         this.surf = null;
+        this.animationId = null
 
         EventQueue.subscribe(CreateSurface, this.setUpRendering.bind(this))
 
@@ -78,23 +80,31 @@ class Renderer {
             this.render(canvas);
         }
         if (this.isRunning) {
-            this.surf?.requestAnimationFrame(this.drawFrame);
+            this.animationId = this.surf?.requestAnimationFrame(this.drawFrame);
         }
     };
 
     public stopLoop() {
         this.isRunning = false;
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId)
+            this.animationId = null
+        }
     }
 
     startLoop(fps: number = 60) {
         this.fpsInterval = 1000 / fps;
         this.lastTimestamp = performance.now();
         this.isRunning = true;
-        this.surf?.requestAnimationFrame(this.drawFrame);
+        this.animationId = this.surf?.requestAnimationFrame(this.drawFrame);
     }
 
     render(skCnvs: Canvas) {
-        if (!this.resource.canvasKit || !this.surf || !skCnvs) return;
+        if (!this.resource.canvasKit || !this.surf || !skCnvs) {
+            console.log('log error with surface');
+
+            return;
+        }
 
         skCnvs.clear(this.resource.canvasKit.TRANSPARENT);
         skCnvs!.save();

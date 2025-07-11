@@ -1,23 +1,36 @@
-import { Shape } from "@/lib/shapes";
-import { Canvas, ParagraphStyle, TextStyle } from "canvaskit-wasm";
+import { Shape, TextCursor } from "@/lib/shapes";
+import { Canvas, FontMgr, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from "canvaskit-wasm";
 
 class PText extends Shape {
     private text: string = "";
     private textColor: string | number[]
     private fontSize: number = 16;
     private fontWeight: number = 500;
-    private width: number;
-    private height: number;
+    private lineHeight: number = 1.2
+    private width: number = 0;
+    private height: number = 0;
     private fontFamily: string[] = ["Inter", "sans-serif"];
     private fontData: ArrayBuffer[] = []; //look for a better way to prevent storing
     private textAlign: any | null = null;
+    private cursor: TextCursor;
+    private cursorIndex: number;
+    private fontMgr: FontMgr;
+    private builder: ParagraphBuilder;
+    private paragraph: Paragraph | null;
 
     constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
-        this.text = text || "Text";
+        this.text = text || "";
         this.textColor = [0, 0, 0, 1];
+        this.cursorIndex = 0
+        this.cursor = new TextCursor(0, 0, 0)
+
+        this.paragraph = null
+        this.fontMgr = null
+        this.builder = null
 
         this.loadInterFont()
+        this.setText(this.text)
         this.calculateBoundingRect();
     }
 
@@ -137,15 +150,17 @@ class PText extends Shape {
     }
 
     calculateBoundingRect(): void {
-        // Approximate text width calculation - could be enhanced with actual paragraph measurement
-        this.width = this.text.length * this.fontSize * 0.6;
-        this.height = this.fontSize * 1.2; // Add some line height
-        this.boundingRect = {
-            top: this.y,
-            left: this.x,
-            right: this.x + this.width,
-            bottom: this.y + this.height
+        if (!this.width || !this.height) {
+            console.log('no width and height');
+
+            return
         }
+        this.boundingRect = {
+            left: this.x,
+            top: this.y,
+            right: this.x + this.width,
+            bottom: this.y + this.height,
+        };
     }
 
     moveShape(mx: number, my: number): void {
@@ -163,37 +178,68 @@ class PText extends Shape {
     }
 
     draw(canvas: Canvas): void {
-        if (!this.resource) return
+        if (!this.resource || !this.paragraph) {
+            console.log('failed to draw');
+            return
+        }
 
         try {
-            const [textStyle, paragraphStyle] = this.setStyles();
+            canvas.drawParagraph(this.paragraph, this.x, this.y);
+            this.cursor.draw(canvas)
 
-            const fontMgr = this.resource.fontMgr.FromData(...this.fontData)
-            const builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, fontMgr);
-
-            builder.pushStyle(textStyle);
-            builder.addText(this.text);
-
-            const paragraph = builder.build();
-
-            this.width = paragraph.getMaxWidth();
-            this.height = paragraph.getHeight();
-
-            paragraph.layout(this.width || 1000);
-
-            canvas.drawParagraph(paragraph, this.x, this.y);
-
-            paragraph.delete();
-            builder.delete();
         } catch (error) {
             console.error('Error drawing PText:', error);
             console.warn('PText: Attempting fallback rendering');
         }
     }
 
-    setText(text: string): void {
-        this.text += text;
+    setText(char: string): void {
+        const textBefore = this.text.slice(0, this.cursorIndex)
+        const textAfter = this.text.slice(this.cursorIndex);
+        this.text = textBefore + char + textAfter
+        this.cursorIndex += char.length;
+
+        const [textStyle, paragraphStyle] = this.setStyles();
+
+        this.fontMgr = this.resource.fontMgr.FromData(...this.fontData)
+        this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.fontMgr);
+
+        this.builder.pushStyle(textStyle);
+        this.builder.addText(this.text);
+
+        this.paragraph = this.builder.build();
+
+        this.paragraph.layout(1000);
+
+        const width = this.paragraph.getLongestLine();
+        const height = this.paragraph.getHeight();
+        console.log(width, height);
+
+        this.width = (width <= 0) ? 30 : width
+        this.height = (height <= 0) ? (this.fontSize * this.lineHeight) : height
+
+
+
+        if (this.cursor) {
+            const cursorPos = this.calculateCursorX();
+            this.cursor.updatePosition(cursorPos[0], this.y, this.fontSize * this.lineHeight);
+        }
         this.calculateBoundingRect();
+    }
+
+    private calculateCursorX(): number[] {
+        if (!this.resource.canvasKit) return [];
+
+        const rects = this.paragraph.getRectsForRange(
+            this.cursorIndex,
+            this.cursorIndex,
+            this.resource.canvasKit.RectHeightStyle.Max,
+            this.resource.canvasKit.RectWidthStyle.Tight
+        );
+        if (!rects.length) return [];
+        const [x, y, w, h] = rects[0].rect;
+
+        return [x, y, w, h];
     }
 
     getText(): string {

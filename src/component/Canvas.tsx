@@ -30,28 +30,31 @@ function Canvas() {
     useEffect(() => {
         console.log('CanvasKit loaded:', canvasKit);
 
-        if (!canvasRef.current || !canvasKit) return;
+        if (!canvasRef.current || !canvasKit || !canvasManagerRef) return;
 
         if (canvasManagerRef.current) {
             canvasManagerRef.current.removeEventListener();
-            canvasResourcesRef.current.dispose()
             canvasManagerRef.current = null;
+        }
+        if (canvasResourcesRef.current) {
             canvasResourcesRef.current = null
+            canvasResourcesRef.current.dispose()
         }
 
-        canvasManagerRef.current = new CanvasManager(canvasRef.current);
         canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
+        canvasManagerRef.current = new CanvasManager(canvasRef.current);
         console.log('Initializing CanvasManager with CanvasKit');
 
         return () => {
             if (canvasManagerRef.current) {
                 canvasManagerRef.current.removeEventListener();
-                canvasResourcesRef.current.dispose()
                 canvasManagerRef.current = null;
+            } if (canvasResourcesRef.current) {
+                canvasResourcesRef.current.dispose()
                 canvasResourcesRef.current = null
             }
         }
-    }, [canvasKit]);
+    }, [canvasKit, canvasManagerRef, canvasResourcesRef]);
 
     useEffect(() => {
         if (!canvasManagerRef.current) return;

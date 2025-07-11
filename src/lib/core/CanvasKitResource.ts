@@ -15,7 +15,10 @@ export class CanvasKitResources {
     private constructor(canvasKit: CanvasKit) {
         this.canvasKit = canvasKit
 
-        if (!this.canvasKit) return
+        if (!this.canvasKit) {
+            console.error('no canvas kit in canvaskitresourse')
+            return
+        }
 
         this.paint = new this.canvasKit.Paint();
         this.paint.setColor(this.canvasKit.Color(60, 0, 0, 255));
@@ -49,6 +52,7 @@ export class CanvasKitResources {
 
     public static initialize(CanvasKit: CanvasKit) {
         if (!this.instance) {
+            console.log('initialising canvaskit resources');
             this.instance = new CanvasKitResources(CanvasKit);
         }
         return this.instance;
@@ -68,6 +72,8 @@ export class CanvasKitResources {
         this.strokePaint.delete()
         this.textStyle = null;
         this.fontMgr = null;
+        CanvasKitResources.instance = null
+        console.log('deleting all canvaskit object');
         // Note: ParagraphStyle may not need explicit delete depending on usage.
     }
 }

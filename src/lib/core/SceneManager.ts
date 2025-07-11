@@ -163,7 +163,7 @@ class SceneManager {
             console.log('Shape removed: too small');
         }
     }
-    editText(e: KeyboardEvent) {
+    editText(e: KeyboardEvent) {console.log(888888);
         const shape = this.shapeMod.getShape()
         if (shape instanceof PText) {
             shape.setText(e.key);
