@@ -1,11 +1,10 @@
-import type { CanvasKit } from "canvaskit-wasm";
 import EventQueue from './EventQueue';
 import InputManager from "./InputManger";
 import SceneManager from "./SceneManager";
 import Renderer from "./Renderer";
 import ToolManager from "./ToolManager";
 
-import type { Matrix } from "@/lib/core";
+import type Matrix  from "./Matrix";
 
 
 class CanvasManager {
@@ -17,11 +16,11 @@ class CanvasManager {
     undoStack: never[];
     redoStack: never[];
 
-    constructor(canvas: HTMLCanvasElement, canvasKit: CanvasKit) {
+    constructor(canvas: HTMLCanvasElement) {
 
         // this.skCnvs = null;
         this.sceneManager = new SceneManager();
-        this.renderer = new Renderer(canvasKit, canvas, this.sceneManager)
+        this.renderer = new Renderer(canvas, this.sceneManager)
         this.inputManager = new InputManager(canvas)
         this.toolManager = new ToolManager()
 

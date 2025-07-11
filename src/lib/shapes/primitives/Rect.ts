@@ -91,14 +91,15 @@ class Rectangle extends Shape {
     }
 
 
-    override draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+    override draw(canvas: Canvas): void {
+        if(!this.resource) return
 
-        this.setPaint(canvasKit, paint, strokePaint);
+        this.setPaint();
 
-        const rect = canvasKit.LTRBRect(this.x, this.y, this.x + this.width, this.y + this.height);
+        const rect = this.resource.canvasKit.LTRBRect(this.x, this.y, this.x + this.width, this.y + this.height);
 
-        canvas.drawRect(rect, paint);
-        canvas.drawRect(rect, strokePaint);
+        canvas.drawRect(rect, this.resource.paint);
+        canvas.drawRect(rect, this.resource.strokePaint);
     }
 
     getHandles(size: number, color: string | number[]): Handle[] {

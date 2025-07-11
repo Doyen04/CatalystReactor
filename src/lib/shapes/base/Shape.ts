@@ -2,6 +2,7 @@
 // 📐 Abstract Base Shape Class
 
 import { Handle, ModifierPos } from "@/lib/modifiers";
+import { CanvasKitResources } from "@lib/core";
 import type { CanvasKit, Paint, Canvas } from "canvaskit-wasm";
 
 
@@ -29,7 +30,10 @@ abstract class Shape {
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
         this.isHover = false;
     }
-
+    get resource(): CanvasKitResources | null {
+        const resources = CanvasKitResources.getInstance();
+        return (resources)? resources : null
+    }
     getHandles(size: number, color: string | number[]): Handle[] {
         const handles: Handle[] = [];
         ModifierPos.forEach(pos => {
@@ -59,22 +63,25 @@ abstract class Shape {
     abstract moveShape(mx: number, my: number): void;
     abstract calculateBoundingRect(): void;
     abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
-    abstract draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void;
+    abstract draw(canvas: Canvas): void;
 
-    setPaint(canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
-        const fill = (Array.isArray(this.fill)) ? this.fill : canvasKit.parseColorString(this.fill)
-        let strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : canvasKit.parseColorString(this.strokeColor)
+    setPaint(): void {
+        if(!this.resource) return
+        const cnvsKit = this.resource
 
-        strokeColor = (this.isHover == false )? strokeColor : canvasKit.Color(0,0,255)
+        const fill = (Array.isArray(this.fill)) ? this.fill : cnvsKit.canvasKit.parseColorString(this.fill)
+        let strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : cnvsKit.canvasKit.parseColorString(this.strokeColor)
 
-        paint.setColor(fill);
-        paint.setStyle(canvasKit.PaintStyle.Fill);
-        paint.setAntiAlias(true);
+        strokeColor = (this.isHover == false )? strokeColor : cnvsKit.canvasKit.Color(0,0,255)
 
-        strokePaint.setColor(strokeColor);
-        strokePaint.setStyle(canvasKit.PaintStyle.Stroke);
-        strokePaint.setStrokeWidth(this.strokeWidth);
-        strokePaint.setAntiAlias(true);
+        cnvsKit.paint.setColor(fill);
+        cnvsKit.paint.setStyle(cnvsKit.canvasKit.PaintStyle.Fill);
+        cnvsKit.paint.setAntiAlias(true);
+
+        cnvsKit.strokePaint.setColor(strokeColor);
+        cnvsKit.strokePaint.setStyle(cnvsKit.canvasKit.PaintStyle.Stroke);
+        cnvsKit.strokePaint.setStrokeWidth(this.strokeWidth);
+        cnvsKit.strokePaint.setAntiAlias(true);
     }
 
     setStrokeColor(color: string | number[]): void {

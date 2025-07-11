@@ -1,6 +1,7 @@
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 import type { Shape } from "@/lib/shapes";
 import { Handle } from "@/lib/modifiers";
+import { CanvasKitResources } from "@lib/core";
 
 export const ModifierPos = [
     'top-left',
@@ -27,9 +28,13 @@ class ShapeModifier {
     setShape(shape: Shape) {
         this.handles = []
         this.shape = shape;
-        
+
         if (!this.shape) return
         this.handles = this.shape.getHandles(this.size, this.strokeColor);
+    }
+    get resource(): CanvasKitResources | null {
+        const resources = CanvasKitResources.getInstance();
+        return (resources) ? resources : null
     }
     updateResizerPositions() {
         if (!this.shape) return;
@@ -40,23 +45,24 @@ class ShapeModifier {
         }
 
     }
-    setPaint(canvasKit: CanvasKit, strokePaint: Paint): void {
+    setPaint(): void {
+        if(!this.resource) return
 
-        const strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : canvasKit.parseColorString(this.strokeColor)
+        const strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : this.resource.canvasKit.parseColorString(this.strokeColor)
 
-        strokePaint.setColor(strokeColor);
-        strokePaint.setStyle(canvasKit.PaintStyle.Stroke);
-        strokePaint.setStrokeWidth(this.strokeWidth);
-        strokePaint.setAntiAlias(true);
+        this.resource.strokePaint.setColor(strokeColor);
+        this.resource.strokePaint.setStyle(this.resource.canvasKit.PaintStyle.Stroke);
+        this.resource.strokePaint.setStrokeWidth(this.strokeWidth);
+        this.resource.strokePaint.setAntiAlias(true);
     }
     hasShape() {
         return this.shape !== null;
     }
-    getShape(){
+    getShape() {
         return this.shape
     }
-    setIsHovered(bool : boolean){
-        this.isHovered = bool 
+    setIsHovered(bool: boolean) {
+        this.isHovered = bool
     }
     CanDraw(): boolean {
         if (!this.shape) return false;
@@ -67,24 +73,24 @@ class ShapeModifier {
 
         return (width < minSize || height < minSize)
     }
-    draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+    draw(canvas: Canvas): void {
 
-        if (!this.shape || this.CanDraw()) return;
+        if (!this.shape || this.CanDraw() || !this.resource) return;
 
         this.updateResizerPositions()// bad practice
-        this.setPaint(canvasKit, strokePaint);
+        this.setPaint();
         const dimen = this.shape.boundingRect;
 
-        const rect = canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);
+        const rect = this.resource.canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);
 
-        canvas.drawRect(rect, strokePaint);
+        canvas.drawRect(rect, this.resource.strokePaint);
 
         this.handles.forEach(handle => {
             if (handle.type !== 'size' && this.isHovered) {
-                handle.draw(canvas, canvasKit, paint, strokePaint);
+                handle.draw(canvas, this.resource.canvasKit, this.resource.paint, this.resource.strokePaint);
             }
             else if (handle.type === 'size') {
-                handle.draw(canvas, canvasKit, paint, strokePaint);
+                handle.draw(canvas, this.resource.canvasKit, this.resource.paint, this.resource.strokePaint);
             }
         });
     }

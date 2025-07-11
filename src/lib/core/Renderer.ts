@@ -2,17 +2,14 @@ import { Canvas, CanvasKit, Paint, Surface } from "canvaskit-wasm";
 import EventQueue, { EventTypes, } from './EventQueue'
 import SceneManager from "./SceneManager";
 import type SceneNode from "./SceneGraph";
+import CanvasKitResources from "./CanvasKitResource";
 
 const { CreateSurface } = EventTypes
 
 class Renderer {
     sceneManager: SceneManager
-    canvasKit: CanvasKit;
     surf: Surface | null;
     canvasEl: HTMLCanvasElement
-
-    paint: Paint;
-    strokePaint: Paint;
 
     dpr: number = window.devicePixelRatio || 1;;
 
@@ -21,34 +18,24 @@ class Renderer {
     private fpsInterval = 1000 / 60;
 
 
-    constructor(canvasKit: CanvasKit, canvasEl: HTMLCanvasElement, sceneManager: SceneManager) {
-        this.canvasKit = canvasKit;
+    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager) {
         this.canvasEl = canvasEl;
         this.sceneManager = sceneManager;
         this.surf = null;
-
-        this.setUpPaint()
 
         EventQueue.subscribe(CreateSurface, this.setUpRendering.bind(this))
 
         this.setUpRendering()
     }
 
-    setUpPaint() {
-        this.paint = new this.canvasKit.Paint();
-        this.paint.setColor(this.canvasKit.Color(60, 0, 0, 255));
-        this.paint.setStyle(this.canvasKit.PaintStyle.Fill);
-        this.paint.setAntiAlias(true);
-
-        this.strokePaint = new this.canvasKit.Paint();
-        this.strokePaint.setColor(this.canvasKit.Color(0, 255, 0, 255));
-        this.strokePaint.setStyle(this.canvasKit.PaintStyle.Stroke);
-        this.strokePaint.setStrokeWidth(2);
-        this.strokePaint.setAntiAlias(true);
+    get resource(): CanvasKitResources {
+        const resources = CanvasKitResources.getInstance();
+        return (resources) ? resources : null
     }
 
-    setUpRendering() {console.log('setuprendering');
-    
+    setUpRendering() {
+        console.log('setuprendering');
+
         this.stopLoop()
 
         setTimeout(() => {
@@ -58,20 +45,22 @@ class Renderer {
     }
 
     makeSurface() {
+        if (!this.resource) return
+
         const { width, height } = getComputedStyle(this.canvasEl);
         console.log(width, height);
 
         this.canvasEl.width = parseInt(width) * this.dpr;
         this.canvasEl.height = parseInt(height) * this.dpr; // set canvas height
 
-        if (!this.canvasKit) throw new Error("CanvasKit not initialized");
+        if (!this.resource.canvasKit) throw new Error("CanvasKit not initialized");
 
         if (this.surf) {
             this.surf.delete();
             this.surf = null;
         }
 
-        this.surf = this.canvasKit.MakeWebGLCanvasSurface(this.canvasEl);
+        this.surf = this.resource.canvasKit.MakeWebGLCanvasSurface(this.canvasEl);
         console.log(this.surf);
 
         if (!this.surf) throw new Error("Could not create CanvasKit surface");
@@ -105,9 +94,9 @@ class Renderer {
     }
 
     render(skCnvs: Canvas) {
-        if (!this.canvasKit || !this.surf || !skCnvs) return;
+        if (!this.resource.canvasKit || !this.surf || !skCnvs) return;
 
-        skCnvs.clear(this.canvasKit.TRANSPARENT);
+        skCnvs.clear(this.resource.canvasKit.TRANSPARENT);
         skCnvs!.save();
         skCnvs.scale(this.dpr, this.dpr);
 
@@ -116,18 +105,18 @@ class Renderer {
         const transientShape = this.sceneManager.getTransientShape()
         scene.updateWorldMatrix();
 
-        const rect = this.canvasKit.LTRBRect(10, 10, 250, 100);
-        skCnvs!.drawRect(rect, this.paint!);
-        skCnvs!.drawRect(rect, this.strokePaint!);
+        const rect = this.resource.canvasKit.LTRBRect(10, 10, 250, 100);
+        skCnvs!.drawRect(rect, this.resource.paint!);
+        skCnvs!.drawRect(rect, this.resource.strokePaint!);
 
         this.renderNode(skCnvs, scene);
 
         if (transientShape) {
-            transientShape.shape.draw(skCnvs, this.canvasKit, this.paint!, this.strokePaint!)
+            transientShape.shape.draw(skCnvs)
         }
 
         if (shapeModifier.hasShape()) {
-            shapeModifier.draw(skCnvs, this.canvasKit, this.paint!, this.strokePaint!);
+            shapeModifier.draw(skCnvs);
         }
 
         skCnvs!.restore();
@@ -137,7 +126,7 @@ class Renderer {
     renderNode(skCnvs: Canvas, node: SceneNode) {
         // Draw the shape if it exists
         if (node.shape && typeof node.shape.draw === 'function') {
-            node.shape.draw(skCnvs!, this.canvasKit!, this.paint!, this.strokePaint!);
+            node.shape.draw(skCnvs!);
         }
 
         // Render children
@@ -145,7 +134,7 @@ class Renderer {
             this.renderNode(skCnvs, child);
         }
     }
-    
+
     destroy() {
         this.stopLoop()
 
@@ -154,9 +143,6 @@ class Renderer {
             this.surf.delete();
             this.surf = null;
         }
-        // Clean up paints
-        this.paint?.delete();
-        this.strokePaint?.delete();
     }
 }
 

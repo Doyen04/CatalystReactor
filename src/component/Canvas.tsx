@@ -6,12 +6,13 @@ import CanvasKitInit from "canvaskit-wasm";
 import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url';
 import type { CanvasKit } from 'canvaskit-wasm';
 
-import { CanvasManager } from "@/lib/core";
+import { CanvasKitResources, CanvasManager } from "@/lib/core";
 import { useToolStore } from "@hooks/useTool";
 
 function Canvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const canvasManagerRef = useRef<CanvasManager>(null)
+    const canvasResourcesRef = useRef<CanvasKitResources>(null)
     const [canvasKit, setCanvasKit] = useState<CanvasKit | null>(null)
     const { tool } = useToolStore()
 
@@ -33,16 +34,21 @@ function Canvas() {
 
         if (canvasManagerRef.current) {
             canvasManagerRef.current.removeEventListener();
+            canvasResourcesRef.current.dispose()
             canvasManagerRef.current = null;
+            canvasResourcesRef.current = null
         }
 
-        canvasManagerRef.current = new CanvasManager(canvasRef.current, canvasKit);
+        canvasManagerRef.current = new CanvasManager(canvasRef.current);
+        canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
         console.log('Initializing CanvasManager with CanvasKit');
 
         return () => {
             if (canvasManagerRef.current) {
                 canvasManagerRef.current.removeEventListener();
+                canvasResourcesRef.current.dispose()
                 canvasManagerRef.current = null;
+                canvasResourcesRef.current = null
             }
         }
     }, [canvasKit]);

@@ -44,9 +44,11 @@ class Star extends Shape {
         return points;
     }
 
-    override draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
-        this.setPaint(canvasKit, paint, strokePaint);
-        const path = new canvasKit.Path();
+    override draw(canvas: Canvas): void {
+        if(!this.resource) return
+
+        this.setPaint();
+        const path = new this.resource.canvasKit.Path();
 
         path.moveTo(this.points[0][0], this.points[0][1]);
 
@@ -55,8 +57,8 @@ class Star extends Shape {
         }
         path.close();
 
-        canvas.drawPath(path, paint);
-        canvas.drawPath(path, strokePaint);
+        canvas.drawPath(path, this.resource.paint);
+        canvas.drawPath(path, this.resource.strokePaint);
 
         path.delete(); // Clean up path object
     }

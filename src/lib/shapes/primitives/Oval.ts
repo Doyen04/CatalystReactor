@@ -1,7 +1,6 @@
 import { Handle } from "@/lib/modifiers";
 import { Shape } from "@/lib/shapes"
-import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
-
+import type { Canvas } from "canvaskit-wasm";
 
 class Oval extends Shape {
     radiusX: number;
@@ -83,14 +82,15 @@ class Oval extends Shape {
         this.calculateBoundingRect();
     }
 
-    override draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+    override draw(canvas: Canvas): void {
+        if (!this.resource) return
 
-        this.setPaint(canvasKit, paint, strokePaint);
+        this.setPaint();
 
-        const rect = canvasKit.LTRBRect(this.boundingRect.left, this.boundingRect.top, this.boundingRect.right, this.boundingRect.bottom);
+        const rect = this.resource.canvasKit.LTRBRect(this.boundingRect.left, this.boundingRect.top, this.boundingRect.right, this.boundingRect.bottom);
 
-        canvas.drawOval(rect, paint);
-        canvas.drawOval(rect, strokePaint);
+        canvas.drawOval(rect, this.resource.paint);
+        canvas.drawOval(rect, this.resource.strokePaint);
     }
 
     override getHandles(size: number, color: string | number[]): Handle[] {

@@ -1,5 +1,5 @@
 import { Shape } from "@/lib/shapes";
-import { Canvas, CanvasKit, Paint, ParagraphStyle, TextStyle } from "canvaskit-wasm";
+import { Canvas, ParagraphStyle, TextStyle } from "canvaskit-wasm";
 
 class PText extends Shape {
     private text: string = "";
@@ -10,9 +10,6 @@ class PText extends Shape {
     private height: number;
     private fontFamily: string[] = ["Inter", "sans-serif"];
     private fontData: ArrayBuffer[] = []; //look for a better way to prevent storing
-    private canvasKit: CanvasKit | null = null;
-    private textStyle: TextStyle | null = null;
-    private paragraphStyle: ParagraphStyle | null = null;
     private textAlign: any | null = null;
 
     constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
@@ -24,29 +21,30 @@ class PText extends Shape {
         this.calculateBoundingRect();
     }
 
-    private initializeStyles(canvasKit: CanvasKit): void {
-        this.canvasKit = canvasKit
-        if (!this.canvasKit) return;
+    private setStyles(): [TextStyle, ParagraphStyle] {
+        const canvasKit = this.resource.canvasKit
+
+        if (!canvasKit) return;
+
         const textColor = (Array.isArray(this.textColor)) ? this.textColor
-            : this.canvasKit.parseColorString(this.textColor);
-        this.textAlign = this.canvasKit.TextAlign.Left;
+            : canvasKit.parseColorString(this.textColor);
+
+        this.textAlign = canvasKit.TextAlign.Left;
 
         // Create text style
-        this.textStyle = new this.canvasKit.TextStyle({
-            color: textColor, // Black text
-            fontSize: this.fontSize,
-            fontFamilies: this.fontFamily,
-            fontVariations: [
-                { axis: 'wght', value: this.fontWeight },
-                { axis: 'opsz', value: this.fontSize }
-            ]
-        });
+        this.resource.textStyle.color = textColor // Black text
+        this.resource.textStyle.fontSize = this.fontSize
+        this.resource.textStyle.fontFamilies = this.fontFamily
+        this.resource.textStyle.fontVariations = [
+            { axis: 'wght', value: this.fontWeight },
+            { axis: 'opsz', value: this.fontSize }
+        ]
 
         // Create paragraph style
-        this.paragraphStyle = new this.canvasKit.ParagraphStyle({
-            textStyle: this.textStyle,
-            textAlign: this.textAlign,
-        });
+        this.resource.paragraphStyle.textStyle = this.resource.textStyle
+        this.resource.paragraphStyle.textAlign = this.textAlign
+
+        return [this.resource.textStyle, this.resource.paragraphStyle]
     }
 
     async loadInterFont() {
@@ -74,13 +72,13 @@ class PText extends Shape {
     }
 
     private extractFontNames(): string[] {
-        if (!this.canvasKit || !this.fontData.length) return [];
+        if (!this.resource.canvasKit || !this.fontData.length) return [];
 
         const fontNames: string[] = [];
 
         try {
             // Create a temporary FontMgr to parse font data
-            const fontMgr = this.canvasKit.FontMgr.FromData(...this.fontData);
+            const fontMgr = this.resource.fontMgr.FromData(...this.fontData);
 
             // Get the number of font families
             const familyCount = fontMgr.countFamilies();
@@ -101,13 +99,13 @@ class PText extends Shape {
     }
 
     private updateTextStyle({ textColor, fontSize, fontFamily }: { textColor: string | number[], fontSize: number, fontFamily: string[] }): void {
-        if (!this.canvasKit || !this.textStyle) return;
+        if (!this.resource) return;
         const color = (Array.isArray(textColor)) ? textColor
-            : this.canvasKit.parseColorString(textColor);
+            : this.resource.canvasKit.parseColorString(textColor);
 
-        this.textStyle.color = color
-        this.textStyle.fontSize = fontSize;
-        this.textStyle.fontFamilies = fontFamily
+        this.resource.textStyle.color = color
+        this.resource.textStyle.fontSize = fontSize;
+        this.resource.textStyle.fontFamilies = fontFamily
 
     }
 
@@ -116,15 +114,16 @@ class PText extends Shape {
     }
 
     private updateParagraphStyle({ textStyle, textAlign }: { textStyle: TextStyle, textAlign: any }): void {
-        if (!this.canvasKit || !this.paragraphStyle) return;
+        if (!this.resource) return;
 
-        this.paragraphStyle.textStyle = textStyle
-        this.paragraphStyle.textAlign = textAlign;
+        this.resource.paragraphStyle.textStyle = textStyle
+        this.resource.paragraphStyle.textAlign = textAlign;
 
     }
 
     getParagraphStyle(): { textStyle: TextStyle, textAlign: any } {
-        return { textStyle: this.textStyle, textAlign: this.textAlign }
+        const [textStyle, paragraphStyle] = this.setStyles()
+        return { textStyle: textStyle, textAlign: this.textAlign }
     }
 
     updateStyles() {
@@ -163,15 +162,16 @@ class PText extends Shape {
         this.calculateBoundingRect();
     }
 
-    draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
-        try {
-            if (!this.textStyle || !this.paragraphStyle) {
-                this.initializeStyles(canvasKit);
-            }
-            const fontMgr = canvasKit.FontMgr.FromData(...this.fontData)
-            const builder = canvasKit.ParagraphBuilder.Make(this.paragraphStyle, fontMgr);
+    draw(canvas: Canvas): void {
+        if (!this.resource) return
 
-            builder.pushStyle(this.textStyle);
+        try {
+            const [textStyle, paragraphStyle] = this.setStyles();
+
+            const fontMgr = this.resource.fontMgr.FromData(...this.fontData)
+            const builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, fontMgr);
+
+            builder.pushStyle(textStyle);
             builder.addText(this.text);
 
             const paragraph = builder.build();
@@ -215,12 +215,7 @@ class PText extends Shape {
     }
 
     destroy(): void {
-        if (this.textStyle) {
-            this.textStyle = null;
-        }
-        if (this.paragraphStyle) {
-            this.paragraphStyle = null;
-        }
+
     }
 }
 

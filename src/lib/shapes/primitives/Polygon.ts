@@ -89,10 +89,12 @@ class Polygon extends Shape {
     }
 
 
-    override draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint): void {
+    override draw(canvas: Canvas): void {
+        if(!this.resource) return
+        
+        this.setPaint();
 
-        this.setPaint(canvasKit, paint, strokePaint);
-        const path = new canvasKit.Path();
+        const path = new this.resource.canvasKit.Path();
         const [startX, startY] = this.point[0];
         path.moveTo(startX, startY);
 
@@ -103,8 +105,8 @@ class Polygon extends Shape {
 
         path.close();
 
-        canvas.drawPath(path, paint);
-        canvas.drawPath(path, strokePaint);
+        canvas.drawPath(path, this.resource.paint);
+        canvas.drawPath(path, this.resource.strokePaint);
 
         path.delete();
     }
