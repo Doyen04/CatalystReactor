@@ -29,9 +29,10 @@ class PText extends Shape {
         this.fontMgr = null
         this.builder = null
 
-        this.loadInterFont()
-        this.insertText(this.text)
-        this.calculateBoundingRect();
+        this.loadInterFont().then(() => {
+            this.insertText(this.text)
+            this.calculateBoundingRect();
+        })
     }
 
     private setStyles(): [TextStyle, ParagraphStyle] {
@@ -208,6 +209,8 @@ class PText extends Shape {
         const [textStyle, paragraphStyle] = this.setStyles();
 
         this.fontMgr = this.resource.fontMgr.FromData(...this.fontData)
+        console.log(this.fontMgr, this.fontData);
+
         this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.fontMgr);
 
         this.builder.pushStyle(textStyle);
@@ -219,10 +222,12 @@ class PText extends Shape {
 
         const width = this.paragraph.getLongestLine();
         const height = this.paragraph.getHeight();
-        console.log(width, height);
 
-        this.width = (width <= 0) ? 30 : width
+        this.width = (width <= 0) ? 20 : width
         this.height = (height <= 0) ? (this.fontSize * this.lineHeight) : height
+
+        this.fontMgr.delete()
+        this.builder.delete()
     }
 
     deleteText(direction: 'forward' | 'backward'): void {
