@@ -32,12 +32,12 @@ abstract class Shape {
     }
     get resource(): CanvasKitResources | null {
         const resources = CanvasKitResources.getInstance();
-        return (resources)? resources : null
+        return (resources) ? resources : null
     }
-    getHandles(size: number, color: string | number[]): Handle[] {
+    getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles: Handle[] = [];
         ModifierPos.forEach(pos => {
-            handles.push(new Handle(0, 0, size, pos, 'size', color));
+            handles.push(new Handle(0, 0, size, pos, 'size', fill, strokeColor));
         });
         return handles;
     }
@@ -66,22 +66,18 @@ abstract class Shape {
     abstract draw(canvas: Canvas): void;
 
     setPaint(): void {
-        if(!this.resource) return
+        if (!this.resource) return
         const cnvsKit = this.resource
 
         const fill = (Array.isArray(this.fill)) ? this.fill : cnvsKit.canvasKit.parseColorString(this.fill)
         let strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : cnvsKit.canvasKit.parseColorString(this.strokeColor)
 
-        strokeColor = (this.isHover == false )? strokeColor : cnvsKit.canvasKit.Color(0,0,255)
+        strokeColor = (this.isHover == false) ? strokeColor : cnvsKit.canvasKit.Color(0, 0, 255)
 
         cnvsKit.paint.setColor(fill);
-        cnvsKit.paint.setStyle(cnvsKit.canvasKit.PaintStyle.Fill);
-        cnvsKit.paint.setAntiAlias(true);
 
         cnvsKit.strokePaint.setColor(strokeColor);
-        cnvsKit.strokePaint.setStyle(cnvsKit.canvasKit.PaintStyle.Stroke);
         cnvsKit.strokePaint.setStrokeWidth(this.strokeWidth);
-        cnvsKit.strokePaint.setAntiAlias(true);
     }
 
     setStrokeColor(color: string | number[]): void {
@@ -94,7 +90,7 @@ abstract class Shape {
         this.fill = color;
     }
 
-    setHovered(hvr: boolean){
+    setHovered(hvr: boolean) {
         this.isHover = hvr
     }
     abstract destroy(): void;

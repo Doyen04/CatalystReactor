@@ -10,7 +10,7 @@ export default class Handle {
     shape: Oval | Rectangle;
     pos: string;
 
-    constructor(x: number, y: number, size: number, pos: string, type: HandleType, color: string | number[]) {
+    constructor(x: number, y: number, size: number, pos: string, type: HandleType, fill: string | number[],stroke: string | number[]) {
         this.x = x;
         this.y = y;
         this.pos = pos
@@ -21,12 +21,13 @@ export default class Handle {
         if (type === "radius") {
             this.shape = new Oval(x, y);
             this.shape.setRadius(size, size);
-            this.shape.setStrokeColor(color)
+            this.shape.setStrokeColor(stroke)
+            this.shape.setFill(fill)
         } else {
             this.shape = new Rectangle(x, y);
             this.shape.setDim(size, size);
-            this.shape.setFill(color);
-            this.shape.setStrokeColor(color);
+            this.shape.setFill(fill);
+            this.shape.setStrokeColor(stroke);
         }
     }
 
@@ -39,7 +40,7 @@ export default class Handle {
         this.shape.calculateBoundingRect();
     }
 
-    draw(canvas: Canvas, canvasKit: CanvasKit, paint: Paint, strokePaint: Paint) {
-        this.shape.draw(canvas, canvasKit, paint, strokePaint);
+    draw(canvas: Canvas) {
+        this.shape.draw(canvas);
     }
 }

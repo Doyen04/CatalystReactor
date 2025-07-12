@@ -93,8 +93,8 @@ class Oval extends Shape {
         canvas.drawOval(rect, this.resource.strokePaint);
     }
 
-    override getHandles(size: number, color: string | number[]): Handle[] {
-        const handles = super.getHandles(size, color);
+    override getHandles(size: number, fill: string | number[],  strokeColor: string | number[]): Handle[] {
+        const handles = super.getHandles(size, fill, strokeColor);
         return handles;
     }
 

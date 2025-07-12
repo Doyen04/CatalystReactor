@@ -102,10 +102,10 @@ class Rectangle extends Shape {
         canvas.drawRect(rect, this.resource.strokePaint);
     }
 
-    getHandles(size: number, color: string | number[]): Handle[] {
-        const handles = super.getHandles(size, color);
+    getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
+        const handles = super.getHandles(size, fill, strokeColor);
         ModifierPos.forEach(pos => {
-            handles.push(new Handle(0, 0, size, pos, 'radius', color))
+            handles.push(new Handle(0, 0, size, pos, 'radius', fill, strokeColor))
         })
         return handles;
     }

@@ -14,6 +14,7 @@ class ShapeModifier {
     private shape: Shape | null;
     private strokeColor: string | number[];
     private strokeWidth: number;
+    private fill: string = '#fff'
     private size: number = 5; // Default radius for the resizers
     private handles: Handle[];
     private isHovered: boolean;
@@ -30,7 +31,7 @@ class ShapeModifier {
         this.shape = shape;
 
         if (!this.shape) return
-        this.handles = this.shape.getHandles(this.size, this.strokeColor);
+        this.handles = this.shape.getHandles(this.size, this.fill,this.strokeColor);
     }
     get resource(): CanvasKitResources | null {
         const resources = CanvasKitResources.getInstance();
@@ -46,14 +47,16 @@ class ShapeModifier {
 
     }
     setPaint(): void {
-        if(!this.resource) return
+        if (!this.resource) return
+
+        const fillColor = (Array.isArray(this.fill)) ? this.fill : this.resource.canvasKit.parseColorString(this.fill)
 
         const strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : this.resource.canvasKit.parseColorString(this.strokeColor)
 
         this.resource.strokePaint.setColor(strokeColor);
-        this.resource.strokePaint.setStyle(this.resource.canvasKit.PaintStyle.Stroke);
         this.resource.strokePaint.setStrokeWidth(this.strokeWidth);
-        this.resource.strokePaint.setAntiAlias(true);
+
+        this.resource.paint.setColor(fillColor);
     }
     hasShape() {
         return this.shape !== null;
@@ -87,10 +90,10 @@ class ShapeModifier {
 
         this.handles.forEach(handle => {
             if (handle.type !== 'size' && this.isHovered) {
-                handle.draw(canvas, this.resource.canvasKit, this.resource.paint, this.resource.strokePaint);
+                handle.draw(canvas);
             }
             else if (handle.type === 'size') {
-                handle.draw(canvas, this.resource.canvasKit, this.resource.paint, this.resource.strokePaint);
+                handle.draw(canvas);
             }
         });
     }
