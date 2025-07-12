@@ -10,7 +10,7 @@ class TextTool extends Tool {
 
     override handlePointerDown(dragStart: Coords, e: MouseEvent) {
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
-        if(this.shape && this.shape instanceof PText){
+        if (this.shape && this.shape instanceof PText) {
             this.shape.destroy()
         }
         this.shape = EventQueue.trigger(CreateShape, 'text', e.offsetX, e.offsetY)
@@ -28,16 +28,16 @@ class TextTool extends Tool {
         if (this.shape instanceof PText) {
             switch (e.key) {
                 case 'ArrowLeft':
-                    this.shape.moveCursor('left');
+                    this.shape.moveCursor('left', e.shiftKey);
                     break;
                 case 'ArrowRight':
-                    this.shape.moveCursor('right');
+                    this.shape.moveCursor('right', e.shiftKey);
                     break;
                 case 'ArrowUp':
-                    this.shape.moveCursor('up');
+                    this.shape.moveCursor('up', e.shiftKey);
                     break;
                 case 'ArrowDown':
-                    this.shape.moveCursor('down');
+                    this.shape.moveCursor('down', e.shiftKey);
                     break;
                 case 'Backspace':
                     this.shape.deleteText('backward');
@@ -46,18 +46,33 @@ class TextTool extends Tool {
                     this.shape.deleteText('forward');
                     break;
                 case 'Enter':
-                    this.shape.insertText('\n');
+                    this.shape.insertText('\n', e.shiftKey);
                     break;
                 default:
                     // Insert regular characters
-                    if (e.key.length === 1) {
-                        this.shape.insertText(e.key);
+                    if (e.ctrlKey) {
+                        this.handleControlKey(e.key)
+                    }
+                    else if (e.key.length === 1) {
+                        this.shape.insertText(e.key, e.shiftKey);
                     }
             }
         }
     }
+    handleControlKey(e: string) {
+        if (this.shape instanceof PText) {
+            switch (e.toLowerCase()) {
+                case 'c':
+                    this.shape.copyText();
+                    break;
+                case 'v':
+                    this.shape.pasteText();
+                    break;
+            }
+        }
+    }
     override handleKeyUp(e: KeyboardEvent): void {
-        
+
     }
 
 }

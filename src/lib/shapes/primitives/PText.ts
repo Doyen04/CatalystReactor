@@ -1,61 +1,84 @@
 import { Shape, TextCursor } from "@/lib/shapes";
-import { Canvas, FontMgr, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from "canvaskit-wasm";
+import { Canvas, Color, FontMgr, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from "canvaskit-wasm";
+
+interface TextStyleProp {
+    textColor: string | number[];
+    fontSize: number;
+    fontWeight: number;
+    fontFamily: string[];
+    lineHeight: number;
+    textAlign: any | null;
+    textSpacing?: number;
+    backgroundColor?: Color | null;
+}
 
 class PText extends Shape {
     private text: string = "";
-    private textColor: string | number[]
-    private fontSize: number = 16;
-    private fontWeight: number = 500;
-    private lineHeight: number = 1.2
+    private textStyle: TextStyleProp;
     private width: number = 0;
     private height: number = 0;
-    private fontFamily: string[] = ["Inter", "sans-serif"];
     private fontData: ArrayBuffer[] = []; //look for a better way to prevent storing
-    private textAlign: any | null = null;
     private cursor: TextCursor;
     private fontMgr: FontMgr;
     private builder: ParagraphBuilder;
     private paragraph: Paragraph | null;
+    private selectionStart: number = 0;
+    private selectionEnd: number = 0;
 
     constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
         this.text = text || "";
-        this.textColor = [0, 0, 0, 1];
+
         this.cursor = new TextCursor(x, y, 0)
-        
+
         this.paragraph = null
         this.fontMgr = null
         this.builder = null
-
+        this.setTextStyle()
         this.loadInterFont().then(() => {
             this.setUpBuilder()
-            this.insertText(this.text)
+            this.insertText(this.text, false)
             this.calculateBoundingRect();
         })
     }
+    private setTextStyle() {
+        if (!this.resource) {
+            console.log('no canvas kit resources');
 
-    private setStyles(): [TextStyle, ParagraphStyle] {
+        }
+        this.textStyle = {
+            textColor: [0, 0, 0, 1],
+            textAlign: this.resource.canvasKit.TextAlign.Left,
+            fontSize: 16,
+            fontWeight: 500,
+            fontFamily: ["Inter", "sans-serif"],
+            lineHeight: 1.2,
+            backgroundColor: this.resource.canvasKit.TRANSPARENT
+        }
+    }
+
+    private setStyles(textStyle: TextStyleProp): [TextStyle, ParagraphStyle] {
         const canvasKit = this.resource.canvasKit
 
         if (!canvasKit) return;
 
-        const textColor = (Array.isArray(this.textColor)) ? this.textColor
-            : canvasKit.parseColorString(this.textColor);
+        const textColor = (Array.isArray(textStyle.textColor)) ? textStyle.textColor
+            : canvasKit.parseColorString(textStyle.textColor);
 
-        this.textAlign = canvasKit.TextAlign.Left;
-
+        this.textStyle.textAlign = canvasKit.TextAlign.Left;
         // Create text style
         this.resource.textStyle.color = textColor // Black text
-        this.resource.textStyle.fontSize = this.fontSize
-        this.resource.textStyle.fontFamilies = this.fontFamily
+        this.resource.textStyle.fontSize = textStyle.fontSize
+        this.resource.textStyle.fontFamilies = textStyle.fontFamily
+        this.resource.textStyle.backgroundColor = textStyle.backgroundColor
         this.resource.textStyle.fontVariations = [
-            { axis: 'wght', value: this.fontWeight },
-            { axis: 'opsz', value: this.fontSize }
+            { axis: 'wght', value: textStyle.fontWeight },
+            { axis: 'opsz', value: textStyle.fontSize }
         ]
 
         // Create paragraph style
         this.resource.paragraphStyle.textStyle = this.resource.textStyle
-        this.resource.paragraphStyle.textAlign = this.textAlign
+        this.resource.paragraphStyle.textAlign = canvasKit.TextAlign.Left
 
         return [this.resource.textStyle, this.resource.paragraphStyle]
     }
@@ -111,37 +134,12 @@ class PText extends Shape {
         return fontNames;
     }
 
-    private updateTextStyle({ textColor, fontSize, fontFamily }: { textColor: string | number[], fontSize: number, fontFamily: string[] }): void {
-        if (!this.resource) return;
-        const color = (Array.isArray(textColor)) ? textColor
-            : this.resource.canvasKit.parseColorString(textColor);
-
-        this.resource.textStyle.color = color
-        this.resource.textStyle.fontSize = fontSize;
-        this.resource.textStyle.fontFamilies = fontFamily
-
-    }
-
-    getTextStyle(): { textColor: string | number[], fontSize: number, fontFamily: string[] } {
-        return { textColor: this.textColor, fontSize: this.fontSize, fontFamily: this.fontFamily }
-    }
-
-    private updateParagraphStyle({ textStyle, textAlign }: { textStyle: TextStyle, textAlign: any }): void {
-        if (!this.resource) return;
-
-        this.resource.paragraphStyle.textStyle = textStyle
-        this.resource.paragraphStyle.textAlign = textAlign;
-
-    }
-
-    getParagraphStyle(): { textStyle: TextStyle, textAlign: any } {
-        const [textStyle, paragraphStyle] = this.setStyles()
-        return { textStyle: textStyle, textAlign: this.textAlign }
+    get getTextStyle(): TextStyleProp {
+        return { ...this.textStyle }
     }
 
     updateStyles() {
-        this.updateTextStyle(this.getTextStyle())
-        this.updateParagraphStyle(this.getParagraphStyle())
+        this.setStyles(this.textStyle)
     }
 
     pointInShape(x: number, y: number): boolean {
@@ -174,7 +172,7 @@ class PText extends Shape {
     setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         // For text, we might adjust font size instead of traditional sizing
         const distance = Math.sqrt(Math.pow(mx - dragStart.x, 2) + Math.pow(my - dragStart.y, 2));
-        this.fontSize = Math.max(8, Math.min(72, 16 + distance * 0.1));
+        this.textStyle.fontSize = Math.max(8, Math.min(72, 16 + distance * 0.1));
 
         this.updateStyles()
         this.calculateBoundingRect();
@@ -195,8 +193,21 @@ class PText extends Shape {
             console.warn('PText: Attempting fallback rendering');
         }
     }
+    private deleteSelection(): void {
+        const start = Math.min(this.selectionStart, this.selectionEnd);
+        const end = Math.max(this.selectionStart, this.selectionEnd);
+        const before = this.text.substring(0, start);
+        const after = this.text.substring(end);
+        this.text = before + after;
+        this.cursor.setCursorPos(start);
+        this.clearSelection();
 
-    insertText(char: string): void {
+    }
+
+    insertText(char: string, shiftKey: boolean): void {
+        if (this.hasSelection) {
+            this.deleteSelection()
+        }
         const textBefore = this.text.slice(0, this.cursor.cursorPosIndex)
         const textAfter = this.text.slice(this.cursor.cursorPosIndex);
         this.text = textBefore + char + textAfter
@@ -205,7 +216,7 @@ class PText extends Shape {
         this.setUpParagraph()
         this.calculateDim()
         this.calculateBoundingRect();
-        this.cursor.calculateCursorCoord(this.text, this.fontSize, this.lineHeight, this.paragraph)
+        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
     }
 
     deleteText(direction: 'forward' | 'backward'): void {
@@ -219,12 +230,25 @@ class PText extends Shape {
         this.setUpParagraph()
         this.calculateDim()
         this.calculateBoundingRect();
-        this.cursor.calculateCursorCoord(this.text, this.fontSize, this.lineHeight, this.paragraph)
+        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
+    }
+    copyText() {
+        const start = Math.min(this.selectionStart, this.selectionEnd);
+        const end = Math.max(this.selectionStart, this.selectionEnd);
+        const text = this.text.substring(start, end);
+        navigator.clipboard.writeText(text)
+
+    }
+    pasteText() {
+        navigator.clipboard.readText().then((string)=>{
+            this.insertText(string, false);
+        })
+        // is there any eveny like onpaste
     }
 
-    setUpBuilder(){
-        
-        const [textStyle, paragraphStyle] = this.setStyles();
+    setUpBuilder() {
+
+        const [textStyle, paragraphStyle] = this.setStyles(this.textStyle);
 
         this.fontMgr = this.resource.fontMgr.FromData(...this.fontData)
         console.log(this.fontMgr, this.fontData);
@@ -232,34 +256,78 @@ class PText extends Shape {
         this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.fontMgr);
 
     }
-    
+
     setUpParagraph() {
-        if (!this.builder) return
-        const [textStyle, paragraphStyle] = this.setStyles();
+        if (!this.builder || !this.resource) {
+            console.log('no resources amd builder');
+            return
+        }
+        const [textStyle, paragraphStyle] = this.setStyles(this.textStyle);
 
         this.builder.reset()
-        this.builder.pushStyle(textStyle);
-        this.builder.addText(this.text);
+
+        if (!this.hasSelection) {
+            this.builder.pushStyle(textStyle);
+            this.builder.addText(this.text);
+            this.builder.pop()
+        } else {
+            const start = Math.min(this.selectionStart, this.selectionEnd)
+            const end = Math.max(this.selectionStart, this.selectionEnd)
+            if (start > 0) {
+                this.builder.pushStyle(textStyle);
+                this.builder.addText(this.text.substring(0, start));
+                this.builder.pop();
+            } if (start < end) {
+                const selectionStyle = this.getTextStyle
+                selectionStyle.backgroundColor = this.resource.canvasKit.Color(0, 0, 255)
+
+                const [textStyle, paragraphStyle] = this.setStyles(selectionStyle);
+
+                this.builder.pushStyle(textStyle);
+                this.builder.addText(this.text.substring(start, end));
+                this.builder.pop();
+
+            } if (end < this.text.length) {
+                const [textStyle, paragraphStyle] = this.setStyles(this.textStyle);
+                this.builder.pushStyle(textStyle);
+                this.builder.addText(this.text.substring(end));
+                this.builder.pop();
+            }
+        }
 
         this.paragraph = this.builder.build();
 
         this.paragraph.layout(1000);
     }
 
-    calculateDim(){
-        if(!this.paragraph) return
+    calculateDim() {
+        if (!this.paragraph) return
 
         const width = this.paragraph.getLongestLine();
         const height = this.paragraph.getHeight();
 
         this.width = (width <= 0) ? 20 : width
-        this.height = (height <= 0) ? (this.fontSize * this.lineHeight) : height
+        this.height = (height <= 0) ? (this.textStyle.fontSize * this.textStyle.lineHeight) : height
     }
-
-    moveCursor(direction: 'left' | 'right' | 'up' | 'down') {
+    private get hasSelection(): boolean {
+        return this.selectionStart !== this.selectionEnd;
+    }
+    private clearSelection(): void {
+        this.selectionStart = 0;
+        this.selectionEnd = 0;
+    }
+    moveCursor(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean) {
+        if (shiftKey) {
+            if (!this.hasSelection) this.selectionStart = this.cursor.cursorPosIndex
+        } else {
+            this.clearSelection()
+        }
         this.cursor.moveCursor(direction,
-            this.text, this.fontSize,
-            this.lineHeight, this.paragraph)
+            this.text, this.textStyle.fontSize,
+            this.textStyle.lineHeight, this.paragraph)
+
+        if (shiftKey) this.selectionEnd = this.cursor.cursorPosIndex
+        this.setUpParagraph()
     }
 
     getText(): string {
@@ -267,24 +335,25 @@ class PText extends Shape {
     }
 
     setFontSize(size: number): void {
-        this.fontSize = size;
+        this.textStyle.fontSize = size;
 
         this.updateStyles();
         this.calculateBoundingRect();
     }
 
     setFontFamily(fontFamily: string): void {
-        this.fontFamily.unshift(fontFamily);
+        this.textStyle.fontFamily.unshift(fontFamily);
 
         this.updateStyles();
         this.calculateBoundingRect();
     }
+
     override destroy(): void {
         this.cursor.destroy()
         if (this.builder) {
             this.builder.delete()
         }
-        if(this.fontMgr){
+        if (this.fontMgr) {
             this.fontMgr.delete()
         }
         // if(this.paragraph){

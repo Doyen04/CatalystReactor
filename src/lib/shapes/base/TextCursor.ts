@@ -29,16 +29,19 @@ class TextCursor {
     updateCursorPosIndex(di: number) {
         this.cursorIndex += di
     }
+    setCursorPos(pos: number) {
+        this.cursorIndex = pos
+    }
     get cursorPosIndex(): number {
         return this.cursorIndex
     }
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
-        if(resources){
-            return resources 
-        }else{
+        if (resources) {
+            return resources
+        } else {
             console.log('resources is null');
-            
+
             return null
         }
     }
@@ -50,7 +53,7 @@ class TextCursor {
     setPaint() {
         if (!this.resource) {
             console.log('resource not set');
-            
+
             return
         }
 
