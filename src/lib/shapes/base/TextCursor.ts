@@ -34,7 +34,13 @@ class TextCursor {
     }
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
-        return (resources) ? resources : null
+        if(resources){
+            return resources 
+        }else{
+            console.log('resources is null');
+            
+            return null
+        }
     }
     setXY(x: number, y: number) {
         this.x = x
@@ -42,7 +48,11 @@ class TextCursor {
     }
 
     setPaint() {
-        if (!this.resource) return
+        if (!this.resource) {
+            console.log('resource not set');
+            
+            return
+        }
 
         this.resource.strokePaint.setColor(this.resource.canvasKit.BLACK);
         this.resource.strokePaint.setStrokeWidth(2)

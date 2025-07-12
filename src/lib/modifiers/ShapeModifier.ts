@@ -30,15 +30,29 @@ class ShapeModifier {
         this.handles = []
         this.shape = shape;
 
-        if (!this.shape) return
+        if (!this.shape) {
+            console.log('no shape for shape modifier');
+            
+            return
+        }
         this.handles = this.shape.getHandles(this.size, this.fill,this.strokeColor);
     }
-    get resource(): CanvasKitResources | null {
+    get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
-        return (resources) ? resources : null
+        if(resources){
+            return resources 
+        }else{
+            console.log('resources is null');
+            
+            return null
+        }
     }
     updateResizerPositions() {
-        if (!this.shape) return;
+        if (!this.shape) {
+            console.log(' no shape for updateresizer');
+            
+            return;
+        }
 
         for (const resizer of this.handles) {
             const { x, y } = this.shape.getModifersPos(resizer.pos, this.size, resizer.type);
@@ -78,7 +92,11 @@ class ShapeModifier {
     }
     draw(canvas: Canvas): void {
 
-        if (!this.shape || this.CanDraw() || !this.resource) return;
+        if (!this.shape || this.CanDraw() || !this.resource) {
+            console.log('too small or no shape or no resources');
+            
+            return;
+        }
 
         this.updateResizerPositions()// bad practice
         this.setPaint();

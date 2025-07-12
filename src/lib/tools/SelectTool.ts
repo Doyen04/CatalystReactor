@@ -18,7 +18,11 @@ class SelectTool extends Tool {
     }
     override handlePointerDrag(dragStart: Coords, e: MouseEvent): void {
         
-        if (!this.lastMouseCoord) return
+        if (!this.lastMouseCoord) {
+            console.log('mousecoord is null');
+            
+            return
+        }
 
         const dx = e.offsetX - this.lastMouseCoord.x
         const dy = e.offsetY - this.lastMouseCoord.y

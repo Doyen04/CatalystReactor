@@ -76,8 +76,6 @@ class InputManager {
         console.log("resizing----5----");
         
         EventQueue.trigger(CreateSurface)
-        //     this.startLoop();
-        // }, 0);
     }
 
     removeEventListeners() {

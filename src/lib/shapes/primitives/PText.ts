@@ -28,6 +28,7 @@ class PText extends Shape {
         this.builder = null
 
         this.loadInterFont().then(() => {
+            this.setUpBuilder()
             this.insertText(this.text)
             this.calculateBoundingRect();
         })
@@ -201,34 +202,10 @@ class PText extends Shape {
         this.text = textBefore + char + textAfter
         this.cursor.updateCursorPosIndex(char.length);
 
-        this.setUpBuilder()
-        this.cursor.calculateCursorCoord(this.text, this.fontSize, this.lineHeight, this.paragraph)
+        this.setUpParagraph()
+        this.calculateDim()
         this.calculateBoundingRect();
-    }
-
-    setUpBuilder() {
-        const [textStyle, paragraphStyle] = this.setStyles();
-
-        this.fontMgr = this.resource.fontMgr.FromData(...this.fontData)
-        console.log(this.fontMgr, this.fontData);
-
-        this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.fontMgr);
-
-        this.builder.pushStyle(textStyle);
-        this.builder.addText(this.text);
-
-        this.paragraph = this.builder.build();
-
-        this.paragraph.layout(1000);
-
-        const width = this.paragraph.getLongestLine();
-        const height = this.paragraph.getHeight();
-
-        this.width = (width <= 0) ? 20 : width
-        this.height = (height <= 0) ? (this.fontSize * this.lineHeight) : height
-
-        this.fontMgr.delete()
-        this.builder.delete()
+        this.cursor.calculateCursorCoord(this.text, this.fontSize, this.lineHeight, this.paragraph)
     }
 
     deleteText(direction: 'forward' | 'backward'): void {
@@ -239,10 +216,46 @@ class PText extends Shape {
             this.text = this.text.slice(0, this.cursor.cursorPosIndex) + this.text.slice(this.cursor.cursorPosIndex + 1);
         }
 
-        this.setUpBuilder()
+        this.setUpParagraph()
+        this.calculateDim()
         this.calculateBoundingRect();
         this.cursor.calculateCursorCoord(this.text, this.fontSize, this.lineHeight, this.paragraph)
     }
+
+    setUpBuilder(){
+        
+        const [textStyle, paragraphStyle] = this.setStyles();
+
+        this.fontMgr = this.resource.fontMgr.FromData(...this.fontData)
+        console.log(this.fontMgr, this.fontData);
+
+        this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.fontMgr);
+
+    }
+    
+    setUpParagraph() {
+        if (!this.builder) return
+        const [textStyle, paragraphStyle] = this.setStyles();
+
+        this.builder.reset()
+        this.builder.pushStyle(textStyle);
+        this.builder.addText(this.text);
+
+        this.paragraph = this.builder.build();
+
+        this.paragraph.layout(1000);
+    }
+
+    calculateDim(){
+        if(!this.paragraph) return
+
+        const width = this.paragraph.getLongestLine();
+        const height = this.paragraph.getHeight();
+
+        this.width = (width <= 0) ? 20 : width
+        this.height = (height <= 0) ? (this.fontSize * this.lineHeight) : height
+    }
+
     moveCursor(direction: 'left' | 'right' | 'up' | 'down') {
         this.cursor.moveCursor(direction,
             this.text, this.fontSize,
@@ -268,6 +281,15 @@ class PText extends Shape {
     }
     override destroy(): void {
         this.cursor.destroy()
+        if (this.builder) {
+            this.builder.delete()
+        }
+        if(this.fontMgr){
+            this.fontMgr.delete()
+        }
+        // if(this.paragraph){
+        //     this.paragraph.delete()
+        // }// not sure if i should delete
         //add more from this class
     }
 }

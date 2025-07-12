@@ -30,9 +30,15 @@ abstract class Shape {
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
         this.isHover = false;
     }
-    get resource(): CanvasKitResources | null {
+    get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
-        return (resources) ? resources : null
+        if(resources){
+            return resources 
+        }else{
+            console.log('resources is null');
+            
+            return null
+        }
     }
     getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles: Handle[] = [];

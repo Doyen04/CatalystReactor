@@ -124,8 +124,8 @@ class Star extends Shape {
         }
         return { x: 0, y: 0 };
     }
-    getHandles(size: number, color: string | number[]): Handle[] {
-        const handles = super.getHandles(size, color);
+    getHandles(size: number, fill: string | number[],strokeColor: string | number[], ): Handle[] {
+        const handles = super.getHandles(size, fill,strokeColor);
         return handles;
     }
 

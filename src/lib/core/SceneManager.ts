@@ -62,7 +62,11 @@ class SceneManager {
     }
 
     dragSelectedShape(dx: number, dy: number) {
-        if (!this.selected) return
+        if (!this.selected){ 
+            console.log('no selected shape');
+            
+            return
+        }
 
         this.selected.shape.moveShape(dx, dy)
     }

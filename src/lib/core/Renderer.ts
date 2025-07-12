@@ -32,7 +32,13 @@ class Renderer {
 
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
-        return (resources) ? resources : null
+        if(resources){
+            return resources 
+        }else{
+            console.log('resources is null');
+            
+            return null
+        }
     }
 
     setUpRendering() {
@@ -47,7 +53,11 @@ class Renderer {
     }
 
     makeSurface() {
-        if (!this.resource) return
+        if (!this.resource){
+            console.log('resoures not found in renderer');
+            
+            return
+        } 
 
         const { width, height } = getComputedStyle(this.canvasEl);
         console.log(width, height);
@@ -71,7 +81,11 @@ class Renderer {
     }
 
     private drawFrame = (canvas: Canvas) => {
-        if (!this.isRunning) return;
+        if (!this.isRunning) {
+            console.log('not running render');
+            
+            return;
+        }
 
         const now = performance.now();
         const elapsed = now - this.lastTimestamp;
