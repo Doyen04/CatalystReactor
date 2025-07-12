@@ -129,7 +129,9 @@ class Polygon extends Shape {
 
         return inside;
     }
-
+    override destroy(): void {
+        
+    }
 
 }
 

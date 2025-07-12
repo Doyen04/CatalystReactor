@@ -3,8 +3,8 @@ import { ShapeModifier } from "@lib/modifiers";
 import { PText, Shape, ShapeFactory } from "@lib/shapes";
 import EventQueue, { EventTypes } from './EventQueue'
 
-const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape, DragShape, EditText } = EventTypes
-
+const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape, DragShape, ToolChange } = EventTypes
+//REMEMER TO STOP BLICKING WHEN I CLICK TO CREATE ANOTHER SGAPE IR I CLICK SELECT
 
 class SceneManager {
     private scene: SceneNode
@@ -26,6 +26,7 @@ class SceneManager {
         EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
         EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
         EventQueue.subscribe(DragShape, this.dragSelectedShape.bind(this))
+        EventQueue.subscribe(ToolChange, this.handleToolChange.bind(this))
     }
 
     getScene(): SceneNode {
@@ -147,7 +148,7 @@ class SceneManager {
 
     cleanUp() {
         this.discardTinyShapes()
-        this.transientShape = null
+        // this.transientShape = null
     }
 
     discardTinyShapes(): void {
@@ -162,6 +163,11 @@ class SceneManager {
             this.removeNode(this.transientShape);
             this.shapeMod.setShape(null)
             console.log('Shape removed: too small');
+        }
+    }
+    handleToolChange() {
+        if (this.transientShape) {
+            this.transientShape.shape.destroy()
         }
     }
 }

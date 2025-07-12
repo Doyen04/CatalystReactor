@@ -37,6 +37,10 @@ class SceneNode {
         return this.shape
     }
 
+    hasShape(): boolean{
+        return this.shape != null
+    }
+
     setLocalMatrix(matrix: Matrix) {
         this.localMatrix = matrix
     }

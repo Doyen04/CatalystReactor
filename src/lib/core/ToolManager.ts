@@ -1,7 +1,7 @@
 import { SelectTool, ShapeTool, TextTool, Tool } from '@/lib/tools'
 import EventQueue, { EventTypes } from './EventQueue'
 
-const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp } = EventTypes
+const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes
 
 class ToolManager {
     currentTool: Tool
@@ -38,6 +38,7 @@ class ToolManager {
                 this.currentTool = null
                 break;
         }
+        if(this.currentTool) EventQueue.trigger(ToolChange)
         this.setUpEvent()
     }
     setUpEvent() {

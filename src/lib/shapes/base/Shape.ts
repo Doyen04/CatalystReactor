@@ -97,6 +97,7 @@ abstract class Shape {
     setHovered(hvr: boolean){
         this.isHover = hvr
     }
+    abstract destroy(): void;
 
 }
 export default Shape;

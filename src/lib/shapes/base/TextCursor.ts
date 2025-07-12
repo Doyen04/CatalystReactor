@@ -53,6 +53,7 @@ class TextCursor {
     }
 
     destroy(): void {
+        this.visible = false
         clearInterval(this.blinkInterval);
     }
 }

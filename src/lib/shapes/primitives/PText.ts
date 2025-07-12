@@ -309,8 +309,9 @@ class PText extends Shape {
         this.calculateBoundingRect();
     }
 
-    destroy(): void {
-
+    override destroy(): void {
+        this.cursor.destroy()
+        //add more from this class
     }
 }
 

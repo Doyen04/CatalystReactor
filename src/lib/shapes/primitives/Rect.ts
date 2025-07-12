@@ -144,6 +144,9 @@ class Rectangle extends Shape {
             y >= this.y &&
             y <= this.y + this.height;
     }
+    override destroy(): void {
+        
+    }
 }
 
 export default Rectangle;

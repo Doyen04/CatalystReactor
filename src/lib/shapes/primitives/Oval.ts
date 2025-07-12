@@ -116,6 +116,9 @@ class Oval extends Shape {
 
         return normalizedDistance <= 1;
     }
+    override destroy(): void {
+        
+    }
 }
 
 export default Oval;

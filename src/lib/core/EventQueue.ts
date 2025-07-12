@@ -15,7 +15,7 @@ enum EventTypes {
     SelectShape = 'select:shape',
     DragShape = 'drag:shape',
     EditText = 'insert:text',
-
+    ToolChange = 'tool:change',
 }
 
 type Handlers = {
@@ -33,6 +33,7 @@ type Handlers = {
     [EventTypes.SelectShape]: (x: number, y: number) => void;
     [EventTypes.DragShape]: (dx: number, dy: number) => void;
     [EventTypes.EditText]: (e: KeyboardEvent) => void;
+    [EventTypes.ToolChange]: () => void;
 };
 
 class EventBus {

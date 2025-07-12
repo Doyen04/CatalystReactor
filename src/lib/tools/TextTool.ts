@@ -10,6 +10,9 @@ class TextTool extends Tool {
 
     override handlePointerDown(dragStart: Coords, e: MouseEvent) {
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
+        if(this.shape && this.shape instanceof PText){
+            this.shape.destroy()
+        }
         this.shape = EventQueue.trigger(CreateShape, 'text', e.offsetX, e.offsetY)
     }
     override handlePointerUp() {

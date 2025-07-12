@@ -160,6 +160,9 @@ class Star extends Shape {
 
         return inside;
     }
+    override destroy(): void {
+        
+    }
 }
 
 export default Star;
