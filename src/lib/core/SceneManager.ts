@@ -3,7 +3,11 @@ import { ShapeModifier } from "@lib/modifiers";
 import { PText, Shape, ShapeFactory } from "@lib/shapes";
 import EventQueue, { EventTypes } from './EventQueue'
 
-const { FinalizeShape, DrawShape, CreateShape, ShowHovered, SelectShape, DragShape, ToolChange } = EventTypes
+const {
+    FinalizeShape, DrawShape, CreateShape, FinaliseSelection,
+    ShowHovered, SelectObject, SelectModifier,RemoveSelectedModifier,
+    ToolChange, DragObject, ModifierSelected, DragModifier
+} = EventTypes
 //REMEMER TO STOP BLICKING WHEN I CLICK TO CREATE ANOTHER SGAPE IR I CLICK SELECT
 
 class SceneManager {
@@ -12,6 +16,7 @@ class SceneManager {
     transientShape: SceneNode | null;
     shapeMod: ShapeModifier;
     hoveredScene: SceneNode | null;
+    modifierSelected: boolean;
 
     constructor() {
         this.scene = new SceneNode()
@@ -19,13 +24,20 @@ class SceneManager {
         this.selected = null
         this.hoveredScene = null
         this.shapeMod = new ShapeModifier()
+        this.modifierSelected = false
+        //remember to add a shape created event
 
         EventQueue.subscribe(CreateShape, this.createShape.bind(this))
         EventQueue.subscribe(DrawShape, this.updateTransientShape.bind(this))
         EventQueue.subscribe(FinalizeShape, this.cleanUp.bind(this))
         EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
-        EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
-        EventQueue.subscribe(DragShape, this.dragSelectedShape.bind(this))
+        EventQueue.subscribe(SelectObject, this.selectObject.bind(this))
+        // EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
+        EventQueue.subscribe(ModifierSelected, this.handleModifierSelected.bind(this))
+        EventQueue.subscribe(DragObject, this.dragSelectedObject.bind(this))
+        EventQueue.subscribe(FinaliseSelection, this.handleSelectionCleanUp.bind(this))
+        // EventQueue.subscribe(DragShape, this.dragSelectedShape.bind(this))
+
         EventQueue.subscribe(ToolChange, this.handleToolChange.bind(this))
     }
 
@@ -48,6 +60,32 @@ class SceneManager {
         // this.render();
     }
 
+    getCollidedScene(x: number, y: number): SceneNode | null {
+        const flattened = this.flattenScene();
+
+        for (const node of flattened) {
+            if (node && node.isCollide(x, y)) {
+                return node;
+            }
+        }
+
+        return null;
+    }
+    handleSelectionCleanUp() {
+        EventQueue.trigger(RemoveSelectedModifier)
+        this.modifierSelected = false
+    }
+
+    handleModifierSelected() {
+        this.modifierSelected = true
+    }
+
+    selectObject(x: number, y: number) {
+        EventQueue.trigger(SelectModifier, x, y)
+        if (this.modifierSelected) return
+        this.selectShape(x, y)
+    }
+
     selectShape(x: number, y: number) {
         const selected = this.getCollidedScene(x, y)
 
@@ -61,27 +99,23 @@ class SceneManager {
         }
     }
 
+    dragSelectedObject(dx: number, dy: number) {
+        if (this.modifierSelected) {
+            EventQueue.trigger(DragModifier, dx, dy)
+        } else {
+            this.dragSelectedShape(dx, dy)
+        }
+    }
     dragSelectedShape(dx: number, dy: number) {
-        if (!this.selected){ 
+        if (!this.selected) {
             console.log('no selected shape');
-            
+
             return
         }
 
         this.selected.shape.moveShape(dx, dy)
     }
 
-    getCollidedScene(x: number, y: number): SceneNode | null {
-        const flattened = this.flattenScene();
-
-        for (const node of flattened) {
-            if (node && node.isCollide(x, y)) {
-                return node;
-            }
-        }
-
-        return null;
-    }
 
     showHovered(x: number, y: number) {
         const hoveredScene = this.getCollidedScene(x, y)

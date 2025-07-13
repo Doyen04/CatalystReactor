@@ -1,7 +1,9 @@
-import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
-import type { Shape } from "@/lib/shapes";
+import type { Canvas } from "canvaskit-wasm";
+import { Rectangle, type Shape } from "@/lib/shapes";
 import { Handle } from "@/lib/modifiers";
-import { CanvasKitResources } from "@lib/core";
+import { CanvasKitResources, EventQueue, EventTypes } from "@lib/core";
+
+const { SelectModifier, DragModifier, ModifierSelected, RemoveSelectedModifier } = EventTypes
 
 export const ModifierPos = [
     'top-left',
@@ -18,6 +20,7 @@ class ShapeModifier {
     private size: number = 5; // Default radius for the resizers
     private handles: Handle[];
     private isHovered: boolean;
+    private selectedModifier: Handle | null;
 
     constructor() {
         this.shape = null;
@@ -25,6 +28,11 @@ class ShapeModifier {
         this.strokeWidth = 1;
         this.handles = [];
         this.isHovered = false;
+        this.selectedModifier = null
+
+        EventQueue.subscribe(SelectModifier, this.selectModifier.bind(this))
+        EventQueue.subscribe(DragModifier, this.handleModifierDrag.bind(this))
+        EventQueue.subscribe(RemoveSelectedModifier, this.handleRemoveModifer.bind(this))
     }
     setShape(shape: Shape) {
         this.handles = []
@@ -32,25 +40,55 @@ class ShapeModifier {
 
         if (!this.shape) {
             console.log('no shape for shape modifier');
-            
+
             return
         }
-        this.handles = this.shape.getHandles(this.size, this.fill,this.strokeColor);
+        this.handles = this.shape.getHandles(this.size, this.fill, this.strokeColor);
     }
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
-        if(resources){
-            return resources 
-        }else{
+        if (resources) {
+            return resources
+        } else {
             console.log('resources is null');
-            
+
             return null
+        }
+    }
+    handleRemoveModifer(){
+        this.selectModifier = null
+    }
+
+    selectModifier(x: number, y: number) {
+        if (this.handles.length == 0) return
+        let selected: Handle = null
+        console.log(this.handles);
+
+        for (const node of this.handles) {
+            if (node && node.isCollide(x, y)) {
+                selected = node;
+                EventQueue.trigger(ModifierSelected)
+                break
+            }
+        }
+        this.selectedModifier = selected
+    }
+    handleModifierDrag(x: number, y: number) {
+        if (this.selectedModifier) {
+            switch (this.selectedModifier.type) {
+                case 'radius':
+                    if(this.shape instanceof Rectangle) this.shape.updateRadius(x,y)
+                    break;
+            
+                default:
+                    break;
+            }
         }
     }
     updateResizerPositions() {
         if (!this.shape) {
             console.log(' no shape for updateresizer');
-            
+
             return;
         }
 
@@ -94,7 +132,7 @@ class ShapeModifier {
 
         if (!this.shape || this.CanDraw() || !this.resource) {
             console.log('too small or no shape or no resources');
-            
+
             return;
         }
 

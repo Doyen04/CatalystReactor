@@ -33,6 +33,9 @@ class Oval extends Shape {
     setRadius(radiusX: number, radiusY: number): void {
         this.radiusX = radiusX;
         this.radiusY = radiusY;
+
+        this.centerX = this.x + radiusX
+        this.centerY = this.y + radiusY
     }
 
     calculateBoundingRect(): void {
@@ -47,6 +50,9 @@ class Oval extends Shape {
     setCoord(centerX: number, centerY: number): void {
         this.x = centerX;
         this.y = centerY;
+
+        this.centerX = this.x + this.radiusX
+        this.centerY = this.y + this.radiusY
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {

@@ -12,10 +12,17 @@ enum EventTypes {
     FinalizeShape = 'finish:draw',
     CreateSurface = 'create:surface',
     ShowHovered = 'hovered:shape',
+    SelectObject = 'select:object',
     SelectShape = 'select:shape',
-    DragShape = 'drag:shape',
+    SelectModifier = 'select:modifier',
+    DragObject = 'drag:object',
+    // DragShape = 'drag:shape',
+    DragModifier = 'drag:modifier',
+    FinaliseSelection= 'selection:finished',
+    RemoveSelectedModifier= 'remove:modifier',
     EditText = 'insert:text',
     ToolChange = 'tool:change',
+    ModifierSelected = 'modifier:selected',
 }
 
 type Handlers = {
@@ -30,8 +37,15 @@ type Handlers = {
     [EventTypes.FinalizeShape]: () => void;
     [EventTypes.CreateSurface]: () => void;
     [EventTypes.ShowHovered]: (x: number, y: number) => void;
+    [EventTypes.SelectObject]: (x: number, y: number) => void;
     [EventTypes.SelectShape]: (x: number, y: number) => void;
-    [EventTypes.DragShape]: (dx: number, dy: number) => void;
+    [EventTypes.SelectModifier]: (x: number, y: number) => void;
+    [EventTypes.ModifierSelected]: () => void;
+    // [EventTypes.DragShape]: (dx: number, dy: number) => void;
+    [EventTypes.DragObject]: (dx: number, dy: number) => void;
+    [EventTypes.DragModifier]: (dx: number, dy: number) => void;
+    [EventTypes.FinaliseSelection]: () => void;
+    [EventTypes.RemoveSelectedModifier]: () => void;
     [EventTypes.EditText]: (e: KeyboardEvent) => void;
     [EventTypes.ToolChange]: () => void;
 };

@@ -92,14 +92,20 @@ class Rectangle extends Shape {
 
 
     override draw(canvas: Canvas): void {
-        if(!this.resource) return
+        if (!this.resource) return
 
         this.setPaint();
 
         const rect = this.resource.canvasKit.LTRBRect(this.x, this.y, this.x + this.width, this.y + this.height);
+        const rect2 = this.resource.canvasKit.RRectXY(rect, this.bdradius, this.bdradius)
 
-        canvas.drawRect(rect, this.resource.paint);
-        canvas.drawRect(rect, this.resource.strokePaint);
+        canvas.drawRRect(rect2, this.resource.paint)
+        canvas.drawRRect(rect2, this.resource.strokePaint)
+
+        if (this.bdradius > 0) return
+
+        canvas.drawRect(rect2, this.resource.paint);
+        canvas.drawRect(rect2, this.resource.strokePaint);
     }
 
     getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
@@ -127,6 +133,13 @@ class Rectangle extends Shape {
                 return { x: 0, y: 0 };
         }
     }
+    updateRadius(x: number, y: number) {
+        const nx = (x != 0) ? x / Math.abs(x) : x
+        const ny = (y != 0) ? y / Math.abs(y) : y
+        console.log(nx, ny, x, y);
+
+        this.bdradius += Math.max(nx, ny)
+    }
 
     override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
 
@@ -145,7 +158,7 @@ class Rectangle extends Shape {
             y <= this.y + this.height;
     }
     override destroy(): void {
-        
+
     }
 }
 
