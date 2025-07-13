@@ -3,13 +3,13 @@ import { Shape } from "@/lib/shapes"
 import type { Canvas } from "canvaskit-wasm";
 
 class Oval extends Shape {
-    radiusX: number;
-    radiusY: number;
+    private radiusX: number;
+    private radiusY: number;
 
-    isFlippedX: boolean;
-    isFlippedY: boolean;
-    centerX: number;
-    centerY: number;
+    private isFlippedX: boolean;
+    private isFlippedY: boolean;
+    private centerX: number;
+    private centerY: number;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
@@ -30,15 +30,27 @@ class Oval extends Shape {
         this.calculateBoundingRect();
     }
 
-    setRadius(radiusX: number, radiusY: number): void {
-        this.radiusX = radiusX;
-        this.radiusY = radiusY;
+    setRadius(radius: number): void {
+        this.radiusX = radius;
+        this.radiusY = radius;
 
-        this.centerX = this.x + radiusX
-        this.centerY = this.y + radiusY
+        this.centerX = this.x + radius
+        this.centerY = this.y + radius
+
+        this.calculateBoundingRect()
     }
 
-    calculateBoundingRect(): void {
+    override setDim(width: number, height: number) {
+        this.radiusX = width / 2;
+        this.radiusY = height / 2;
+
+        this.centerX = this.x + this.radiusX
+        this.centerY = this.y + this.radiusY
+
+        this.calculateBoundingRect()
+    }
+
+    override calculateBoundingRect(): void {
         this.boundingRect = {
             top: this.y,
             left: this.x,
@@ -47,12 +59,14 @@ class Oval extends Shape {
         }
     }
 
-    setCoord(centerX: number, centerY: number): void {
+    override setCoord(centerX: number, centerY: number): void {
         this.x = centerX;
         this.y = centerY;
 
         this.centerX = this.x + this.radiusX
         this.centerY = this.y + this.radiusY
+
+        this.calculateBoundingRect()
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -99,7 +113,7 @@ class Oval extends Shape {
         canvas.drawOval(rect, this.resource.strokePaint);
     }
 
-    override getHandles(size: number, fill: string | number[],  strokeColor: string | number[]): Handle[] {
+    override getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles = super.getHandles(size, fill, strokeColor);
         return handles;
     }
@@ -123,7 +137,7 @@ class Oval extends Shape {
         return normalizedDistance <= 1;
     }
     override destroy(): void {
-        
+
     }
 }
 

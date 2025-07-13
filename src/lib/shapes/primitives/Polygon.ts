@@ -20,6 +20,26 @@ class Polygon extends Shape {
         this.radiusY = 0;
         this.point = this.generateRegularPolygon();
     }
+    override setDim(width: number, height: number) {
+        this.radiusX = width/2;
+        this.radiusY = height/2;
+
+        this.centerX = this.x + this.radiusX
+        this.centerY = this.y + this.radiusY
+
+        this.point = this.generateRegularPolygon();
+        this.calculateBoundingRect()
+    }
+    override setCoord(x: number, y: number): void {
+        this.x = x;
+        this.y = y;
+
+        this.centerX = this.x + this.radiusX
+        this.centerY = this.y + this.radiusY
+
+        this.point = this.generateRegularPolygon();
+        this.calculateBoundingRect()
+    }
 
     private generateRegularPolygon(): Points[] {
         const points: Points[] = [];

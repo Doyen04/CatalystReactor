@@ -5,10 +5,9 @@ import EventQueue, { EventTypes } from './EventQueue'
 
 const {
     FinalizeShape, DrawShape, CreateShape, FinaliseSelection,
-    ShowHovered, SelectObject, SelectModifier,RemoveSelectedModifier,
+    ShowHovered, SelectObject, SelectModifier, RemoveSelectedModifier,
     ToolChange, DragObject, ModifierSelected, DragModifier
 } = EventTypes
-//REMEMER TO STOP BLICKING WHEN I CLICK TO CREATE ANOTHER SGAPE IR I CLICK SELECT
 
 class SceneManager {
     private scene: SceneNode
@@ -185,11 +184,11 @@ class SceneManager {
     }
 
     cleanUp() {
-        this.discardTinyShapes()
+        this.handleTinyShapes()
         // this.transientShape = null
     }
 
-    discardTinyShapes(): void {
+    handleTinyShapes(): void {
         if (!this.transientShape?.shape) return;
 
         const { left, top, right, bottom } = this.transientShape.shape.boundingRect;
@@ -198,14 +197,16 @@ class SceneManager {
         const minSize = 5;
 
         if (width < minSize || height < minSize) {
-            this.removeNode(this.transientShape);
-            this.shapeMod.setShape(null)
-            console.log('Shape removed: too small');
+            this.transientShape.shape.setDim(100, 100)
+            const { x, y } = this.transientShape.shape.getCoord()
+            this.transientShape.shape.setCoord(x - 50, y - 50)
+            console.log('Shape removed: too small add default size');
         }
     }
     handleToolChange() {
         if (this.transientShape) {
             this.transientShape.shape.destroy()
+            this.transientShape = null
         }
     }
 }

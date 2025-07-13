@@ -20,7 +20,7 @@ export default class Handle {
         // By default, use Oval for radius, Rect for size
         if (type === "radius") {
             this.shape = new Oval(x, y);
-            this.shape.setRadius(size, size);
+            this.shape.setRadius(size);
         } else {
             this.shape = new Rectangle(x, y);
             this.shape.setDim(size, size);

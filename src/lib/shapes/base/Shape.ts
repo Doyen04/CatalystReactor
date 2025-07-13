@@ -32,11 +32,11 @@ abstract class Shape {
     }
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
-        if(resources){
-            return resources 
-        }else{
+        if (resources) {
+            return resources
+        } else {
             console.log('resources is null');
-            
+
             return null
         }
     }
@@ -70,6 +70,11 @@ abstract class Shape {
     abstract calculateBoundingRect(): void;
     abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     abstract draw(canvas: Canvas): void;
+    abstract setDim(width: number, height: number): void;
+    abstract setCoord(x: number, y: number): void;
+    getCoord(): { x: number, y: number } {
+        return { x: this.x, y: this.y }
+    }
 
     setPaint(): void {
         if (!this.resource) return

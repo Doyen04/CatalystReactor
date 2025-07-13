@@ -347,6 +347,13 @@ class PText extends Shape {
         this.updateStyles();
         this.calculateBoundingRect();
     }
+    override setDim(width: number, height: number): void {
+        
+    }
+    
+    override setCoord(x: number, y: number): void {
+        
+    }
 
     override destroy(): void {
         this.cursor.destroy()

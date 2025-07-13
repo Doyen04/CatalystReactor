@@ -71,14 +71,18 @@ class Rectangle extends Shape {
         this.calculateBoundingRect();
     }
 
-    setCoord(x: number, y: number): void {
+    override setCoord(x: number, y: number): void {
         this.x = x;
         this.y = y;
+
+        this.calculateBoundingRect()
     }
 
-    setDim(width: number, height: number): void {
+    override setDim(width: number, height: number): void {
         this.width = width;
         this.height = height;
+
+        this.calculateBoundingRect()
     }
 
     override calculateBoundingRect(): void {
@@ -139,6 +143,7 @@ class Rectangle extends Shape {
         console.log(nx, ny, x, y);
 
         this.bdradius += Math.max(nx, ny)
+
     }
 
     override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
