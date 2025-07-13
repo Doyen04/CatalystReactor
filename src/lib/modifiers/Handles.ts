@@ -1,6 +1,7 @@
 // Handle.ts
-import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
-import { Oval, Rectangle } from "@/lib/shapes";
+import type { Canvas } from "canvaskit-wasm";
+import { Oval, Rectangle, Shape } from "@/lib/shapes";
+import type { ModifierPos } from './ShapeModifier'
 
 export default class Handle {
     x: number;
@@ -39,6 +40,25 @@ export default class Handle {
     }
     isCollide(x: number, y: number): boolean {
         return this.shape.pointInShape(x, y)
+    }
+    updateRadii(mx: number, my: number, shape: Shape) {
+        console.log(99999, this.pos);
+
+        if (shape instanceof Rectangle) {
+            switch (this.pos) {
+                case 'top-left':
+                    shape.updateRadius(Math.max(mx, my))
+                    break;
+                case 'top-right':
+                    break;
+                case 'bottom-left':
+                    break;
+                case 'bottom-right':
+                    break;
+                default:
+                    break;
+            }
+        }
     }
     // move(x: number, y: number) {console.log('dragging start', x, y);
     //     this.shape.moveShape(x, y)

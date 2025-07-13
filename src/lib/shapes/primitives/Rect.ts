@@ -106,10 +106,10 @@ class Rectangle extends Shape {
         canvas.drawRRect(rect2, this.resource.paint)
         canvas.drawRRect(rect2, this.resource.strokePaint)
 
-        if (this.bdradius > 0) return
+        // if (this.bdradius > 0) return
 
-        canvas.drawRect(rect2, this.resource.paint);
-        canvas.drawRect(rect2, this.resource.strokePaint);
+        // canvas.drawRect(rect2, this.resource.paint);
+        // canvas.drawRect(rect2, this.resource.strokePaint);
     }
 
     getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
@@ -137,13 +137,12 @@ class Rectangle extends Shape {
                 return { x: 0, y: 0 };
         }
     }
-    updateRadius(x: number, y: number) {
-        const nx = (x != 0) ? x / Math.abs(x) : x
-        const ny = (y != 0) ? y / Math.abs(y) : y
-        console.log(nx, ny, x, y);
-
-        this.bdradius += Math.max(nx, ny)
-
+    updateRadius(r: number) {
+        console.log(r);
+        const highRad = Math.min(this.width, this.height) / 2
+        r = (this.bdradius + r < 0) ? -this.bdradius :
+            (this.bdradius + r > highRad) ? highRad - this.bdradius : r;
+        this.bdradius += r
     }
 
     override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {

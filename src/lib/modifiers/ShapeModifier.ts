@@ -55,7 +55,7 @@ class ShapeModifier {
             return null
         }
     }
-    handleRemoveModifer(){
+    handleRemoveModifer() {
         this.selectModifier = null
     }
 
@@ -77,9 +77,9 @@ class ShapeModifier {
         if (this.selectedModifier) {
             switch (this.selectedModifier.type) {
                 case 'radius':
-                    if(this.shape instanceof Rectangle) this.shape.updateRadius(x,y)
+                    this.selectedModifier.updateRadii(x,y, this.shape)
                     break;
-            
+
                 default:
                     break;
             }
