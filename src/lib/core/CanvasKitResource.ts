@@ -5,35 +5,66 @@ import type { CanvasKit, Paint, ParagraphStyle, TextStyle, FontMgrFactory } from
 export class CanvasKitResources {
     private static instance: CanvasKitResources;
 
-    public readonly paint: Paint;
-    public readonly strokePaint: Paint;
-    public textStyle: TextStyle;
-    public readonly paragraphStyle: ParagraphStyle;
-    public fontMgr: FontMgrFactory;
-    public readonly canvasKit: CanvasKit;
+    private cnvsPaint: Paint;
+    private cnvsStrokePaint: Paint;
+    private cnvsTextStyle: TextStyle;
+    private cnvsParagraphStyle: ParagraphStyle;
+    private cnvsFontMgr: FontMgrFactory;
+    private cnvsCanvasKit: CanvasKit;
+    private static cnvsFontData: ArrayBuffer[] = [];
 
     private constructor(canvasKit: CanvasKit) {
-        this.canvasKit = canvasKit
+        this.cnvsCanvasKit = canvasKit
 
-        if (!this.canvasKit) {
+        this.setUpPaints()
+        this.setUpStyles()
+    }
+
+    setUpPaints() {
+        if (!this.cnvsCanvasKit) {
             console.error('no canvas kit in canvaskitresourse')
             return
         }
+        this.cnvsPaint = new this.cnvsCanvasKit.Paint();
+        this.cnvsPaint.setColor(this.cnvsCanvasKit.Color(60, 0, 0, 255));
+        this.cnvsPaint.setStyle(this.cnvsCanvasKit.PaintStyle.Fill);
+        this.cnvsPaint.setAntiAlias(true);
 
-        this.paint = new this.canvasKit.Paint();
-        this.paint.setColor(this.canvasKit.Color(60, 0, 0, 255));
-        this.paint.setStyle(this.canvasKit.PaintStyle.Fill);
-        this.paint.setAntiAlias(true);
-
-        this.strokePaint = new this.canvasKit.Paint();
-        this.strokePaint.setColor(this.canvasKit.Color(0, 255, 0, 255));
-        this.strokePaint.setStyle(this.canvasKit.PaintStyle.Stroke);
-        this.strokePaint.setStrokeWidth(2);
-        this.strokePaint.setAntiAlias(true);
-
+        this.cnvsStrokePaint = new this.cnvsCanvasKit.Paint();
+        this.cnvsStrokePaint.setColor(this.cnvsCanvasKit.Color(0, 255, 0, 255));
+        this.cnvsStrokePaint.setStyle(this.cnvsCanvasKit.PaintStyle.Stroke);
+        this.cnvsStrokePaint.setStrokeWidth(2);
+        this.cnvsStrokePaint.setAntiAlias(true);
+    }
+    get paint() {
+        return this.cnvsPaint
+    }
+    get strokePaint() {
+        return this.cnvsStrokePaint
+    }
+    get textStyle() {
+        return this.cnvsTextStyle
+    }
+    get paragraphStyle() {
+        return this.cnvsParagraphStyle
+    }
+    get canvasKit() {
+        return this.cnvsCanvasKit
+    }
+    get fontMgr() {
+        return this.cnvsFontMgr
+    }
+    get fontData(){
+        return CanvasKitResources.cnvsFontData
+    }
+    setUpStyles() {
+        if (!this.cnvsCanvasKit) {
+            console.error('no canvas kit in canvaskitresourse')
+            return
+        }
         const fontSize = 16
-        this.textStyle = new this.canvasKit.TextStyle({
-            color: this.canvasKit.BLACK,
+        this.cnvsTextStyle = new this.cnvsCanvasKit.TextStyle({
+            color: this.cnvsCanvasKit.BLACK,
             fontSize: fontSize,
             fontFamilies: [],
             fontVariations: [
@@ -42,12 +73,29 @@ export class CanvasKitResources {
             ]
         });
 
-        this.paragraphStyle = new this.canvasKit.ParagraphStyle({
-            textStyle: this.textStyle,
-            textAlign: this.canvasKit.TextAlign.Left,
+        this.cnvsParagraphStyle = new this.cnvsCanvasKit.ParagraphStyle({
+            textStyle: this.cnvsTextStyle,
+            textAlign: this.cnvsCanvasKit.TextAlign.Left,
         });
 
-        this.fontMgr = this.canvasKit.FontMgr;
+        this.cnvsFontMgr = this.cnvsCanvasKit.FontMgr;
+    }
+
+    static async loadInterFont() {
+        if(this.cnvsFontData.length != 0) return
+
+        const loadFont = await Promise.all([
+            fetch('/fonts/Inter-VariableFont_opsz,wght.ttf'),
+            fetch('/fonts/Inter-Italic-VariableFont_opsz,wght.ttf')
+        ])
+
+        const [normalData, italicData] = await Promise.all([
+            loadFont[0].arrayBuffer(),
+            loadFont[1].arrayBuffer()
+        ]);
+
+        this.cnvsFontData = [normalData, italicData];
+        // Create a new FontMgr instance
     }
 
     public static initialize(CanvasKit: CanvasKit) {
@@ -68,10 +116,11 @@ export class CanvasKitResources {
     }
 
     public dispose() {
-        this.paint.delete();
-        this.strokePaint.delete()
-        this.textStyle = null;
-        this.fontMgr = null;
+        this.cnvsPaint.delete();
+        this.cnvsStrokePaint.delete()
+        this.cnvsTextStyle = null;
+        this.cnvsFontMgr = null;
+        CanvasKitResources.cnvsFontData = []
         CanvasKitResources.instance = null
         console.log('deleting all canvaskit object');
         // Note: ParagraphStyle may not need explicit delete depending on usage.

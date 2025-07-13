@@ -76,6 +76,8 @@ class CanvasManager {
         // return skMatrix;
     }
     removeEventListener() {
+        console.log('removing all event and doing clean up');
+        
         this.inputManager.removeEventListeners()
         this.renderer.destroy()
         EventQueue.removeAllEvent()

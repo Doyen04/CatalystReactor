@@ -40,10 +40,13 @@ function Canvas() {
             canvasResourcesRef.current = null
             canvasResourcesRef.current.dispose()
         }
-
-        canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
-        canvasManagerRef.current = new CanvasManager(canvasRef.current);
-        console.log('Initializing CanvasManager with CanvasKit');
+        const load = async () => {
+            await CanvasKitResources.loadInterFont()
+            canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
+            canvasManagerRef.current = new CanvasManager(canvasRef.current);
+            console.log('Initializing CanvasManager with CanvasKit');
+        }
+        load()
 
         return () => {
             if (canvasManagerRef.current) {

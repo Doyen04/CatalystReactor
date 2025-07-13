@@ -19,7 +19,6 @@ class PText extends Shape {
     private height: number = 0;
     private TWidth: number = 0;
     private THeight: number = 0;
-    private fontData: ArrayBuffer[] = []; //look for a better way to prevent storing
     private cursor: TextCursor;
     private fontMgr: FontMgr;
     private builder: ParagraphBuilder;
@@ -37,11 +36,10 @@ class PText extends Shape {
         this.fontMgr = null
         this.builder = null
         this.setTextStyle()
-        this.loadInterFont().then(() => {
-            this.setUpBuilder()
-            this.insertText(this.text, false)
-            this.calculateBoundingRect();
-        })
+        this.setUpBuilder()
+        this.insertText(this.text, false)
+        this.calculateBoundingRect();
+
     }
     private setTextStyle() {
         if (!this.resource) {
@@ -85,38 +83,14 @@ class PText extends Shape {
         return [this.resource.textStyle, this.resource.paragraphStyle]
     }
 
-    async loadInterFont() {
-        // Load the variable font files in parallel
-        const [interNormal, interItalic] = await Promise.all([
-            fetch('/fonts/Inter-VariableFont_opsz,wght.ttf'),
-            fetch('/fonts/Inter-Italic-VariableFont_opsz,wght.ttf')
-        ]);
-
-        if (!interNormal.ok || !interItalic.ok) {
-            console.warn('Failed to load some font files');
-            return;
-        }
-        // Convert to array buffers in parallel
-        const [normalData, italicData] = await Promise.all([
-            interNormal.arrayBuffer(),
-            interItalic.arrayBuffer()
-        ]);
-        if (normalData.byteLength === 0 || italicData.byteLength === 0) {
-            console.warn('Font data is empty');
-            return;
-        }
-        this.fontData = [normalData, italicData];
-        // Create a new FontMgr instance
-    }
-
     private extractFontNames(): string[] {
-        if (!this.resource.canvasKit || !this.fontData.length) return [];
+        if (!this.resource.canvasKit || !this.resource.fontData.length) return [];
 
         const fontNames: string[] = [];
 
         try {
             // Create a temporary FontMgr to parse font data
-            const fontMgr = this.resource.fontMgr.FromData(...this.fontData);
+            const fontMgr = this.resource.fontMgr.FromData(...this.resource.fontData);
 
             // Get the number of font families
             const familyCount = fontMgr.countFamilies();
@@ -150,7 +124,7 @@ class PText extends Shape {
     }
 
     calculateBoundingRect(): void {
-        
+
         this.boundingRect = {
             left: this.x,
             top: this.y,
@@ -248,11 +222,17 @@ class PText extends Shape {
     }
 
     setUpBuilder() {
+        if (this.resource.fontData.length == 0) {
+            console.log(this.resource.fontData);
+            
+            return
+        }
+        const fontData = this.resource.fontData
 
         const [textStyle, paragraphStyle] = this.setStyles(this.textStyle);
 
-        this.fontMgr = this.resource.fontMgr.FromData(...this.fontData)
-        console.log(this.fontMgr, this.fontData);
+        this.fontMgr = this.resource.fontMgr.FromData(...fontData)
+        console.log(this.fontMgr, fontData);
 
         this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.fontMgr);
 
@@ -307,7 +287,7 @@ class PText extends Shape {
         const width = this.paragraph.getLongestLine();
         const height = this.paragraph.getHeight();
 
-        this.TWidth =  width
+        this.TWidth = width
         this.THeight = height
     }
 
@@ -332,7 +312,7 @@ class PText extends Shape {
 
         //remember moving cursor up and down does not work if text wraps
         if (shiftKey) this.selectionEnd = this.cursor.cursorPosIndex
-        
+
     }
 
     getText(): string {

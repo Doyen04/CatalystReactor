@@ -6,18 +6,29 @@ import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 class Rectangle extends Shape {
     width: number;
     height: number;
-    bdradius: number;
-
+    bdradius: {
+        'top-left': number,
+        'top-right': number,
+        'bottom-left': number,
+        'bottom-right': number,
+        'locked': boolean
+    };
     originalX: number;
     originalY: number;
     isFlippedX: boolean;
     isFlippedY: boolean;
 
-    constructor(x: number, y: number, { bdradius = 0, ...shapeProps } = {}) {
+    constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
         this.width = 0;
         this.height = 0;
-        this.bdradius = bdradius;
+        this.bdradius = {
+            'top-left': 0,
+            'top-right': 0,
+            'bottom-left': 0,
+            'bottom-right': 0,
+            locked: false,
+        };
         this.originalX = x;
         this.originalY = y;
         this.isFlippedX = false;
@@ -101,7 +112,7 @@ class Rectangle extends Shape {
         this.setPaint();
 
         const rect = this.resource.canvasKit.LTRBRect(this.x, this.y, this.x + this.width, this.y + this.height);
-        const rect2 = this.resource.canvasKit.RRectXY(rect, this.bdradius, this.bdradius)
+        const rect2 = this.resource.canvasKit.RRectXY(rect, this.bdradius['top-left'], this.bdradius['bottom-left'])
 
         canvas.drawRRect(rect2, this.resource.paint)
         canvas.drawRRect(rect2, this.resource.strokePaint)
@@ -122,27 +133,43 @@ class Rectangle extends Shape {
 
     getRadiusModifiersPos(modifierName: string, size: number): { x: number; y: number; } {
         const bRect = this.boundingRect
-        const ModPadding = (this.bdradius == 0)?(this.bdradius + 10): this.bdradius + (10/this.bdradius)
+        const bR = this.bdradius
+        const ModPadding = 10
 
         switch (modifierName) {
             case 'top-left':
-                return { x: (bRect.left + ModPadding) - size, y: (bRect.top + ModPadding) - size };
+                return {
+                    x: (bRect.left + (bR['top-left'] + ModPadding)) - size,
+                    y: (bRect.top + (bR['top-left'] + ModPadding)) - size
+                };
             case 'top-right':
-                return { x: (bRect.right - ModPadding) - size, y: (bRect.top + ModPadding) - size };
+                return {
+                    x: (bRect.right - (bR['top-right'] + ModPadding)) - size,
+                    y: (bRect.top + (bR['top-right'] + ModPadding)) - size
+                };
             case 'bottom-left':
-                return { x: (bRect.left + ModPadding) - size, y: (bRect.bottom - ModPadding) - size };
+                return {
+                    x: (bRect.left + (bR['bottom-left'] + ModPadding)) - size,
+                    y: (bRect.bottom - (bR['bottom-left'] + ModPadding)) - size
+                };
             case 'bottom-right':
-                return { x: (bRect.right - ModPadding) - size, y: (bRect.bottom - ModPadding) - size };
+                return {
+                    x: (bRect.right - (bR['bottom-right'] + ModPadding)) - size,
+                    y: (bRect.bottom - (bR['bottom-right'] + ModPadding)) - size
+                };
             default:
                 return { x: 0, y: 0 };
         }
     }
-    updateRadius(r: number) {
+    updateRadius(r: number, pos: string) {
         console.log(r);
+        if (!(pos in ['top-left', 'top-right', 'bottom-left', 'bottom-right'])) return
+
         const highRad = Math.min(this.width, this.height) / 2
-        r = (this.bdradius + r < 0) ? -this.bdradius :
-            (this.bdradius + r > highRad) ? highRad - this.bdradius : r;
-        this.bdradius += r
+        r = (this.bdradius[pos] + r < 0) ? -this.bdradius[pos] :
+            (this.bdradius + r[pos] > highRad) ? highRad - this.bdradius[pos] : r;
+
+        this.bdradius[pos] += r
     }
 
     override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
