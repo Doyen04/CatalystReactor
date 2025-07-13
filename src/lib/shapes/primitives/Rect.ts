@@ -122,7 +122,7 @@ class Rectangle extends Shape {
 
     getRadiusModifiersPos(modifierName: string, size: number): { x: number; y: number; } {
         const bRect = this.boundingRect
-        const ModPadding = (this.bdradius + 10)
+        const ModPadding = (this.bdradius == 0)?(this.bdradius + 10): this.bdradius + (10/this.bdradius)
 
         switch (modifierName) {
             case 'top-left':
