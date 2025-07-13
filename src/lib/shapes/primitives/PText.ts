@@ -17,6 +17,8 @@ class PText extends Shape {
     private textStyle: TextStyleProp;
     private width: number = 0;
     private height: number = 0;
+    private TWidth: number = 0;
+    private THeight: number = 0;
     private fontData: ArrayBuffer[] = []; //look for a better way to prevent storing
     private cursor: TextCursor;
     private fontMgr: FontMgr;
@@ -148,16 +150,12 @@ class PText extends Shape {
     }
 
     calculateBoundingRect(): void {
-        if (!this.width || !this.height) {
-            console.log('no width and height');
-
-            return
-        }
+        
         this.boundingRect = {
             left: this.x,
             top: this.y,
-            right: this.x + this.width,
-            bottom: this.y + this.height,
+            right: this.x + ((this.width > 0) ? this.width : this.TWidth),
+            bottom: this.y + ((this.height > 0) ? this.height : this.THeight),
         };
     }
 
@@ -171,10 +169,13 @@ class PText extends Shape {
 
     setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         // For text, we might adjust font size instead of traditional sizing
-        const distance = Math.sqrt(Math.pow(mx - dragStart.x, 2) + Math.pow(my - dragStart.y, 2));
-        this.textStyle.fontSize = Math.max(8, Math.min(72, 16 + distance * 0.1));
+        const deltaX = (mx - dragStart.x);
+        const deltaY = (my - dragStart.y);
 
-        this.updateStyles()
+        this.width = Math.abs(deltaX);
+        this.height = Math.abs(deltaY);
+        this.x = Math.min(dragStart.x, mx);
+        this.y = Math.min(dragStart.y, my);
         this.calculateBoundingRect();
     }
 
@@ -240,7 +241,7 @@ class PText extends Shape {
 
     }
     pasteText() {
-        navigator.clipboard.readText().then((string)=>{
+        navigator.clipboard.readText().then((string) => {
             this.insertText(string, false);
         })
         // is there any eveny like onpaste
@@ -297,7 +298,7 @@ class PText extends Shape {
 
         this.paragraph = this.builder.build();
 
-        this.paragraph.layout(1000);
+        this.paragraph.layout(((this.width > 0) ? this.width : 1000));
     }
 
     calculateDim() {
@@ -306,16 +307,19 @@ class PText extends Shape {
         const width = this.paragraph.getLongestLine();
         const height = this.paragraph.getHeight();
 
-        this.width = (width <= 0) ? 20 : width
-        this.height = (height <= 0) ? (this.textStyle.fontSize * this.textStyle.lineHeight) : height
+        this.TWidth =  width
+        this.THeight = height
     }
+
     private get hasSelection(): boolean {
         return this.selectionStart !== this.selectionEnd;
     }
+
     private clearSelection(): void {
         this.selectionStart = 0;
         this.selectionEnd = 0;
     }
+
     moveCursor(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean) {
         if (shiftKey) {
             if (!this.hasSelection) this.selectionStart = this.cursor.cursorPosIndex
@@ -326,8 +330,9 @@ class PText extends Shape {
             this.text, this.textStyle.fontSize,
             this.textStyle.lineHeight, this.paragraph)
 
+        //remember moving cursor up and down does not work if text wraps
         if (shiftKey) this.selectionEnd = this.cursor.cursorPosIndex
-        this.setUpParagraph()
+        
     }
 
     getText(): string {
@@ -347,12 +352,13 @@ class PText extends Shape {
         this.updateStyles();
         this.calculateBoundingRect();
     }
+
     override setDim(width: number, height: number): void {
-        
+
     }
-    
+
     override setCoord(x: number, y: number): void {
-        
+
     }
 
     override destroy(): void {
