@@ -164,7 +164,7 @@ class PText extends Shape {
     moveShape(mx: number, my: number): void {
         this.x += mx;
         this.y += my;
-        this.cursor.setXY(this.x, this.y)
+        this.cursor.setCoord(this.x, this.y)
 
         this.calculateBoundingRect()
     }

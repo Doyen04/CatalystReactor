@@ -45,7 +45,7 @@ class TextCursor {
             return null
         }
     }
-    setXY(x: number, y: number) {
+    setCoord(x: number, y: number) {
         this.x = x
         this.y = y
     }
