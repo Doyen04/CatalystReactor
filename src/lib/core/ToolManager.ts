@@ -42,6 +42,19 @@ class ToolManager {
         this.setUpEvent()
     }
     setUpEvent() {
+        this.removeEvent()
+        this.addEvent()
+    }
+    addEvent(){
+        EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown.bind(this.currentTool))
+        EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag.bind(this.currentTool))
+        EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove.bind(this.currentTool))
+        EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp.bind(this.currentTool))
+        EventQueue.subscribe(KeyDown, this.currentTool.handleKeyDown.bind(this.currentTool))
+        EventQueue.subscribe(KeyUp, this.currentTool.handleKeyUp.bind(this.currentTool))
+        
+    }
+    removeEvent(){
         EventQueue.unSubscribeAll(PointerDown)
         EventQueue.unSubscribeAll(PointerDrag)
         EventQueue.unSubscribeAll(PointerMove)
@@ -49,12 +62,6 @@ class ToolManager {
         EventQueue.unSubscribeAll(KeyDown)
         EventQueue.unSubscribeAll(KeyUp)
 
-        EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown.bind(this.currentTool))
-        EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag.bind(this.currentTool))
-        EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove.bind(this.currentTool))
-        EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp.bind(this.currentTool))
-        EventQueue.subscribe(KeyDown, this.currentTool.handleKeyDown.bind(this.currentTool))
-        EventQueue.subscribe(KeyUp, this.currentTool.handleKeyUp.bind(this.currentTool))
     }
 }
 

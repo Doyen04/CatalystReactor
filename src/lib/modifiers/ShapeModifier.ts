@@ -30,10 +30,25 @@ class ShapeModifier {
         this.isHovered = false;
         this.selectedModifier = null
 
+        this.setUpEvent()
+    }
+    setUpEvent() {
+        this.removeEvent()
+        this.addEvent()
+    }
+    addEvent() {
         EventQueue.subscribe(SelectModifier, this.selectModifier.bind(this))
         EventQueue.subscribe(DragModifier, this.handleModifierDrag.bind(this))
         EventQueue.subscribe(RemoveSelectedModifier, this.handleRemoveModifer.bind(this))
+
     }
+    removeEvent() {
+        EventQueue.unSubscribeAll(SelectModifier)
+        EventQueue.unSubscribeAll(DragModifier)
+        EventQueue.unSubscribeAll(RemoveSelectedModifier)
+
+    }
+
     setShape(shape: Shape) {
         this.handles = []
         this.shape = shape;

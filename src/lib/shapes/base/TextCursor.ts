@@ -21,10 +21,7 @@ class TextCursor {
         this.height = initialHeight;
         this.cursorIndex = 0
 
-        // Setup blinking effect
-        this.blinkInterval = setInterval(() => {
-            this.visible = !this.visible
-        }, this.blinkSpeed)
+        this.startCursorBlink()
     }
     updateCursorPosIndex(di: number) {
         this.cursorIndex += di
@@ -67,6 +64,7 @@ class TextCursor {
         if (cursorPos.length == 0) return
         this.updatePosition(cursorPos[0], cursorPos[1], cursorPos[3]);
     }
+
     private findLineAfterNewline(lineMetrics: any[]): number {
         // Find the line that starts at or after the cursor position
         for (let i = 0; i < lineMetrics.length; i++) {

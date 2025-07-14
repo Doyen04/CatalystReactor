@@ -8,13 +8,6 @@ class InputManager {
     private isDragging: boolean;
     private dragStart: Coords;
 
-    private boundOnPointerDown: (e: MouseEvent) => void;
-    private boundOnPointerMove: (e: MouseEvent) => void;
-    private boundOnPointerUp: (e: MouseEvent) => void;
-    private boundOnKeyDown: (e: KeyboardEvent) => void;
-    private boundOnKeyUp: (e: KeyboardEvent) => void;
-    private boundResize: (e?: Event) => void;
-
     constructor(cnvs: HTMLCanvasElement) {
         this.canvasEl = cnvs
 
@@ -22,30 +15,33 @@ class InputManager {
         this.isDragging = false
         this.dragStart = null
 
-        this.boundOnPointerDown = this.onPointerDown.bind(this);
-        this.boundOnPointerMove = this.onPointerMove.bind(this);
-        this.boundOnPointerUp = this.onPointerUp.bind(this);
-        this.boundOnKeyDown = this.onKeyDown.bind(this)
-        this.boundOnKeyUp = this.onKeyUp.bind(this)
-        this.boundResize = this.resize.bind(this);
-
         // Bind events
-        this.canvasEl.addEventListener('mousedown', this.boundOnPointerDown);
-        this.canvasEl.addEventListener('mousemove', this.boundOnPointerMove);
-        this.canvasEl.addEventListener('mouseup', this.boundOnPointerUp);
-        window.addEventListener('keydown', this.boundOnKeyDown)
-        window.addEventListener('keyup', this.boundOnKeyUp);
-        window.addEventListener('resize', this.boundResize);
+        this.setUpEvent()
+    }
+    setUpEvent() {
+        this.removeEventListeners()
+        this.addEventListeners()
+    }
+    addEventListeners() {
+        this.canvasEl.addEventListener('mousedown', this.onPointerDown.bind(this));
+        this.canvasEl.addEventListener('mousemove', this.onPointerMove.bind(this));
+        this.canvasEl.addEventListener('mouseup', this.onPointerUp.bind(this));
+        window.addEventListener('keydown', this.onPointerUp.bind(this))
+        window.addEventListener('keyup', this.onKeyUp.bind(this));
+        window.addEventListener('resize', this.resize.bind(this));
+
     }
 
-    onPointerDown(e: MouseEvent) {console.log('down');
-    
+    onPointerDown(e: MouseEvent) {
+        console.log('down');
+
         this.isPointerDown = true
         this.dragStart = { x: e.offsetX, y: e.offsetY }
         EventQueue.trigger(PointerDown, this.dragStart, e)
     }
 
-    onPointerMove(e: MouseEvent) {console.log('move');
+    onPointerMove(e: MouseEvent) {
+        console.log('move');
         if (this.isPointerDown) {
             EventQueue.trigger(PointerDrag, this.dragStart, e)
         } else {
@@ -54,7 +50,8 @@ class InputManager {
 
     }
 
-    onPointerUp(e: MouseEvent) {console.log('up');
+    onPointerUp(e: MouseEvent) {
+        console.log('up');
         this.isPointerDown = false;
 
         EventQueue.trigger(PointerUp, this.dragStart, e)
@@ -62,29 +59,29 @@ class InputManager {
 
     onKeyDown(e: KeyboardEvent) {
         console.log(e);
-        
+
         EventQueue.trigger(KeyDown, e)
     }
 
     onKeyUp(e: KeyboardEvent) {
         console.log(e);
-        
+
         EventQueue.trigger(KeyUp, e)
     }
 
     resize(e?: Event): void {
         console.log("resizing----5----");
-        
+
         EventQueue.trigger(CreateSurface)
     }
 
     removeEventListeners() {
-        this.canvasEl.removeEventListener('mousedown', this.boundOnPointerDown);
-        this.canvasEl.removeEventListener('mousemove', this.boundOnPointerMove);
-        this.canvasEl.removeEventListener('mouseup', this.boundOnPointerUp);
-        window.removeEventListener('keydown', this.boundOnKeyDown)
-        window.removeEventListener('keyup', this.boundOnKeyUp);
-        window.removeEventListener('resize', this.boundResize);
+        this.canvasEl.removeEventListener('mousedown', this.onPointerDown.bind(this));
+        this.canvasEl.removeEventListener('mousemove', this.onPointerMove.bind(this));
+        this.canvasEl.removeEventListener('mouseup', this.onPointerUp.bind(this));
+        window.removeEventListener('keydown', this.onPointerUp.bind(this))
+        window.removeEventListener('keyup', this.onKeyUp.bind(this));
+        window.removeEventListener('resize', this.resize.bind(this));
     }
 }
 

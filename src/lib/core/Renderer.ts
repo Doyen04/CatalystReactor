@@ -25,9 +25,19 @@ class Renderer {
         this.surf = null;
         this.animationId = null
 
-        EventQueue.subscribe(CreateSurface, this.setUpRendering.bind(this))
+        this.setUpEvent()
 
         this.setUpRendering()
+    }
+    setUpEvent(){
+        this.removeEvent()
+        this.addEvent()
+    }
+    removeEvent(){
+        EventQueue.unSubscribeAll(CreateSurface)
+    }
+    addEvent(){
+        EventQueue.subscribe(CreateSurface, this.setUpRendering.bind(this))
     }
 
     get resource(): CanvasKitResources {
@@ -167,6 +177,7 @@ class Renderer {
             this.surf.delete();
             this.surf = null;
         }
+        this.removeEvent()
     }
 }
 

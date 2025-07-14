@@ -26,9 +26,17 @@ class SceneManager {
         this.modifierSelected = false
         //remember to add a shape created event
 
+        this.setUpEvent()
+    }
+    setUpEvent(){
+        this.removeEvent()
+        this.addEvent()
+    }
+    addEvent(){
         EventQueue.subscribe(CreateShape, this.createShape.bind(this))
         EventQueue.subscribe(DrawShape, this.updateTransientShape.bind(this))
         EventQueue.subscribe(FinalizeShape, this.cleanUp.bind(this))
+        
         EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
         EventQueue.subscribe(SelectObject, this.selectObject.bind(this))
         // EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
@@ -36,10 +44,22 @@ class SceneManager {
         EventQueue.subscribe(DragObject, this.dragSelectedObject.bind(this))
         EventQueue.subscribe(FinaliseSelection, this.handleSelectionCleanUp.bind(this))
         // EventQueue.subscribe(DragShape, this.dragSelectedShape.bind(this))
-
         EventQueue.subscribe(ToolChange, this.handleToolChange.bind(this))
     }
+    removeEvent(){
+        EventQueue.unSubscribeAll(CreateShape)
+        EventQueue.unSubscribeAll(DrawShape)
+        EventQueue.unSubscribeAll(FinalizeShape)
 
+        EventQueue.unSubscribeAll(ShowHovered)
+        EventQueue.unSubscribeAll(SelectObject)
+        
+        EventQueue.unSubscribeAll(ModifierSelected)
+        EventQueue.unSubscribeAll(DragObject)
+        EventQueue.unSubscribeAll(FinaliseSelection)
+        
+        EventQueue.unSubscribeAll(ToolChange)
+    }
     getScene(): SceneNode {
         return this.scene
     }
@@ -173,7 +193,6 @@ class SceneManager {
     }
 
     createShape(type: ShapeType, x: number, y: number): Shape {
-
         // Create a new shape based on the type and add it to the scene
         const node = ShapeFactory.createShape(type, { x, y });
         this.addNode(node);
