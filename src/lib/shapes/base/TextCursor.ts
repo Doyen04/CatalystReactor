@@ -67,6 +67,24 @@ class TextCursor {
         if (cursorPos.length == 0) return
         this.updatePosition(cursorPos[0], cursorPos[1], cursorPos[3]);
     }
+    private findLineAfterNewline(lineMetrics: any[]): number {
+        // Find the line that starts at or after the cursor position
+        for (let i = 0; i < lineMetrics.length; i++) {
+            const metric = lineMetrics[i];
+            if (this.cursorIndex <= metric.startIndex) {
+                return i;
+            }
+            if (this.cursorIndex >= metric.startIndex && this.cursorIndex <= metric.endIndex) {
+                // If cursor is within this line, check if it's at the start due to newline
+                if (this.cursorIndex === metric.startIndex) {
+                    return i;
+                }
+                // Otherwise, return next line if it exists
+                return Math.min(i + 1, lineMetrics.length - 1);
+            }
+        }
+        return lineMetrics.length - 1;
+    }
 
     private calculateCursorRect(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): number[] {
         if (!this.resource.canvasKit) return [];
@@ -75,12 +93,14 @@ class TextCursor {
             return [0, 0, 2, fontSize * lineHeight];
         }
         if (text[this.cursorIndex - 1] === "\n") {
-            // Fallback for newline
-            console.log(text.split('\n'), text);
+            const lineMetrics = paragraph.getLineMetrics();
+            const currentLine = this.findLineAfterNewline(lineMetrics);
 
-            const lineCount = text.slice(0, this.cursorIndex).split("\n").length - 1;
-            const yOffset = lineCount * fontSize * lineHeight;
-            return [0, yOffset, 2, fontSize * lineHeight];
+            if (currentLine < lineMetrics.length) {
+                const lineMetric = lineMetrics[currentLine];
+                // Position cursor at the start of the current line
+                return [0, lineMetric.baseline - fontSize, 2, fontSize * lineHeight];
+            }
         }
 
         const rects = paragraph.getRectsForRange(
@@ -107,10 +127,10 @@ class TextCursor {
                 this.cursorIndex = Math.min(text.length, this.cursorIndex + 1);
                 break;
             case 'up':
-                this.moveCursorUp(text)
+                this.moveCursorUp(text, paragraph)
                 break;
             case 'down':
-                this.moveCursorDown(text)
+                this.moveCursorDown(text, paragraph)
                 break;
             default:
                 console.log('direction not implemented');
@@ -121,59 +141,87 @@ class TextCursor {
         this.calculateCursorCoord(text, fontSize, lineHeight, paragraph)
     }
 
-    private moveCursorUp(text: string): void {
-        const lines = text.split('\n');
-        const { lineIndex, charIndex } = this.getCursorLinePosition(text);
+    private moveCursorUp(text: string, paragraph: Paragraph): void {
+        if (!paragraph) return;
 
-        if (lineIndex > 0) {
-            const targetLine = lines[lineIndex - 1];
-            const newCharIndex = Math.min(charIndex, targetLine.length);
-            const newPosition = this.getnextCursorPositionFromLine(text, lineIndex - 1, newCharIndex);
+        const lineMetrics = paragraph.getLineMetrics();
+        const currentLine = this.findCurrentLine(lineMetrics);
 
-            this.cursorIndex = newPosition;
+        if (currentLine > 0) {
+            const currentLineMetric = lineMetrics[currentLine];
+            const targetLineMetric = lineMetrics[currentLine - 1];
+
+            // Get current position within the line
+            const currentLineStart = currentLineMetric.startIndex;
+            const positionInLine = this.cursorIndex - currentLineStart;
+
+            // Calculate approximate x position based on character position
+            const charWidth = this.estimateCharWidth(text, currentLineMetric);
+            const targetX = positionInLine * charWidth;
+
+            // Find closest position in target line
+            const targetLineStart = targetLineMetric.startIndex;
+            const targetLineEnd = targetLineMetric.endIndex;
+            const targetLineLength = targetLineEnd - targetLineStart;
+
+            // Estimate position in target line based on x position
+            const targetPositionInLine = Math.min(
+                Math.round(targetX / charWidth),
+                targetLineLength
+            );
+
+            this.cursorIndex = targetLineStart + targetPositionInLine;
         }
     }
 
-    private moveCursorDown(text: string): void {
-        const lines = text.split('\n');
-        const { lineIndex, charIndex } = this.getCursorLinePosition(text);
 
-        if (lineIndex < lines.length - 1) {
-            const targetLine = lines[lineIndex + 1];
-            const newCharIndex = Math.min(charIndex, targetLine.length);
-            const newPosition = this.getnextCursorPositionFromLine(text, lineIndex + 1, newCharIndex);
+    private moveCursorDown(text: string, paragraph: Paragraph): void {
+        if (!paragraph) return;
 
-            this.cursorIndex = newPosition;
+        const lineMetrics = paragraph.getLineMetrics();
+        const currentLine = this.findCurrentLine(lineMetrics);
+
+        if (currentLine < lineMetrics.length - 1) {
+            const currentLineMetric = lineMetrics[currentLine];
+            const targetLineMetric = lineMetrics[currentLine + 1];
+
+            // Get current position within the line
+            const currentLineStart = currentLineMetric.startIndex;
+            const positionInLine = this.cursorIndex - currentLineStart;
+
+            // Calculate approximate x position based on character position
+            const charWidth = this.estimateCharWidth(text, currentLineMetric);
+            const targetX = positionInLine * charWidth;
+
+            // Find closest position in target line
+            const targetLineStart = targetLineMetric.startIndex;
+            const targetLineEnd = targetLineMetric.endIndex;
+            const targetLineLength = targetLineEnd - targetLineStart;
+
+            // Estimate position in target line based on x position
+            const targetPositionInLine = Math.min(
+                Math.round(targetX / charWidth),
+                targetLineLength
+            );
+
+            this.cursorIndex = targetLineStart + targetPositionInLine;
         }
     }
 
-    private getnextCursorPositionFromLine(text: string, lineIndex: number, charIndex: number): number {
-        const lines = text.split('\n');
-        let position = 0;
-
-        for (let i = 0; i < lineIndex && i < lines.length; i++) {//check agast this ??
-            position += lines[i].length + 1; // +1 for newline
-        }
-
-        return position + Math.min(charIndex, lines[lineIndex]?.length || 0);
-    }
-
-    private getCursorLinePosition(text: string): { lineIndex: number, charIndex: number } {
-        const lines = text.split('\n');
-        let currentPos = 0;
-
-        for (let i = 0; i < lines.length; i++) {
-            const lineLength = lines[i].length;
-            if (currentPos + lineLength >= this.cursorIndex) {
-                return {
-                    lineIndex: i,
-                    charIndex: this.cursorIndex - currentPos
-                };
+    private findCurrentLine(lineMetrics: any[]): number {
+        for (let i = 0; i < lineMetrics.length; i++) {
+            const metric = lineMetrics[i];
+            if (this.cursorIndex >= metric.startIndex && this.cursorIndex <= metric.endIndex) {
+                return i;
             }
-            currentPos += lineLength + 1; // +1 for newline character
         }
+        return lineMetrics.length - 1;
+    }
 
-        return { lineIndex: lines.length - 1, charIndex: lines[lines.length - 1]?.length || 0 };
+    private estimateCharWidth(text: string, lineMetric: any): number {
+        const lineText = text.substring(lineMetric.startIndex, lineMetric.endIndex);
+        const lineWidth = lineMetric.width;
+        return lineText.length > 0 ? lineWidth / lineText.length : 10; // fallback width
     }
 
     updatePosition(x: number, y: number, height: number): void {
