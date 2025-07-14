@@ -208,28 +208,28 @@ class Rectangle extends Shape {
         return handles;
     }
 
-    getRadiusModifiersPos(pos: Corner, size: number) {
+    getRadiusModifiersPos(pos: Corner, size: number, isDragging?: boolean): { x: number; y: number; } {
         const r = this.bdradius[pos];
-        const padding = 10;
+        const padding = 15;
 
         let x: number, y: number;
 
         switch (pos) {
             case 'top-left':
-                x = (this.x + (r === 0 ? padding : r)) - size;
-                y = (this.y + (r === 0 ? padding : r)) - size;
+                x = this.x + (isDragging || r >= padding ? r : padding) - size;
+                y = this.y + (isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'top-right':
-                x = ((this.x + this.width) - (r === 0 ? padding : r)) - size;
-                y = (this.y + (r === 0 ? padding : r)) - size;
+                x = this.x + this.width - (isDragging || r >= padding ? r : padding) - size;
+                y = this.y + (isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'bottom-left':
-                x = (this.x + (r === 0 ? padding : r)) - size;
-                y = ((this.y + this.height) - (r === 0 ? padding : r)) - size;
+                x = this.x + (isDragging || r >= padding ? r : padding) - size;
+                y = this.y + this.height - (isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'bottom-right':
-                x = ((this.x + this.width) - (r === 0 ? padding : r)) - size;
-                y = ((this.y + this.height) - (r === 0 ? padding : r)) - size;
+                x = this.x + this.width - (isDragging || r >= padding ? r : padding) - size;
+                y = this.y + this.height - (isDragging || r >= padding ? r : padding) - size;
                 break;
         }
 
@@ -262,10 +262,10 @@ class Rectangle extends Shape {
         }
     }
 
-    override getModifersPos(modifierName: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
+    override getModifersPos(modifierName: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
 
         if (handleType === 'radius') {
-            return this.getRadiusModifiersPos(modifierName, size);
+            return this.getRadiusModifiersPos(modifierName, size, isDragging);
         } else if (handleType === 'size') {
             return super.getModifersPos(modifierName, size, handleType);
         }

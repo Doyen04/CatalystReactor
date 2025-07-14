@@ -48,7 +48,7 @@ abstract class Shape {
         return handles;
     }
 
-    getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
+    getModifersPos(modifierName: string, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
         const bRect = this.boundingRect
         size = size / 2
         switch (modifierName) {

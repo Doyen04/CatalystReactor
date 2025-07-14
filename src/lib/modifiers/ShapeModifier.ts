@@ -56,7 +56,8 @@ class ShapeModifier {
         }
     }
     handleRemoveModifer() {
-        this.selectModifier = null
+        this.selectedModifier.isDragging = false
+        this.selectedModifier = null
     }
 
     selectModifier(x: number, y: number) {
@@ -92,7 +93,7 @@ class ShapeModifier {
         }
 
         for (const resizer of this.handles) {
-            const { x, y } = this.shape.getModifersPos(resizer.pos, this.size, resizer.type);
+            const { x, y } = this.shape.getModifersPos(resizer.pos, this.size, resizer.type, resizer.isDragging);
             resizer.updatePosition(x, y);
         }
 

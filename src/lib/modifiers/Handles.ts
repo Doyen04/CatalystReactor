@@ -10,6 +10,7 @@ export default class Handle {
     type: HandleType;
     shape: Oval | Rectangle;
     pos: Corner;
+    isDragging: boolean = false;
 
     constructor(x: number, y: number, size: number, pos: Corner, type: HandleType, fill: string | number[], stroke: string | number[]) {
         this.x = x;
@@ -46,6 +47,7 @@ export default class Handle {
             const { left, right, top, bottom } = shape.boundingRect;
 
             let cornerX, cornerY, distX, distY, newRadius = 0;
+            this.isDragging = true;
 
             switch (this.pos) {
                 case 'top-left':
