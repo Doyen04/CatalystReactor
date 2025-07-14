@@ -31,33 +31,34 @@ function Canvas() {
         console.log('CanvasKit loaded:', canvasKit);
 
         if (!canvasKit) return;
-
-        const load = async () => {console.log('starting to load refs');
-            if (canvasManagerRef.current) {console.log('starting to clean refs');
-            
+        let isCancelled = false
+        const cleanupExisting = () => {
+            if (canvasManagerRef.current) {
                 canvasManagerRef.current.removeEventListener();
                 canvasManagerRef.current = null;
             }
             if (canvasResourcesRef.current) {
-                canvasResourcesRef.current = null
-                canvasResourcesRef.current.dispose()
+                canvasResourcesRef.current.dispose();
+                canvasResourcesRef.current = null;
             }
+        };
+
+        const load = async () => {
+            console.log('starting to load refs');
+            cleanupExisting()
             await CanvasKitResources.loadInterFont()
+            if (isCancelled) return
+
             canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
             canvasManagerRef.current = new CanvasManager(canvasRef.current);
             console.log('Initializing Canvasmnager with CasKit');
         }
+
         load()
         return () => {
             console.log('clean up');
-
-            if (canvasManagerRef.current) {
-                canvasManagerRef.current.removeEventListener();
-                canvasManagerRef.current = null;
-            } if (canvasResourcesRef.current) {
-                canvasResourcesRef.current.dispose()
-                canvasResourcesRef.current = null
-            }
+            isCancelled = true
+           cleanupExisting()
         }
     }, [canvasKit]);
 

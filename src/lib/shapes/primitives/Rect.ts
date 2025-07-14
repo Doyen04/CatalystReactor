@@ -1,7 +1,8 @@
 import { Handle, ModifierPos } from '@/lib/modifiers';
 import { Shape } from '@/lib/shapes';
-import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
+import type { Canvas, CanvasKit, Paint, Path, Rect } from "canvaskit-wasm";
 
+type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 class Rectangle extends Shape {
     width: number;
@@ -107,20 +108,96 @@ class Rectangle extends Shape {
 
 
     override draw(canvas: Canvas): void {
-        if (!this.resource) return
+        if (!this.resource) return;
 
         this.setPaint();
 
         const rect = this.resource.canvasKit.LTRBRect(this.x, this.y, this.x + this.width, this.y + this.height);
-        const rect2 = this.resource.canvasKit.RRectXY(rect, this.bdradius['top-left'], this.bdradius['bottom-left'])
+        // Check if any corners have radius
+        const hasRadius = this.bdradius['top-left'] > 0 ||
+            this.bdradius['top-right'] > 0 ||
+            this.bdradius['bottom-left'] > 0 ||
+            this.bdradius['bottom-right'] > 0;
 
-        canvas.drawRRect(rect2, this.resource.paint)
-        canvas.drawRRect(rect2, this.resource.strokePaint)
+        if (hasRadius) {
+            this.drawRoundedRect(canvas, rect);
+        } else {
+            // Draw regular rectangle
+            canvas.drawRect(rect, this.resource.paint);
+            canvas.drawRect(rect, this.resource.strokePaint);
+        }
+    }
 
-        // if (this.bdradius > 0) return
+    private drawRoundedRect(canvas: Canvas, rect: Rect): void {
+        if (!this.resource) return;
 
-        // canvas.drawRect(rect2, this.resource.paint);
-        // canvas.drawRect(rect2, this.resource.strokePaint);
+        const canvasKit = this.resource.canvasKit;
+
+        // Method 1: Using RRectXY (simpler but uniform corners)
+        if (this.bdradius.locked) {
+            const radius = this.bdradius['top-left'];
+            const rrect = canvasKit.RRectXY(rect, radius, radius);
+            canvas.drawRRect(rrect, this.resource.paint);
+            canvas.drawRRect(rrect, this.resource.strokePaint);
+            return;
+        } else {
+            const path = this.makeCustomRRectPath()
+
+            canvas.drawPath(path, this.resource.paint);
+            canvas.drawPath(path, this.resource.strokePaint);
+
+            path.delete(); // Clean up WASM memory
+        }
+    }
+
+    private makeCustomRRectPath(): Path {
+        const radii = {
+            tl: this.bdradius['top-left'],
+            tr: this.bdradius['top-right'],
+            br: this.bdradius['bottom-right'],
+            bl: this.bdradius['bottom-left']
+        };
+        const [x, y, w, h] = [this.x, this.y, this.width, this.height];
+        const CanvasKit = this.resource?.canvasKit;
+
+        const p = new CanvasKit.Path();
+        const { tl, tr, br, bl } = radii;
+
+        p.moveTo(x + tl, y);
+        p.lineTo(x + w - tr, y);
+        if (tr > 0) {
+            p.arcToOval(
+                CanvasKit.LTRBRect(x + w - 2 * tr, y, x + w, y + 2 * tr),
+                -90, 90, false
+            );
+        }
+
+        p.lineTo(x + w, y + h - br);
+        if (br > 0) {
+            p.arcToOval(
+                CanvasKit.LTRBRect(x + w - 2 * br, y + h - 2 * br, x + w, y + h),
+                0, 90, false
+            );
+        }
+
+        p.lineTo(x + bl, y + h);
+        if (bl > 0) {
+            p.arcToOval(
+                CanvasKit.LTRBRect(x, y + h - 2 * bl, x + 2 * bl, y + h),
+                90, 90, false
+            );
+        }
+
+        p.lineTo(x, y + tl);
+        if (tl > 0) {
+            p.arcToOval(
+                CanvasKit.LTRBRect(x, y, x + 2 * tl, y + 2 * tl),
+                180, 90, false
+            );
+        }
+
+        p.close();
+        return p;
     }
 
     getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
@@ -131,48 +208,44 @@ class Rectangle extends Shape {
         return handles;
     }
 
-    getRadiusModifiersPos(modifierName: string, size: number): { x: number; y: number; } {
-        const bRect = this.boundingRect
-        const bR = this.bdradius
-        const ModPadding = 10
+    getRadiusModifiersPos(pos: Corner, size: number) {
+        const pad = 10;
+        const r = this.bdradius[pos];
+        const x = pos.includes('left')
+            ? this.x + r + pad - size
+            : this.x + this.width - r - pad - size;
+        const y = pos.includes('top')
+            ? this.y + r + pad - size
+            : this.y + this.height - r - pad - size;
+        return { x, y };
+    }
 
-        switch (modifierName) {
-            case 'top-left':
-                return {
-                    x: (bRect.left + (bR['top-left'] + ModPadding)) - size,
-                    y: (bRect.top + (bR['top-left'] + ModPadding)) - size
-                };
-            case 'top-right':
-                return {
-                    x: (bRect.right - (bR['top-right'] + ModPadding)) - size,
-                    y: (bRect.top + (bR['top-right'] + ModPadding)) - size
-                };
-            case 'bottom-left':
-                return {
-                    x: (bRect.left + (bR['bottom-left'] + ModPadding)) - size,
-                    y: (bRect.bottom - (bR['bottom-left'] + ModPadding)) - size
-                };
-            case 'bottom-right':
-                return {
-                    x: (bRect.right - (bR['bottom-right'] + ModPadding)) - size,
-                    y: (bRect.bottom - (bR['bottom-right'] + ModPadding)) - size
-                };
-            default:
-                return { x: 0, y: 0 };
+    updateRadius(delta: number, pos: Corner) {
+        const current = this.bdradius[pos];
+        const max = Math.min(this.width, this.height) / 2;
+        this.bdradius[pos] = Math.max(0, Math.min(current + delta, max));
+    }
+
+    private setBorderRadius(radius: number): void {
+        this.bdradius = {
+            'top-left': radius,
+            'top-right': radius,
+            'bottom-left': radius,
+            'bottom-right': radius,
+            locked: true
+        };
+    }
+    
+    toggleRadiusLock(): void {
+        this.bdradius.locked = !this.bdradius.locked;
+        if (this.bdradius.locked) {
+            const radius = Math.max(this.bdradius['top-left'], this.bdradius['top-right'],
+                this.bdradius['bottom-left'], this.bdradius['bottom-right']);
+            this.setBorderRadius(radius);
         }
     }
-    updateRadius(r: number, pos: string) {
-        console.log(r);
-        if (!(pos in ['top-left', 'top-right', 'bottom-left', 'bottom-right'])) return
 
-        const highRad = Math.min(this.width, this.height) / 2
-        r = (this.bdradius[pos] + r < 0) ? -this.bdradius[pos] :
-            (this.bdradius + r[pos] > highRad) ? highRad - this.bdradius[pos] : r;
-
-        this.bdradius[pos] += r
-    }
-
-    override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
+    override getModifersPos(modifierName: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
 
         if (handleType === 'radius') {
             return this.getRadiusModifiersPos(modifierName, size);
