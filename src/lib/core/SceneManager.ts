@@ -185,7 +185,7 @@ class SceneManager {
 
     cleanUp() {
         this.handleTinyShapes()
-        // this.transientShape = null
+        this.transientShape = null
     }
 
     handleTinyShapes(): void {
@@ -203,6 +203,7 @@ class SceneManager {
             console.log('Shape removed: too small add default size');
         }
     }
+    
     handleToolChange() {
         if (this.transientShape) {
             this.transientShape.shape.destroy()

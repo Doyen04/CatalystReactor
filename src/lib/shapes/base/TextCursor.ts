@@ -182,22 +182,38 @@ class TextCursor {
         this.height = height;
         this.visible = true;
         // Reset blink timer
-        clearInterval(this.blinkInterval);
+        this.startCursorBlink()
+    }
+
+    private startCursorBlink(): void {
+        this.stopCursorBlink();
+        this.visible = true;
         this.blinkInterval = setInterval(() => {
             this.visible = !this.visible;
+            // Trigger a redraw here - depends on your rendering system
+            // this.requestRedraw();
         }, this.blinkSpeed);
     }
 
+    private stopCursorBlink(): void {
+        if (this.blinkInterval) {
+            clearInterval(this.blinkInterval);
+            this.blinkInterval = null;
+        }
+        this.visible = false;
+    }
+
     draw(canvas: Canvas): void {
-        if (!this.visible || !this.resource) return;
+        if (!this.visible || !this.resource) {
+            return;
+        }
         this.setPaint()
 
         canvas.drawLine(this.x + this.textX, this.y + this.textY, this.x + this.textX, this.y + this.textY + this.height, this.resource.strokePaint);
     }
 
     destroy(): void {
-        this.visible = false
-        clearInterval(this.blinkInterval);
+        this.stopCursorBlink()
     }
 }
 

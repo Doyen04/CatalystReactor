@@ -4,7 +4,7 @@ import SceneManager from "./SceneManager";
 import Renderer from "./Renderer";
 import ToolManager from "./ToolManager";
 
-import type Matrix  from "./Matrix";
+import type Matrix from "./Matrix";
 
 
 class CanvasManager {
@@ -18,10 +18,14 @@ class CanvasManager {
 
     constructor(canvas: HTMLCanvasElement) {
 
-        // this.skCnvs = null;
+        // this.skCnvs = null
+        console.log('init scene');
         this.sceneManager = new SceneManager();
+        console.log('init render');
         this.renderer = new Renderer(canvas, this.sceneManager)
+        console.log('init input');
         this.inputManager = new InputManager(canvas)
+        console.log('init tool');
         this.toolManager = new ToolManager()
 
         // Input handling state
@@ -77,9 +81,9 @@ class CanvasManager {
     }
     removeEventListener() {
         console.log('removing all event and doing clean up');
-        
-        this.inputManager.removeEventListeners()
-        this.renderer.destroy()
+
+        if(this.inputManager)this.inputManager.removeEventListeners()
+        if(this.renderer)this.renderer.destroy()
         EventQueue.removeAllEvent()
     }
 

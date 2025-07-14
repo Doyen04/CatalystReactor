@@ -30,25 +30,27 @@ function Canvas() {
     useEffect(() => {
         console.log('CanvasKit loaded:', canvasKit);
 
-        if (!canvasRef.current || !canvasKit || !canvasManagerRef) return;
+        if (!canvasKit) return;
 
-        if (canvasManagerRef.current) {
-            canvasManagerRef.current.removeEventListener();
-            canvasManagerRef.current = null;
-        }
-        if (canvasResourcesRef.current) {
-            canvasResourcesRef.current = null
-            canvasResourcesRef.current.dispose()
-        }
-        const load = async () => {
+        const load = async () => {console.log('starting to load refs');
+            if (canvasManagerRef.current) {console.log('starting to clean refs');
+            
+                canvasManagerRef.current.removeEventListener();
+                canvasManagerRef.current = null;
+            }
+            if (canvasResourcesRef.current) {
+                canvasResourcesRef.current = null
+                canvasResourcesRef.current.dispose()
+            }
             await CanvasKitResources.loadInterFont()
             canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
             canvasManagerRef.current = new CanvasManager(canvasRef.current);
-            console.log('Initializing CanvasManager with CanvasKit');
+            console.log('Initializing Canvasmnager with CasKit');
         }
         load()
-
         return () => {
+            console.log('clean up');
+
             if (canvasManagerRef.current) {
                 canvasManagerRef.current.removeEventListener();
                 canvasManagerRef.current = null;
@@ -57,7 +59,7 @@ function Canvas() {
                 canvasResourcesRef.current = null
             }
         }
-    }, [canvasKit, canvasManagerRef, canvasResourcesRef]);
+    }, [canvasKit]);
 
     useEffect(() => {
         if (!canvasManagerRef.current) return;

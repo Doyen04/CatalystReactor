@@ -119,8 +119,9 @@ class PText extends Shape {
     }
 
     pointInShape(x: number, y: number): boolean {
-        return x >= this.x && x <= this.x + this.width &&
-            y >= this.y && y <= this.y + this.height;
+        const w = (this.width == 0) ? this.TWidth : this.width
+        const h = (this.height == 0) ? this.THeight : this.height
+        return x >= this.x && x <= this.x + w && y >= this.y && y <= this.y + h;
     }
 
     calculateBoundingRect(): void {
@@ -224,7 +225,7 @@ class PText extends Shape {
     setUpBuilder() {
         if (this.resource.fontData.length == 0) {
             console.log(this.resource.fontData);
-            
+
             return
         }
         const fontData = this.resource.fontData
