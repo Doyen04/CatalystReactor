@@ -98,14 +98,15 @@ class SceneManager {
         }
     }
 
-    dragSelectedObject(dx: number, dy: number) {
+    dragSelectedObject(dx: number, dy: number, e: MouseEvent) {
         if (this.modifierSelected) {
-            EventQueue.trigger(DragModifier, dx, dy)
+            EventQueue.trigger(DragModifier, dx, dy, e)
         } else {
-            this.dragSelectedShape(dx, dy)
+            this.dragSelectedShape(dx, dy, e)
         }
     }
-    dragSelectedShape(dx: number, dy: number) {
+
+    dragSelectedShape(dx: number, dy: number, e: MouseEvent) {
         if (!this.selected) {
             console.log('no selected shape');
 
@@ -203,7 +204,7 @@ class SceneManager {
             console.log('Shape removed: too small add default size');
         }
     }
-    
+
     handleToolChange() {
         if (this.transientShape) {
             this.transientShape.shape.destroy()

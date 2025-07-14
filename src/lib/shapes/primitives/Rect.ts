@@ -209,21 +209,38 @@ class Rectangle extends Shape {
     }
 
     getRadiusModifiersPos(pos: Corner, size: number) {
-        const pad = 10;
         const r = this.bdradius[pos];
-        const x = pos.includes('left')
-            ? this.x + r + pad - size
-            : this.x + this.width - r - pad - size;
-        const y = pos.includes('top')
-            ? this.y + r + pad - size
-            : this.y + this.height - r - pad - size;
+        const padding = 10;
+
+        let x: number, y: number;
+
+        switch (pos) {
+            case 'top-left':
+                x = (this.x + (r === 0 ? padding : r)) - size;
+                y = (this.y + (r === 0 ? padding : r)) - size;
+                break;
+            case 'top-right':
+                x = ((this.x + this.width) - (r === 0 ? padding : r)) - size;
+                y = (this.y + (r === 0 ? padding : r)) - size;
+                break;
+            case 'bottom-left':
+                x = (this.x + (r === 0 ? padding : r)) - size;
+                y = ((this.y + this.height) - (r === 0 ? padding : r)) - size;
+                break;
+            case 'bottom-right':
+                x = ((this.x + this.width) - (r === 0 ? padding : r)) - size;
+                y = ((this.y + this.height) - (r === 0 ? padding : r)) - size;
+                break;
+        }
+
         return { x, y };
     }
 
-    updateRadius(delta: number, pos: Corner) {
-        const current = this.bdradius[pos];
+    updateRadius(newRadius: number, pos: Corner) {
+        console.log(newRadius, pos);
+
         const max = Math.min(this.width, this.height) / 2;
-        this.bdradius[pos] = Math.max(0, Math.min(current + delta, max));
+        this.bdradius[pos] = Math.max(0, Math.min(newRadius, max));
     }
 
     private setBorderRadius(radius: number): void {
@@ -235,7 +252,7 @@ class Rectangle extends Shape {
             locked: true
         };
     }
-    
+
     toggleRadiusLock(): void {
         this.bdradius.locked = !this.bdradius.locked;
         if (this.bdradius.locked) {

@@ -5,7 +5,7 @@ import { CanvasKitResources, EventQueue, EventTypes } from "@lib/core";
 
 const { SelectModifier, DragModifier, ModifierSelected, RemoveSelectedModifier } = EventTypes
 
-export const ModifierPos = [
+export const ModifierPos: Corner[] = [
     'top-left',
     'top-right',
     'bottom-left',
@@ -62,7 +62,6 @@ class ShapeModifier {
     selectModifier(x: number, y: number) {
         if (this.handles.length == 0) return
         let selected: Handle = null
-        console.log(this.handles);
 
         for (const node of this.handles) {
             if (node && node.isCollide(x, y)) {
@@ -73,11 +72,11 @@ class ShapeModifier {
         }
         this.selectedModifier = selected
     }
-    handleModifierDrag(x: number, y: number) {
+    handleModifierDrag(x: number, y: number, e: MouseEvent) {
         if (this.selectedModifier) {
             switch (this.selectedModifier.type) {
                 case 'radius':
-                    this.selectedModifier.updateRadii(x,y, this.shape)
+                    this.selectedModifier.updateRadii(x, y, e, this.shape)
                     break;
 
                 default:

@@ -9,9 +9,9 @@ export default class Handle {
     size: number;
     type: HandleType;
     shape: Oval | Rectangle;
-    pos: string;
+    pos: Corner;
 
-    constructor(x: number, y: number, size: number, pos: string, type: HandleType, fill: string | number[], stroke: string | number[]) {
+    constructor(x: number, y: number, size: number, pos: Corner, type: HandleType, fill: string | number[], stroke: string | number[]) {
         this.x = x;
         this.y = y;
         this.pos = pos
@@ -41,28 +41,55 @@ export default class Handle {
     isCollide(x: number, y: number): boolean {
         return this.shape.pointInShape(x, y)
     }
-    updateRadii(mx: number, my: number, shape: Shape) {
-        console.log(99999, this.pos);
-
+    updateRadii(dx: number, dy: number, e: MouseEvent, shape: Shape) {
         if (shape instanceof Rectangle) {
+            const { left, right, top, bottom } = shape.boundingRect;
+
+            let cornerX, cornerY, distX, distY, newRadius = 0;
+
             switch (this.pos) {
                 case 'top-left':
-                    shape.updateRadius(Math.max(mx, my))
+                    cornerX = left;
+                    cornerY = top;
+                    distX = e.offsetX - cornerX;
+                    distY = e.offsetY - cornerY;
+                    if (distX >= 0 && distY >= 0) {
+                        newRadius = Math.min(distX, distY);
+                    }
                     break;
                 case 'top-right':
+                    cornerX = right;
+                    cornerY = top;
+                    distX = e.offsetX - cornerX;
+                    distY = e.offsetY - cornerY;
+                    if (distX <= 0 && distY >= 0) {
+                        newRadius = Math.min(Math.abs(distX), distY);
+                    }
                     break;
                 case 'bottom-left':
+                    cornerX = left;
+                    cornerY = bottom;
+                    distX = e.offsetX - cornerX;
+                    distY = e.offsetY - cornerY;
+                    if (distX >= 0 && distY <= 0) {
+                        newRadius = Math.min(distX, Math.abs(distY));
+                    }
                     break;
                 case 'bottom-right':
-                    break;
-                default:
+                    cornerX = right;
+                    cornerY = bottom;
+                    distX = e.offsetX - cornerX;
+                    distY = e.offsetY - cornerY;
+                    if (distX <= 0 && distY <= 0) {
+                        newRadius = Math.min(Math.abs(distX), Math.abs(distY));
+                    }
                     break;
             }
+
+            shape.updateRadius(newRadius, this.pos);
         }
     }
-    // move(x: number, y: number) {console.log('dragging start', x, y);
-    //     this.shape.moveShape(x, y)
-    // }
+
     draw(canvas: Canvas) {
         this.shape.draw(canvas);
     }

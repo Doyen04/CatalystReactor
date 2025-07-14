@@ -19,3 +19,5 @@ declare interface Coords {
     x: number;
     y: number;
 }
+
+declare type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';

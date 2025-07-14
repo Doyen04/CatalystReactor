@@ -27,7 +27,7 @@ class SelectTool extends Tool {
         const dx = e.offsetX - this.lastMouseCoord.x
         const dy = e.offsetY - this.lastMouseCoord.y
 
-        EventQueue.trigger(DragObject, dx, dy)
+        EventQueue.trigger(DragObject, dx, dy, e)
 
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
     }
