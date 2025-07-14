@@ -56,10 +56,10 @@ class Renderer {
 
         this.stopLoop()
 
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             this.makeSurface()
             this.startLoop();
-        }, 0);
+        });
     }
 
     makeSurface() {
@@ -136,7 +136,7 @@ class Renderer {
 
         const scene = this.sceneManager.getScene()
         const shapeModifier = this.sceneManager.getDimModifier()
-        const transientShape = this.sceneManager.getTransientShape()
+        const transientShape = this.sceneManager.getTransientScene()
         scene.updateWorldMatrix();
 
         const rect = this.resource.canvasKit.LTRBRect(10, 10, 250, 100);

@@ -26,7 +26,7 @@ class InputManager {
         this.canvasEl.addEventListener('mousedown', this.onPointerDown.bind(this));
         this.canvasEl.addEventListener('mousemove', this.onPointerMove.bind(this));
         this.canvasEl.addEventListener('mouseup', this.onPointerUp.bind(this));
-        window.addEventListener('keydown', this.onPointerUp.bind(this))
+        window.addEventListener('keydown', this.onKeyDown.bind(this))
         window.addEventListener('keyup', this.onKeyUp.bind(this));
         window.addEventListener('resize', this.resize.bind(this));
 

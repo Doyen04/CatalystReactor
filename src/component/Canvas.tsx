@@ -17,7 +17,6 @@ function Canvas() {
     const { tool } = useToolStore()
 
     useEffect(() => {
-        let isCancelled = false
 
         const cleanupExisting = () => {
             if (canvasManagerRef.current) {
@@ -38,8 +37,9 @@ function Canvas() {
                 const canvasKit = await CanvasKitInit({ locateFile: () => canvasKitWasmUrl })
 
                 await CanvasKitResources.loadInterFont()
-                // if (isCancelled) return
-
+                //why do this line downward run twice withut running cleanupexisting first
+                if (canvasResourcesRef.current || canvasManagerRef.current) return
+                
                 canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
                 canvasManagerRef.current = new CanvasManager(canvasRef.current);
                 console.log('Initializing Canvasmanager with CanvasKit');
@@ -51,7 +51,6 @@ function Canvas() {
         load()
         return () => {
             console.log('clean up');
-            // isCancelled = true
             cleanupExisting()
         }
     }, [canvasRef]);

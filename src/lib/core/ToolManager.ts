@@ -1,11 +1,11 @@
 import { SelectTool, ShapeTool, TextTool, Tool } from '@/lib/tools'
 import EventQueue, { EventTypes } from './EventQueue'
+import { Shape } from '@lib/shapes';
 
 const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes
 
 class ToolManager {
     currentTool: Tool
-
     constructor() {
         this.currentTool = new SelectTool()
 
@@ -13,55 +13,65 @@ class ToolManager {
     }
 
     setCurrentTool(tool: ToolType) {
+        let currentTool = null
         switch (tool) {
             case 'select':
-                this.currentTool = new SelectTool()
+                currentTool = new SelectTool()
                 break;
             case 'rect':
-                this.currentTool = new ShapeTool('rect')
+                currentTool = new ShapeTool('rect')
                 break;
             case 'oval':
-                this.currentTool = new ShapeTool('oval')
+                currentTool = new ShapeTool('oval')
                 break;
             case 'star':
-                this.currentTool = new ShapeTool('star')
+                currentTool = new ShapeTool('star')
                 break;
             case 'polygon':
-                this.currentTool = new ShapeTool('polygon')
+                currentTool = new ShapeTool('polygon')
                 break;
             case 'text':
-                this.currentTool = new TextTool()
+                currentTool = new TextTool()
                 break;
             default:
                 console.log('ttool not implemented');
 
-                this.currentTool = null
+                currentTool = null
                 break;
         }
-        if(this.currentTool) EventQueue.trigger(ToolChange)
+        if (currentTool) EventQueue.trigger(ToolChange, currentTool)
         this.setUpEvent()
+    }
+    handleToolChange(tool: any) {
+        if (tool !== this.currentTool) {
+            if (this.currentTool) this.currentTool.cleanUp()
+            this.currentTool = tool
+        }
     }
     setUpEvent() {
         this.removeEvent()
         this.addEvent()
     }
-    addEvent(){
+    addEvent() {
+        console.log(this.currentTool);
+
         EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown.bind(this.currentTool))
         EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag.bind(this.currentTool))
         EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove.bind(this.currentTool))
         EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp.bind(this.currentTool))
         EventQueue.subscribe(KeyDown, this.currentTool.handleKeyDown.bind(this.currentTool))
         EventQueue.subscribe(KeyUp, this.currentTool.handleKeyUp.bind(this.currentTool))
-        
+        EventQueue.subscribe(ToolChange, this.handleToolChange.bind(this))
+
     }
-    removeEvent(){
+    removeEvent() {
         EventQueue.unSubscribeAll(PointerDown)
         EventQueue.unSubscribeAll(PointerDrag)
         EventQueue.unSubscribeAll(PointerMove)
         EventQueue.unSubscribeAll(PointerUp)
         EventQueue.unSubscribeAll(KeyDown)
         EventQueue.unSubscribeAll(KeyUp)
-
+        EventQueue.unSubscribeAll(ToolChange)
     }
 }
 

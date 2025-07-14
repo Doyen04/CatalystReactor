@@ -1,10 +1,9 @@
-import { SceneNode } from "@/lib/core";
 import { Rectangle, Oval, Star, Polygon, PText } from "@/lib/shapes";
 import type { Shape } from "@/lib/shapes";
 
 
 export default class ShapeFactory {
-    static createShape(type: ShapeType, options: ShapeOptions): SceneNode {
+    static createShape(type: ShapeType, options: ShapeOptions): Shape {
         let shape: Shape;
 
         switch (type) {
@@ -25,10 +24,7 @@ export default class ShapeFactory {
                 break;
             default:
                 throw new Error(`Unsupported shape type: ${type}`);
-        }
-
-        const node: SceneNode = new SceneNode();
-        node.shape = shape
-        return node
+        } 
+        return shape
     }
 }

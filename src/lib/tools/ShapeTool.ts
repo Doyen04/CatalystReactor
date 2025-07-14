@@ -1,16 +1,17 @@
 import { Tool } from "@/lib/tools";
 import { EventTypes, EventQueue } from "@lib/core";
 
-const { CreateShape, DrawShape, FinalizeShape } = EventTypes
+const { CreateScene, DrawScene, FinalizeShape } = EventTypes
 
 class ShapeTool extends Tool {
-    shape: ShapeType
+    shapeType: ShapeType
     constructor(shape: ShapeType) {
         super()
-        this.shape = shape
+        this.shapeType = shape
     }
     override handlePointerDown(dragStart: Coords, e: MouseEvent) {
-        EventQueue.trigger(CreateShape, this.shape, dragStart.x, dragStart.y)
+    
+        EventQueue.trigger(CreateScene, this.shapeType, dragStart.x, dragStart.y)
     }
     override handlePointerUp(coord: Coords, e: MouseEvent) {
         EventQueue.trigger(FinalizeShape)
@@ -20,10 +21,10 @@ class ShapeTool extends Tool {
     }
     override handlePointerDrag(dragStart: Coords, e:MouseEvent): void {
     
-        EventQueue.trigger(DrawShape, dragStart, e.offsetX, e.offsetY, e.shiftKey)
+        EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
     }
     setShape(shape: ShapeType) {
-        this.shape = shape
+        this.shapeType = shape
     }
     override handleKeyDown(e: KeyboardEvent): void {
         

@@ -71,6 +71,7 @@ class ShapeModifier {
         }
     }
     handleRemoveModifer() {
+        if (!this.selectedModifier) return
         this.selectedModifier.isDragging = false
         this.selectedModifier = null
     }

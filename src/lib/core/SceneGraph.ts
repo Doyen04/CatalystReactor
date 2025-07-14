@@ -54,6 +54,9 @@ class SceneNode {
             c.updateWorldMatrix(this.worldMatrix)
         }
     }
+    destroy(){
+        
+    }
 }
 
 export default SceneNode;

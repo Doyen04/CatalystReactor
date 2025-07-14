@@ -1,4 +1,4 @@
-import { Shape } from "@lib/shapes";
+import SceneNode from "./SceneGraph";
 
 enum EventTypes {
     PointerDown = 'pointer:down',
@@ -7,8 +7,9 @@ enum EventTypes {
     PointerDrag = 'pointer:drag',
     KeyDown = 'key:down',
     KeyUp = 'key:up',
-    CreateShape = 'create:shape',
-    DrawShape = 'draw:shape',
+    CreateScene = 'create:scene',
+    SceneCreated = 'scene:created',
+    DrawScene = 'draw:shape',
     FinalizeShape = 'finish:draw',
     CreateSurface = 'create:surface',
     ShowHovered = 'hovered:shape',
@@ -18,8 +19,8 @@ enum EventTypes {
     DragObject = 'drag:object',
     // DragShape = 'drag:shape',
     DragModifier = 'drag:modifier',
-    FinaliseSelection= 'selection:finished',
-    RemoveSelectedModifier= 'remove:modifier',
+    FinaliseSelection = 'selection:finished',
+    RemoveSelectedModifier = 'remove:modifier',
     EditText = 'insert:text',
     ToolChange = 'tool:change',
     ModifierSelected = 'modifier:selected',
@@ -32,8 +33,9 @@ type Handlers = {
     [EventTypes.PointerDrag]: (dragStart: Coords, e: MouseEvent) => void;
     [EventTypes.KeyDown]: (e: KeyboardEvent) => void;
     [EventTypes.KeyUp]: (e: KeyboardEvent) => void;
-    [EventTypes.CreateShape]: (type: ShapeType, x: number, y: number) => Shape;
-    [EventTypes.DrawShape]: (dragStart: Coords, x: number, y: number, shiftKey: boolean) => void;
+    [EventTypes.CreateScene]: (type: ShapeType, x: number, y: number) => void;
+    [EventTypes.SceneCreated]: (Scene: SceneNode) => void;
+    [EventTypes.DrawScene]: (dragStart: Coords, x: number, y: number, shiftKey: boolean) => void;
     [EventTypes.FinalizeShape]: () => void;
     [EventTypes.CreateSurface]: () => void;
     [EventTypes.ShowHovered]: (x: number, y: number) => void;
@@ -47,7 +49,7 @@ type Handlers = {
     [EventTypes.FinaliseSelection]: () => void;
     [EventTypes.RemoveSelectedModifier]: () => void;
     [EventTypes.EditText]: (e: KeyboardEvent) => void;
-    [EventTypes.ToolChange]: () => void;
+    [EventTypes.ToolChange]: (tool: any) => void;
 };
 
 class EventBus {
