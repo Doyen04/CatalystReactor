@@ -1,6 +1,5 @@
 import { SelectTool, ShapeTool, TextTool, Tool } from '@/lib/tools'
 import EventQueue, { EventTypes } from './EventQueue'
-import { Shape } from '@lib/shapes';
 
 const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes
 
