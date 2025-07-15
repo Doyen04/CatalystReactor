@@ -2,7 +2,7 @@ import { Tool } from "@/lib/tools";
 import { EventQueue, EventTypes } from "@lib/core";
 import { PText, Shape } from "@lib/shapes";
 
-const { CreateScene, DrawScene, FinalizeShape, EditText } = EventTypes
+const { CreateScene, DrawScene, EditText } = EventTypes
 
 class TextTool extends Tool {
     private lastMouseCoord: Coords | null = null
@@ -11,17 +11,11 @@ class TextTool extends Tool {
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
         if (this.createdScene) {
             console.log('creating another shape');
-            
+
             const shape = this.createdScene.getShape()
             shape.destroy()
         }
         EventQueue.trigger(CreateScene, 'text', e.offsetX, e.offsetY)
-    }
-    override handlePointerUp() {
-        EventQueue.trigger(FinalizeShape)
-    }
-    override handlePointerMove(dragStart: Coords, e: MouseEvent): void {
-
     }
     override handlePointerDrag(dragStart: Coords, e: MouseEvent): void {
         EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
@@ -29,7 +23,7 @@ class TextTool extends Tool {
     override handleKeyDown(e: KeyboardEvent): void {
         const shape = this.createdScene.getShape()
         console.log(shape);
-        
+
         if (shape instanceof PText) {
             switch (e.key) {
                 case 'ArrowLeft':

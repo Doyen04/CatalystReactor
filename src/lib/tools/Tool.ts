@@ -1,34 +1,39 @@
 import { EventQueue, EventTypes, SceneNode } from "@lib/core";
 
-const {SceneCreated} = EventTypes
+const { SceneCreated, FinalizeShape } = EventTypes
 
 abstract class Tool {
-    protected createdScene: SceneNode| null = null;
+    protected createdScene: SceneNode | null = null;
 
-    constructor(){
+    constructor() {
         this.setUpEvent()
     }
-    setUpEvent(){
+    setUpEvent() {
         this.removeEvent()
         this.addEvent()
     }
-    removeEvent(){
+    removeEvent() {
         EventQueue.unSubscribeAll(SceneCreated)
     }
-    addEvent(){
+    addEvent() {
         EventQueue.subscribe(SceneCreated, this.handleSceneCreated.bind(this))
     }
-    handleSceneCreated(node: SceneNode){console.log('scene created');
+    handleSceneCreated(node: SceneNode) {
+        console.log('scene created');
         this.createdScene = node
     }
+    handlePointerUp(coord: Coords, e: MouseEvent) {
+        EventQueue.trigger(FinalizeShape)
+    }
+    handlePointerMove(dragStart: Coords, e: MouseEvent) {
+
+    }
     abstract handlePointerDown(dragStart: Coords, e: MouseEvent): void;
-    abstract handlePointerUp(dragStart: Coords, e: MouseEvent): void;
-    abstract handlePointerMove(dragStart: Coords, e: MouseEvent): void;
     abstract handlePointerDrag(dragStart: Coords, e: MouseEvent): void;
     abstract handleKeyDown(e: KeyboardEvent): void;
     abstract handleKeyUp(e: KeyboardEvent): void;
     cleanUp(): void {
-        if(!this.createdScene) return
+        if (!this.createdScene) return
         this.createdScene.getShape().destroy()
         this.createdScene.destroy()
         this.createdScene = null
