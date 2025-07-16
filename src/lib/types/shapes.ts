@@ -19,8 +19,6 @@ export type HandleType = 'size' | 'radius' | 'corner';
 export interface IShape {
     id?: string;
     type?: ShapeType;
-    x: number;
-    y: number;
     boundingRect: BoundingRect;
     rotation: number;
     scale: number;
@@ -29,8 +27,9 @@ export interface IShape {
     strokeColor: string | number[];
 
     // Methods that all shapes should implement
-    getHandles(size: number, fill: string, strokeColor: string | number[]): any[];
-    getModifersPos(pos: Corner, size: number, type: HandleType, isDragging: boolean): Point;
+    getModifierHandles(size: number, fill: string, strokeColor: string | number[]): any[];
+    getSizeModifierHandlesPos(pos: Corner, size: number, type: HandleType, isDragging: boolean): Point;
+    getModifierHandlesPos(pos: Corner, size: number, type: HandleType, isDragging: boolean): Point;
     pointInShape(x: number, y: number): boolean;
     moveShape(mx: number, my: number): void;
     calculateBoundingRect(): void;
@@ -43,6 +42,7 @@ export interface IShape {
     destroy?(): void;
     updateBorderRadius?(r: number, pos: Corner): void;
     getCoord?(): { x: number, y: number };
+    updateDim?(dx:number, dy:number):void;
     setStrokeColor(stroke: string | number[]): void;
     setFill(stroke: string | number[]): void;
 }

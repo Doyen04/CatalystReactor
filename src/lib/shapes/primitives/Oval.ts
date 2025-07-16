@@ -50,6 +50,9 @@ class Oval extends Shape {
 
         this.calculateBoundingRect()
     }
+    override updateDim(dx: number, dy: number): void {
+        
+    }
 
     override calculateBoundingRect(): void {
         this.boundingRect = {
@@ -114,13 +117,13 @@ class Oval extends Shape {
         canvas.drawOval(rect, this.resource.strokePaint);
     }
 
-    override getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
-        const handles = super.getHandles(size, fill, strokeColor);
+    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
+        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
         return handles;
     }
 
-    override getModifersPos(pos: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
-        return super.getModifersPos(pos, size, handleType);
+    override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
+        return super.getSizeModifierHandlesPos(pos, size, handleType);
     }
 
     override pointInShape(x: number, y: number): boolean {

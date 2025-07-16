@@ -1,6 +1,8 @@
-import  Shape from "../base/Shape";
+import { Corner, HandleType } from "@lib/types/shapes";
+import Shape from "../base/Shape";
 import TextCursor from '../base/TextCursor'
 import { Canvas, Color, FontMgr, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from "canvaskit-wasm";
+import Handle from "@lib/modifiers/Handles";
 
 interface TextStyleProp {
     textColor: string | number[];
@@ -340,6 +342,20 @@ class PText extends Shape {
     }
 
     override setCoord(x: number, y: number): void {
+
+    }
+
+    override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
+        if (handleType === 'size') {
+            return super.getSizeModifierHandlesPos(pos, size, handleType);
+        }
+        return { x: 0, y: 0 };
+    }
+    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
+        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+        return handles;
+    }
+    override updateDim(dx: number, dy: number): void {
 
     }
 

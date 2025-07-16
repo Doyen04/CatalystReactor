@@ -2,9 +2,7 @@ import Handle from '@lib/modifiers/Handles'
 import { ModifierPos } from '@/lib/modifiers/ShapeModifier';
 import Shape from '../base/Shape';
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
-import { HandleType } from '@lib/types/shapes';
-
-type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+import { Corner, HandleType } from '@lib/types/shapes';
 
 class Rectangle extends Shape {
     width: number;
@@ -98,6 +96,12 @@ class Rectangle extends Shape {
 
         this.calculateBoundingRect()
     }
+    override updateDim(dx: number, dy: number) {
+        this.width += dx
+        this.height += dy
+
+        this.calculateBoundingRect()
+    }
 
     override calculateBoundingRect(): void {
         this.boundingRect = {
@@ -107,7 +111,6 @@ class Rectangle extends Shape {
             right: this.x + this.width
         };
     }
-
 
     override draw(canvas: Canvas): void {
         if (!this.resource) return;
@@ -202,15 +205,41 @@ class Rectangle extends Shape {
         return p;
     }
 
-    getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
-        const handles = super.getHandles(size, fill, strokeColor);
+    updateBorderRadius(newRadius: number, pos: Corner) {
+        console.log(newRadius, pos);
+
+        const max = Math.min(this.width, this.height) / 2;
+        this.bdradius[pos] = Math.max(0, Math.min(newRadius, max));
+    }
+
+    private setBorderRadius(radius: number): void {
+        this.bdradius = {
+            'top-left': radius,
+            'top-right': radius,
+            'bottom-left': radius,
+            'bottom-right': radius,
+            locked: true
+        };
+    }
+
+    toggleRadiusLock(): void {
+        this.bdradius.locked = !this.bdradius.locked;
+        if (this.bdradius.locked) {
+            const radius = Math.max(this.bdradius['top-left'], this.bdradius['top-right'],
+                this.bdradius['bottom-left'], this.bdradius['bottom-right']);
+            this.setBorderRadius(radius);
+        }
+    }
+    
+    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
+        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
         ModifierPos.forEach(pos => {
             handles.push(new Handle(0, 0, size, pos, 'radius', fill, strokeColor))
         })
         return handles;
     }
 
-    getRadiusModifiersPos(pos: Corner, size: number, isDragging?: boolean): { x: number; y: number; } {
+    getRadiusModiferHandlesPos(pos: Corner, size: number, isDragging?: boolean): { x: number; y: number; } {
         const r = this.bdradius[pos];
         const padding = 15;
 
@@ -238,38 +267,12 @@ class Rectangle extends Shape {
         return { x, y };
     }
 
-    updateBorderRadius(newRadius: number, pos: Corner) {
-        console.log(newRadius, pos);
-
-        const max = Math.min(this.width, this.height) / 2;
-        this.bdradius[pos] = Math.max(0, Math.min(newRadius, max));
-    }
-
-    private setBorderRadius(radius: number): void {
-        this.bdradius = {
-            'top-left': radius,
-            'top-right': radius,
-            'bottom-left': radius,
-            'bottom-right': radius,
-            locked: true
-        };
-    }
-
-    toggleRadiusLock(): void {
-        this.bdradius.locked = !this.bdradius.locked;
-        if (this.bdradius.locked) {
-            const radius = Math.max(this.bdradius['top-left'], this.bdradius['top-right'],
-                this.bdradius['bottom-left'], this.bdradius['bottom-right']);
-            this.setBorderRadius(radius);
-        }
-    }
-
-    override getModifersPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
+    override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
 
         if (handleType === 'radius') {
-            return this.getRadiusModifiersPos(pos, size, isDragging);
+            return this.getRadiusModiferHandlesPos(pos, size, isDragging);
         } else if (handleType === 'size') {
-            return super.getModifersPos(pos, size, handleType);
+            return super.getSizeModifierHandlesPos(pos, size, handleType);
         }
         return { x: 0, y: 0 };
     }

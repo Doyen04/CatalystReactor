@@ -1,5 +1,7 @@
 import type { Canvas } from "canvaskit-wasm";
-import Shape  from "../base/Shape";
+import Shape from "../base/Shape";
+import { Corner, HandleType } from "@lib/types/shapes";
+import Handle from "@lib/modifiers/Handles";
 
 class Polygon extends Shape {
     centerX: number;
@@ -21,8 +23,8 @@ class Polygon extends Shape {
         this.point = this.generateRegularPolygon();
     }
     override setDim(width: number, height: number) {
-        this.radiusX = width/2;
-        this.radiusY = height/2;
+        this.radiusX = width / 2;
+        this.radiusY = height / 2;
 
         this.centerX = this.x + this.radiusX
         this.centerY = this.y + this.radiusY
@@ -61,7 +63,7 @@ class Polygon extends Shape {
         this.y += dy;
         this.centerX += dx;
         this.centerY += dy;
-        
+
         this.point = this.generateRegularPolygon()
         this.calculateBoundingRect();
     }
@@ -110,8 +112,8 @@ class Polygon extends Shape {
 
 
     override draw(canvas: Canvas): void {
-        if(!this.resource) return
-        
+        if (!this.resource) return
+
         this.setPaint();
 
         const path = new this.resource.canvasKit.Path();
@@ -149,8 +151,25 @@ class Polygon extends Shape {
 
         return inside;
     }
+    
+    override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
+        if (handleType === 'size') {
+            return super.getSizeModifierHandlesPos(pos, size, handleType);
+        }
+        return { x: 0, y: 0 };
+    }
+
+    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
+        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+        return handles;
+    }
+
+    override updateDim(dx: number, dy: number): void {
+
+    }
+
     override destroy(): void {
-        
+
     }
 
 }

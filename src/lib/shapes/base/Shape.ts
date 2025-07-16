@@ -9,8 +9,8 @@ import type { Canvas } from "canvaskit-wasm";
 
 
 abstract class Shape implements IShape {
-    x: number;
-    y: number;
+    protected x: number;
+    protected y: number;
     rotation: number;
     scale: number;
     fill: string | number[];
@@ -41,7 +41,7 @@ abstract class Shape implements IShape {
             return null
         }
     }
-    getHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
+    getSizeModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles: Handle[] = [];
         ModifierPos.forEach(pos => {
             handles.push(new Handle(0, 0, size, pos, 'size', fill, strokeColor));
@@ -49,7 +49,7 @@ abstract class Shape implements IShape {
         return handles;
     }
 
-    getModifersPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
+    getSizeModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
         const bRect = this.boundingRect
         size = size / 2
         switch (pos) {
@@ -66,6 +66,8 @@ abstract class Shape implements IShape {
         }
     }
 
+    abstract getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[];
+    abstract getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } ;
     abstract pointInShape(x: number, y: number): boolean;
     abstract moveShape(mx: number, my: number): void;
     abstract calculateBoundingRect(): void;
@@ -73,6 +75,7 @@ abstract class Shape implements IShape {
     abstract draw(canvas: Canvas): void;
     abstract setDim(width: number, height: number): void;
     abstract setCoord(x: number, y: number): void;
+    abstract updateDim(dx: number, dy: number): void;
     getCoord(): { x: number, y: number } {
         return { x: this.x, y: this.y }
     }

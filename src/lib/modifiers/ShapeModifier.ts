@@ -59,7 +59,7 @@ class ShapeModifier {
 
             return
         }
-        this.handles = this.shape.getHandles(this.size, this.fill, this.strokeColor);
+        this.handles = this.shape.getModifierHandles(this.size, this.fill, this.strokeColor);
     }
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
@@ -96,6 +96,9 @@ class ShapeModifier {
                 case 'radius':
                     this.selectedModifier.updateRadii(x, y, e, this.shape)
                     break;
+                case 'size':
+                    this.selectedModifier.updateDim(x, y, e, this.shape)
+                    break;
 
                 default:
                     break;
@@ -110,7 +113,7 @@ class ShapeModifier {
         }
 
         for (const resizer of this.handles) {
-            const { x, y } = this.shape.getModifersPos(resizer.pos, this.size, resizer.type, resizer.isDragging);
+            const { x, y } = this.shape.getModifierHandlesPos(resizer.pos, this.size, resizer.type, resizer.isDragging);
             resizer.updatePosition(x, y);
         }
 

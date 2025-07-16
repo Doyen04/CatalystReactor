@@ -11,9 +11,14 @@ export default defineConfig({
         react(),
         tailwindcss(),
         ViteAliases({
-          dir: 'src',
-          prefix: '@',
-          deep: true
+            dir: 'src',
+            prefix: '@',
+            deep: true
         })
     ],
+    server: {
+        watch: {
+            usePolling: true
+        }
+    }
 })

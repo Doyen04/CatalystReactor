@@ -142,15 +142,18 @@ class Star extends Shape {
         this.boundingRect = { left, top, right, bottom };
     }
 
-    getModifersPos(pos: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
+    override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
         if (handleType === 'size') {
-            return super.getModifersPos(pos, size, handleType);
+            return super.getSizeModifierHandlesPos(pos, size, handleType);
         }
         return { x: 0, y: 0 };
     }
-    getHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
-        const handles = super.getHandles(size, fill, strokeColor);
+    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
+        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
         return handles;
+    }
+    override updateDim(dx: number, dy: number): void {
+        
     }
 
     // Additional star-specific methods
