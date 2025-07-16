@@ -8,7 +8,6 @@ import { Corner, HandleType, IShape } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
 
 
-// ════════════════════════════════════
 abstract class Shape implements IShape {
     x: number;
     y: number;

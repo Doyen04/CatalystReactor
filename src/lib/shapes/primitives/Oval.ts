@@ -1,4 +1,4 @@
-import { Handle } from "@/lib/modifiers";
+import Handle from "@/lib/modifiers/Handles";
 import Shape  from "../base/Shape"
 import type { Canvas } from "canvaskit-wasm";
 import { Corner, HandleType } from "@lib/types/shapes";
