@@ -151,7 +151,7 @@ class Polygon extends Shape {
 
         return inside;
     }
-    
+
     override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
         if (handleType === 'size') {
             return super.getSizeModifierHandlesPos(pos, size, handleType);
@@ -164,8 +164,8 @@ class Polygon extends Shape {
         return handles;
     }
 
-    override updateDim(dx: number, dy: number): void {
-
+    override getDim(): { width: number, height: number } {
+        return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
 
     override destroy(): void {

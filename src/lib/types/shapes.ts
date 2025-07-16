@@ -36,13 +36,13 @@ export interface IShape {
     setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     draw(canvas: Canvas): void;
     setDim(width: number, height: number): void;
+    getDim(): {width:number, height:number};
+    getCoord?(): { x: number, y: number };
     setCoord(x: number, y: number): void;
     setHovered?(B: boolean): void;
     setRadius?(r: number): void;
     destroy?(): void;
     updateBorderRadius?(r: number, pos: Corner): void;
-    getCoord?(): { x: number, y: number };
-    updateDim?(dx:number, dy:number):void;
     setStrokeColor(stroke: string | number[]): void;
     setFill(stroke: string | number[]): void;
 }

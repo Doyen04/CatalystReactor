@@ -1,5 +1,5 @@
 import Handle from "@/lib/modifiers/Handles";
-import Shape  from "../base/Shape"
+import Shape from "../base/Shape"
 import type { Canvas } from "canvaskit-wasm";
 import { Corner, HandleType } from "@lib/types/shapes";
 
@@ -50,8 +50,9 @@ class Oval extends Shape {
 
         this.calculateBoundingRect()
     }
-    override updateDim(dx: number, dy: number): void {
-        
+
+    override getDim(): { width: number, height: number } {
+        return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
 
     override calculateBoundingRect(): void {

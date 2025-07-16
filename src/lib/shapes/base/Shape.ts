@@ -4,7 +4,7 @@
 import Handle from "@lib/modifiers/Handles"
 import { ModifierPos } from "@/lib/modifiers/ShapeModifier";
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { Corner, HandleType, IShape } from "@lib/types/shapes";
+import { BoundingRect, Corner, HandleType, IShape } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
 
 
@@ -16,7 +16,7 @@ abstract class Shape implements IShape {
     fill: string | number[];
     strokeWidth: number;
     strokeColor: string | number[];
-    boundingRect: { top: number, left: number, bottom: number, right: number };
+    boundingRect: BoundingRect;
     private isHover: boolean;
 
     constructor({ x = 0, y = 0, rotation = 0, scale = 1, fill = "#fff", strokeWidth = 1, strokeColor = '#000' } = {}) {
@@ -74,8 +74,8 @@ abstract class Shape implements IShape {
     abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     abstract draw(canvas: Canvas): void;
     abstract setDim(width: number, height: number): void;
+    abstract getDim(): {width:number, height:number} ;
     abstract setCoord(x: number, y: number): void;
-    abstract updateDim(dx: number, dy: number): void;
     getCoord(): { x: number, y: number } {
         return { x: this.x, y: this.y }
     }

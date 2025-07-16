@@ -45,7 +45,6 @@ class Rectangle extends Shape {
         this.calculateBoundingRect();
     }
 
-
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         // Calculate dimensions
         const deltaX = (mx - dragStart.x);
@@ -96,11 +95,8 @@ class Rectangle extends Shape {
 
         this.calculateBoundingRect()
     }
-    override updateDim(dx: number, dy: number) {
-        this.width += dx
-        this.height += dy
-
-        this.calculateBoundingRect()
+    override getDim():{width:number, height:number} {
+        return {width:this.width, height:this.height}
     }
 
     override calculateBoundingRect(): void {
@@ -230,7 +226,7 @@ class Rectangle extends Shape {
             this.setBorderRadius(radius);
         }
     }
-    
+
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
         ModifierPos.forEach(pos => {

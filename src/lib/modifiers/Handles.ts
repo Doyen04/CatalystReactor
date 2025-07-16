@@ -11,6 +11,7 @@ export default class Handle {
     shape: IShape;
     pos: Corner;
     isDragging: boolean = false;
+    dragStartPos: { x: number, y: number } = { x: 0, y: 0 }
 
     constructor(x: number, y: number, size: number, pos: Corner, type: HandleType, fill: string | number[], stroke: string | number[]) {
         this.x = x;
@@ -89,30 +90,48 @@ export default class Handle {
         }
         shape.updateBorderRadius(newRadius, this.pos);
     }
-    updateDim(dx: number, dy: number, e: MouseEvent, shape: IShape) {
-        console.log(dx, dy);
 
-        const { x: sx, y: sy } = shape.getCoord()
+    updateDim(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+        let [width, height] = [0, 0]
+        let nx = 0
+        let ny = 0
+        let deltaX = 0
+        let deltaY = 0
+
         switch (this.pos) {
             case 'top-left':
-                shape.setCoord(sx + dx, sy + dy);
-                shape.updateDim(-dx, -dy)
+                if (this.dragStartPos.x === 0 && this.dragStartPos.y === 0) {
+                    this.dragStartPos = { x: shape.boundingRect.right, y: shape.boundingRect.bottom }
+                }
                 break;
             case 'top-right':
-                shape.setCoord(sx, sy + dy)
-                shape.updateDim(dx, -dy)
+                if (this.dragStartPos.x === 0 && this.dragStartPos.y === 0) {
+                    this.dragStartPos = { x: shape.boundingRect.left, y: shape.boundingRect.bottom }
+                }
                 break
             case 'bottom-left':
-                shape.setCoord(sx + dx, sy)
-                shape.updateDim(-dx, dy)
+                if (this.dragStartPos.x === 0 && this.dragStartPos.y === 0) {
+                    this.dragStartPos = { x: shape.boundingRect.right, y: shape.boundingRect.top }
+                }
                 break
             case 'bottom-right':
-                shape.setCoord(sx, sy)
-                shape.updateDim(dx, dy)
+                if (this.dragStartPos.x === 0 && this.dragStartPos.y === 0) {
+                    this.dragStartPos = { x: shape.boundingRect.left, y: shape.boundingRect.top }
+                }
                 break;
             default:
                 break;
         }
+
+        deltaX = (e.offsetX - this.dragStartPos.x);
+        deltaY = (e.offsetY - this.dragStartPos.y);
+        width = Math.abs(deltaX);
+        height = Math.abs(deltaY);
+        nx = Math.min(this.dragStartPos.x, e.offsetX);
+        ny = Math.min(this.dragStartPos.y, e.offsetY);
+        
+        shape.setCoord(nx, ny);
+        shape.setDim(width, height);
     }
 
     draw(canvas: Canvas) {

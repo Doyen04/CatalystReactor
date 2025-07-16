@@ -56,7 +56,6 @@ class ShapeModifier {
 
         if (!this.shape) {
             console.log('no shape for shape modifier');
-
             return
         }
         this.handles = this.shape.getModifierHandles(this.size, this.fill, this.strokeColor);
@@ -103,6 +102,7 @@ class ShapeModifier {
                 default:
                     break;
             }
+            // this.handles = this.shape.getModifierHandles(this.size, this.fill, this.strokeColor)
         }
     }
     updateResizerPositions() {
