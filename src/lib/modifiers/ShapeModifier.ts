@@ -1,7 +1,8 @@
 import type { Canvas } from "canvaskit-wasm";
-import { Rectangle, type Shape } from "@/lib/shapes";
-import { Handle } from "@/lib/modifiers";
-import { CanvasKitResources, EventQueue, EventTypes } from "@lib/core";
+import { Corner, IShape } from "@lib/types/shapes"
+import Handle from "./Handles";
+import CanvasKitResources from '@lib/core/CanvasKitResource'
+import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 
 const { SelectModifier, DragModifier, ModifierSelected, RemoveSelectedModifier } = EventTypes
 
@@ -13,7 +14,7 @@ export const ModifierPos: Corner[] = [
 ];
 
 class ShapeModifier {
-    private shape: Shape | null;
+    private shape: IShape | null;
     private strokeColor: string | number[];
     private strokeWidth: number;
     private fill: string = '#fff'
@@ -49,7 +50,7 @@ class ShapeModifier {
 
     }
 
-    setShape(shape: Shape) {
+    setShape(shape: IShape) {
         this.handles = []
         this.shape = shape;
 

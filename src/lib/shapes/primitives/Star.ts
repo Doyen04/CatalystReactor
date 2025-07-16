@@ -1,6 +1,7 @@
-import { Handle } from '@/lib/modifiers';
-import { Shape } from '@/lib/shapes';
-import type { Canvas, CanvasKit, Paint, } from "canvaskit-wasm";
+import Handle from '@/lib/modifiers/Handles';
+import Shape from '../base/Shape';
+import type { Canvas, } from "canvaskit-wasm";
+import { Corner, HandleType } from '@lib/types/shapes';
 
 class Star extends Shape {
     outerRadiusX: number;
@@ -45,8 +46,8 @@ class Star extends Shape {
     }
 
     setDim(width: number, height: number) {
-        this.outerRadiusX = width/2;
-        this.outerRadiusY = height/2;
+        this.outerRadiusX = width / 2;
+        this.outerRadiusY = height / 2;
 
         this.innerRadiusX = this.outerRadiusX * this.ratio
         this.innerRadiusY = this.outerRadiusY * this.ratio
@@ -68,7 +69,7 @@ class Star extends Shape {
     }
 
     override draw(canvas: Canvas): void {
-        if(!this.resource) return
+        if (!this.resource) return
 
         this.setPaint();
         const path = new this.resource.canvasKit.Path();
@@ -91,7 +92,7 @@ class Star extends Shape {
         this.y += my;
         this.centerX += mx;
         this.centerY += my;
-        
+
         this.points = this.generateStarPoints();
         this.calculateBoundingRect();
     }
@@ -141,14 +142,14 @@ class Star extends Shape {
         this.boundingRect = { left, top, right, bottom };
     }
 
-    getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
+    getModifersPos(pos: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
         if (handleType === 'size') {
-            return super.getModifersPos(modifierName, size, handleType);
+            return super.getModifersPos(pos, size, handleType);
         }
         return { x: 0, y: 0 };
     }
-    getHandles(size: number, fill: string | number[],strokeColor: string | number[], ): Handle[] {
-        const handles = super.getHandles(size, fill,strokeColor);
+    getHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
+        const handles = super.getHandles(size, fill, strokeColor);
         return handles;
     }
 
@@ -190,7 +191,7 @@ class Star extends Shape {
         return inside;
     }
     override destroy(): void {
-        
+
     }
 }
 

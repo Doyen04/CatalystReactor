@@ -1,6 +1,6 @@
-import { Tool } from "@/lib/tools";
-import { EventQueue, EventTypes } from "@lib/core";
-import { PText } from "@lib/shapes";
+import Tool from "./Tool";
+import EventQueue, { EventTypes } from "@lib/core/EventQueue";
+import PText from "@lib/shapes/primitives/PText";
 
 const { CreateScene, DrawScene, EditText } = EventTypes
 

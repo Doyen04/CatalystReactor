@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import "./Component.css"
 import ToolBar from "./ToolBar"
 
 import CanvasKitInit from "canvaskit-wasm";
 import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url';
-import type { CanvasKit } from 'canvaskit-wasm';
 
-import { CanvasKitResources, CanvasManager } from "@/lib/core";
+import { CanvasKitResources} from "@/lib/core/CanvasKitResource";
+import CanvasManager from "@lib/core/CanvasManager";
+
 import { useToolStore } from "@hooks/useTool";
 
 function Canvas() {

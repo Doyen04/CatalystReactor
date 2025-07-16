@@ -1,13 +1,15 @@
 // ════════════════════════════════════
 // 📐 Abstract Base Shape Class
 
-import { Handle, ModifierPos } from "@/lib/modifiers";
-import { CanvasKitResources } from "@lib/core";
-import type { CanvasKit, Paint, Canvas } from "canvaskit-wasm";
+import Handle from "@lib/modifiers/Handles"
+import { ModifierPos } from "@/lib/modifiers/ShapeModifier";
+import { CanvasKitResources } from "@lib/core/CanvasKitResource";
+import { Corner, HandleType, IShape } from "@lib/types/shapes";
+import type { Canvas } from "canvaskit-wasm";
 
 
 // ════════════════════════════════════
-abstract class Shape {
+abstract class Shape implements IShape {
     x: number;
     y: number;
     rotation: number;
@@ -48,10 +50,10 @@ abstract class Shape {
         return handles;
     }
 
-    getModifersPos(modifierName: string, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
+    getModifersPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
         const bRect = this.boundingRect
         size = size / 2
-        switch (modifierName) {
+        switch (pos) {
             case 'top-left':
                 return { x: bRect.left - size, y: bRect.top - size };
             case 'top-right':

@@ -1,6 +1,6 @@
 import SceneNode from "./SceneGraph";
-import { ShapeModifier } from "@lib/modifiers";
-import { PText, Shape, ShapeFactory } from "@lib/shapes";
+import ShapeModifier from "@lib/modifiers/ShapeModifier";
+import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 import EventQueue, { EventTypes } from './EventQueue'
 
 const {
@@ -194,7 +194,7 @@ class SceneManager {
         // Create a new shape based on the type and add it to the scene
         const shape = ShapeFactory.createShape(type, { x, y });
         console.log(shape, 'created');
-        
+
         const scene: SceneNode = new SceneNode();
         scene.shape = shape
         this.addNode(scene);

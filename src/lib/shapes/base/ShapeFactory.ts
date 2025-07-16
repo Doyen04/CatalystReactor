@@ -1,10 +1,14 @@
-import { Rectangle, Oval, Star, Polygon, PText } from "@/lib/shapes";
-import type { Shape } from "@/lib/shapes";
+import  Oval from "../primitives/Oval";
+import Rectangle from "../primitives/Rect"
+import Star from '../primitives/Star'
+import Polygon from '../primitives/Polygon'
+import PText from "../primitives/PText";
+import { IShape } from "@lib/types/shapes";
 
 
 export default class ShapeFactory {
-    static createShape(type: ShapeType, options: ShapeOptions): Shape {
-        let shape: Shape;
+    static createShape(type: ShapeType, options: ShapeOptions): IShape {
+        let shape: IShape;
 
         switch (type) {
             case "rect":

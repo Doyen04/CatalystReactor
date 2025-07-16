@@ -54,7 +54,7 @@ export class CanvasKitResources {
     get fontMgr() {
         return this.cnvsFontMgr
     }
-    get fontData(){
+    get fontData() {
         return CanvasKitResources.cnvsFontData
     }
     setUpStyles() {
@@ -82,7 +82,7 @@ export class CanvasKitResources {
     }
 
     static async loadInterFont() {
-        if(this.cnvsFontData.length != 0) return
+        if (this.cnvsFontData.length != 0) return
 
         const loadFont = await Promise.all([
             fetch('/fonts/Inter-VariableFont_opsz,wght.ttf'),

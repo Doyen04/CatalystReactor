@@ -1,5 +1,5 @@
-import type { CanvasKit, Paint, Canvas } from "canvaskit-wasm";
-import { Shape } from "@/lib/shapes";
+import type { Canvas } from "canvaskit-wasm";
+import Shape  from "../base/Shape";
 
 class Polygon extends Shape {
     centerX: number;

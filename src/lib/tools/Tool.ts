@@ -1,4 +1,5 @@
-import { EventQueue, EventTypes, SceneNode } from "@lib/core";
+import EventQueue, { EventTypes } from "@lib/core/EventQueue"
+import SceneNode from "@lib/core/SceneGraph";
 
 const { SceneCreated, FinalizeShape } = EventTypes
 

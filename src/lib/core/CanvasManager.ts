@@ -82,8 +82,8 @@ class CanvasManager {
     removeEventListener() {
         console.log('removing all event and doing clean up');
 
-        if(this.inputManager)this.inputManager.removeEventListeners()
-        if(this.renderer)this.renderer.destroy()
+        if (this.inputManager) this.inputManager.removeEventListeners()
+        if (this.renderer) this.renderer.destroy()
         EventQueue.removeAllEvent()
     }
 

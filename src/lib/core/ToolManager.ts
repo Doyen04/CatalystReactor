@@ -1,4 +1,7 @@
-import { SelectTool, ShapeTool, TextTool, Tool } from '@/lib/tools'
+import SelectTool from '@/lib/tools/SelectTool'
+import ShapeTool from '@/lib/tools/ShapeTool'
+import TextTool from '@/lib/tools/TextTool'
+import Tool from '@/lib/tools/SelectTool'
 import EventQueue, { EventTypes } from './EventQueue'
 
 const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes

@@ -1,6 +1,8 @@
-import { Handle, ModifierPos } from '@/lib/modifiers';
-import { Shape } from '@/lib/shapes';
-import type { Canvas, CanvasKit, Paint, Path, Rect } from "canvaskit-wasm";
+import Handle from '@lib/modifiers/Handles'
+import { ModifierPos } from '@/lib/modifiers/ShapeModifier';
+import Shape from '../base/Shape';
+import type { Canvas, Path, Rect } from "canvaskit-wasm";
+import { HandleType } from '@lib/types/shapes';
 
 type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
@@ -236,7 +238,7 @@ class Rectangle extends Shape {
         return { x, y };
     }
 
-    updateRadius(newRadius: number, pos: Corner) {
+    updateBorderRadius(newRadius: number, pos: Corner) {
         console.log(newRadius, pos);
 
         const max = Math.min(this.width, this.height) / 2;
@@ -262,12 +264,12 @@ class Rectangle extends Shape {
         }
     }
 
-    override getModifersPos(modifierName: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
+    override getModifersPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
 
         if (handleType === 'radius') {
-            return this.getRadiusModifiersPos(modifierName, size, isDragging);
+            return this.getRadiusModifiersPos(pos, size, isDragging);
         } else if (handleType === 'size') {
-            return super.getModifersPos(modifierName, size, handleType);
+            return super.getModifersPos(pos, size, handleType);
         }
         return { x: 0, y: 0 };
     }

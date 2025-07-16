@@ -29,24 +29,24 @@ class Renderer {
 
         this.setUpRendering()
     }
-    setUpEvent(){
+    setUpEvent() {
         this.removeEvent()
         this.addEvent()
     }
-    removeEvent(){
+    removeEvent() {
         EventQueue.unSubscribeAll(CreateSurface)
     }
-    addEvent(){
+    addEvent() {
         EventQueue.subscribe(CreateSurface, this.setUpRendering.bind(this))
     }
 
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
-        if(resources){
-            return resources 
-        }else{
+        if (resources) {
+            return resources
+        } else {
             console.log('resources is null');
-            
+
             return null
         }
     }
@@ -63,11 +63,11 @@ class Renderer {
     }
 
     makeSurface() {
-        if (!this.resource){
+        if (!this.resource) {
             console.log('resoures not found in renderer');
-            
+
             return
-        } 
+        }
 
         const { width, height } = getComputedStyle(this.canvasEl);
         console.log(width, height);
@@ -93,7 +93,7 @@ class Renderer {
     private drawFrame = (canvas: Canvas) => {
         if (!this.isRunning) {
             console.log('not running render');
-            
+
             return;
         }
 

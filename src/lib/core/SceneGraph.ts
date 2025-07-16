@@ -1,14 +1,14 @@
 import Matrix from './Matrix';
-import type { Shape } from '@/lib/shapes';
+import { IShape } from '@lib/types/shapes';
 
 class SceneNode {
-    shape: Shape | null;
+    shape: IShape | null;
     children: SceneNode[];
     parent: SceneNode | null;
     localMatrix: Matrix;
     worldMatrix: Matrix;
 
-    constructor(shape: Shape | null = null) {
+    constructor(shape: IShape | null = null) {
         this.shape = shape;
         this.children = []
         this.parent = null
@@ -33,11 +33,11 @@ class SceneNode {
         }
     }
 
-    getShape(): Shape {
+    getShape(): IShape {
         return this.shape
     }
 
-    hasShape(): boolean{
+    hasShape(): boolean {
         return this.shape != null
     }
 
@@ -54,8 +54,8 @@ class SceneNode {
             c.updateWorldMatrix(this.worldMatrix)
         }
     }
-    destroy(){
-        
+    destroy() {
+
     }
 }
 

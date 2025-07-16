@@ -7,8 +7,6 @@ interface ShapeOptions {
     y: number;
 }
 
-declare type HandleType = "radius" | "size" | "rotate";
-
 declare type Points = [
     x: number,
     y: number
@@ -19,5 +17,3 @@ declare interface Coords {
     x: number;
     y: number;
 }
-
-declare type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';

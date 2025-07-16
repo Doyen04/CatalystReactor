@@ -1,6 +1,7 @@
 import { Handle } from "@/lib/modifiers";
-import { Shape } from "@/lib/shapes"
+import Shape  from "../base/Shape"
 import type { Canvas } from "canvaskit-wasm";
+import { Corner, HandleType } from "@lib/types/shapes";
 
 class Oval extends Shape {
     private radiusX: number;
@@ -118,8 +119,8 @@ class Oval extends Shape {
         return handles;
     }
 
-    override getModifersPos(modifierName: string, size: number, handleType: HandleType): { x: number; y: number; } {
-        return super.getModifersPos(modifierName, size, handleType);
+    override getModifersPos(pos: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
+        return super.getModifersPos(pos, size, handleType);
     }
 
     override pointInShape(x: number, y: number): boolean {

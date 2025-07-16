@@ -1,4 +1,5 @@
-import { Shape, TextCursor } from "@/lib/shapes";
+import  Shape from "../base/Shape";
+import TextCursor from '../base/TextCursor'
 import { Canvas, Color, FontMgr, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from "canvaskit-wasm";
 
 interface TextStyleProp {

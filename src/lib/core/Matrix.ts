@@ -7,7 +7,7 @@ class Matrix {
         [0, 1, 0,],
         [0, 0, 1]
     ]) {
-        this.mat = m; 
+        this.mat = m;
     }
     static identity(): Matrix { return new Matrix(); }
 

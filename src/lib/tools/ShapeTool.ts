@@ -1,5 +1,5 @@
-import { Tool } from "@/lib/tools";
-import { EventTypes, EventQueue } from "@lib/core";
+import Tool  from "./Tool";
+import EventQueue, {EventTypes } from "@lib/core/EventQueue";
 
 const { CreateScene, DrawScene } = EventTypes
 

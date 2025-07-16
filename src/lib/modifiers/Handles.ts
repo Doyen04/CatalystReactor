@@ -1,14 +1,14 @@
 // Handle.ts
 import type { Canvas } from "canvaskit-wasm";
-import { Oval, Rectangle, Shape } from "@/lib/shapes";
-import type { ModifierPos } from './ShapeModifier'
+import ShapeFactory  from "@/lib/shapes/base/ShapeFactory";
+import { Corner, HandleType, IShape } from "@lib/types/shapes";
 
 export default class Handle {
     x: number;
     y: number;
     size: number;
     type: HandleType;
-    shape: Oval | Rectangle;
+    shape: IShape;
     pos: Corner;
     isDragging: boolean = false;
 
@@ -21,10 +21,10 @@ export default class Handle {
 
         // By default, use Oval for radius, Rect for size
         if (type === "radius") {
-            this.shape = new Oval(x, y);
+            this.shape = ShapeFactory.createShape('oval', {x,y});
             this.shape.setRadius(size);
         } else {
-            this.shape = new Rectangle(x, y);
+            this.shape = ShapeFactory.createShape('rect', {x,y});
             this.shape.setDim(size, size);
         }
         this.shape.setStrokeColor(stroke)
@@ -42,8 +42,8 @@ export default class Handle {
     isCollide(x: number, y: number): boolean {
         return this.shape.pointInShape(x, y)
     }
-    updateRadii(dx: number, dy: number, e: MouseEvent, shape: Shape) {
-        if (shape instanceof Rectangle) {
+    updateRadii(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+        
             const { left, right, top, bottom } = shape.boundingRect;
 
             let cornerX, cornerY, distX, distY, newRadius = 0;
@@ -87,9 +87,7 @@ export default class Handle {
                     }
                     break;
             }
-
-            shape.updateRadius(newRadius, this.pos);
-        }
+            shape.updateBorderRadius(newRadius, this.pos);
     }
 
     draw(canvas: Canvas) {

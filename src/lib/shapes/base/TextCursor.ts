@@ -1,5 +1,5 @@
 // TextCursor.ts
-import { CanvasKitResources } from "@lib/core";
+import { CanvasKitResources } from "@lib/core/CanvasKitResource";
 import type { Canvas, Paragraph } from "canvaskit-wasm";
 
 class TextCursor {
