@@ -11,7 +11,7 @@ export default class Handle {
     shape: IShape;
     pos: Corner;
     isDragging: boolean = false;
-    dragStartPos: { x: number, y: number } = { x: 0, y: 0 }
+    anchorPoint: { x: number, y: number } = { x: 0, y: 0 }
 
     constructor(x: number, y: number, size: number, pos: Corner, type: HandleType, fill: string | number[], stroke: string | number[]) {
         this.x = x;
@@ -30,6 +30,9 @@ export default class Handle {
         }
         this.shape.setStrokeColor(stroke)
         this.shape.setFill(fill)
+    }
+    resetAnchorPoint() {
+        this.anchorPoint = { x: 0, y: 0 }
     }
 
     updatePosition(x: number, y: number) {
@@ -100,36 +103,36 @@ export default class Handle {
 
         switch (this.pos) {
             case 'top-left':
-                if (this.dragStartPos.x === 0 && this.dragStartPos.y === 0) {
-                    this.dragStartPos = { x: shape.boundingRect.right, y: shape.boundingRect.bottom }
+                if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
+                    this.anchorPoint = { x: shape.boundingRect.right, y: shape.boundingRect.bottom }
                 }
                 break;
             case 'top-right':
-                if (this.dragStartPos.x === 0 && this.dragStartPos.y === 0) {
-                    this.dragStartPos = { x: shape.boundingRect.left, y: shape.boundingRect.bottom }
+                if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
+                    this.anchorPoint = { x: shape.boundingRect.left, y: shape.boundingRect.bottom }
                 }
                 break
             case 'bottom-left':
-                if (this.dragStartPos.x === 0 && this.dragStartPos.y === 0) {
-                    this.dragStartPos = { x: shape.boundingRect.right, y: shape.boundingRect.top }
+                if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
+                    this.anchorPoint = { x: shape.boundingRect.right, y: shape.boundingRect.top }
                 }
                 break
             case 'bottom-right':
-                if (this.dragStartPos.x === 0 && this.dragStartPos.y === 0) {
-                    this.dragStartPos = { x: shape.boundingRect.left, y: shape.boundingRect.top }
+                if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
+                    this.anchorPoint = { x: shape.boundingRect.left, y: shape.boundingRect.top }
                 }
                 break;
             default:
                 break;
         }
 
-        deltaX = (e.offsetX - this.dragStartPos.x);
-        deltaY = (e.offsetY - this.dragStartPos.y);
+        deltaX = (e.offsetX - this.anchorPoint.x);
+        deltaY = (e.offsetY - this.anchorPoint.y);
         width = Math.abs(deltaX);
         height = Math.abs(deltaY);
-        nx = Math.min(this.dragStartPos.x, e.offsetX);
-        ny = Math.min(this.dragStartPos.y, e.offsetY);
-        
+        nx = Math.min(this.anchorPoint.x, e.offsetX);
+        ny = Math.min(this.anchorPoint.y, e.offsetY);
+
         shape.setCoord(nx, ny);
         shape.setDim(width, height);
     }
