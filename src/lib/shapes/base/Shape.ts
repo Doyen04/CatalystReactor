@@ -2,7 +2,7 @@
 // 📐 Abstract Base Shape Class
 
 import Handle from "@lib/modifiers/Handles"
-import { ModifierPos } from "@/lib/modifiers/ShapeModifier";
+import { SizeRadiusModifierPos } from "@/lib/modifiers/ShapeModifier";
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
 import { BoundingRect, Corner, HandleType, IShape } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
@@ -43,7 +43,7 @@ abstract class Shape implements IShape {
     }
     getSizeModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles: Handle[] = [];
-        ModifierPos.forEach(pos => {
+        SizeRadiusModifierPos.forEach(pos => {
             handles.push(new Handle(0, 0, size, pos, 'size', fill, strokeColor));
         });
         return handles;

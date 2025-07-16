@@ -1,11 +1,12 @@
 import Handle from "@/lib/modifiers/Handles";
 import Shape from "../base/Shape"
-import type { Canvas } from "canvaskit-wasm";
+import type { Canvas, Rect } from "canvaskit-wasm";
 import { Corner, HandleType } from "@lib/types/shapes";
 
 class Oval extends Shape {
     private radiusX: number;
     private radiusY: number;
+    private ratio: number;
 
     private isFlippedX: boolean;
     private isFlippedY: boolean;
@@ -16,6 +17,7 @@ class Oval extends Shape {
         super({ x, y, ...shapeProps });
         this.radiusX = 0;
         this.radiusY = 0;
+        this.ratio = 0.2;
         this.isFlippedX = false;
         this.isFlippedY = false;
         this.centerX = 0;
@@ -106,6 +108,9 @@ class Oval extends Shape {
 
         this.calculateBoundingRect();
     }
+    isTorus(): boolean {
+        return this.ratio > 0;
+    }
 
     override draw(canvas: Canvas): void {
         if (!this.resource) return
@@ -113,18 +118,55 @@ class Oval extends Shape {
         this.setPaint();
 
         const rect = this.resource.canvasKit.LTRBRect(this.boundingRect.left, this.boundingRect.top, this.boundingRect.right, this.boundingRect.bottom);
+        if (this.isTorus()) {
+            // Draw torus using path
+            this.drawTorus(canvas, rect);
+        } else {
 
-        canvas.drawOval(rect, this.resource.paint);
-        canvas.drawOval(rect, this.resource.strokePaint);
+            canvas.drawOval(rect, this.resource.paint);
+            canvas.drawOval(rect, this.resource.strokePaint);
+        }
+    }
+    drawTorus(canvas: Canvas, rect:Rect) {
+        const { canvasKit } = this.resource;
+        const path = new canvasKit.Path();
+
+        path.addOval(rect);
+
+        const innerRect = canvasKit.LTRBRect(
+            this.centerX - this.radiusX * this.ratio,
+            this.centerY - this.radiusY * this.ratio,
+            this.centerX + this.radiusX * this.ratio,
+            this.centerY + this.radiusY * this.ratio
+        );
+        path.addOval(innerRect, true); // true = clockwise (creates hole)
+        path.setFillType(canvasKit.FillType.EvenOdd);
+
+        canvas.drawPath(path, this.resource.paint);
+        canvas.drawPath(path, this.resource.strokePaint);
+
+        path.delete();
     }
 
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+        handles.push(new Handle(0, 0, size, 'along-arc', 'arc', fill, strokeColor))
+        handles.push(new Handle(0, 0, size, 'center', 'ratio', fill, strokeColor))
         return handles;
     }
 
     override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
-        return super.getSizeModifierHandlesPos(pos, size, handleType);
+        if (handleType == 'size') {
+            return super.getSizeModifierHandlesPos(pos, size, handleType);
+        } else {
+            return { x: 0, y: 0 }
+        }
+    }
+    private getRatioModifierHandlesPos() {
+
+    }
+    private getArcModifierHandlesPos() {
+
     }
 
     override pointInShape(x: number, y: number): boolean {

@@ -6,7 +6,7 @@ import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 
 const { SelectModifier, DragModifier, ModifierSelected, RemoveSelectedModifier } = EventTypes
 
-export const ModifierPos: Corner[] = [
+export const SizeRadiusModifierPos: Corner[] = [
     'top-left',
     'top-right',
     'bottom-left',

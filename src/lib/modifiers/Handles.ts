@@ -21,7 +21,7 @@ export default class Handle {
         this.type = type;
 
         // By default, use Oval for radius, Rect for size
-        if (type === "radius") {
+        if (type === "radius" || type === 'arc' || type === 'ratio') {
             this.shape = ShapeFactory.createShape('oval', { x, y });
             this.shape.setRadius(size);
         } else {

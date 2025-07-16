@@ -1,5 +1,5 @@
 import Handle from '@lib/modifiers/Handles'
-import { ModifierPos } from '@/lib/modifiers/ShapeModifier';
+import { SizeRadiusModifierPos } from '@/lib/modifiers/ShapeModifier';
 import Shape from '../base/Shape';
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
 import { Corner, HandleType } from '@lib/types/shapes';
@@ -229,7 +229,7 @@ class Rectangle extends Shape {
 
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        ModifierPos.forEach(pos => {
+        SizeRadiusModifierPos.forEach(pos => {
             handles.push(new Handle(0, 0, size, pos, 'radius', fill, strokeColor))
         })
         return handles;

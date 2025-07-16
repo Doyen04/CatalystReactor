@@ -13,8 +13,8 @@ export interface Point {
 }
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text';
-export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-export type HandleType = 'size' | 'radius' | 'corner';
+export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'along-arc';
+export type HandleType = 'size' | 'radius' | 'arc' | 'ratio';
 
 export interface IShape {
     id?: string;
