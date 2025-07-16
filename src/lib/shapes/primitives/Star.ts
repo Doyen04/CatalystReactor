@@ -4,10 +4,10 @@ import type { Canvas, } from "canvaskit-wasm";
 import { Corner, HandleType } from '@lib/types/shapes';
 
 class Star extends Shape {
-    outerRadiusX: number;
-    outerRadiusY: number;
-    innerRadiusX: number;
-    innerRadiusY: number;
+    radiusX: number;
+    radiusY: number;
+    // innerRadiusX: number;
+    // innerRadiusY: number;
     spikes: number;
     centerX: number;
     centerY: number;
@@ -16,12 +16,10 @@ class Star extends Shape {
 
     constructor(x: number, y: number, { rotation = 0, ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
-        this.outerRadiusX = 0;
-        this.outerRadiusY = 0;
+        this.radiusX = 0;
+        this.radiusY = 0;
         this.spikes = 5;
         this.ratio = 0.5;
-        this.innerRadiusX = 0;
-        this.innerRadiusY = 0;
         this.centerX = 0;
         this.centerY = 0;
         this.points = this.generateStarPoints();
@@ -34,8 +32,8 @@ class Star extends Shape {
 
         for (let i = 0; i < this.spikes * 2; i++) {
             const angle = i * (angleStep / 2) - (Math.PI / 2);
-            const radiusX = i % 2 === 0 ? this.outerRadiusX : this.innerRadiusX;
-            const radiusY = i % 2 === 0 ? this.outerRadiusY : this.innerRadiusY;
+            const radiusX = i % 2 === 0 ? this.radiusX : this.radiusX * this.ratio;
+            const radiusY = i % 2 === 0 ? this.radiusY : this.radiusY * this.ratio;
 
             const x = this.centerX + Math.cos(angle) * radiusX;
             const y = this.centerY + Math.sin(angle) * radiusY;
@@ -46,14 +44,11 @@ class Star extends Shape {
     }
 
     setDim(width: number, height: number) {
-        this.outerRadiusX = width / 2;
-        this.outerRadiusY = height / 2;
+        this.radiusX = width / 2;
+        this.radiusY = height / 2;
 
-        this.innerRadiusX = this.outerRadiusX * this.ratio
-        this.innerRadiusY = this.outerRadiusY * this.ratio
-
-        this.centerX = this.x + this.outerRadiusX
-        this.centerY = this.y + this.outerRadiusY
+        this.centerX = this.x + this.radiusX
+        this.centerY = this.y + this.radiusY
 
         this.points = this.generateStarPoints();
         this.calculateBoundingRect()
@@ -61,8 +56,8 @@ class Star extends Shape {
     override setCoord(x: number, y: number): void {
         this.x = x;
         this.y = y;
-        this.centerX = x + this.outerRadiusX;
-        this.centerY = y + this.outerRadiusY;
+        this.centerX = x + this.radiusX;
+        this.centerY = y + this.radiusY;
 
         this.points = this.generateStarPoints();
         this.calculateBoundingRect();
@@ -109,30 +104,27 @@ class Star extends Shape {
 
         if (shiftKey) {
             const maxRadius = Math.max(newRadiusX, newRadiusY);
-            this.outerRadiusX = this.outerRadiusY = maxRadius;
-            this.innerRadiusX = this.innerRadiusY = maxRadius * this.ratio;
+            this.radiusX = this.radiusY = maxRadius;
 
             this.centerX = dragStart.x + (deltaX >= 0 ? maxRadius : -maxRadius);
             this.centerY = dragStart.y + (deltaY >= 0 ? maxRadius : -maxRadius);
         } else {
             // Free form star - use actual dimensions
-            this.outerRadiusX = newRadiusX;
-            this.outerRadiusY = newRadiusY;
-            this.innerRadiusX = newRadiusX * this.ratio;
-            this.innerRadiusY = newRadiusY * this.ratio;
+            this.radiusX = newRadiusX;
+            this.radiusY = newRadiusY;
         }
 
         // Update position for bounding calculations
-        this.x = this.centerX - Math.max(this.outerRadiusX, this.innerRadiusX);
-        this.y = this.centerY - Math.max(this.outerRadiusY, this.innerRadiusY);
+        this.x = this.centerX - this.radiusX;
+        this.y = this.centerY - this.radiusY;
 
         this.points = this.generateStarPoints();
         this.calculateBoundingRect();
     }
 
     override calculateBoundingRect(): void {
-        const maxRadiusX = Math.max(this.outerRadiusX, this.innerRadiusX);
-        const maxRadiusY = Math.max(this.outerRadiusY, this.innerRadiusY);
+        const maxRadiusX = this.radiusX
+        const maxRadiusY = this.radiusY
 
         const left = this.centerX - maxRadiusX;
         const top = this.centerY - maxRadiusY;
@@ -152,8 +144,8 @@ class Star extends Shape {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
         return handles;
     }
-    override updateDim(dx: number, dy: number): void {
-        
+    override getDim(): { width: number; height: number; } {
+        return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
 
     // Additional star-specific methods
@@ -166,14 +158,6 @@ class Star extends Shape {
 
     setRotation(rotation: number): void {
         this.rotation = rotation % 360;
-    }
-
-    setInnerRadius(radiusX: number, radiusY: number): void {
-        this.innerRadiusX = Math.max(1, Math.min(radiusX, this.outerRadiusX - 1));
-        this.innerRadiusY = Math.max(1, Math.min(radiusY, this.outerRadiusY - 1));
-
-        this.points = this.generateStarPoints();
-        this.calculateBoundingRect()
     }
 
     override pointInShape(x: number, y: number): boolean {
