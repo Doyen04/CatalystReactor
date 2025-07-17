@@ -1,3 +1,4 @@
+import type Handle from "@lib/modifiers/Handles";
 import { Canvas } from "canvaskit-wasm";
 
 export interface BoundingRect {
@@ -28,20 +29,22 @@ export interface IShape {
 
     // Methods that all shapes should implement
     getModifierHandles(size: number, fill: string, strokeColor: string | number[]): any[];
-    getSizeModifierHandlesPos(pos: Corner, size: number, type: HandleType, isDragging: boolean): Point;
-    getModifierHandlesPos(pos: Corner, size: number, type: HandleType, isDragging: boolean): Point;
+    getSizeModifierHandlesPos(handle: Handle): Point;
+    getModifierHandlesPos(handle: Handle): Point;
+
     pointInShape(x: number, y: number): boolean;
     moveShape(mx: number, my: number): void;
     calculateBoundingRect(): void;
     setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     draw(canvas: Canvas): void;
     setDim(width: number, height: number): void;
-    getDim(): {width:number, height:number};
+    getDim(): { width: number, height: number };
     getCoord?(): { x: number, y: number };
     setCoord(x: number, y: number): void;
     setHovered?(B: boolean): void;
     setRadius?(r: number): void;
     destroy?(): void;
+    setRatio?(r: number): void;
     getCenterCoord?(): { x: number, y: number };
     updateBorderRadius?(r: number, pos: Corner): void;
     setStrokeColor(stroke: string | number[]): void;

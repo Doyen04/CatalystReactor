@@ -11,7 +11,8 @@ export default class Handle {
     shape: IShape;
     pos: Corner;
     isDragging: boolean = false;
-    anchorPoint: { x: number, y: number } = { x: 0, y: 0 }
+    handleAngle: number | null = null;
+    private anchorPoint: { x: number, y: number } = { x: 0, y: 0 }
 
     constructor(x: number, y: number, size: number, pos: Corner, type: HandleType, fill: string | number[], stroke: string | number[]) {
         this.x = x;
@@ -24,6 +25,9 @@ export default class Handle {
         if (type === "radius" || type === 'arc' || type === 'ratio') {
             this.shape = ShapeFactory.createShape('oval', { x, y });
             this.shape.setRadius(size);
+            if (type === 'arc' || type === 'ratio') {
+                this.handleAngle = 0
+            }
         } else {
             this.shape = ShapeFactory.createShape('rect', { x, y });
             this.shape.setDim(size, size);
@@ -136,9 +140,34 @@ export default class Handle {
         shape.setCoord(nx, ny);
         shape.setDim(width, height);
     }
-    updateRatio(dx: number, dy: number, e: MouseEvent, shape: IShape){
-        const {x, y} = shape.getCenterCoord()
+    updateRatio(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+
+        const { x, y } = shape.getCenterCoord()
+        const { width, height } = shape.getDim()
+
+        const radiusX = width / 2;
+        const radiusY = height / 2;
+
+        const deltaX = e.offsetX - x
+        const deltaY = e.offsetY - y
+       
+        //parametric deg
+        this.handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
         
+        const deg = Math.atan2(deltaY, deltaX)
+        const cos = Math.cos(deg);
+        const sin = Math.sin(deg);
+        
+        const ellipseRadiusAtAngle = Math.sqrt(
+            (radiusX * radiusX * radiusY * radiusY) /
+            (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin)
+        );
+
+        const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        const ratio = Math.min(0.99, distanceFromCenter / ellipseRadiusAtAngle);
+        console.log(ratio);
+        shape.setRatio(ratio)
     }
 
     draw(canvas: Canvas) {

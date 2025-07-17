@@ -17,7 +17,7 @@ class Oval extends Shape {
         super({ x, y, ...shapeProps });
         this.radiusX = 0;
         this.radiusY = 0;
-        this.ratio = 0.2;
+        this.ratio = 0;
         this.isFlippedX = false;
         this.isFlippedY = false;
         this.centerX = 0;
@@ -56,6 +56,7 @@ class Oval extends Shape {
     override getDim(): { width: number, height: number } {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
+
     getCenterCoord(): { x: number, y: number } {
         return { x: this.centerX, y: this.centerY }
     }
@@ -116,7 +117,7 @@ class Oval extends Shape {
         return this.ratio > 0;
     }
 
-    setRatio(nx: number){
+    setRatio(nx: number) {
         this.ratio = nx
     }
 
@@ -164,25 +165,38 @@ class Oval extends Shape {
         return handles;
     }
 
-    override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
-        if (handleType == 'size') {
-            return super.getSizeModifierHandlesPos(pos, size, handleType);
-        } else if (handleType == 'ratio') {
-            return this.getRatioModifierHandlesPos(size)
+    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+        if (handle.type == 'size') {
+            return super.getSizeModifierHandlesPos(handle);
+        } else if (handle.type == 'ratio') {
+            return this.getRatioModifierHandlesPos(handle);
         }
         else {
             return { x: 0, y: 0 }
         }
     }
-    private getRatioModifierHandlesPos(size: number) {
-        const halfSize = size / 2;
 
+    private getRatioModifierHandlesPos(handle: Handle): { x: number; y: number } {
+        const halfSize = handle.size;
+
+        // If ratio is 0, place handle at center
+        if (this.ratio === 0) {
+            return {
+                x: this.centerX - halfSize,
+                y: this.centerY - halfSize
+            };
+        }
+
+        // Calculate position on inner circle using angle
         const innerRadiusX = this.radiusX * this.ratio;
         const innerRadiusY = this.radiusY * this.ratio;
 
+        const handleX = this.centerX + innerRadiusX * Math.cos(handle.handleAngle);
+        const handleY = this.centerY + innerRadiusY * Math.sin(handle.handleAngle);
+
         return {
-            x: (this.centerX + innerRadiusX) - halfSize,
-            y: (this.centerY) - halfSize
+            x: handleX - halfSize,
+            y: handleY - halfSize
         };
     }
 

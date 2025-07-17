@@ -117,7 +117,7 @@ class ShapeModifier {
         }
 
         for (const resizer of this.handles) {
-            const { x, y } = this.shape.getModifierHandlesPos(resizer.pos, this.size, resizer.type, resizer.isDragging);
+            const { x, y } = this.shape.getModifierHandlesPos(resizer);
             resizer.updatePosition(x, y);
         }
 

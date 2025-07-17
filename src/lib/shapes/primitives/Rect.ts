@@ -235,40 +235,41 @@ class Rectangle extends Shape {
         return handles;
     }
 
-    getRadiusModiferHandlesPos(pos: Corner, size: number, isDragging?: boolean): { x: number; y: number; } {
-        const r = this.bdradius[pos];
+    getRadiusModiferHandlesPos(handle: Handle): { x: number; y: number; } {
+        const r = this.bdradius[handle.pos];
         const padding = 15;
+        const size = handle.size
 
         let x: number, y: number;
 
-        switch (pos) {
+        switch (handle.pos) {
             case 'top-left':
-                x = this.x + (isDragging || r >= padding ? r : padding) - size;
-                y = this.y + (isDragging || r >= padding ? r : padding) - size;
+                x = this.x + (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.y + (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'top-right':
-                x = this.x + this.width - (isDragging || r >= padding ? r : padding) - size;
-                y = this.y + (isDragging || r >= padding ? r : padding) - size;
+                x = this.x + this.width - (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.y + (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'bottom-left':
-                x = this.x + (isDragging || r >= padding ? r : padding) - size;
-                y = this.y + this.height - (isDragging || r >= padding ? r : padding) - size;
+                x = this.x + (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.y + this.height - (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'bottom-right':
-                x = this.x + this.width - (isDragging || r >= padding ? r : padding) - size;
-                y = this.y + this.height - (isDragging || r >= padding ? r : padding) - size;
+                x = this.x + this.width - (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.y + this.height - (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
         }
 
         return { x, y };
     }
 
-    override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
+    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
 
-        if (handleType === 'radius') {
-            return this.getRadiusModiferHandlesPos(pos, size, isDragging);
-        } else if (handleType === 'size') {
-            return super.getSizeModifierHandlesPos(pos, size, handleType);
+        if (handle.type === 'radius') {
+            return this.getRadiusModiferHandlesPos(handle);
+        } else if (handle.type === 'size') {
+            return super.getSizeModifierHandlesPos(handle);
         }
         return { x: 0, y: 0 };
     }

@@ -152,9 +152,9 @@ class Polygon extends Shape {
         return inside;
     }
 
-    override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
-        if (handleType === 'size') {
-            return super.getSizeModifierHandlesPos(pos, size, handleType);
+    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+        if (handle.type === 'size') {
+            return super.getSizeModifierHandlesPos(handle);
         }
         return { x: 0, y: 0 };
     }

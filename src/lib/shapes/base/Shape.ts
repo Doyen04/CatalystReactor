@@ -1,7 +1,7 @@
 // ════════════════════════════════════
 // 📐 Abstract Base Shape Class
 
-import Handle from "@lib/modifiers/Handles"
+import  Handle from "@lib/modifiers/Handles"
 import { SizeRadiusModifierPos } from "@/lib/modifiers/ShapeModifier";
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
 import { BoundingRect, Corner, HandleType, IShape } from "@lib/types/shapes";
@@ -31,6 +31,7 @@ abstract class Shape implements IShape {
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
         this.isHover = false;
     }
+
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
         if (resources) {
@@ -41,6 +42,7 @@ abstract class Shape implements IShape {
             return null
         }
     }
+
     getSizeModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles: Handle[] = [];
         SizeRadiusModifierPos.forEach(pos => {
@@ -49,10 +51,10 @@ abstract class Shape implements IShape {
         return handles;
     }
 
-    getSizeModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } {
+    getSizeModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const bRect = this.boundingRect
-        size = size / 2
-        switch (pos) {
+        const size = handle.size / 2
+        switch (handle.pos) {
             case 'top-left':
                 return { x: bRect.left - size, y: bRect.top - size };
             case 'top-right':
@@ -67,7 +69,7 @@ abstract class Shape implements IShape {
     }
 
     abstract getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[];
-    abstract getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType, isDragging?: boolean): { x: number; y: number; } ;
+    abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; } ;
     abstract pointInShape(x: number, y: number): boolean;
     abstract moveShape(mx: number, my: number): void;
     abstract calculateBoundingRect(): void;
