@@ -1,7 +1,7 @@
 import Handle from "@/lib/modifiers/Handles";
 import Shape from "../base/Shape"
-import type { Canvas, Rect } from "canvaskit-wasm";
-import { Corner, HandleType } from "@lib/types/shapes";
+import type { Canvas, Path, Rect } from "canvaskit-wasm";
+import { Corner, HandleType, Point } from "@lib/types/shapes";
 
 class Oval extends Shape {
     private radiusX: number;
@@ -12,6 +12,9 @@ class Oval extends Shape {
     private isFlippedY: boolean;
     private centerX: number;
     private centerY: number;
+    private startAngle: number = 0;
+    private endAngle: number = 2 * Math.PI;
+
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
@@ -55,6 +58,27 @@ class Oval extends Shape {
 
     override getDim(): { width: number, height: number } {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
+    }
+
+    isTorus(): boolean {
+        return this.ratio > 0;
+    }
+
+    setRatio(nx: number) {
+        this.ratio = nx
+    }
+
+    setArc(startAngle: number, endAngle: number) {
+        this.startAngle = startAngle;
+        this.endAngle = endAngle;
+    }
+
+    isArc(): boolean {
+        return Math.abs(this.endAngle - this.startAngle) < 2 * Math.PI;
+    }
+
+    getArcAngles(): { start: number, end: number } {
+        return { start: this.startAngle, end: this.endAngle };
     }
 
     getCenterCoord(): { x: number, y: number } {
@@ -113,23 +137,15 @@ class Oval extends Shape {
         this.calculateBoundingRect();
     }
 
-    isTorus(): boolean {
-        return this.ratio > 0;
-    }
-
-    setRatio(nx: number) {
-        this.ratio = nx
-    }
-
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
         this.setPaint();
 
         const rect = this.resource.canvasKit.LTRBRect(this.boundingRect.left, this.boundingRect.top, this.boundingRect.right, this.boundingRect.bottom);
-        if (this.isTorus()) {
+        if (this.isTorus() || this.isArc()) {
             // Draw torus using path
-            this.drawTorus(canvas, rect);
+            this.drawComplexShape(canvas, rect);
         } else {
 
             canvas.drawOval(rect, this.resource.paint);
@@ -137,11 +153,9 @@ class Oval extends Shape {
         }
     }
 
-    drawTorus(canvas: Canvas, rect: Rect) {
+    private drawComplexShape(canvas: Canvas, rect: Rect) {
         const { canvasKit } = this.resource;
         const path = new canvasKit.Path();
-
-        path.addOval(rect);
 
         const innerRect = canvasKit.LTRBRect(
             this.centerX - this.radiusX * this.ratio,
@@ -149,13 +163,48 @@ class Oval extends Shape {
             this.centerX + this.radiusX * this.ratio,
             this.centerY + this.radiusY * this.ratio
         );
-        path.addOval(innerRect, true); // true = clockwise (creates hole)
+        const startDegrees = this.startAngle * 180 / Math.PI;
+        const sweepDegrees = (this.endAngle - this.startAngle) * 180 / Math.PI;
+
+        if (this.isTorus() && !this.isArc()) {
+            this.drawTorus(rect, innerRect, path)
+        } else if (this.isArc() && !this.isTorus()) {
+            this.drawArc(rect, path, startDegrees, sweepDegrees);
+        } else {
+            this.drawComplexTorusArc(rect, innerRect, path, startDegrees, sweepDegrees)
+        }
         path.setFillType(canvasKit.FillType.EvenOdd);
 
         canvas.drawPath(path, this.resource.paint);
         canvas.drawPath(path, this.resource.strokePaint);
-
         path.delete();
+    }
+
+    private drawArc(rect: Rect, path: Path, startDegrees: number, sweepDegrees: number) {
+        path.moveTo(this.centerX, this.centerY);
+        path.arcToOval(rect, startDegrees, sweepDegrees, false);
+        path.close();
+    }
+
+    private drawTorus(rect: Rect, innerRect: Rect, path: Path) {
+        path.addOval(rect);
+        path.addOval(innerRect, true); // true = clockwise (creates hole)
+    }
+
+    private drawComplexTorusArc(rect: Rect, innerRect: Rect, path: Path, startDegrees: number, sweepDegrees: number) {
+        const innerStartX = this.centerX + (this.radiusX * this.ratio) * Math.cos(this.startAngle);
+        const innerStartY = this.centerY + (this.radiusY * this.ratio) * Math.sin(this.startAngle);
+
+        const outerEndX = this.centerX + this.radiusX * Math.cos(this.endAngle);
+        const outerEndY = this.centerY + this.radiusY * Math.sin(this.endAngle);
+
+        path.moveTo(innerStartX, innerStartY);
+        path.arcToOval(innerRect, startDegrees, sweepDegrees, false);
+
+        path.lineTo(outerEndX, outerEndY);
+        path.arcToOval(rect, startDegrees + sweepDegrees, -sweepDegrees, false);
+
+        path.close();
     }
 
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
@@ -165,29 +214,29 @@ class Oval extends Shape {
         return handles;
     }
 
-    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+    override getModifierHandlesPos(handle: Handle): Point {
         if (handle.type == 'size') {
             return super.getSizeModifierHandlesPos(handle);
         } else if (handle.type == 'ratio') {
             return this.getRatioModifierHandlesPos(handle);
+        } else if (handle.type == 'arc') {
+            return this.getArcModifierHandlesPos(handle)
         }
         else {
             return { x: 0, y: 0 }
         }
     }
 
-    private getRatioModifierHandlesPos(handle: Handle): { x: number; y: number } {
-        const halfSize = handle.size;
+    private getRatioModifierHandlesPos(handle: Handle): Point {
+        const size = handle.size;
 
-        // If ratio is 0, place handle at center
         if (this.ratio === 0) {
             return {
-                x: this.centerX - halfSize,
-                y: this.centerY - halfSize
+                x: this.centerX - size,
+                y: this.centerY - size
             };
         }
 
-        // Calculate position on inner circle using angle
         const innerRadiusX = this.radiusX * this.ratio;
         const innerRadiusY = this.radiusY * this.ratio;
 
@@ -195,13 +244,43 @@ class Oval extends Shape {
         const handleY = this.centerY + innerRadiusY * Math.sin(handle.handleAngle);
 
         return {
-            x: handleX - halfSize,
-            y: handleY - halfSize
+            x: handleX - size,
+            y: handleY - size
         };
     }
 
-    private getArcModifierHandlesPos() {
+    private getArcModifierHandlesPos(handle: Handle): Point {
+        const size = handle.size;
+        const gap = 20
 
+        if (this.ratio === 0) {
+            const handleX = this.centerX + (this.radiusX - gap);
+            const handleY = this.centerY;
+
+            return {
+                x: handleX - size,
+                y: handleY - size
+            };
+        } else {
+            const outerRadiusX = this.radiusX;
+            const outerRadiusY = this.radiusY;
+            const innerRadiusX = this.radiusX * this.ratio;
+            const innerRadiusY = this.radiusY * this.ratio;
+
+            const midRadiusX = (outerRadiusX + innerRadiusX) / 2;
+            const midRadiusY = (outerRadiusY + innerRadiusY) / 2;
+
+            // Use the same angle as ratio handle if it exists, otherwise default to top
+            const angle = handle.handleAngle !== null ? handle.handleAngle : Math.PI / 2; // Default to top
+
+            const handleX = this.centerX + midRadiusX * Math.cos(angle);
+            const handleY = this.centerY + midRadiusY * Math.sin(angle);
+
+            return {
+                x: handleX - size,
+                y: handleY - size
+            };
+        }
     }
 
     override pointInShape(x: number, y: number): boolean {

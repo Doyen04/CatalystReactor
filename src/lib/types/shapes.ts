@@ -47,6 +47,7 @@ export interface IShape {
     setRatio?(r: number): void;
     getCenterCoord?(): { x: number, y: number };
     updateBorderRadius?(r: number, pos: Corner): void;
+    setArc?(startAngle: number, endAngle: number): void;
     setStrokeColor(stroke: string | number[]): void;
     setFill(stroke: string | number[]): void;
 }

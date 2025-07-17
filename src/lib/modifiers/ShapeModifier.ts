@@ -94,15 +94,17 @@ class ShapeModifier {
         if (this.selectedModifier) {
             switch (this.selectedModifier.type) {
                 case 'radius':
-                    this.selectedModifier.updateRadii(x, y, e, this.shape)
+                    this.selectedModifier.updateShapeRadii(x, y, e, this.shape)
                     break;
                 case 'size':
-                    this.selectedModifier.updateDim(x, y, e, this.shape)
+                    this.selectedModifier.updateShapeDim(x, y, e, this.shape)
                     break;
                 case 'ratio':
-                    this.selectedModifier.updateRatio(x,y,e,this.shape)
+                    this.selectedModifier.updateShapeRatio(x,y,e,this.shape)
                     break;
-
+                case 'arc':
+                    this.selectedModifier.updateShapeArc(x,y,e,this.shape)
+                    break;
                 default:
                     break;
             }

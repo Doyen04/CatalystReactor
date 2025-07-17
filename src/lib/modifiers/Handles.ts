@@ -50,7 +50,7 @@ export default class Handle {
     isCollide(x: number, y: number): boolean {
         return this.shape.pointInShape(x, y)
     }
-    updateRadii(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateShapeRadii(dx: number, dy: number, e: MouseEvent, shape: IShape) {
 
         const { left, right, top, bottom } = shape.boundingRect;
 
@@ -98,7 +98,7 @@ export default class Handle {
         shape.updateBorderRadius(newRadius, this.pos);
     }
 
-    updateDim(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateShapeDim(dx: number, dy: number, e: MouseEvent, shape: IShape) {
         let [width, height] = [0, 0]
         let nx = 0
         let ny = 0
@@ -140,7 +140,7 @@ export default class Handle {
         shape.setCoord(nx, ny);
         shape.setDim(width, height);
     }
-    updateRatio(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateShapeRatio(dx: number, dy: number, e: MouseEvent, shape: IShape) {
 
         const { x, y } = shape.getCenterCoord()
         const { width, height } = shape.getDim()
@@ -150,14 +150,14 @@ export default class Handle {
 
         const deltaX = e.offsetX - x
         const deltaY = e.offsetY - y
-       
+
         //parametric deg
         this.handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
-        
+
         const deg = Math.atan2(deltaY, deltaX)
         const cos = Math.cos(deg);
         const sin = Math.sin(deg);
-        
+
         const ellipseRadiusAtAngle = Math.sqrt(
             (radiusX * radiusX * radiusY * radiusY) /
             (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin)
@@ -168,6 +168,27 @@ export default class Handle {
         const ratio = Math.min(0.99, distanceFromCenter / ellipseRadiusAtAngle);
         console.log(ratio);
         shape.setRatio(ratio)
+    }
+
+    updateShapeArc(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+        const { x, y } = shape.getCenterCoord();
+        const { width, height } = shape.getDim()
+        const deltaX = e.offsetX - x;
+        const deltaY = e.offsetY - y;
+        const radiusX = width / 2;
+        const radiusY = height / 2;
+
+         //parametric deg
+        let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
+
+        // Normalize angle to 0-2π range
+        if (angle < 0) angle += 2 * Math.PI;
+
+        // Store angle for handle positioning
+        this.handleAngle = angle;
+
+        // Set arc from 0 to current angle (pizza slice effect)
+        shape.setArc(0, angle);
     }
 
     draw(canvas: Canvas) {
