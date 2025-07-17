@@ -209,7 +209,8 @@ class Oval extends Shape {
 
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        handles.push(new Handle(0, 0, size, 'along-arc', 'arc', fill, strokeColor))
+        handles.push(new Handle(0, 0, size, 'arc-start', 'arc', fill, strokeColor))
+        handles.push(new Handle(0, 0, size, 'arc-end', 'arc', fill, strokeColor))
         handles.push(new Handle(0, 0, size, 'center', 'ratio', fill, strokeColor))
         return handles;
     }
@@ -240,8 +241,10 @@ class Oval extends Shape {
         const innerRadiusX = this.radiusX * this.ratio;
         const innerRadiusY = this.radiusY * this.ratio;
 
-        const handleX = this.centerX + innerRadiusX * Math.cos(handle.handleAngle);
-        const handleY = this.centerY + innerRadiusY * Math.sin(handle.handleAngle);
+        const handleAngle = (handle.isDragging) ? handle.handleRatioAngle : (this.startAngle + this.endAngle) / 2
+
+        const handleX = this.centerX + innerRadiusX * Math.cos(handleAngle);
+        const handleY = this.centerY + innerRadiusY * Math.sin(handleAngle);
 
         return {
             x: handleX - size,
@@ -269,12 +272,15 @@ class Oval extends Shape {
 
             const midRadiusX = (outerRadiusX + innerRadiusX) / 2;
             const midRadiusY = (outerRadiusY + innerRadiusY) / 2;
-
-            // Use the same angle as ratio handle if it exists, otherwise default to top
-            const angle = handle.handleAngle !== null ? handle.handleAngle : Math.PI / 2; // Default to top
-
-            const handleX = this.centerX + midRadiusX * Math.cos(angle);
-            const handleY = this.centerY + midRadiusY * Math.sin(angle);
+            let handleX = 0;
+            let handleY = 0;
+            if (handle.pos == 'arc-end') {
+                handleX = this.centerX + midRadiusX * Math.cos(this.endAngle);
+                handleY = this.centerY + midRadiusY * Math.sin(this.endAngle);
+            } else if (handle.pos == 'arc-start') {
+                handleX = this.centerX + midRadiusX * Math.cos(this.startAngle);
+                handleY = this.centerY + midRadiusY * Math.sin(this.startAngle);
+            }
 
             return {
                 x: handleX - size,

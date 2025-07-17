@@ -11,7 +11,8 @@ export default class Handle {
     shape: IShape;
     pos: Corner;
     isDragging: boolean = false;
-    handleAngle: number | null = null;
+    handleArcAngle: number | null = null;
+    handleRatioAngle: number | null = null;
     private anchorPoint: { x: number, y: number } = { x: 0, y: 0 }
 
     constructor(x: number, y: number, size: number, pos: Corner, type: HandleType, fill: string | number[], stroke: string | number[]) {
@@ -26,7 +27,8 @@ export default class Handle {
             this.shape = ShapeFactory.createShape('oval', { x, y });
             this.shape.setRadius(size);
             if (type === 'arc' || type === 'ratio') {
-                this.handleAngle = 0
+                this.handleArcAngle = 0
+                this.handleRatioAngle = 0
             }
         } else {
             this.shape = ShapeFactory.createShape('rect', { x, y });
@@ -141,10 +143,10 @@ export default class Handle {
         shape.setDim(width, height);
     }
 
-    clampAngleToArc(t: number, start: number, end: number, prev:number): number {
+    clampAngleToArc(t: number, start: number, end: number, prev: number): number {
         const TWO_PI = 2 * Math.PI;
-        
-        let t0 = (t < 0)? t + TWO_PI : t
+
+        let t0 = (t < 0) ? t + TWO_PI : t
 
         if (t0 < start) return prev;
         if (t0 > end) return prev;
@@ -155,6 +157,7 @@ export default class Handle {
 
         const { x, y } = shape.getCenterCoord()
         const { width, height } = shape.getDim()
+        this.isDragging = true
 
         const radiusX = width / 2;
         const radiusY = height / 2;
@@ -167,12 +170,11 @@ export default class Handle {
         const { start, end } = shape.getArcAngles()
         if (shape.isArc()) {
             console.log('inside ');
-            const Angle = this.clampAngleToArc(handleAngle, start, end, this.handleAngle)
-            console.log(Angle);
-            this.handleAngle = Angle
+            const Angle = this.clampAngleToArc(handleAngle, start, end, this.handleRatioAngle)
+            this.handleRatioAngle = Angle
 
         } else {
-            this.handleAngle = handleAngle
+            this.handleRatioAngle = handleAngle
         }
 
         const deg = Math.atan2(deltaY, deltaX)
@@ -192,12 +194,20 @@ export default class Handle {
     }
 
     updateShapeArc(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+        if (this.pos == 'arc-end') {
+            this.updateShapeArcEnd(dx, dy, e, shape)
+        } else {
+            this.updateShapeArcStart(dx, dy, e, shape)
+        }
+    }
+    updateShapeArcStart(dx: number, dy: number, e: MouseEvent, shape: IShape) {
         const { x, y } = shape.getCenterCoord();
         const { width, height } = shape.getDim()
         const deltaX = e.offsetX - x;
         const deltaY = e.offsetY - y;
         const radiusX = width / 2;
         const radiusY = height / 2;
+        const { start, end } = shape.getArcAngles()
 
         //parametric deg
         let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
@@ -205,11 +215,26 @@ export default class Handle {
         // Normalize angle to 0-2π range
         if (angle < 0) angle += 2 * Math.PI;
 
-        // Store angle for handle positioning
-        this.handleAngle = angle;
+        shape.setArc(angle, end);
+    }
+
+    updateShapeArcEnd(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+        const { x, y } = shape.getCenterCoord();
+        const { width, height } = shape.getDim()
+        const deltaX = e.offsetX - x;
+        const deltaY = e.offsetY - y;
+        const radiusX = width / 2;
+        const radiusY = height / 2;
+        const { start, end } = shape.getArcAngles()
+
+        //parametric deg
+        let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
+
+        // Normalize angle to 0-2π range
+        if (angle < 0) angle += 2 * Math.PI;
 
         // Set arc from 0 to current angle (pizza slice effect)
-        shape.setArc(0, angle);
+        shape.setArc(start, angle);
     }
 
     draw(canvas: Canvas) {

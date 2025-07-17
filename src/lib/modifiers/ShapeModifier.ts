@@ -161,15 +161,15 @@ class ShapeModifier {
 
             return;
         }
-
+        
         this.updateResizerPositions()// bad practice
         this.setPaint();
         const dimen = this.shape.boundingRect;
-
+        
         const rect = this.resource.canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);
-
+        
         canvas.drawRect(rect, this.resource.strokePaint);
-
+        
         this.handles.forEach(handle => {
             if (handle.type !== 'size' && this.isHovered) {
                 handle.draw(canvas);

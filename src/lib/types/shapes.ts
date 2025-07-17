@@ -14,7 +14,7 @@ export interface Point {
 }
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text';
-export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'along-arc';
+export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end';
 export type HandleType = 'size' | 'radius' | 'arc' | 'ratio';
 
 export interface IShape {
