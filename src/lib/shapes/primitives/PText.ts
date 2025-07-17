@@ -355,8 +355,12 @@ class PText extends Shape {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
         return handles;
     }
-    override updateDim(dx: number, dy: number): void {
+    override getDim(): { width: number, height: number } {
 
+        return {
+            width: ((this.width > 0) ? this.width : this.TWidth),
+            height: ((this.height > 0) ? this.height : this.THeight)
+        }
     }
 
     override destroy(): void {

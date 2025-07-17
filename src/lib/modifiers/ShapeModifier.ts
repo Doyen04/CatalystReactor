@@ -99,6 +99,9 @@ class ShapeModifier {
                 case 'size':
                     this.selectedModifier.updateDim(x, y, e, this.shape)
                     break;
+                case 'ratio':
+                    this.selectedModifier.updateRatio(x,y,e,this.shape)
+                    break;
 
                 default:
                     break;

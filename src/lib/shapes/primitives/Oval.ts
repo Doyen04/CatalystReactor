@@ -56,6 +56,9 @@ class Oval extends Shape {
     override getDim(): { width: number, height: number } {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
+    getCenterCoord(): { x: number, y: number } {
+        return { x: this.centerX, y: this.centerY }
+    }
 
     override calculateBoundingRect(): void {
         this.boundingRect = {
@@ -108,8 +111,13 @@ class Oval extends Shape {
 
         this.calculateBoundingRect();
     }
+
     isTorus(): boolean {
         return this.ratio > 0;
+    }
+
+    setRatio(nx: number){
+        this.ratio = nx
     }
 
     override draw(canvas: Canvas): void {
@@ -127,7 +135,8 @@ class Oval extends Shape {
             canvas.drawOval(rect, this.resource.strokePaint);
         }
     }
-    drawTorus(canvas: Canvas, rect:Rect) {
+
+    drawTorus(canvas: Canvas, rect: Rect) {
         const { canvasKit } = this.resource;
         const path = new canvasKit.Path();
 
@@ -158,13 +167,25 @@ class Oval extends Shape {
     override getModifierHandlesPos(pos: Corner, size: number, handleType: HandleType): { x: number; y: number; } {
         if (handleType == 'size') {
             return super.getSizeModifierHandlesPos(pos, size, handleType);
-        } else {
+        } else if (handleType == 'ratio') {
+            return this.getRatioModifierHandlesPos(size)
+        }
+        else {
             return { x: 0, y: 0 }
         }
     }
-    private getRatioModifierHandlesPos() {
+    private getRatioModifierHandlesPos(size: number) {
+        const halfSize = size / 2;
 
+        const innerRadiusX = this.radiusX * this.ratio;
+        const innerRadiusY = this.radiusY * this.ratio;
+
+        return {
+            x: (this.centerX + innerRadiusX) - halfSize,
+            y: (this.centerY) - halfSize
+        };
     }
+
     private getArcModifierHandlesPos() {
 
     }

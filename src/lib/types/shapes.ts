@@ -42,6 +42,7 @@ export interface IShape {
     setHovered?(B: boolean): void;
     setRadius?(r: number): void;
     destroy?(): void;
+    getCenterCoord?(): { x: number, y: number };
     updateBorderRadius?(r: number, pos: Corner): void;
     setStrokeColor(stroke: string | number[]): void;
     setFill(stroke: string | number[]): void;

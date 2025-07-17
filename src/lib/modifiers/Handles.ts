@@ -136,6 +136,10 @@ export default class Handle {
         shape.setCoord(nx, ny);
         shape.setDim(width, height);
     }
+    updateRatio(dx: number, dy: number, e: MouseEvent, shape: IShape){
+        const {x, y} = shape.getCenterCoord()
+        
+    }
 
     draw(canvas: Canvas) {
         this.shape.draw(canvas);
