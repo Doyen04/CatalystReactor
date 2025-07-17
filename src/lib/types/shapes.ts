@@ -44,6 +44,8 @@ export interface IShape {
     setHovered?(B: boolean): void;
     setRadius?(r: number): void;
     destroy?(): void;
+    isArc?(): boolean;
+    getArcAngles?(): { start: number, end: number }
     setRatio?(r: number): void;
     getCenterCoord?(): { x: number, y: number };
     updateBorderRadius?(r: number, pos: Corner): void;

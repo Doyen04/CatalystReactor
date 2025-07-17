@@ -140,6 +140,17 @@ export default class Handle {
         shape.setCoord(nx, ny);
         shape.setDim(width, height);
     }
+
+    clampAngleToArc(t: number, start: number, end: number, prev:number): number {
+        const TWO_PI = 2 * Math.PI;
+        
+        let t0 = (t < 0)? t + TWO_PI : t
+
+        if (t0 < start) return prev;
+        if (t0 > end) return prev;
+        return t0;
+    }
+
     updateShapeRatio(dx: number, dy: number, e: MouseEvent, shape: IShape) {
 
         const { x, y } = shape.getCenterCoord()
@@ -152,7 +163,17 @@ export default class Handle {
         const deltaY = e.offsetY - y
 
         //parametric deg
-        this.handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
+        const handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
+        const { start, end } = shape.getArcAngles()
+        if (shape.isArc()) {
+            console.log('inside ');
+            const Angle = this.clampAngleToArc(handleAngle, start, end, this.handleAngle)
+            console.log(Angle);
+            this.handleAngle = Angle
+
+        } else {
+            this.handleAngle = handleAngle
+        }
 
         const deg = Math.atan2(deltaY, deltaX)
         const cos = Math.cos(deg);
@@ -178,7 +199,7 @@ export default class Handle {
         const radiusX = width / 2;
         const radiusY = height / 2;
 
-         //parametric deg
+        //parametric deg
         let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
 
         // Normalize angle to 0-2π range
