@@ -3,8 +3,26 @@ import "./Component.css"
 import Button from "../ui/Button"
 import MoreButton from "@ui/MoreButton";
 import { useToolStore } from "@hooks/useTool";
+import { useEffect } from "react";
+import { useFilePicker } from "@hooks/useFileOpener";
+import { useImageStore } from "@hooks/imageStore";
 
 function ToolBar() {
+    const { openFilePicker } = useFilePicker({
+        accept: 'image/*',
+        multiple: true,
+        onFileSelect: (file) => handleFileSelect(file)
+    })
+    const { setSelectedImage } = useImageStore()
+
+    const handleFileSelect = (files: FileList) => {
+        if (files && files.length > 0) {
+            const urlList = Array.from(files).map((file) => URL.createObjectURL(file))
+            console.log(urlList, files);
+
+            setSelectedImage(files, urlList)
+        }
+    }
 
     const SelectTools = [
         {
@@ -60,6 +78,12 @@ function ToolBar() {
     if (!currentTool) {
         setTool(SelectTools[0])
     }
+    useEffect(() => {
+        if (currentTool?.toolName === 'img') {
+            openFilePicker()
+        }
+    }, [currentTool?.toolName, openFilePicker])
+
     return (
         <div className={'toolbar'}>
             <Button tool={SelectTools[0]} group={SelectTools} />
@@ -72,3 +96,4 @@ function ToolBar() {
 }
 
 export default ToolBar
+
