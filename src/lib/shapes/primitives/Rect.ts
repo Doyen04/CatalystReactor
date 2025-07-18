@@ -2,7 +2,7 @@ import Handle from '@lib/modifiers/Handles'
 import { SizeRadiusModifierPos } from '@/lib/modifiers/ShapeModifier';
 import Shape from '../base/Shape';
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
-import { Corner, HandleType } from '@lib/types/shapes';
+import { Corner } from '@lib/types/shapes';
 
 class Rectangle extends Shape {
     width: number;

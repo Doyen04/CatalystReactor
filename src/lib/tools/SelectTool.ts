@@ -1,3 +1,4 @@
+import { Coords } from "@lib/types/shapeTypes";
 import Tool from "./Tool";
 import EventQueue, {EventTypes } from "@lib/core/EventQueue";
 

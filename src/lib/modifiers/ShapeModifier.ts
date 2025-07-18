@@ -4,7 +4,7 @@ import Handle from "./Handles";
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 
-const { SelectModifier, DragModifier, ModifierSelected, RemoveSelectedModifier } = EventTypes
+const { SelectModifier, DragModifier, ModifierSelected, RemoveSelectedModifier, UpdateModifierHandlesPos } = EventTypes
 
 export const SizeRadiusModifierPos: Corner[] = [
     'top-left',
@@ -41,13 +41,13 @@ class ShapeModifier {
         EventQueue.subscribe(SelectModifier, this.selectModifier.bind(this))
         EventQueue.subscribe(DragModifier, this.handleModifierDrag.bind(this))
         EventQueue.subscribe(RemoveSelectedModifier, this.handleRemoveModifer.bind(this))
-
+        EventQueue.subscribe(UpdateModifierHandlesPos, this.updateResizerPositions.bind(this))
     }
     removeEvent() {
         EventQueue.unSubscribeAll(SelectModifier)
         EventQueue.unSubscribeAll(DragModifier)
         EventQueue.unSubscribeAll(RemoveSelectedModifier)
-
+        EventQueue.unSubscribeAll(UpdateModifierHandlesPos)
     }
 
     setShape(shape: IShape) {
@@ -100,16 +100,16 @@ class ShapeModifier {
                     this.selectedModifier.updateShapeDim(x, y, e, this.shape)
                     break;
                 case 'ratio':
-                    this.selectedModifier.updateShapeRatio(x,y,e,this.shape)
+                    this.selectedModifier.updateShapeRatio(x, y, e, this.shape)
                     break;
                 case 'arc':
-                    this.selectedModifier.updateShapeArc(x,y,e,this.shape)
+                    this.selectedModifier.updateShapeArc(x, y, e, this.shape)
                     break;
                 default:
                     break;
             }
-            // this.handles = this.shape.getModifierHandles(this.size, this.fill, this.strokeColor)
         }
+        this.updateResizerPositions()
     }
     updateResizerPositions() {
         if (!this.shape) {
@@ -161,15 +161,13 @@ class ShapeModifier {
 
             return;
         }
-        
-        this.updateResizerPositions()// bad practice
         this.setPaint();
         const dimen = this.shape.boundingRect;
-        
+
         const rect = this.resource.canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);
-        
+
         canvas.drawRect(rect, this.resource.strokePaint);
-        
+
         this.handles.forEach(handle => {
             if (handle.type !== 'size' && this.isHovered) {
                 handle.draw(canvas);

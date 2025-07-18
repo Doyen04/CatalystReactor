@@ -1,5 +1,6 @@
 import EventQueue, { EventTypes } from "@lib/core/EventQueue"
 import SceneNode from "@lib/core/SceneGraph";
+import { Coords } from "@lib/types/shapeTypes";
 
 const { SceneCreated, FinalizeShape } = EventTypes
 

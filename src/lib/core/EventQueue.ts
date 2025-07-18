@@ -1,3 +1,4 @@
+import { Coord, ShapeType } from "@lib/types/shapes";
 import SceneNode from "./SceneGraph";
 
 enum EventTypes {
@@ -21,21 +22,22 @@ enum EventTypes {
     DragModifier = 'drag:modifier',
     FinaliseSelection = 'selection:finished',
     RemoveSelectedModifier = 'remove:modifier',
+    UpdateModifierHandlesPos = 'update:modifier',
     EditText = 'insert:text',
     ToolChange = 'tool:change',
     ModifierSelected = 'modifier:selected',
 }
 
 type Handlers = {
-    [EventTypes.PointerDown]: (dragStart: Coords, e: MouseEvent) => void;
-    [EventTypes.PointerUp]: (dragStart: Coords, e: MouseEvent) => void;
-    [EventTypes.PointerMove]: (dragStart: Coords, e: MouseEvent) => void;
-    [EventTypes.PointerDrag]: (dragStart: Coords, e: MouseEvent) => void;
+    [EventTypes.PointerDown]: (dragStart: Coord, e: MouseEvent) => void;
+    [EventTypes.PointerUp]: (dragStart: Coord, e: MouseEvent) => void;
+    [EventTypes.PointerMove]: (dragStart: Coord, e: MouseEvent) => void;
+    [EventTypes.PointerDrag]: (dragStart: Coord, e: MouseEvent) => void;
     [EventTypes.KeyDown]: (e: KeyboardEvent) => void;
     [EventTypes.KeyUp]: (e: KeyboardEvent) => void;
     [EventTypes.CreateScene]: (type: ShapeType, x: number, y: number) => void;
     [EventTypes.SceneCreated]: (Scene: SceneNode) => void;
-    [EventTypes.DrawScene]: (dragStart: Coords, x: number, y: number, shiftKey: boolean) => void;
+    [EventTypes.DrawScene]: (dragStart: Coord, x: number, y: number, shiftKey: boolean) => void;
     [EventTypes.FinalizeShape]: () => void;
     [EventTypes.CreateSurface]: () => void;
     [EventTypes.ShowHovered]: (x: number, y: number) => void;
@@ -48,6 +50,7 @@ type Handlers = {
     [EventTypes.DragModifier]: (dx: number, dy: number, e: MouseEvent) => void;
     [EventTypes.FinaliseSelection]: () => void;
     [EventTypes.RemoveSelectedModifier]: () => void;
+    [EventTypes.UpdateModifierHandlesPos]: () => void;
     [EventTypes.EditText]: (e: KeyboardEvent) => void;
     [EventTypes.ToolChange]: (tool: any) => void;
 };

@@ -1,7 +1,9 @@
-import Tool  from "./Tool";
-import EventQueue, {EventTypes } from "@lib/core/EventQueue";
+import { ShapeType } from "@lib/types/shapes";
+import Tool from "./Tool";
+import EventQueue, { EventTypes } from "@lib/core/EventQueue";
+import { Coord } from "@lib/types/shapes";
 
-const { CreateScene, DrawScene } = EventTypes
+const { CreateScene, DrawScene, UpdateModifierHandlesPos } = EventTypes
 
 class ShapeTool extends Tool {
     shapeType: ShapeType
@@ -9,13 +11,14 @@ class ShapeTool extends Tool {
         super()
         this.shapeType = shape
     }
-    override handlePointerDown(dragStart: Coords, e: MouseEvent) {
+    override handlePointerDown(dragStart: Coord, e: MouseEvent) {
 
         EventQueue.trigger(CreateScene, this.shapeType, dragStart.x, dragStart.y)
     }
-    override handlePointerDrag(dragStart: Coords, e: MouseEvent): void {
+    override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
 
         EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
+        EventQueue.trigger(UpdateModifierHandlesPos)
     }
     setShape(shape: ShapeType) {
         this.shapeType = shape

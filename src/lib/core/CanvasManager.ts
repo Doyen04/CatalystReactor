@@ -5,6 +5,7 @@ import Renderer from "./Renderer";
 import ToolManager from "./ToolManager";
 
 import type Matrix from "./Matrix";
+import { ToolType } from '@lib/types/shapeTypes';
 
 
 class CanvasManager {

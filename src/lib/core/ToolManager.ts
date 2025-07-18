@@ -3,6 +3,8 @@ import ShapeTool from '@/lib/tools/ShapeTool'
 import TextTool from '@/lib/tools/TextTool'
 import Tool from '@/lib/tools/SelectTool'
 import EventQueue, { EventTypes } from './EventQueue'
+import { ToolType } from '@lib/types/shapeTypes'
+import ImageTool from '@lib/tools/ImageTool'
 
 const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes
 
@@ -34,6 +36,9 @@ class ToolManager {
                 break;
             case 'text':
                 currentTool = new TextTool()
+                break;
+            case 'img':
+                currentTool = new ImageTool()
                 break;
             default:
                 console.log('ttool not implemented');

@@ -8,12 +8,12 @@ export interface BoundingRect {
     bottom: number;
 }
 
-export interface Point {
+export interface Coord {
     x: number;
     y: number;
 }
 
-export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text';
+export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img';
 export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end';
 export type HandleType = 'size' | 'radius' | 'arc' | 'ratio';
 
@@ -29,8 +29,8 @@ export interface IShape {
 
     // Methods that all shapes should implement
     getModifierHandles(size: number, fill: string, strokeColor: string | number[]): any[];
-    getSizeModifierHandlesPos(handle: Handle): Point;
-    getModifierHandlesPos(handle: Handle): Point;
+    getSizeModifierHandlesPos(handle: Handle): Coord;
+    getModifierHandlesPos(handle: Handle): Coord;
 
     pointInShape(x: number, y: number): boolean;
     moveShape(mx: number, my: number): void;

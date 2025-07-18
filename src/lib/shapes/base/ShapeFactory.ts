@@ -3,11 +3,12 @@ import Rectangle from "../primitives/Rect"
 import Star from '../primitives/Star'
 import Polygon from '../primitives/Polygon'
 import PText from "../primitives/PText";
-import { IShape } from "@lib/types/shapes";
+import { IShape, Coord, ShapeType } from "@lib/types/shapes";
+import PImage from "../primitives/Image";
 
 
 export default class ShapeFactory {
-    static createShape(type: ShapeType, options: ShapeOptions): IShape {
+    static createShape(type: ShapeType, options: Coord): IShape {
         let shape: IShape;
 
         switch (type) {
@@ -25,6 +26,9 @@ export default class ShapeFactory {
                 break;
             case "text":
                 shape = new PText(options.x, options.y);
+                break;
+            case "img":
+                shape = new PImage(options.x, options.y);
                 break;
             default:
                 throw new Error(`Unsupported shape type: ${type}`);
