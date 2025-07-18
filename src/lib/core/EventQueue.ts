@@ -26,6 +26,7 @@ enum EventTypes {
     EditText = 'insert:text',
     ToolChange = 'tool:change',
     ModifierSelected = 'modifier:selected',
+    Render = 'render:scene',
 }
 
 type Handlers = {
@@ -53,6 +54,7 @@ type Handlers = {
     [EventTypes.UpdateModifierHandlesPos]: () => void;
     [EventTypes.EditText]: (e: KeyboardEvent) => void;
     [EventTypes.ToolChange]: (tool: any) => void;
+    [EventTypes.Render]: () => void;
 };
 
 class EventBus {

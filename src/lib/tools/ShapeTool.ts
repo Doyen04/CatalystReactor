@@ -3,7 +3,7 @@ import Tool from "./Tool";
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import { Coord } from "@lib/types/shapes";
 
-const { CreateScene, DrawScene, UpdateModifierHandlesPos } = EventTypes
+const { CreateScene, DrawScene, UpdateModifierHandlesPos, Render } = EventTypes
 
 class ShapeTool extends Tool {
     shapeType: ShapeType
@@ -19,6 +19,7 @@ class ShapeTool extends Tool {
 
         EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
         EventQueue.trigger(UpdateModifierHandlesPos)
+        EventQueue.trigger(Render)
     }
     setShape(shape: ShapeType) {
         this.shapeType = shape

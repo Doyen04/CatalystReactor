@@ -3,7 +3,7 @@ import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import PText from "@lib/shapes/primitives/PText";
 import { Coord } from "@lib/types/shapes";
 
-const { CreateScene, DrawScene, UpdateModifierHandlesPos, EditText } = EventTypes
+const { CreateScene, DrawScene, UpdateModifierHandlesPos, Render,EditText } = EventTypes
 
 class TextTool extends Tool {
     // private lastMouseCoord: Coords | null = null
@@ -21,6 +21,7 @@ class TextTool extends Tool {
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
         EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
         EventQueue.trigger(UpdateModifierHandlesPos)
+        EventQueue.trigger(Render)
     }
     override handleKeyDown(e: KeyboardEvent): void {
         const shape = this.createdScene.getShape()

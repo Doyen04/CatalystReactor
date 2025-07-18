@@ -154,6 +154,7 @@ class ShapeModifier {
 
         return (width < minSize || height < minSize)
     }
+    
     draw(canvas: Canvas): void {
 
         if (!this.shape || this.CanDraw() || !this.resource) {

@@ -2,6 +2,7 @@ import SceneNode from "./SceneGraph";
 import ShapeModifier from "@lib/modifiers/ShapeModifier";
 import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 import EventQueue, { EventTypes } from './EventQueue'
+import { Coord, ShapeType } from "@lib/types/shapes";
 
 const {
     FinalizeShape, DrawScene, CreateScene, SceneCreated, FinaliseSelection,
@@ -186,7 +187,7 @@ class SceneManager {
         }
     }
 
-    updateTransientScene(dragStart: Coords, x: number, y: number, shiftKey: boolean) {
+    updateTransientScene(dragStart: Coord, x: number, y: number, shiftKey: boolean) {
         this.transientScene.shape.setSize(dragStart, x, y, shiftKey)
     }
 

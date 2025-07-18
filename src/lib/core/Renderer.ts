@@ -4,14 +4,15 @@ import SceneManager from "./SceneManager";
 import type SceneNode from "./SceneGraph";
 import CanvasKitResources from "./CanvasKitResource";
 
-const { CreateSurface } = EventTypes
+const { CreateSurface,Render } = EventTypes
 
 class Renderer {
     sceneManager: SceneManager
     surf: Surface | null;
     canvasEl: HTMLCanvasElement
 
-    dpr: number = window.devicePixelRatio || 1;;
+    dpr: number = window.devicePixelRatio || 1;
+    skCnvs: Canvas;
 
     private isRunning = false;
     private lastTimestamp = 0;
@@ -27,7 +28,7 @@ class Renderer {
 
         this.setUpEvent()
 
-        this.setUpRendering()
+        this.makeSurface()
     }
     setUpEvent() {
         this.removeEvent()
@@ -35,9 +36,11 @@ class Renderer {
     }
     removeEvent() {
         EventQueue.unSubscribeAll(CreateSurface)
+        EventQueue.unSubscribeAll(Render)
     }
     addEvent() {
-        EventQueue.subscribe(CreateSurface, this.setUpRendering.bind(this))
+        EventQueue.subscribe(CreateSurface, this.makeSurface.bind(this))
+        EventQueue.subscribe(Render, this.render.bind(this))
     }
 
     get resource(): CanvasKitResources {
@@ -51,16 +54,16 @@ class Renderer {
         }
     }
 
-    setUpRendering() {
-        console.log('setuprendering');
+    // setUpRendering() {
+    //     console.log('setuprendering');
 
-        this.stopLoop()
+    //     // this.stopLoop()
 
-        requestAnimationFrame(() => {
-            this.makeSurface()
-            this.startLoop();
-        });
-    }
+    //     // requestAnimationFrame(() => {
+    //         this.makeSurface()
+    //         // this.startLoop();
+    //     // });
+    // }
 
     makeSurface() {
         if (!this.resource) {
@@ -86,44 +89,45 @@ class Renderer {
         console.log(this.surf);
 
         if (!this.surf) throw new Error("Could not create CanvasKit surface");
-        // this.skCnvs = this.surf.getCanvas();
+        this.skCnvs = this.surf.getCanvas();
 
     }
 
-    private drawFrame = (canvas: Canvas) => {
-        if (!this.isRunning) {
-            console.log('not running render');
+    // private drawFrame = (canvas: Canvas) => {
+    //     if (!this.isRunning) {
+    //         console.log('not running render');
 
-            return;
-        }
+    //         return;
+    //     }
 
-        const now = performance.now();
-        const elapsed = now - this.lastTimestamp;
-        if (elapsed >= this.fpsInterval) {
-            this.lastTimestamp = now - (elapsed % this.fpsInterval);
-            this.render(canvas);
-        }
-        if (this.isRunning) {
-            this.animationId = this.surf?.requestAnimationFrame(this.drawFrame);
-        }
-    };
+    //     const now = performance.now();
+    //     const elapsed = now - this.lastTimestamp;
+    //     if (elapsed >= this.fpsInterval) {
+    //         this.lastTimestamp = now - (elapsed % this.fpsInterval);
+    //         this.render(canvas);
+    //     }
+    //     if (this.isRunning) {
+    //         this.animationId = this.surf?.requestAnimationFrame(this.drawFrame);
+    //     }
+    // };
 
-    public stopLoop() {
-        this.isRunning = false;
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId)
-            this.animationId = null
-        }
-    }
+    // public stopLoop() {
+    //     this.isRunning = false;
+    //     if (this.animationId) {
+    //         cancelAnimationFrame(this.animationId)
+    //         this.animationId = null
+    //     }
+    // }
 
-    startLoop(fps: number = 60) {
-        this.fpsInterval = 1000 / fps;
-        this.lastTimestamp = performance.now();
-        this.isRunning = true;
-        this.animationId = this.surf?.requestAnimationFrame(this.drawFrame);
-    }
+    // startLoop(fps: number = 60) {
+    //     this.fpsInterval = 1000 / fps;
+    //     this.lastTimestamp = performance.now();
+    //     this.isRunning = true;
+    //     this.animationId = this.surf?.requestAnimationFrame(this.drawFrame);
+    // }
 
-    render(skCnvs: Canvas) {
+    render(skCnvs?: Canvas) {
+        skCnvs = (skCnvs)? skCnvs : this.skCnvs
         if (!this.resource.canvasKit || !this.surf || !skCnvs) {
             console.log('log error with surface');
 
@@ -170,7 +174,7 @@ class Renderer {
     }
 
     destroy() {
-        this.stopLoop()
+        // this.stopLoop()
 
         // Clean up surface
         if (this.surf) {

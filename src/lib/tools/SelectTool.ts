@@ -1,23 +1,24 @@
-import { Coords } from "@lib/types/shapeTypes";
+import { Coord } from "@lib/types/shapes";
 import Tool from "./Tool";
-import EventQueue, {EventTypes } from "@lib/core/EventQueue";
+import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 
-const { ShowHovered, SelectObject, DragObject, FinaliseSelection } = EventTypes
+const { ShowHovered, SelectObject, DragObject, FinaliseSelection, Render } = EventTypes
 
 class SelectTool extends Tool {
-    private lastMouseCoord: Coords | null = null
+    private lastMouseCoord: Coord | null = null
 
-    override handlePointerDown(dragStart: Coords, e: MouseEvent) {
+    override handlePointerDown(dragStart: Coord, e: MouseEvent) {
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
         EventQueue.trigger(SelectObject, e.offsetX, e.offsetY)
     }
     override handlePointerUp() {
         EventQueue.trigger(FinaliseSelection)
     }
-    override handlePointerMove(dragStart: Coords, e: MouseEvent): void {
+    override handlePointerMove(dragStart: Coord, e: MouseEvent): void {
         EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
+        EventQueue.trigger(Render)
     }
-    override handlePointerDrag(dragStart: Coords, e: MouseEvent): void {
+    override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
 
         if (!this.lastMouseCoord) {
             console.log('mousecoord is null');
@@ -31,12 +32,13 @@ class SelectTool extends Tool {
         EventQueue.trigger(DragObject, dx, dy, e)
 
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
+        EventQueue.trigger(Render)
     }
     override handleKeyDown(e: KeyboardEvent): void {
 
     }
     override handleKeyUp(e: KeyboardEvent): void {
-        
+
     }
 }
 
