@@ -51,17 +51,22 @@ function ToolBar() {
             tip: 'Image'
         }
     ];
+    const TextTool = {
+        toolName: 'text',
+        icon: <Type className={"w-4 h-4"} />,
+        tip: 'Text'
+    }
     const { setTool, tool: currentTool } = useToolStore()
     if (!currentTool) {
         setTool(SelectTools[0])
     }
     return (
         <div className={'toolbar'}>
-            <Button tool={SelectTools[0]} group={SelectTools}/>
+            <Button tool={SelectTools[0]} group={SelectTools} />
             <MoreButton tools={SelectTools} tip={'SelectTools'} />
-            <Button tool={ShapeTools[0]} group={ShapeTools}/>
-            <MoreButton tools={ShapeTools} tip={'ShapeTools'}/>
-            {/* <Button tip={"Text"} /> */}
+            <Button tool={ShapeTools[0]} group={ShapeTools} />
+            <MoreButton tools={ShapeTools} tip={'ShapeTools'} />
+            <Button tool={TextTool} group={[TextTool]} />
         </div>
     )
 }
