@@ -254,48 +254,28 @@ class Oval extends Shape {
 
     private getArcModifierHandlesPos(handle: Handle): Point {
         const size = handle.size;
-        const gap = 20
+        const gap = 20;
 
-        if (this.ratio === 0) {
-            let handleX = 0;
-            let handleY = 0;
+        const outerRx = this.radiusX;
+        const outerRy = this.radiusY;
+        const innerRx = this.radiusX * this.ratio;
+        const innerRy = this.radiusY * this.ratio;
 
-            if (handle.pos == 'arc-end') {
-                handleX = this.centerX + (this.radiusX - gap) * Math.cos(this.endAngle);
-                handleY = this.centerY + (this.radiusY - gap) * Math.sin(this.endAngle);
-            } else if (handle.pos == 'arc-start') {
-                handleX = this.centerX + (this.radiusX - gap) * Math.cos(this.startAngle);
-                handleY = this.centerY + (this.radiusY - gap) * Math.sin(this.startAngle);
-            }
+        const rx = (this.ratio === 0) ? outerRx - gap : (outerRx + innerRx) / 2;
+        const ry = (this.ratio === 0) ? outerRy - gap : (outerRy + innerRy) / 2;
 
-            return {
-                x: handleX - size,
-                y: handleY - size
-            };
-        } else {
-            const outerRadiusX = this.radiusX;
-            const outerRadiusY = this.radiusY;
-            const innerRadiusX = this.radiusX * this.ratio;
-            const innerRadiusY = this.radiusY * this.ratio;
+        const theta = (handle.pos === 'arc-end') ? this.endAngle : this.startAngle;
 
-            const midRadiusX = (outerRadiusX + innerRadiusX) / 2;
-            const midRadiusY = (outerRadiusY + innerRadiusY) / 2;
-            let handleX = 0;
-            let handleY = 0;
-            if (handle.pos == 'arc-end') {
-                handleX = this.centerX + midRadiusX * Math.cos(this.endAngle);
-                handleY = this.centerY + midRadiusY * Math.sin(this.endAngle);
-            } else if (handle.pos == 'arc-start') {
-                handleX = this.centerX + midRadiusX * Math.cos(this.startAngle);
-                handleY = this.centerY + midRadiusY * Math.sin(this.startAngle);
-            }
+        // Compute handle's center point along ellipse, then offset by handle size
+        const handleCenterX = this.centerX + rx * Math.cos(theta);
+        const handleCenterY = this.centerY + ry * Math.sin(theta);
 
-            return {
-                x: handleX - size,
-                y: handleY - size
-            };
-        }
+        return {
+            x: handleCenterX - size,
+            y: handleCenterY - size
+        };
     }
+
 
     override pointInShape(x: number, y: number): boolean {
         if (this.radiusX <= 0 || this.radiusY <= 0) {
