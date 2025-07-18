@@ -1,6 +1,8 @@
 import { Triangle, Lasso, Maximize2, MousePointer2, Square, Star, Type, Circle, Image } from "lucide-react"
 import "./Component.css"
 import Button from "../ui/Button"
+import MoreButton from "@ui/MoreButton";
+import { useToolStore } from "@hooks/useTool";
 
 function ToolBar() {
 
@@ -21,6 +23,7 @@ function ToolBar() {
             tip: 'Scale'
         }
     ];
+
     const ShapeTools = [
         {
             toolName: 'rect',
@@ -48,11 +51,17 @@ function ToolBar() {
             tip: 'Image'
         }
     ];
+    const { setTool, tool: currentTool } = useToolStore()
+    if (!currentTool) {
+        setTool(SelectTools[0])
+    }
     return (
         <div className={'toolbar'}>
-            <Button toolname={'select'} moreTools={SelectTools} moreToolsTips={"Select Tools"} />
-            <Button toolname={'rect'} moreTools={ShapeTools} moreToolsTips={"Draw tools"} />
-            <Button tip={"Text"} toolname={'text'} icon={<Type className={"w-4 h-4"} />} />
+            <Button tool={SelectTools[0]} group={SelectTools}/>
+            <MoreButton tools={SelectTools} tip={'SelectTools'} />
+            <Button tool={ShapeTools[0]} group={ShapeTools}/>
+            <MoreButton tools={ShapeTools} tip={'ShapeTools'}/>
+            {/* <Button tip={"Text"} /> */}
         </div>
     )
 }

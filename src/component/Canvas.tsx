@@ -58,7 +58,7 @@ function Canvas() {
 
     useEffect(() => {
         if (!canvasManagerRef.current) return;
-        canvasManagerRef.current.setTool(tool);
+        canvasManagerRef.current.setTool(tool.toolName);
     }, [tool]);
 
     return (

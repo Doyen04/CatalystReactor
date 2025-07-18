@@ -1,11 +1,24 @@
+import React from 'react'
 import { create } from 'zustand'
 
 interface ToolState {
-  tool: string
-  setTool: (tool: string) => void
+  tool: {
+    toolName: string
+    icon: React.ReactNode
+    tip: string
+  } | null;
+  setTool: (tool: {
+    toolName: string
+    icon: React.ReactNode
+    tip: string
+  }) => void
 }
 
 export const useToolStore = create<ToolState>((set) => ({
-  tool: 'select',
-  setTool: (tool: string) => set({ tool }),
+  tool: null,
+  setTool: (tool: {
+    toolName: string
+    icon: React.ReactNode
+    tip: string
+  }) => set({ tool }),
 }))

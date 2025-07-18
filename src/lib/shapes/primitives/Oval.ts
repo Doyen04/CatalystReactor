@@ -1,7 +1,7 @@
 import Handle from "@/lib/modifiers/Handles";
 import Shape from "../base/Shape"
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
-import { Corner, HandleType, Point } from "@lib/types/shapes";
+import { Coord } from "@lib/types/shapes";
 
 class Oval extends Shape {
     private radiusX: number;
@@ -215,7 +215,7 @@ class Oval extends Shape {
         return handles;
     }
 
-    override getModifierHandlesPos(handle: Handle): Point {
+    override getModifierHandlesPos(handle: Handle): Coord {
         if (handle.type == 'size') {
             return super.getSizeModifierHandlesPos(handle);
         } else if (handle.type == 'ratio') {
@@ -228,7 +228,7 @@ class Oval extends Shape {
         }
     }
 
-    private getRatioModifierHandlesPos(handle: Handle): Point {
+    private getRatioModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size;
 
         if (this.ratio === 0) {
@@ -252,7 +252,7 @@ class Oval extends Shape {
         };
     }
 
-    private getArcModifierHandlesPos(handle: Handle): Point {
+    private getArcModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size;
         const gap = 20;
 
