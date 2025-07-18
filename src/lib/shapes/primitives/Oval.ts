@@ -209,8 +209,8 @@ class Oval extends Shape {
 
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        handles.push(new Handle(0, 0, size, 'arc-start', 'arc', fill, strokeColor))
         handles.push(new Handle(0, 0, size, 'arc-end', 'arc', fill, strokeColor))
+        handles.push(new Handle(0, 0, size, 'arc-start', 'arc', fill, strokeColor))
         handles.push(new Handle(0, 0, size, 'center', 'ratio', fill, strokeColor))
         return handles;
     }
@@ -257,8 +257,16 @@ class Oval extends Shape {
         const gap = 20
 
         if (this.ratio === 0) {
-            const handleX = this.centerX + (this.radiusX - gap);
-            const handleY = this.centerY;
+            let handleX = 0;
+            let handleY = 0;
+
+            if (handle.pos == 'arc-end') {
+                handleX = this.centerX + (this.radiusX - gap) * Math.cos(this.endAngle);
+                handleY = this.centerY + (this.radiusY - gap) * Math.sin(this.endAngle);
+            } else if (handle.pos == 'arc-start') {
+                handleX = this.centerX + (this.radiusX - gap) * Math.cos(this.startAngle);
+                handleY = this.centerY + (this.radiusY - gap) * Math.sin(this.startAngle);
+            }
 
             return {
                 x: handleX - size,
@@ -303,6 +311,11 @@ class Oval extends Shape {
 
         return normalizedDistance <= 1;
     }
+
+    rotate(r: number) {
+        this.rotation = r
+    }
+
     override destroy(): void {
 
     }

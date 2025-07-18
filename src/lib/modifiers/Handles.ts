@@ -214,8 +214,9 @@ export default class Handle {
 
         // Normalize angle to 0-2π range
         if (angle < 0) angle += 2 * Math.PI;
+        const delta = angle - start;
 
-        shape.setArc(angle, end);
+        shape.setArc(start + delta, end + delta);
     }
 
     updateShapeArcEnd(dx: number, dy: number, e: MouseEvent, shape: IShape) {
@@ -229,12 +230,13 @@ export default class Handle {
 
         //parametric deg
         let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
-
         // Normalize angle to 0-2π range
         if (angle < 0) angle += 2 * Math.PI;
 
-        // Set arc from 0 to current angle (pizza slice effect)
-        shape.setArc(start, angle);
+        let sweep = angle - start;
+        if (sweep <= 0) sweep += 2 * Math.PI;
+
+        shape.setArc(start, start + sweep);
     }
 
     draw(canvas: Canvas) {

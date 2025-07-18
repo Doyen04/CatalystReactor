@@ -1,10 +1,10 @@
 // ════════════════════════════════════
 // 📐 Abstract Base Shape Class
 
-import  Handle from "@lib/modifiers/Handles"
+import Handle from "@lib/modifiers/Handles"
 import { SizeRadiusModifierPos } from "@/lib/modifiers/ShapeModifier";
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, Corner, HandleType, IShape } from "@lib/types/shapes";
+import { BoundingRect, IShape } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
 
 
@@ -18,6 +18,7 @@ abstract class Shape implements IShape {
     strokeColor: string | number[];
     boundingRect: BoundingRect;
     private isHover: boolean;
+    anchorPoint: number;
 
     constructor({ x = 0, y = 0, rotation = 0, scale = 1, fill = "#fff", strokeWidth = 1, strokeColor = '#000' } = {}) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
@@ -26,6 +27,7 @@ abstract class Shape implements IShape {
         this.rotation = rotation;
         this.scale = scale;
         this.fill = fill;
+        this.anchorPoint = null
         this.strokeColor = strokeColor;
         this.strokeWidth = strokeWidth;
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
@@ -69,14 +71,14 @@ abstract class Shape implements IShape {
     }
 
     abstract getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[];
-    abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; } ;
+    abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; };
     abstract pointInShape(x: number, y: number): boolean;
     abstract moveShape(mx: number, my: number): void;
     abstract calculateBoundingRect(): void;
     abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     abstract draw(canvas: Canvas): void;
     abstract setDim(width: number, height: number): void;
-    abstract getDim(): {width:number, height:number} ;
+    abstract getDim(): { width: number, height: number };
     abstract setCoord(x: number, y: number): void;
     getCoord(): { x: number, y: number } {
         return { x: this.x, y: this.y }
