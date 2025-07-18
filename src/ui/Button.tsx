@@ -17,13 +17,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ tool, className,group, children, active, ...props }, ref) => {
+    ({ tool, className, group, children, active, ...props }, ref) => {
 
         const { setTool, tool: currentTool } = useToolStore()
 
         const isActive = group.some(grouptool => currentTool.toolName === grouptool.toolName)
 
-        tool = (isActive)? currentTool : tool 
+        tool = (isActive) ? currentTool : tool
 
         const buttonStyles = useMemo(() => {
             const baseStyles = 'w-fit h-fit p-1.5 rounded-lg border transition-colors duration-200'
@@ -37,7 +37,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         return (
             <div className='flex items-center gap-0.5 h-fit w-fit'>
                 <div className='relative group'>
-                    <button ref={ref} onClick={() => { setTool(tool) }}
+                    <button ref={ref} onClick={() => { if (currentTool.toolName !== tool.toolName) setTool(tool) }}
                         className={twMerge(buttonStyles, className)}
                         {...props}
                     >

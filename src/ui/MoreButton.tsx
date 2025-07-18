@@ -26,7 +26,7 @@ const MoreButton = forwardRef<HTMLButtonElement, ButtonProps>(
             : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
 
         const handleToolSelect = (tool: { toolName: string; icon: React.ReactNode; tip: string }) => {
-            setTool(tool)
+            if (currentTool.toolName !== tool.toolName) setTool(tool)
             setIsDropdownOpen(false)
         }
         return (

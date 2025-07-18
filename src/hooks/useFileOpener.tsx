@@ -11,7 +11,7 @@ export const useFilePicker = ({ accept = 'image/*', multiple = false, onFileSele
 
     const openFilePicker = useCallback(() => {
         if (!fileInputRef.current) {
-            // Create file input element
+            
             const input = document.createElement('input')
             input.type = 'file'
             input.accept = accept

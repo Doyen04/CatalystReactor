@@ -1,10 +1,11 @@
-import  Oval from "../primitives/Oval";
+import Oval from "../primitives/Oval";
 import Rectangle from "../primitives/Rect"
 import Star from '../primitives/Star'
 import Polygon from '../primitives/Polygon'
 import PText from "../primitives/PText";
 import { IShape, Coord, ShapeType } from "@lib/types/shapes";
 import PImage from "../primitives/Image";
+import { useImageStore } from "@hooks/imageStore";
 
 
 export default class ShapeFactory {
@@ -28,11 +29,18 @@ export default class ShapeFactory {
                 shape = new PText(options.x, options.y);
                 break;
             case "img":
-                shape = new PImage(options.x, options.y);
+                const { getNextImage } = useImageStore.getState();
+                const img = getNextImage()
+
+                if (!img) {
+                    console.log('no file ');
+                    return null
+                }
+                shape = new PImage(options.x, options.y, img);
                 break;
             default:
                 throw new Error(`Unsupported shape type: ${type}`);
-        } 
+        }
         return shape
     }
 }

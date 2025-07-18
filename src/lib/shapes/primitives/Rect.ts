@@ -107,20 +107,20 @@ class Rectangle extends Shape {
             right: this.x + this.width
         };
     }
-
+    hasRadius(): boolean {
+        return this.bdradius['top-left'] > 0 ||
+            this.bdradius['top-right'] > 0 ||
+            this.bdradius['bottom-left'] > 0 ||
+            this.bdradius['bottom-right'] > 0;
+    }
     override draw(canvas: Canvas): void {
         if (!this.resource) return;
 
         this.setPaint();
 
         const rect = this.resource.canvasKit.LTRBRect(this.x, this.y, this.x + this.width, this.y + this.height);
-        // Check if any corners have radius
-        const hasRadius = this.bdradius['top-left'] > 0 ||
-            this.bdradius['top-right'] > 0 ||
-            this.bdradius['bottom-left'] > 0 ||
-            this.bdradius['bottom-right'] > 0;
 
-        if (hasRadius) {
+        if (this.hasRadius()) {
             this.drawRoundedRect(canvas, rect);
         } else {
             // Draw regular rectangle
@@ -151,7 +151,7 @@ class Rectangle extends Shape {
         }
     }
 
-    private makeCustomRRectPath(): Path {
+    protected makeCustomRRectPath(): Path {
         const radii = {
             tl: this.bdradius['top-left'],
             tr: this.bdradius['top-right'],

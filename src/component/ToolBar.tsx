@@ -3,9 +3,10 @@ import "./Component.css"
 import Button from "../ui/Button"
 import MoreButton from "@ui/MoreButton";
 import { useToolStore } from "@hooks/useTool";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useFilePicker } from "@hooks/useFileOpener";
 import { useImageStore } from "@hooks/imageStore";
+import { loadImage } from "@/util/loadFile";
 
 function ToolBar() {
     const { openFilePicker } = useFilePicker({
@@ -15,12 +16,14 @@ function ToolBar() {
     })
     const { setSelectedImage } = useImageStore()
 
-    const handleFileSelect = (files: FileList) => {
+    const handleFileSelect = async (files: FileList) => {
         if (files && files.length > 0) {
             const urlList = Array.from(files).map((file) => URL.createObjectURL(file))
-            console.log(urlList, files);
+            const images = await loadImage(urlList)
+            console.log(images, 'images');
 
-            setSelectedImage(files, urlList)
+            urlList.forEach(url => URL.revokeObjectURL(url))
+            setSelectedImage(images)
         }
     }
 
@@ -78,9 +81,15 @@ function ToolBar() {
     if (!currentTool) {
         setTool(SelectTools[0])
     }
+    const isOpen = useRef(false)
     useEffect(() => {
-        if (currentTool?.toolName === 'img') {
+        if (currentTool?.toolName === 'img' && !isOpen.current) {
+            console.log('open file picker');
+            isOpen.current = true;
             openFilePicker()
+        }
+        if (currentTool?.toolName !== 'img') {
+            isOpen.current = false;
         }
     }, [currentTool?.toolName, openFilePicker])
 

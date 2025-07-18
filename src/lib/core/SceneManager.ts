@@ -193,15 +193,15 @@ class SceneManager {
 
     createScene(type: ShapeType, x: number, y: number): void {
         // Create a new shape based on the type and add it to the scene
-        const shape = ShapeFactory.createShape(type, { x, y });
-        console.log(shape, 'created');
-
-        const scene: SceneNode = new SceneNode();
-        scene.shape = shape
-        this.addNode(scene);
-        this.transientScene = scene;
-        this.shapeMod.setShape(shape);
-        EventQueue.trigger(SceneCreated, scene)
+        const shape =  ShapeFactory.createShape(type, { x, y });
+        if (shape) {
+            const scene: SceneNode = new SceneNode();
+            scene.shape = shape
+            this.addNode(scene);
+            this.transientScene = scene;
+            this.shapeMod.setShape(shape);
+            EventQueue.trigger(SceneCreated, scene)
+        }
     }
 
     cleanUp() {
