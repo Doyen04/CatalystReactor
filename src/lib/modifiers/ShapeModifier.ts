@@ -4,7 +4,7 @@ import Handle from "./Handles";
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 
-const { SelectModifier, DragModifier, ModifierSelected, RemoveSelectedModifier, UpdateModifierHandlesPos } = EventTypes
+const { SelectModifier, DragModifier, ModifierSelected, RemoveSelectedModifier, Render, UpdateModifierHandlesPos } = EventTypes
 
 export const SizeRadiusModifierPos: Corner[] = [
     'top-left',
@@ -53,12 +53,12 @@ class ShapeModifier {
     setShape(shape: IShape) {
         this.handles = []
         this.shape = shape;
-
         if (!this.shape) {
             console.log('no shape for shape modifier');
             return
         }
         this.handles = this.shape.getModifierHandles(this.size, this.fill, this.strokeColor);
+        this.updateResizerPositions();
     }
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
@@ -120,6 +120,7 @@ class ShapeModifier {
 
         for (const resizer of this.handles) {
             const { x, y } = this.shape.getModifierHandlesPos(resizer);
+            console.log(x, y, 'resizer pos');
             resizer.updatePosition(x, y);
         }
 
@@ -143,6 +144,7 @@ class ShapeModifier {
         return this.shape
     }
     setIsHovered(bool: boolean) {
+        EventQueue.trigger(Render)
         this.isHovered = bool
     }
     CanDraw(): boolean {
@@ -154,7 +156,7 @@ class ShapeModifier {
 
         return (width < minSize || height < minSize)
     }
-    
+
     draw(canvas: Canvas): void {
 
         if (!this.shape || this.CanDraw() || !this.resource) {

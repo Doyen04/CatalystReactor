@@ -3,6 +3,7 @@ import ShapeModifier from "@lib/modifiers/ShapeModifier";
 import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 import EventQueue, { EventTypes } from './EventQueue'
 import { Coord, ShapeType } from "@lib/types/shapes";
+import { log } from "console";
 
 const {
     FinalizeShape, DrawScene, CreateScene, SceneCreated, FinaliseSelection,
@@ -106,7 +107,7 @@ class SceneManager {
 
     selectShape(x: number, y: number) {
         const selected = this.getCollidedScene(x, y)
-
+        
         if (!selected || !selected.getShape()) {
             this.selected = null
             this.shapeMod.setShape(null)
@@ -138,7 +139,7 @@ class SceneManager {
 
     showHovered(x: number, y: number) {
         const hoveredScene = this.getCollidedScene(x, y)
-
+        
         if (!hoveredScene || !hoveredScene.getShape()) {
             if (this.hoveredScene) this.hoveredScene.shape.setHovered(false)
             this.hoveredScene = null
@@ -151,7 +152,6 @@ class SceneManager {
             if (this.hoveredScene) this.hoveredScene.shape.setHovered(false)
             this.hoveredScene = hoveredScene
         }
-
         this.hoveredScene.shape.setHovered(true)
 
         if (!this.shapeMod || !this.shapeMod.hasShape()) return

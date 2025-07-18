@@ -11,6 +11,8 @@ class PImage extends Rectangle {
         super(x, y);
         this.width = 0;
         this.height = 0;
+        this.fill = '#fff';
+        this.strokeColor = '#000';
         this.bdradius = {
             'top-left': 0,
             'top-right': 0,
@@ -101,7 +103,7 @@ class PImage extends Rectangle {
     private async createCanvasKitImage(): Promise<void> {
         if (!this.imageElement || !this.resource?.canvasKit) return;
         const uint8Array = new Uint8Array(this.imageElement);
-
+        
         this.canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(uint8Array);
         if (this.canvasKitImage) {
             this.width = this.canvasKitImage.width();
@@ -123,6 +125,7 @@ class PImage extends Rectangle {
 
     override draw(canvas: Canvas): void {
         if (!this.resource?.canvasKit || !this.canvasKitImage) return;
+        this.setPaint();
 
         const ck = this.resource.canvasKit;
         const srcRect = ck.XYWHRect(0, 0, this.canvasKitImage.width(), this.canvasKitImage.height());
@@ -132,7 +135,7 @@ class PImage extends Rectangle {
             this.clipToRoundedRect(canvas, dstRect);
         }
 
-        canvas.drawImageRect(this.canvasKitImage, srcRect, dstRect, null);
+        canvas.drawImageRect(this.canvasKitImage, srcRect, dstRect, this.resource.strokePaint);
     }
     private clipToRoundedRect(canvas: Canvas, rect: Rect): void {
         if (!this.resource) return;

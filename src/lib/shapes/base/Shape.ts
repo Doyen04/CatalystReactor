@@ -6,7 +6,9 @@ import { SizeRadiusModifierPos } from "@/lib/modifiers/ShapeModifier";
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
 import { BoundingRect, IShape } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
+import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 
+const { Render } = EventTypes
 
 abstract class Shape implements IShape {
     protected x: number;
@@ -109,8 +111,9 @@ abstract class Shape implements IShape {
         this.fill = color;
     }
 
-    setHovered(hvr: boolean) {
-        this.isHover = hvr
+    setHovered(bool: boolean) {
+        EventQueue.trigger(Render)
+        this.isHover = bool
     }
     abstract destroy(): void;
 
