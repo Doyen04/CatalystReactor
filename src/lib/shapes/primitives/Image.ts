@@ -136,7 +136,7 @@ class PImage extends Rectangle {
 
         canvas.drawImageRectOptions(
             this.canvasKitImage, srcRect, dstRect,
-            ck.FilterMode.Nearest,
+            ck.FilterMode.Linear,
             ck.MipmapMode.None,
             null
         );
