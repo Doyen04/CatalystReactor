@@ -86,6 +86,8 @@ class Renderer {
         }
 
         this.surf = this.resource.canvasKit.MakeWebGLCanvasSurface(this.canvasEl);
+
+    
         console.log(this.surf);
 
         if (!this.surf) throw new Error("Could not create CanvasKit surface");

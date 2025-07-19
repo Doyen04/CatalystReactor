@@ -134,7 +134,12 @@ class PImage extends Rectangle {
             this.clipToRoundedRect(canvas, dstRect);
         }
 
-        canvas.drawImageRect(this.canvasKitImage, srcRect, dstRect, null);
+        canvas.drawImageRectOptions(
+            this.canvasKitImage, srcRect, dstRect,
+            ck.FilterMode.Nearest,
+            ck.MipmapMode.None,
+            null
+        );
         canvas.restore();
 
         this.setPaint();
