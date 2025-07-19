@@ -2,6 +2,7 @@ import Handle from '@/lib/modifiers/Handles';
 import Shape from '../base/Shape';
 import type { Canvas, } from "canvaskit-wasm";
 import { Corner, HandleType } from '@lib/types/shapes';
+import { Points } from '@lib/types/shapeTypes';
 
 class Star extends Shape {
     radiusX: number;

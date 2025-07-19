@@ -2,6 +2,7 @@ import type { Canvas } from "canvaskit-wasm";
 import Shape from "../base/Shape";
 import { Corner, HandleType } from "@lib/types/shapes";
 import Handle from "@lib/modifiers/Handles";
+import { Points } from "@lib/types/shapeTypes";
 
 class Polygon extends Shape {
     centerX: number;
