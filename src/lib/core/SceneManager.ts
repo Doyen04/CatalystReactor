@@ -3,12 +3,11 @@ import ShapeModifier from "@lib/modifiers/ShapeModifier";
 import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 import EventQueue, { EventTypes } from './EventQueue'
 import { Coord, ShapeType } from "@lib/types/shapes";
-import { log } from "console";
 
 const {
     FinalizeShape, DrawScene, CreateScene, SceneCreated, FinaliseSelection,
-    ShowHovered, SelectObject, SelectModifier, RemoveSelectedModifier,
-    DragObject, ModifierSelected, DragModifier
+    ShowHovered, SelectObject,
+    DragObject,
 } = EventTypes
 
 class SceneManager {
@@ -40,12 +39,11 @@ class SceneManager {
         EventQueue.subscribe(FinalizeShape, this.cleanUp.bind(this))
 
         EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
+
         EventQueue.subscribe(SelectObject, this.selectObject.bind(this))
-        // EventQueue.subscribe(SelectShape, this.selectShape.bind(this))
-        EventQueue.subscribe(ModifierSelected, this.handleModifierSelected.bind(this))
         EventQueue.subscribe(DragObject, this.dragSelectedObject.bind(this))
         EventQueue.subscribe(FinaliseSelection, this.handleSelectionCleanUp.bind(this))
-        // EventQueue.subscribe(DragShape, this.dragSelectedShape.bind(this))
+
     }
     removeEvent() {
         EventQueue.unSubscribeAll(CreateScene)
@@ -53,9 +51,8 @@ class SceneManager {
         EventQueue.unSubscribeAll(FinalizeShape)
 
         EventQueue.unSubscribeAll(ShowHovered)
-        EventQueue.unSubscribeAll(SelectObject)
 
-        EventQueue.unSubscribeAll(ModifierSelected)
+        EventQueue.unSubscribeAll(SelectObject)
         EventQueue.unSubscribeAll(DragObject)
         EventQueue.unSubscribeAll(FinaliseSelection)
 
@@ -63,12 +60,15 @@ class SceneManager {
     getScene(): SceneNode {
         return this.scene
     }
+
     getDimModifier(): ShapeModifier {
         return this.shapeMod
     }
+
     getTransientScene(): SceneNode {
         return this.transientScene
     }
+
     addNode(node: SceneNode, parent?: SceneNode) {
         if (!parent) {
             this.scene.addChildNode(node)
@@ -90,24 +90,25 @@ class SceneManager {
 
         return null;
     }
+
     handleSelectionCleanUp() {
-        EventQueue.trigger(RemoveSelectedModifier)
+        this.shapeMod.handleRemoveModifer()
         this.modifierSelected = false
     }
 
-    handleModifierSelected() {
-        this.modifierSelected = true
-    }
-
     selectObject(x: number, y: number) {
-        EventQueue.trigger(SelectModifier, x, y)
-        if (this.modifierSelected) return
-        this.selectShape(x, y)
+        const modifierHandleSelected = this.shapeMod.selectModifier(x, y)
+        if (modifierHandleSelected) {
+            this.modifierSelected = true
+            return
+        } else {
+            this.selectShape(x, y)
+        }
     }
 
     selectShape(x: number, y: number) {
         const selected = this.getCollidedScene(x, y)
-        
+
         if (!selected || !selected.getShape()) {
             this.selected = null
             this.shapeMod.setShape(null)
@@ -120,7 +121,7 @@ class SceneManager {
 
     dragSelectedObject(dx: number, dy: number, e: MouseEvent) {
         if (this.modifierSelected) {
-            EventQueue.trigger(DragModifier, dx, dy, e)
+            this.shapeMod.handleModifierDrag(dx, dy, e)
         } else {
             this.dragSelectedShape(dx, dy, e)
         }
@@ -129,17 +130,15 @@ class SceneManager {
     dragSelectedShape(dx: number, dy: number, e: MouseEvent) {
         if (!this.selected) {
             console.log('no selected shape');
-
             return
         }
 
         this.selected.shape.moveShape(dx, dy)
     }
 
-
     showHovered(x: number, y: number) {
         const hoveredScene = this.getCollidedScene(x, y)
-        
+
         if (!hoveredScene || !hoveredScene.getShape()) {
             if (this.hoveredScene) this.hoveredScene.shape.setHovered(false)
             this.hoveredScene = null
@@ -193,7 +192,7 @@ class SceneManager {
 
     createScene(type: ShapeType, x: number, y: number): void {
         // Create a new shape based on the type and add it to the scene
-        const shape =  ShapeFactory.createShape(type, { x, y });
+        const shape = ShapeFactory.createShape(type, { x, y });
         if (shape) {
             const scene: SceneNode = new SceneNode();
             scene.shape = shape
@@ -218,9 +217,7 @@ class SceneManager {
         const minSize = 5;
 
         if (width < minSize || height < minSize) {
-            this.transientScene.shape.setDim(100, 100)
-            const { x, y } = this.transientScene.shape.getCoord()
-            this.transientScene.shape.setCoord(x - 50, y - 50)
+            this.transientScene.shape.drawDefault()
             console.log('Shape removed: too small add default size');
         }
     }

@@ -90,13 +90,15 @@ class Rectangle extends Shape {
     }
 
     override setDim(width: number, height: number): void {
+    
         this.width = width;
         this.height = height;
 
         this.calculateBoundingRect()
     }
-    override getDim():{width:number, height:number} {
-        return {width:this.width, height:this.height}
+
+    override getDim(): { width: number, height: number } {
+        return { width: this.width, height: this.height }
     }
 
     override calculateBoundingRect(): void {
@@ -107,12 +109,14 @@ class Rectangle extends Shape {
             right: this.x + this.width
         };
     }
+
     hasRadius(): boolean {
         return this.bdradius['top-left'] > 0 ||
             this.bdradius['top-right'] > 0 ||
             this.bdradius['bottom-left'] > 0 ||
             this.bdradius['bottom-right'] > 0;
     }
+
     override draw(canvas: Canvas): void {
         if (!this.resource) return;
 
@@ -280,6 +284,7 @@ class Rectangle extends Shape {
             y >= this.y &&
             y <= this.y + this.height;
     }
+
     override destroy(): void {
 
     }

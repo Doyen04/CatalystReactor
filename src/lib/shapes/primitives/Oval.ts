@@ -35,7 +35,7 @@ class Oval extends Shape {
         this.centerY += my;
         this.calculateBoundingRect();
     }
-
+    
     setRadius(radius: number): void {
         this.radiusX = radius;
         this.radiusY = radius;

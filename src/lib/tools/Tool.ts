@@ -2,7 +2,7 @@ import EventQueue, { EventTypes } from "@lib/core/EventQueue"
 import SceneNode from "@lib/core/SceneGraph";
 import { Coord } from "@lib/types/shapes";
 
-const { SceneCreated, FinalizeShape } = EventTypes
+const { SceneCreated, FinalizeShape ,UpdateModifierHandlesPos,Render} = EventTypes
 
 abstract class Tool {
     protected createdScene: SceneNode | null = null;
@@ -26,6 +26,8 @@ abstract class Tool {
     }
     handlePointerUp(coord: Coord, e: MouseEvent) {
         EventQueue.trigger(FinalizeShape)
+        EventQueue.trigger(UpdateModifierHandlesPos)
+        EventQueue.trigger(Render)
     }
     handlePointerMove(dragStart: Coord, e: MouseEvent) {
 

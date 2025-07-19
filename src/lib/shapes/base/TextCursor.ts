@@ -100,7 +100,7 @@ class TextCursor {
                 return [0, lineMetric.baseline - fontSize, 2, fontSize * lineHeight];
             }
         }
-
+        //this is not workign wel if wrappped
         const rects = paragraph.getRectsForRange(
             Math.max(0, this.cursorIndex - 1),
             this.cursorIndex,
@@ -125,21 +125,21 @@ class TextCursor {
                 this.cursorIndex = Math.min(text.length, this.cursorIndex + 1);
                 break;
             case 'up':
-                this.moveCursorUp(text, paragraph)
+                this.cursorIndex = this.moveCursorUp(text, paragraph)
                 break;
             case 'down':
-                this.moveCursorDown(text, paragraph)
+                this.cursorIndex = this.moveCursorDown(text, paragraph)
                 break;
             default:
                 console.log('direction not implemented');
 
-            // TODO: Implement up/down for multi-line text
+            // TODO: Implement up/down for multi-line text forward and backard boes not work if wrap
         }
 
         this.calculateCursorCoord(text, fontSize, lineHeight, paragraph)
     }
 
-    private moveCursorUp(text: string, paragraph: Paragraph): void {
+    private moveCursorUp(text: string, paragraph: Paragraph): number {
         if (!paragraph) return;
 
         const lineMetrics = paragraph.getLineMetrics();
@@ -168,12 +168,11 @@ class TextCursor {
                 targetLineLength
             );
 
-            this.cursorIndex = targetLineStart + targetPositionInLine;
+            return targetLineStart + targetPositionInLine;
         }
     }
 
-
-    private moveCursorDown(text: string, paragraph: Paragraph): void {
+    private moveCursorDown(text: string, paragraph: Paragraph): number {
         if (!paragraph) return;
 
         const lineMetrics = paragraph.getLineMetrics();
@@ -202,7 +201,7 @@ class TextCursor {
                 targetLineLength
             );
 
-            this.cursorIndex = targetLineStart + targetPositionInLine;
+           return targetLineStart + targetPositionInLine;
         }
     }
 

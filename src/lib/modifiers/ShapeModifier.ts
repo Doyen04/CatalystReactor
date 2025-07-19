@@ -4,7 +4,7 @@ import Handle from "./Handles";
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 
-const { SelectModifier, DragModifier, ModifierSelected, RemoveSelectedModifier, Render, UpdateModifierHandlesPos } = EventTypes
+const { Render, UpdateModifierHandlesPos } = EventTypes
 
 export const SizeRadiusModifierPos: Corner[] = [
     'top-left',
@@ -38,15 +38,9 @@ class ShapeModifier {
         this.addEvent()
     }
     addEvent() {
-        EventQueue.subscribe(SelectModifier, this.selectModifier.bind(this))
-        EventQueue.subscribe(DragModifier, this.handleModifierDrag.bind(this))
-        EventQueue.subscribe(RemoveSelectedModifier, this.handleRemoveModifer.bind(this))
         EventQueue.subscribe(UpdateModifierHandlesPos, this.updateResizerPositions.bind(this))
     }
     removeEvent() {
-        EventQueue.unSubscribeAll(SelectModifier)
-        EventQueue.unSubscribeAll(DragModifier)
-        EventQueue.unSubscribeAll(RemoveSelectedModifier)
         EventQueue.unSubscribeAll(UpdateModifierHandlesPos)
     }
 
@@ -84,12 +78,13 @@ class ShapeModifier {
         for (const node of this.handles) {
             if (node && node.isCollide(x, y)) {
                 selected = node;
-                EventQueue.trigger(ModifierSelected)
                 break
             }
         }
         this.selectedModifier = selected
+        return selected
     }
+
     handleModifierDrag(x: number, y: number, e: MouseEvent) {
         if (this.selectedModifier) {
             switch (this.selectedModifier.type) {
@@ -111,6 +106,7 @@ class ShapeModifier {
         }
         this.updateResizerPositions()
     }
+
     updateResizerPositions() {
         if (!this.shape) {
             console.log(' no shape for updateresizer');

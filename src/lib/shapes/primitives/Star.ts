@@ -54,6 +54,7 @@ class Star extends Shape {
         this.points = this.generateStarPoints();
         this.calculateBoundingRect()
     }
+    
     override setCoord(x: number, y: number): void {
         this.x = x;
         this.y = y;

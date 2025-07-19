@@ -33,6 +33,7 @@ class Polygon extends Shape {
         this.point = this.generateRegularPolygon();
         this.calculateBoundingRect()
     }
+    
     override setCoord(x: number, y: number): void {
         this.x = x;
         this.y = y;

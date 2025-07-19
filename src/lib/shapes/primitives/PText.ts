@@ -136,6 +136,19 @@ class PText extends Shape {
             bottom: this.y + ((this.height > 0) ? this.height : this.THeight),
         };
     }
+    override setDim(width: number, height: number): void {
+        this.width = width
+        this.height = height
+
+        this.calculateBoundingRect()
+    }
+
+    override setCoord(x: number, y: number): void {
+        this.x = x
+        this.y = y
+        this.cursor.setCoord(x, y)
+        this.calculateBoundingRect()
+    }
 
     moveShape(mx: number, my: number): void {
         this.x += mx;
@@ -172,6 +185,7 @@ class PText extends Shape {
             console.warn('PText: Attempting fallback rendering');
         }
     }
+
     private deleteSelection(): void {
         const start = Math.min(this.selectionStart, this.selectionEnd);
         const end = Math.max(this.selectionStart, this.selectionEnd);
@@ -180,7 +194,6 @@ class PText extends Shape {
         this.text = before + after;
         this.cursor.setCursorPos(start);
         this.clearSelection();
-
     }
 
     insertText(char: string, shiftKey: boolean): void {
@@ -193,7 +206,7 @@ class PText extends Shape {
         this.cursor.updateCursorPosIndex(char.length);
 
         this.setUpParagraph()
-        this.calculateDim()
+        this.calculateTextDim()
         this.calculateBoundingRect();
         this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
     }
@@ -207,10 +220,11 @@ class PText extends Shape {
         }
 
         this.setUpParagraph()
-        this.calculateDim()
+        this.calculateTextDim()
         this.calculateBoundingRect();
         this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
     }
+
     copyText() {
         const start = Math.min(this.selectionStart, this.selectionEnd);
         const end = Math.max(this.selectionStart, this.selectionEnd);
@@ -218,6 +232,7 @@ class PText extends Shape {
         navigator.clipboard.writeText(text)
 
     }
+
     pasteText() {
         navigator.clipboard.readText().then((string) => {
             this.insertText(string, false);
@@ -285,14 +300,11 @@ class PText extends Shape {
         this.paragraph.layout(((this.width > 0) ? this.width : 1000));
     }
 
-    calculateDim() {
+    calculateTextDim() {
         if (!this.paragraph) return
 
-        const width = this.paragraph.getLongestLine();
-        const height = this.paragraph.getHeight();
-
-        this.TWidth = width
-        this.THeight = height
+        this.TWidth = this.paragraph.getLongestLine();
+        this.THeight = this.paragraph.getHeight();
     }
 
     private get hasSelection(): boolean {
@@ -314,7 +326,6 @@ class PText extends Shape {
             this.text, this.textStyle.fontSize,
             this.textStyle.lineHeight, this.paragraph)
 
-        //remember moving cursor up and down does not work if text wraps
         if (shiftKey) this.selectionEnd = this.cursor.cursorPosIndex
 
     }
@@ -326,24 +337,17 @@ class PText extends Shape {
     setFontSize(size: number): void {
         this.textStyle.fontSize = size;
 
-        this.updateStyles();
-        this.calculateBoundingRect();
+        this.updateStyles();//i tink it is not comp
+        this.calculateBoundingRect();//i tink it is not comp
     }
 
     setFontFamily(fontFamily: string): void {
         this.textStyle.fontFamily.unshift(fontFamily);
 
-        this.updateStyles();
-        this.calculateBoundingRect();
+        this.updateStyles();//i tink it is not comp
+        this.calculateBoundingRect();//i tink it is not comp
     }
 
-    override setDim(width: number, height: number): void {
-
-    }
-
-    override setCoord(x: number, y: number): void {
-
-    }
 
     override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         if (handle.type === 'size') {
@@ -351,10 +355,12 @@ class PText extends Shape {
         }
         return { x: 0, y: 0 };
     }
+
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
         return handles;
     }
+
     override getDim(): { width: number, height: number } {
 
         return {

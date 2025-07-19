@@ -82,8 +82,16 @@ abstract class Shape implements IShape {
     abstract setDim(width: number, height: number): void;
     abstract getDim(): { width: number, height: number };
     abstract setCoord(x: number, y: number): void;
+    
     getCoord(): { x: number, y: number } {
         return { x: this.x, y: this.y }
+    }
+
+    drawDefault() {console.log('999999');
+    
+        const defSize = 100
+        this.setDim(defSize, defSize)
+        this.setCoord(this.x - (defSize / 2), this.y - (defSize / 2))
     }
 
     setPaint(): void {

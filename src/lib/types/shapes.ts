@@ -31,7 +31,8 @@ export interface IShape {
     getModifierHandles(size: number, fill: string, strokeColor: string | number[]): any[];
     getSizeModifierHandlesPos(handle: Handle): Coord;
     getModifierHandlesPos(handle: Handle): Coord;
-
+    
+    drawDefault(): void;
     pointInShape(x: number, y: number): boolean;
     moveShape(mx: number, my: number): void;
     calculateBoundingRect(): void;

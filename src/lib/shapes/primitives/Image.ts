@@ -29,6 +29,7 @@ class PImage extends Rectangle {
         }
         this.calculateBoundingRect()
     }
+
     setImageElement(img: ArrayBuffer): void {
         this.imageElement = img;
         if (!this.imageElement) return;
@@ -38,6 +39,17 @@ class PImage extends Rectangle {
         if (this.resource?.canvasKit) {
             this.createCanvasKitImage();
         }
+    }
+
+    override setDim(width: number, height: number): void {
+        this.width = width;
+        this.height = height;
+
+        this.calculateBoundingRect()
+    }
+
+    override getDim(): { width: number, height: number } {
+        return { width: this.width, height: this.height }
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -133,11 +145,11 @@ class PImage extends Rectangle {
         if (this.hasRadius()) {
             this.clipToRoundedRect(canvas, dstRect);
         }
-
-        canvas.drawImageRectOptions(
+        
+        canvas.drawImageRectCubic(
             this.canvasKitImage, srcRect, dstRect,
-            ck.FilterMode.Linear,
-            ck.MipmapMode.None,
+            1/3,
+            1/3,
             null
         );
         canvas.restore();
@@ -156,6 +168,7 @@ class PImage extends Rectangle {
             canvas.drawRect(borderRect, this.resource.strokePaint);
         }
     }
+
     private drawRoundedRectOutline(canvas: Canvas): void {
         if (!this.resource) return;
 
@@ -178,7 +191,6 @@ class PImage extends Rectangle {
             path.delete();
         }
     }
-
 
     private clipToRoundedRect(canvas: Canvas, rect: Rect): void {
         if (!this.resource) return;

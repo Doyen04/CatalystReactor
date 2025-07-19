@@ -21,7 +21,6 @@ class TextTool extends Tool {
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
         EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
         EventQueue.trigger(UpdateModifierHandlesPos)
-        EventQueue.trigger(Render)
     }
     override handleKeyDown(e: KeyboardEvent): void {
         const shape = this.createdScene.getShape()
@@ -60,6 +59,7 @@ class TextTool extends Tool {
                     }
             }
         }
+        EventQueue.trigger(Render)
     }
     handleControlKey(e: string) {
         const shape = this.createdScene.getShape()
