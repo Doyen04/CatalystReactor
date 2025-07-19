@@ -24,6 +24,7 @@ class PImage extends Rectangle {
         this.originalY = y;
         this.isFlippedX = false;
         this.isFlippedY = false;
+        
         if (imageElem) {
             this.setImageElement(imageElem);
         }
@@ -41,9 +42,41 @@ class PImage extends Rectangle {
         }
     }
 
+    //draw somewhere else first
+    private createCanvasKitImage(): void {
+        if (!this.imageElement || !this.resource?.canvasKit) return;
+        const uint8Array = new Uint8Array(this.imageElement);
+        
+        this.canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(uint8Array);
+        if (this.canvasKitImage) {
+            this.width = this.canvasKitImage.width();
+            this.height = this.canvasKitImage.height();
+
+            this.aspectRatio = this.width / this.height;
+            if (this.maintainAspectRatio) {
+                // Maintain aspect ratio based on which dimension is set
+                if (this.width > 0 && this.height === 0) {
+                    this.height = this.width / this.aspectRatio;
+                } else if (this.height > 0 && this.width === 0) {
+                    this.width = this.height * this.aspectRatio;
+                }
+            }
+
+            this.calculateBoundingRect();
+        }
+    }
+
     override setDim(width: number, height: number): void {
         this.width = width;
         this.height = height;
+        console.log('inimageseething dim');
+        
+        this.calculateBoundingRect()
+    }
+
+    override setCoord(x: number, y: number): void {
+        this.x = x;
+        this.y = y;
 
         this.calculateBoundingRect()
     }
@@ -89,7 +122,7 @@ class PImage extends Rectangle {
                 this.height = size;
             }
 
-            // Position based on drag direction
+            // Position based on drag direction // check this
             if (deltaX >= 0) {
                 this.x = this.originalX;
             } else {
@@ -110,29 +143,6 @@ class PImage extends Rectangle {
         }
 
         this.calculateBoundingRect();
-    }
-
-    private async createCanvasKitImage(): Promise<void> {
-        if (!this.imageElement || !this.resource?.canvasKit) return;
-        const uint8Array = new Uint8Array(this.imageElement);
-
-        this.canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(uint8Array);
-        if (this.canvasKitImage) {
-            this.width = this.canvasKitImage.width();
-            this.height = this.canvasKitImage.height();
-
-            this.aspectRatio = this.width / this.height;
-            if (this.maintainAspectRatio) {
-                // Maintain aspect ratio based on which dimension is set
-                if (this.width > 0 && this.height === 0) {
-                    this.height = this.width / this.aspectRatio;
-                } else if (this.height > 0 && this.width === 0) {
-                    this.width = this.height * this.aspectRatio;
-                }
-            }
-
-            this.calculateBoundingRect();
-        }
     }
 
     override draw(canvas: Canvas): void {

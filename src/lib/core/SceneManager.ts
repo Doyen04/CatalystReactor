@@ -3,6 +3,7 @@ import ShapeModifier from "@lib/modifiers/ShapeModifier";
 import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 import EventQueue, { EventTypes } from './EventQueue'
 import { Coord, ShapeType } from "@lib/types/shapes";
+import PImage from "@lib/shapes/primitives/Image";
 
 const {
     FinalizeShape, DrawScene, CreateScene, SceneCreated, FinaliseSelection,
@@ -215,6 +216,9 @@ class SceneManager {
         const width = right - left;
         const height = bottom - top;
         const minSize = 5;
+        if (this.transientScene.getShape() instanceof PImage) {
+             this.transientScene.shape.drawDefault()//work beterter on this
+        }
 
         if (width < minSize || height < minSize) {
             this.transientScene.shape.drawDefault()
