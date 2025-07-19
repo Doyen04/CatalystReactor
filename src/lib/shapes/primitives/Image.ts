@@ -39,7 +39,7 @@ class PImage extends Rectangle {
             this.createCanvasKitImage();
         }
     }
-    
+
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         // Calculate dimensions
         const deltaX = (mx - dragStart.x);
@@ -103,7 +103,7 @@ class PImage extends Rectangle {
     private async createCanvasKitImage(): Promise<void> {
         if (!this.imageElement || !this.resource?.canvasKit) return;
         const uint8Array = new Uint8Array(this.imageElement);
-        
+
         this.canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(uint8Array);
         if (this.canvasKitImage) {
             this.width = this.canvasKitImage.width();
@@ -125,8 +125,7 @@ class PImage extends Rectangle {
 
     override draw(canvas: Canvas): void {
         if (!this.resource?.canvasKit || !this.canvasKitImage) return;
-        this.setPaint();
-
+        canvas.save();
         const ck = this.resource.canvasKit;
         const srcRect = ck.XYWHRect(0, 0, this.canvasKitImage.width(), this.canvasKitImage.height());
         const dstRect = ck.XYWHRect(this.x, this.y, this.width, this.height);
@@ -135,8 +134,47 @@ class PImage extends Rectangle {
             this.clipToRoundedRect(canvas, dstRect);
         }
 
-        canvas.drawImageRect(this.canvasKitImage, srcRect, dstRect, this.resource.strokePaint);
+        canvas.drawImageRect(this.canvasKitImage, srcRect, dstRect, null);
+        canvas.restore();
+
+        this.setPaint();
+
+        if (this.hasRadius()) {
+            this.drawRoundedRectOutline(canvas);
+        } else {
+            const borderRect = ck.XYWHRect(
+                this.x + this.strokeWidth / 2,
+                this.y + this.strokeWidth / 2,
+                this.width - this.strokeWidth,
+                this.height - this.strokeWidth
+            );
+            canvas.drawRect(borderRect, this.resource.strokePaint);
+        }
     }
+    private drawRoundedRectOutline(canvas: Canvas): void {
+        if (!this.resource) return;
+
+        const ck = this.resource.canvasKit;
+        const strokeOffset = this.strokeWidth / 2;
+        const rect = ck.XYWHRect(
+            this.x + strokeOffset,
+            this.y + strokeOffset,
+            this.width - this.strokeWidth,
+            this.height - this.strokeWidth
+        );
+
+        if (this.bdradius.locked) {
+            const radius = Math.max(0, this.bdradius['top-left'] - strokeOffset);
+            const rrect = ck.RRectXY(rect, radius, radius);
+            canvas.drawRRect(rrect, this.resource.strokePaint);
+        } else {
+            const path = this.makeCustomRRectPath();
+            canvas.drawPath(path, this.resource.strokePaint);
+            path.delete();
+        }
+    }
+
+
     private clipToRoundedRect(canvas: Canvas, rect: Rect): void {
         if (!this.resource) return;
 
@@ -156,7 +194,7 @@ class PImage extends Rectangle {
     }
 
     override destroy(): void {
-        
+
     }
 }
 
