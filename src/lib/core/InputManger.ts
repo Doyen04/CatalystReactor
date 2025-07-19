@@ -1,3 +1,4 @@
+import { Coord } from "@lib/types/shapes";
 import EventQueue, { EventTypes } from "./EventQueue";
 
 const { PointerDown, PointerMove, PointerUp, PointerDrag, CreateSurface, KeyDown, KeyUp } = EventTypes
@@ -6,7 +7,7 @@ class InputManager {
     private canvasEl: HTMLCanvasElement
     private isPointerDown: boolean;
     private isDragging: boolean;
-    private dragStart: Coords;
+    private dragStart: Coord;
 
     constructor(cnvs: HTMLCanvasElement) {
         this.canvasEl = cnvs
