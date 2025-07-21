@@ -51,7 +51,7 @@ class ToolManager {
     }
     handleToolChange(tool: any) {
         if (tool !== this.currentTool) {
-            if (this.currentTool) this.currentTool.cleanUp()
+            if (this.currentTool) this.currentTool.toolChange()
             this.currentTool = tool
         }
     }

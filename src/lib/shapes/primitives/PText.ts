@@ -1,8 +1,9 @@
-import { Corner, HandleType } from "@lib/types/shapes";
 import Shape from "../base/Shape";
 import TextCursor from '../base/TextCursor'
 import { Canvas, Color, FontMgr, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from "canvaskit-wasm";
 import Handle from "@lib/modifiers/Handles";
+
+//TODO: make sure resources is done in canvaskitresources and all font is loaded there then use style to target it
 
 interface TextStyleProp {
     textColor: string | number[];
@@ -68,7 +69,7 @@ class PText extends Shape {
         const textColor = (Array.isArray(textStyle.textColor)) ? textStyle.textColor
             : canvasKit.parseColorString(textStyle.textColor);
 
-        this.textStyle.textAlign = canvasKit.TextAlign.Left;
+        this.textStyle.textAlign = canvasKit.TextAlign.Left;//remove this
         // Create text style
         this.resource.textStyle.color = textColor // Black text
         this.resource.textStyle.fontSize = textStyle.fontSize
@@ -81,11 +82,12 @@ class PText extends Shape {
 
         // Create paragraph style
         this.resource.paragraphStyle.textStyle = this.resource.textStyle
-        this.resource.paragraphStyle.textAlign = canvasKit.TextAlign.Left
+        this.resource.paragraphStyle.textAlign = canvasKit.TextAlign.Left//replace this
 
         return [this.resource.textStyle, this.resource.paragraphStyle]
     }
 
+    //remove this function
     private extractFontNames(): string[] {
         if (!this.resource.canvasKit || !this.resource.fontData.length) return [];
 
@@ -136,11 +138,15 @@ class PText extends Shape {
             bottom: this.y + ((this.height > 0) ? this.height : this.THeight),
         };
     }
+    
     override setDim(width: number, height: number): void {
         this.width = width
         this.height = height
 
-        this.calculateBoundingRect()
+        this.setUpParagraph()
+        this.calculateTextDim()
+        this.calculateBoundingRect();
+        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
     }
 
     override setCoord(x: number, y: number): void {
@@ -156,6 +162,7 @@ class PText extends Shape {
         this.cursor.setCoord(this.x, this.y)
 
         this.calculateBoundingRect()
+        
     }
 
     setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {

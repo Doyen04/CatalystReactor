@@ -7,7 +7,7 @@ import PImage from "@lib/shapes/primitives/Image";
 
 const {
     FinalizeShape, DrawScene, CreateScene, SceneCreated, FinaliseSelection,
-    ShowHovered, SelectObject,
+    ShowHovered, SelectObject,SceneSelected,
     DragObject,
 } = EventTypes
 
@@ -103,20 +103,24 @@ class SceneManager {
             this.modifierSelected = true
             return
         } else {
-            this.selectShape(x, y)
+            const result = this.selectShape(x, y)
+            if (result) {
+                EventQueue.trigger(SceneSelected, result)
+            }
         }
     }
 
-    selectShape(x: number, y: number) {
+    selectShape(x: number, y: number): SceneNode | null {
         const selected = this.getCollidedScene(x, y)
 
         if (!selected || !selected.getShape()) {
             this.selected = null
             this.shapeMod.setShape(null)
-            return
+            return null
         } else {
             this.selected = selected
             this.shapeMod.setShape(this.selected.getShape())
+            return selected
         }
     }
 
@@ -226,27 +230,27 @@ class SceneManager {
         }
     }
     destroy() {
-        if(this.scene){
+        if (this.scene) {
             this.scene.destroy()
             this.scene = null
-        }if (this.selected) {
+        } if (this.selected) {
             this.selected.destroy()
             this.selected = null
         }
-        
-        if(this.transientScene){
+
+        if (this.transientScene) {
             this.transientScene.destroy()
             this.transientScene = null
         }
-        if(this.shapeMod){
+        if (this.shapeMod) {
             this.shapeMod.destroy()
             this.shapeMod = null
         }
-        if(this.hoveredScene){
+        if (this.hoveredScene) {
             this.hoveredScene.destroy()
             this.hoveredScene = null
         }
-        if(this.modifierSelected){
+        if (this.modifierSelected) {
             this.modifierSelected = false
         }
     }

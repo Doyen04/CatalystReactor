@@ -8,18 +8,18 @@ enum EventTypes {
     PointerDrag = 'pointer:drag',
     KeyDown = 'key:down',
     KeyUp = 'key:up',
+
     CreateScene = 'create:scene',
     SceneCreated = 'scene:created',
     DrawScene = 'draw:shape',
     FinalizeShape = 'finish:draw',
+
     CreateSurface = 'create:surface',
     ShowHovered = 'hovered:shape',
+
     SelectObject = 'select:object',
-    SelectShape = 'select:shape',
-    SelectModifier = 'select:modifier',
+    SceneSelected = 'scene:selected',
     DragObject = 'drag:object',
-    // DragShape = 'drag:shape',
-    DragModifier = 'drag:modifier',
     FinaliseSelection = 'selection:finished',
     RemoveSelectedModifier = 'remove:modifier',
     UpdateModifierHandlesPos = 'update:modifier',
@@ -43,12 +43,11 @@ type Handlers = {
     [EventTypes.CreateSurface]: () => void;
     [EventTypes.ShowHovered]: (x: number, y: number) => void;
     [EventTypes.SelectObject]: (x: number, y: number) => void;
-    [EventTypes.SelectShape]: (x: number, y: number) => void;
-    [EventTypes.SelectModifier]: (x: number, y: number) => void;
+    [EventTypes.SceneSelected]: (Scene: SceneNode) => void;
     [EventTypes.ModifierSelected]: () => void;
     // [EventTypes.DragShape]: (dx: number, dy: number) => void;
     [EventTypes.DragObject]: (dx: number, dy: number, e: MouseEvent) => void;
-    [EventTypes.DragModifier]: (dx: number, dy: number, e: MouseEvent) => void;
+
     [EventTypes.FinaliseSelection]: () => void;
     [EventTypes.RemoveSelectedModifier]: () => void;
     [EventTypes.UpdateModifierHandlesPos]: () => void;
