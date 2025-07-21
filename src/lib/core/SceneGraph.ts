@@ -55,6 +55,24 @@ class SceneNode {
         }
     }
     destroy() {
+        if (this.shape) {
+            this.parent?.removeChildNode(this)
+            this.shape.destroy()
+            this.shape = null
+        }
+        if (this.children.length > 0) {    
+            this.children.forEach(child => {
+                child.parent?.removeChildNode(child)
+                child.destroy()
+            })
+            this.children = []
+        }
+        if(this.parent){
+            this.parent.destroy()
+            this.parent = null
+        }
+        this.localMatrix = null
+        this.worldMatrix = null
 
     }
 }

@@ -46,6 +46,7 @@ class Oval extends Shape {
         this.calculateBoundingRect()
     }
 
+    //move to shape
     override setDim(width: number, height: number) {
         this.radiusX = width / 2;
         this.radiusY = height / 2;

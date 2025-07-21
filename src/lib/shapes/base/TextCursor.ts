@@ -1,6 +1,6 @@
 // TextCursor.ts
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import type { Canvas, Paragraph } from "canvaskit-wasm";
+import type { Canvas, LineMetrics, Paragraph } from "canvaskit-wasm";
 
 class TextCursor {
     private x: number;
@@ -65,55 +65,51 @@ class TextCursor {
         this.updatePosition(cursorPos[0], cursorPos[1], cursorPos[3]);
     }
 
-    private findLineAfterNewline(lineMetrics: any[]): number {
-        // Find the line that starts at or after the cursor position
-        for (let i = 0; i < lineMetrics.length; i++) {
-            const metric = lineMetrics[i];
-            if (this.cursorIndex <= metric.startIndex) {
-                return i;
-            }
-            if (this.cursorIndex >= metric.startIndex && this.cursorIndex <= metric.endIndex) {
-                // If cursor is within this line, check if it's at the start due to newline
-                if (this.cursorIndex === metric.startIndex) {
-                    return i;
-                }
-                // Otherwise, return next line if it exists
-                return Math.min(i + 1, lineMetrics.length - 1);
-            }
-        }
-        return lineMetrics.length - 1;
-    }
-
     private calculateCursorRect(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): number[] {
         if (!this.resource.canvasKit) return [];
+        const CK = this.resource.canvasKit
+
+        const lineMetrics = paragraph.getLineMetrics();
+        const { current } = this.findCurrentAboveBelowLine(lineMetrics);
+        console.log(paragraph.getLineMetrics(), current, this.cursorIndex, text);
+
+        if (!current) return [0, 0, 2, fontSize * lineHeight];
+        const height = current.height
 
         if (this.cursorIndex == 0) {
-            return [0, 0, 2, fontSize * lineHeight];
+            return [0, 0, 2, height];
         }
-        if (text[this.cursorIndex - 1] === "\n") {
-            const lineMetrics = paragraph.getLineMetrics();
-            const currentLine = this.findLineAfterNewline(lineMetrics);
 
-            if (currentLine < lineMetrics.length) {
-                const lineMetric = lineMetrics[currentLine];
-                // Position cursor at the start of the current line
-                return [0, lineMetric.baseline - fontSize, 2, fontSize * lineHeight];
+        if (text[this.cursorIndex - 1] === "\n") {
+            if (current) {
+                return [0, current.baseline - current.ascent, 2, height];
             }
         }
-        //this is not workign wel if wrappped
+
+        let startIndex = 0
+        let endIndex = 0
+        if (current.startIndex == this.cursorIndex) {
+            startIndex = this.cursorIndex
+            endIndex = this.cursorIndex + 1
+        } else {
+            startIndex = Math.max(0, this.cursorIndex - 1)
+            endIndex = this.cursorIndex
+        }
+
         const rects = paragraph.getRectsForRange(
-            Math.max(0, this.cursorIndex - 1),
-            this.cursorIndex,
-            this.resource.canvasKit.RectHeightStyle.IncludeLineSpacingTop,
-            this.resource.canvasKit.RectWidthStyle.Tight
+            startIndex,
+            endIndex,
+            CK.RectHeightStyle.IncludeLineSpacingTop,
+            CK.RectWidthStyle.Tight
         );
-        console.log(rects, this.cursorIndex, this.x);
 
         if (!rects.length) return [];
         let [x, y, w, h] = rects[rects.length - 1].rect;
-        h = (h > fontSize * lineHeight) ? fontSize * lineHeight : h
 
-        return [w, y, 2, h];
+        if (current.startIndex == this.cursorIndex) {
+            return [x, y, 2, height]
+        }
+        return [w, y, 2, height];
     }
 
     moveCursor(direction: 'left' | 'right' | 'up' | 'down', text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): void {
@@ -125,10 +121,10 @@ class TextCursor {
                 this.cursorIndex = Math.min(text.length, this.cursorIndex + 1);
                 break;
             case 'up':
-                this.cursorIndex = this.moveCursorUp(text, paragraph)
+                this.cursorIndex = this.moveCursorUp(text, fontSize, lineHeight, paragraph)
                 break;
             case 'down':
-                this.cursorIndex = this.moveCursorDown(text, paragraph)
+                this.cursorIndex = this.moveCursorDown(text, fontSize, lineHeight, paragraph)
                 break;
             default:
                 console.log('direction not implemented');
@@ -139,86 +135,80 @@ class TextCursor {
         this.calculateCursorCoord(text, fontSize, lineHeight, paragraph)
     }
 
-    private moveCursorUp(text: string, paragraph: Paragraph): number {
-        if (!paragraph) return;
+    private findCurrentAboveBelowLine(lineMetrics: LineMetrics[]): { current: LineMetrics | null; above: LineMetrics | null; below: LineMetrics | null; } {
+        const totalLines = lineMetrics.length;
+        let currentLine = 0;
 
-        const lineMetrics = paragraph.getLineMetrics();
-        const currentLine = this.findCurrentLine(lineMetrics);
-
-        if (currentLine > 0) {
-            const currentLineMetric = lineMetrics[currentLine];
-            const targetLineMetric = lineMetrics[currentLine - 1];
-
-            // Get current position within the line
-            const currentLineStart = currentLineMetric.startIndex;
-            const positionInLine = this.cursorIndex - currentLineStart;
-
-            // Calculate approximate x position based on character position
-            const charWidth = this.estimateCharWidth(text, currentLineMetric);
-            const targetX = positionInLine * charWidth;
-
-            // Find closest position in target line
-            const targetLineStart = targetLineMetric.startIndex;
-            const targetLineEnd = targetLineMetric.endIndex;
-            const targetLineLength = targetLineEnd - targetLineStart;
-
-            // Estimate position in target line based on x position
-            const targetPositionInLine = Math.min(
-                Math.round(targetX / charWidth),
-                targetLineLength
-            );
-
-            return targetLineStart + targetPositionInLine;
-        }
-    }
-
-    private moveCursorDown(text: string, paragraph: Paragraph): number {
-        if (!paragraph) return;
-
-        const lineMetrics = paragraph.getLineMetrics();
-        const currentLine = this.findCurrentLine(lineMetrics);
-
-        if (currentLine < lineMetrics.length - 1) {
-            const currentLineMetric = lineMetrics[currentLine];
-            const targetLineMetric = lineMetrics[currentLine + 1];
-
-            // Get current position within the line
-            const currentLineStart = currentLineMetric.startIndex;
-            const positionInLine = this.cursorIndex - currentLineStart;
-
-            // Calculate approximate x position based on character position
-            const charWidth = this.estimateCharWidth(text, currentLineMetric);
-            const targetX = positionInLine * charWidth;
-
-            // Find closest position in target line
-            const targetLineStart = targetLineMetric.startIndex;
-            const targetLineEnd = targetLineMetric.endIndex;
-            const targetLineLength = targetLineEnd - targetLineStart;
-
-            // Estimate position in target line based on x position
-            const targetPositionInLine = Math.min(
-                Math.round(targetX / charWidth),
-                targetLineLength
-            );
-
-           return targetLineStart + targetPositionInLine;
-        }
-    }
-
-    private findCurrentLine(lineMetrics: any[]): number {
-        for (let i = 0; i < lineMetrics.length; i++) {
-            const metric = lineMetrics[i];
-            if (this.cursorIndex >= metric.startIndex && this.cursorIndex <= metric.endIndex) {
-                return i;
+        for (let i = 0; i < totalLines; i++) {
+            const m = lineMetrics[i];
+            if (this.cursorIndex >= m.startIndex && this.cursorIndex <= m.endIndex) {
+                currentLine = i;
+                //removed break because canvaskit end and start are the same
             }
         }
-        return lineMetrics.length - 1;
+
+        // Determine above and below lines
+        const prevLine = currentLine > 0 ? lineMetrics[currentLine - 1] : null;
+        const nextLine = currentLine < totalLines - 1 ? lineMetrics[currentLine + 1] : null;
+
+        return { current: lineMetrics[currentLine], above: prevLine, below: nextLine };
     }
 
-    private estimateCharWidth(text: string, lineMetric: any): number {
-        const lineText = text.substring(lineMetric.startIndex, lineMetric.endIndex);
-        const lineWidth = lineMetric.width;
-        return lineText.length > 0 ? lineWidth / lineText.length : 10; // fallback width
+    private findBestIndexInLine(line: LineMetrics, targetX: number, paragraph: Paragraph): number {
+        const CK = this.resource.canvasKit;
+
+        let bestIndex = line.startIndex;
+        const endIndex = Math.min(line.endExcludingWhitespaces, line.startIndex + 200); // Limit for performance
+
+        for (let i = line.startIndex; i <= endIndex; i++) {
+            const rects = paragraph.getRectsForRange(
+                i,
+                i + 1,
+                CK.RectHeightStyle.IncludeLineSpacingMiddle,
+                CK.RectWidthStyle.Tight
+            );
+
+            if (rects.length > 0) {
+                const charX = rects[0].rect[0]; // left edge of character
+                const charRight = rects[0].rect[2]; // right edge of character
+                console.log(charX, charRight, targetX);
+
+                if (targetX >= charX && targetX <= charRight) {
+                    const charMidpoint = (charX + charRight) / 2;
+                    return targetX <= charMidpoint ? i : i + 1;
+                }
+                if (targetX > charRight) {
+                    bestIndex = i + 1; // Position after this character
+                } else {
+                    break;
+                }
+            } else {
+                // No rect for this character, might be end of line
+                break;
+            }
+        }
+        // Ensure we don't go beyond line boundaries
+        return Math.min(bestIndex, line.endExcludingWhitespaces + 1);
+    }
+
+    private moveCursorUp(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): number {
+        const metrics = paragraph.getLineMetrics();
+        const { above } = this.findCurrentAboveBelowLine(metrics);
+        if (above == null) return this.cursorIndex;
+
+        const coord = this.calculateCursorRect(text, fontSize, lineHeight, paragraph);
+
+        return this.findBestIndexInLine(above, coord[0], paragraph);
+    }
+
+    private moveCursorDown(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): number {
+        const lines = paragraph.getLineMetrics();
+        const { below } = this.findCurrentAboveBelowLine(lines);
+        if (below == null) return this.cursorIndex;
+
+       const coord = this.calculateCursorRect(text, fontSize, lineHeight, paragraph);
+
+        return this.findBestIndexInLine(below, coord[0], paragraph);
     }
 
     updatePosition(x: number, y: number, height: number): void {

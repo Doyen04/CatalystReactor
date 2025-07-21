@@ -19,9 +19,10 @@ function Canvas() {
 
     useEffect(() => {
 
-        const cleanupExisting = () => {
+        const cleanupExisting = () => {console.log('doing clean up');
+        
             if (canvasManagerRef.current) {
-                canvasManagerRef.current.removeEventListener();
+                canvasManagerRef.current.destroy();
                 canvasManagerRef.current = null;
             }
             if (canvasResourcesRef.current) {

@@ -176,7 +176,20 @@ class ShapeModifier {
             }
         });
     }
+    destroy() {
+        if (this.shape) {
+            this.shape.destroy()
+            this.shape = null
+        }
+        this.strokeColor = ''
+        this.strokeWidth = 0
+        this.fill = ''
+        this.size = 0
+        this.handles = []
+        this.isHovered = null
+        this.selectedModifier = null
 
+    }
 
 }
 

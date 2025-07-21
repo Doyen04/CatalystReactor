@@ -217,12 +217,37 @@ class SceneManager {
         const height = bottom - top;
         const minSize = 5;
         if (this.transientScene.getShape() instanceof PImage) {
-             this.transientScene.shape.drawDefault()//work beterter on this
+            this.transientScene.shape.drawDefault()//work beterter on this
         }
 
         if (width < minSize || height < minSize) {
             this.transientScene.shape.drawDefault()
             console.log('Shape removed: too small add default size');
+        }
+    }
+    destroy() {
+        if(this.scene){
+            this.scene.destroy()
+            this.scene = null
+        }if (this.selected) {
+            this.selected.destroy()
+            this.selected = null
+        }
+        
+        if(this.transientScene){
+            this.transientScene.destroy()
+            this.transientScene = null
+        }
+        if(this.shapeMod){
+            this.shapeMod.destroy()
+            this.shapeMod = null
+        }
+        if(this.hoveredScene){
+            this.hoveredScene.destroy()
+            this.hoveredScene = null
+        }
+        if(this.modifierSelected){
+            this.modifierSelected = false
         }
     }
 }

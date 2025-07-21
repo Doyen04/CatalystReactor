@@ -40,8 +40,6 @@ abstract class Tool {
     cleanUp(): void {
 
         if (!this.createdScene) return
-        this.createdScene.getShape().destroy()
-        this.createdScene.destroy()
         this.createdScene = null
     }
 }

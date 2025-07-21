@@ -7,6 +7,7 @@ class PImage extends Rectangle {
     private imageLoaded: boolean = false;
     private aspectRatio: number = 1;
     private maintainAspectRatio: boolean = true;
+    
     constructor(x: number, y: number, imageElem: ArrayBuffer) {
         super(x, y);
         this.width = 0;

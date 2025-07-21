@@ -80,11 +80,25 @@ class CanvasManager {
         // // Apply conversion logic here using the 'matrix' parameter
         // return skMatrix;
     }
-    removeEventListener() {
+    destroy() {
         console.log('removing all event and doing clean up');
 
-        if (this.inputManager) this.inputManager.removeEventListeners()
-        if (this.renderer) this.renderer.destroy()
+        if (this.inputManager) {
+            this.inputManager.destroy()
+            this.inputManager = null
+        }
+        if (this.renderer){
+            this.renderer.destroy()
+            this.renderer = null
+        }
+        if (this.sceneManager){
+            this.sceneManager.destroy()
+            this.sceneManager = null
+        }
+        if (this.toolManager){
+            this.toolManager.destroy()
+            this.toolManager = null
+        }
         EventQueue.removeAllEvent()
     }
 

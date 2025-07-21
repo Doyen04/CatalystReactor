@@ -146,6 +146,7 @@ class Star extends Shape {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
         return handles;
     }
+    
     override getDim(): { width: number; height: number; } {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }

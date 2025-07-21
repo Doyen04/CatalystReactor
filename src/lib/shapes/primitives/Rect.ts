@@ -89,6 +89,7 @@ class Rectangle extends Shape {
         this.calculateBoundingRect()
     }
 
+    //move to shape
     override setDim(width: number, height: number): void {
     
         this.width = width;

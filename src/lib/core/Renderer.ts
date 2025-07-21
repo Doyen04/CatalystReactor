@@ -183,6 +183,9 @@ class Renderer {
             this.surf.delete();
             this.surf = null;
         }
+        this.canvasEl = null;
+        this.sceneManager = null;
+        this.animationId = null
         this.removeEvent()
     }
 }

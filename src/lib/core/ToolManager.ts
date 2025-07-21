@@ -80,6 +80,10 @@ class ToolManager {
         EventQueue.unSubscribeAll(KeyUp)
         EventQueue.unSubscribeAll(ToolChange)
     }
+    destroy(){
+        this.removeEvent()
+        this.currentTool = null
+    }
 }
 
 export default ToolManager;

@@ -84,6 +84,14 @@ class InputManager {
         window.removeEventListener('keyup', this.onKeyUp.bind(this));
         window.removeEventListener('resize', this.resize.bind(this));
     }
+    destroy() {
+        this.removeEventListeners()
+        this.canvasEl = null
+
+        this.isPointerDown = null
+        this.isDragging = null
+        this.dragStart = null
+    }
 }
 
 export default InputManager;
