@@ -54,6 +54,8 @@ export interface IShape {
     startEditing?(): void;
     setArc?(startAngle: number, endAngle: number): void;
     canEdit?(): boolean;
+    selectAll?(): void;
+    insertText?(char: string, shiftKey: boolean): void;
     moveCursor?(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean): void;
     setStrokeColor(stroke: string | number[]): void;
     setFill(stroke: string | number[]): void;

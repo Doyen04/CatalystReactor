@@ -1,20 +1,63 @@
 import { Coord, IShape } from "@lib/types/shapes";
 import Tool from "./Tool";
-import EventQueue, { EventTypes } from "@lib/core/EventQueue";
-import PText from "@lib/shapes/primitives/PText";
-import { useSceneStore } from "@hooks/sceneStore";
+import EventQueue, { EventTypes } from "@lib/core/EventQueue"
 
 const { ShowHovered, SelectObject, DragObject, FinaliseSelection, Render, UpdateModifierHandlesPos } = EventTypes
 
 class SelectTool extends Tool {
     private lastMouseCoord: Coord | null = null
+    private clickTimer: NodeJS.Timeout | null = null
+    private clickCount: number = 0
+    private lastClickTime: number = 0
+    private doubleClickDelay: number = 300 // milliseconds
 
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
+        this.handleClickCount(e)
+    }
+    private handleClickCount(e: MouseEvent) {
+        const currentTime = Date.now()
+        if (currentTime - this.lastClickTime > this.doubleClickDelay) {
+            this.clickCount = 0
+        }
+
+        this.clickCount++
+        this.lastClickTime = currentTime
+        if (this.clickTimer) {
+            clearTimeout(this.clickTimer)
+        }
+
+        // Set timer to process the click(s)
+        this.clickTimer = setTimeout(() => {
+            this.processClick(e, this.clickCount)
+            this.clickCount = 0
+        }, this.doubleClickDelay)
+    }
+    private processClick(e: MouseEvent, clickCount: number) {
+        if (clickCount >= 2) {
+            this.handleDoubleClick(e)
+        } else {
+            this.handleSingleClick(e)
+        }
+    }
+    private handleSingleClick(e: MouseEvent) {
+        console.log('Single click - normal selection')
         EventQueue.trigger(SelectObject, e.offsetX, e.offsetY)
         // EventQueue.trigger(Render)
     }
 
+    private handleDoubleClick(e: MouseEvent) {
+        console.log('Double click detected')
+
+        if (this.currentScene) {
+            const shape = this.currentScene.getShape()
+
+            if (shape.pointInShape(e.offsetX, e.offsetY)) {
+                shape.startEditing()
+                shape.selectAll()
+            }
+        }
+    }
     override handlePointerUp() {
         EventQueue.trigger(FinaliseSelection)
         EventQueue.trigger(UpdateModifierHandlesPos)
@@ -46,7 +89,7 @@ class SelectTool extends Tool {
         if (this.currentScene) {
             const shape = this.currentScene.getShape()
 
-            if (shape instanceof PText && shape.canEdit()) {
+            if (shape.canEdit()) {
                 this.moveTextCursor(e, shape)
             } else {
                 this.moveCurrentShape(e, shape)
@@ -55,12 +98,12 @@ class SelectTool extends Tool {
     }
 
     override handleTextKey(e: KeyboardEvent): void {
-        
+
         if (this.currentScene) {
             const shape = this.currentScene.getShape()
-            
-            if (shape instanceof PText && shape.canEdit()) {
-                this.insertTextIntoShape(e, shape)
+
+            if (shape.canEdit()) {
+                shape.insertText(e.key, e.shiftKey)
             }
         }
     }
@@ -69,20 +112,14 @@ class SelectTool extends Tool {
         if (this.currentScene) {
             const shape = this.currentScene.getShape()
 
-            if (shape instanceof PText && shape.canEdit()) {
+            if (shape.canEdit()) {
                 shape.insertText('\n', e.shiftKey)
             }
         }
     }
 
-    insertTextIntoShape(e: KeyboardEvent, shape:IShape) {
-        if (shape instanceof PText) {
-            shape.insertText(e.key, e.shiftKey)
-        }
-    }
-
-    moveTextCursor(e: KeyboardEvent, shape:IShape) {
-        if (shape instanceof PText) {
+    moveTextCursor(e: KeyboardEvent, shape: IShape) {
+        if (shape) {
             switch (e.key) {
                 case 'ArrowUp':
                     shape.moveCursor('up', e.shiftKey)
@@ -104,7 +141,7 @@ class SelectTool extends Tool {
         EventQueue.trigger(UpdateModifierHandlesPos)
     }
 
-    moveCurrentShape(e: KeyboardEvent, shape:IShape): void {
+    moveCurrentShape(e: KeyboardEvent, shape: IShape): void {
         console.log(e.key);
 
         switch (e.key) {

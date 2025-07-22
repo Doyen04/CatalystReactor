@@ -220,7 +220,7 @@ class TextCursor {
         this.startCursorBlink()
     }
 
-    private startCursorBlink(): void {
+    startCursorBlink(): void {
         this.stopCursorBlink();
         this.visible = true;
         this.blinkInterval = setInterval(() => {
@@ -230,7 +230,7 @@ class TextCursor {
         }, this.blinkSpeed);
     }
 
-    private stopCursorBlink(): void {
+    stopCursorBlink(): void {
         if (this.blinkInterval) {
             clearInterval(this.blinkInterval);
             this.blinkInterval = null;

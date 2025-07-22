@@ -51,6 +51,7 @@ class PText extends Shape {
     }
     startEditing() {
         this.isEdit = true
+        this.cursor.startCursorBlink()
     }
     canEdit(): boolean {
         return this.isEdit
@@ -212,7 +213,11 @@ class PText extends Shape {
         this.cursor.setCursorPos(start);
         this.clearSelection();
     }
-
+    selectAll(){
+        this.selectionStart = 0
+        this.selectionEnd = this.text.length
+        this.setUpParagraph()
+    }
     insertText(char: string, shiftKey: boolean): void {
         if (this.hasSelection) {
             this.deleteSelection()
@@ -344,7 +349,7 @@ class PText extends Shape {
             this.textStyle.lineHeight, this.paragraph)
 
         if (shiftKey) this.selectionEnd = this.cursor.cursorPosIndex
-
+        this.setUpParagraph()
     }
 
     getText(): string {
@@ -386,11 +391,11 @@ class PText extends Shape {
         }
     }
     override cleanUp(): void {
-        this.cursor.destroy()
+        this.cursor.stopCursorBlink()
         this.diableEditing()
     }
     override destroy(): void {
-        this.cursor.destroy()
+        this.cursor.stopCursorBlink()
         if (this.builder) {
             this.builder.delete()
         }
