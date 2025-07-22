@@ -20,7 +20,7 @@ class KeyboardTool {
         switch (e.key) {
             case 'Delete':
             case 'Backspace':
-                this.deleteSelected(e.key);
+                this.deleteSelected(e);
                 break;
             case 'Escape':
                 this.handleEscape();
@@ -53,12 +53,8 @@ class KeyboardTool {
     private handleTextKey(e: KeyboardEvent) {
         this.currentTool.handleTextKey(e)
     }
-    private deleteSelected(key: string) {
-        if (key == 'Delete') {
-
-        } else if (key == 'Backspace') {
-
-        }
+    private deleteSelected(e: KeyboardEvent) {
+       this.currentTool.handleDelete(e)
     }
     private handleEscape() {
 

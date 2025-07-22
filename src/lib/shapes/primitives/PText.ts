@@ -170,6 +170,7 @@ class PText extends Shape {
             console.warn('PText: Attempting fallback rendering');
         }
     }
+
     setCursorPosFromCoord(x: number, y: number) {
         this.clearSelection()
         this.cursor.setCursorPositionFromCoord(
@@ -179,6 +180,7 @@ class PText extends Shape {
             this.textStyle.lineHeight, x, y)
         this.setUpParagraph()
     }
+
     private deleteSelection(): void {
         const start = Math.min(this.selectionStart, this.selectionEnd);
         const end = Math.max(this.selectionStart, this.selectionEnd);
@@ -188,11 +190,14 @@ class PText extends Shape {
         this.cursor.setCursorPos(start);
         this.clearSelection();
     }
+
     selectAll() {
         this.selectionStart = 0
         this.selectionEnd = this.text.length
+        this.cursor.setCursorPos(this.selectionEnd)
         this.setUpParagraph()
     }
+
     insertText(char: string, shiftKey: boolean): void {
         if (this.hasSelection) {
             this.deleteSelection()

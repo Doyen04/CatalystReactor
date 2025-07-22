@@ -64,6 +64,7 @@ class SelectTool extends Tool {
             }
         }
     }
+
     override handlePointerUp() {
         EventQueue.trigger(FinaliseSelection)
         EventQueue.trigger(UpdateModifierHandlesPos)
@@ -120,6 +121,26 @@ class SelectTool extends Tool {
 
             if (shape.canEdit()) {
                 shape.insertText('\n', e.shiftKey)
+            }
+        }
+    }
+
+    override handleDelete(e: KeyboardEvent): void {
+         if (this.currentScene) {
+            const shape = this.currentScene.getShape()
+
+            if (shape.canEdit()) {
+                switch (e.key) {
+                    case "Delete":
+                        shape.deleteText('forward')
+                        break;
+                    case "Backspace":
+                        shape.deleteText('backward')
+                        break;
+                    default:
+                        console.log('delete direction not implemented');
+                        break;
+                }
             }
         }
     }

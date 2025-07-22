@@ -57,6 +57,7 @@ export interface IShape {
     selectAll?(): void;
     insertText?(char: string, shiftKey: boolean): void;
     setCursorPosFromCoord?(x: number, y: number): void;
+    deleteText?(direction: 'forward' | 'backward'): void;
     moveCursor?(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean): void;
     setStrokeColor(stroke: string | number[]): void;
     setFill(stroke: string | number[]): void;

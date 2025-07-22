@@ -34,6 +34,9 @@ abstract class Tool {
     handleEnter(e: KeyboardEvent): void {
 
     };
+    handleDelete(e:KeyboardEvent):void{
+
+    }
 
     handlePointerMove(dragStart: Coord, e: MouseEvent): void {
 
