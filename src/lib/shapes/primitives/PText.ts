@@ -29,6 +29,7 @@ class PText extends Shape {
     private paragraph: Paragraph | null;
     private selectionStart: number = 0;
     private selectionEnd: number = 0;
+    private isEdit: boolean = true;
 
     constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
@@ -44,6 +45,15 @@ class PText extends Shape {
         this.insertText(this.text, false)
         this.calculateBoundingRect();
 
+    }
+    diableEditing() {
+        this.isEdit = false
+    }
+    startEditing() {
+        this.isEdit = true
+    }
+    canEdit(): boolean {
+        return this.isEdit
     }
     private setTextStyle() {
         if (!this.resource) {
@@ -138,7 +148,7 @@ class PText extends Shape {
             bottom: this.y + ((this.height > 0) ? this.height : this.THeight),
         };
     }
-    
+
     override setDim(width: number, height: number): void {
         this.width = width
         this.height = height
@@ -162,7 +172,7 @@ class PText extends Shape {
         this.cursor.setCoord(this.x, this.y)
 
         this.calculateBoundingRect()
-        
+
     }
 
     setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -375,7 +385,9 @@ class PText extends Shape {
             height: ((this.height > 0) ? this.height : this.THeight)
         }
     }
-
+    override cleanUp(): void {
+        this.cursor.destroy()
+    }
     override destroy(): void {
         this.cursor.destroy()
         if (this.builder) {

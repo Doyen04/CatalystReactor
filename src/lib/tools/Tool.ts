@@ -14,7 +14,7 @@ abstract class Tool {
     setUpEvent() {
 
     }
-    get createdScene(): SceneNode | null {
+    get currentScene(): SceneNode | null {
         const { getActiveScene } = useSceneStore.getState()
         return getActiveScene()
     }
@@ -25,14 +25,21 @@ abstract class Tool {
         // EventQueue.trigger(Render)
         setDefaultTool()
     }
-    handlePointerMove(dragStart: Coord, e: MouseEvent) {
+    handleTextKey(e: KeyboardEvent): void {
 
-    }
-    
-    abstract handlePointerDrag(dragStart: Coord, e: MouseEvent): void 
+    };
+    handleArrowKeys(e: KeyboardEvent): void {
+
+    };
+    handleEnter(e: KeyboardEvent): void {
+
+    };
+
+    handlePointerMove(dragStart: Coord, e: MouseEvent): void {
+
+    };
+    abstract handlePointerDrag(dragStart: Coord, e: MouseEvent): void;
     abstract handlePointerDown(dragStart: Coord, e: MouseEvent): void;
-    abstract handleKeyDown(e: KeyboardEvent): void;
-    abstract handleKeyUp(e: KeyboardEvent): void;
 
     toolChange(): void {
         console.log('tool changed');

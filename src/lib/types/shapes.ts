@@ -31,7 +31,7 @@ export interface IShape {
     getModifierHandles(size: number, fill: string, strokeColor: string | number[]): any[];
     getSizeModifierHandlesPos(handle: Handle): Coord;
     getModifierHandlesPos(handle: Handle): Coord;
-    
+
     drawDefault(): void;
     pointInShape(x: number, y: number): boolean;
     moveShape(mx: number, my: number): void;
@@ -50,9 +50,14 @@ export interface IShape {
     setRatio?(r: number): void;
     getCenterCoord?(): { x: number, y: number };
     updateBorderRadius?(r: number, pos: Corner): void;
+    diableEditing?(): void;
+    startEditing?(): void;
     setArc?(startAngle: number, endAngle: number): void;
+    canEdit?(): boolean;
+    moveCursor?(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean): void;
     setStrokeColor(stroke: string | number[]): void;
     setFill(stroke: string | number[]): void;
+    cleanUp(): void;
 }
 
 export interface IShapeModifier {

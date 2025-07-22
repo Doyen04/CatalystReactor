@@ -95,6 +95,11 @@ class SceneManager {
 
     handleSelectionCleanUp() {
         this.shapeMod.handleRemoveModifer()
+
+        const { setCurrentScene, getActiveScene } = useSceneStore.getState()
+        const active = getActiveScene()
+        active.getShape().cleanUp()
+        setCurrentScene(null)
         this.modifierSelected = false
     }
 
@@ -106,8 +111,8 @@ class SceneManager {
         } else {
             const result = this.selectShape(x, y)
             if (result) {
-                const { setSelectedScene } = useSceneStore.getState()
-                setSelectedScene(result)
+                const { setCurrentScene } = useSceneStore.getState()
+                setCurrentScene(result)
             }
         }
     }
@@ -203,10 +208,10 @@ class SceneManager {
             const scene: SceneNode = new SceneNode();
             scene.shape = shape
             this.addNode(scene);
-            this.transientScene = scene;
+            this.transientScene = scene;//check this
             this.shapeMod.setShape(shape);
-            const { setCreatedScene } = useSceneStore.getState()
-            setCreatedScene(scene)
+            const { setCurrentScene } = useSceneStore.getState()
+            setCurrentScene(scene)
         }
     }
 
@@ -231,6 +236,7 @@ class SceneManager {
             console.log('Shape removed: too small add default size');
         }
     }
+
     destroy() {
         if (this.scene) {
             this.scene.destroy()

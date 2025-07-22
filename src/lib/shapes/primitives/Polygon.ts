@@ -169,7 +169,9 @@ class Polygon extends Shape {
     override getDim(): { width: number, height: number } {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
-
+    override cleanUp(): void {
+        
+    }
     override destroy(): void {
 
     }

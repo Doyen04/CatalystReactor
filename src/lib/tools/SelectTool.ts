@@ -1,6 +1,7 @@
-import { Coord } from "@lib/types/shapes";
+import { Coord, IShape } from "@lib/types/shapes";
 import Tool from "./Tool";
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
+import PText from "@lib/shapes/primitives/PText";
 
 const { ShowHovered, SelectObject, DragObject, FinaliseSelection, Render, UpdateModifierHandlesPos } = EventTypes
 
@@ -27,7 +28,6 @@ class SelectTool extends Tool {
 
         if (!this.lastMouseCoord) {
             console.log('mousecoord is null');
-
             return
         }
 
@@ -41,62 +41,88 @@ class SelectTool extends Tool {
         // EventQueue.trigger(Render)
     }
 
-    override handleKeyDown(e: KeyboardEvent): void {
-        // const shape = this.createdScene.getShape()
-        // console.log(shape);
+    override handleArrowKeys(e: KeyboardEvent): void {
+        if (this.currentScene) {
+            const shape = this.currentScene.getShape()
 
-        // if (shape instanceof PText) {
-        //     switch (e.key) {
-        //         case 'ArrowLeft':
-        //             shape.moveCursor('left', e.shiftKey);
-        //             break;
-        //         case 'ArrowRight':
-        //             shape.moveCursor('right', e.shiftKey);
-        //             break;
-        //         case 'ArrowUp':
-        //             shape.moveCursor('up', e.shiftKey);
-        //             break;
-        //         case 'ArrowDown':
-        //             shape.moveCursor('down', e.shiftKey);
-        //             break;
-        //         case 'Backspace':
-        //             shape.deleteText('backward');
-        //             break;
-        //         case 'Delete':
-        //             shape.deleteText('forward');
-        //             break;
-        //         case 'Enter':
-        //             shape.insertText('\n', e.shiftKey);
-        //             break;
-        //         default:
-        //             // Insert regular characters
-        //             if (e.ctrlKey) {
-        //                 this.handleControlKey(e.key)
-        //             }
-        //             else if (e.key.length === 1) {
-        //                 shape.insertText(e.key, e.shiftKey);
-        //             }
-        //     }
-        // }
-        // EventQueue.trigger(Render)
+            if (shape instanceof PText && shape.canEdit()) {
+                this.moveTextCursor(e, shape)
+            } else {
+                this.moveCurrentShape(e, shape)
+            }
+        }
     }
 
-    handleControlKey(e: string) {
-        // const shape = this.createdScene.getShape()
-        // if (shape instanceof PText) {
-        //     switch (e.toLowerCase()) {
-        //         case 'c':
-        //             shape.copyText();
-        //             break;
-        //         case 'v':
-        //             shape.pasteText();
-        //             break;
-        //     }
-        // }
+    override handleTextKey(e: KeyboardEvent): void {
+        if (this.currentScene) {
+            const shape = this.currentScene.getShape()
+
+            if (shape instanceof PText && shape.canEdit()) {
+                this.insertTextIntoShape(e, shape)
+            }
+        }
     }
 
-    override handleKeyUp(e: KeyboardEvent): void {
+    override handleEnter(e: KeyboardEvent) {
+        if (this.currentScene) {
+            const shape = this.currentScene.getShape()
 
+            if (shape instanceof PText && shape.canEdit()) {
+                shape.insertText('\n', e.shiftKey)
+            }
+        }
+    }
+
+    insertTextIntoShape(e: KeyboardEvent, shape:IShape) {
+        if (shape instanceof PText) {
+            shape.insertText(e.key, e.shiftKey)
+        }
+    }
+
+    moveTextCursor(e: KeyboardEvent, shape:IShape) {
+        if (shape instanceof PText) {
+            switch (e.key) {
+                case 'ArrowUp':
+                    shape.moveCursor('up', e.shiftKey)
+                    break;
+                case 'ArrowDown':
+                    shape.moveCursor('down', e.shiftKey)
+                    break;
+                case 'ArrowLeft':
+                    shape.moveCursor('left', e.shiftKey)
+                    break;
+                case 'ArrowRight':
+                    shape.moveCursor('right', e.shiftKey)
+                    break;
+                default:
+                    console.log('direction not implemented');
+                    break;
+            }
+        }
+        EventQueue.trigger(UpdateModifierHandlesPos)
+    }
+
+    moveCurrentShape(e: KeyboardEvent, shape:IShape): void {
+        console.log(e.key);
+
+        switch (e.key) {
+            case 'ArrowUp':
+                shape.moveShape(0, -2)
+                break;
+            case 'ArrowDown':
+                shape.moveShape(0, 2)
+                break;
+            case 'ArrowLeft':
+                shape.moveShape(-2, 0)
+                break;
+            case 'ArrowRight':
+                shape.moveShape(2, 0)
+                break;
+            default:
+                console.log('direction not implemented');
+                break;
+        }
+        EventQueue.trigger(UpdateModifierHandlesPos)
     }
 }
 

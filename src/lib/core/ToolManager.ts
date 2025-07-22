@@ -4,14 +4,16 @@ import Tool from '@/lib/tools/SelectTool'
 import EventQueue, { EventTypes } from './EventQueue'
 import { ToolType } from '@lib/types/shapeTypes'
 import ImageTool from '@lib/tools/ImageTool'
+import KeyboardTool from '@lib/tools/KeyboardTool'
 
 const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes
 
 class ToolManager {
     currentTool: Tool
+    keyboardTool: KeyboardTool;
     constructor() {
         this.currentTool = new SelectTool()
-
+        this.keyboardTool = new KeyboardTool(this.currentTool)
         this.setUpEvent()
     }
 
@@ -52,6 +54,7 @@ class ToolManager {
         if (tool !== this.currentTool) {
             if (this.currentTool) this.currentTool.toolChange()
             this.currentTool = tool
+            this.keyboardTool.setCurrentTool(tool)
         }
     }
     setUpEvent() {
@@ -65,8 +68,8 @@ class ToolManager {
         EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag.bind(this.currentTool))
         EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove.bind(this.currentTool))
         EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp.bind(this.currentTool))
-        EventQueue.subscribe(KeyDown, this.currentTool.handleKeyDown.bind(this.currentTool))
-        EventQueue.subscribe(KeyUp, this.currentTool.handleKeyUp.bind(this.currentTool))
+        EventQueue.subscribe(KeyDown, this.keyboardTool.handleKeyDown.bind(this.keyboardTool))
+        EventQueue.subscribe(KeyUp, this.keyboardTool.handleKeyUp.bind(this.keyboardTool))
         EventQueue.subscribe(ToolChange, this.handleToolChange.bind(this))
 
     }
@@ -75,11 +78,11 @@ class ToolManager {
         EventQueue.unSubscribeAll(PointerDrag)
         EventQueue.unSubscribeAll(PointerMove)
         EventQueue.unSubscribeAll(PointerUp)
-        EventQueue.unSubscribeAll(KeyDown)
-        EventQueue.unSubscribeAll(KeyUp)
+         EventQueue.unSubscribeAll(KeyDown)
+        EventQueue.unSubscribeAll(KeyUp) 
         EventQueue.unSubscribeAll(ToolChange)
     }
-    destroy(){
+    destroy() {
         this.removeEvent()
         this.currentTool = null
     }

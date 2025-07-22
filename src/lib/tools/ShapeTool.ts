@@ -2,6 +2,7 @@ import { ShapeType } from "@lib/types/shapes";
 import Tool from "./Tool";
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import { Coord } from "@lib/types/shapes";
+import PText from "@lib/shapes/primitives/PText";
 
 const { CreateScene, DrawScene, UpdateModifierHandlesPos, Render } = EventTypes
 
@@ -16,19 +17,13 @@ class ShapeTool extends Tool {
         EventQueue.trigger(CreateScene, this.shapeType, dragStart.x, dragStart.y)
     }
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-        if (this.createdScene) {
+        if (this.currentScene) {
             EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
         }
         EventQueue.trigger(UpdateModifierHandlesPos)
     };
     setShape(shape: ShapeType) {
         this.shapeType = shape
-    }
-    override handleKeyDown(e: KeyboardEvent): void {
-
-    }
-    override handleKeyUp(e: KeyboardEvent): void {
-
     }
 }
 

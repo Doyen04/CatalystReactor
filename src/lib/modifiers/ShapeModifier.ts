@@ -116,7 +116,6 @@ class ShapeModifier {
 
         for (const resizer of this.handles) {
             const { x, y } = this.shape.getModifierHandlesPos(resizer);
-            console.log(x, y, 'resizer pos');
             resizer.updatePosition(x, y);
         }
 

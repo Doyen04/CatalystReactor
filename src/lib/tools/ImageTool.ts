@@ -29,31 +29,31 @@ class ImageTool extends Tool {
         super.handlePointerUp?.(dragStart, e);
     }
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-        if (this.createdScene) {
+        if (this.currentScene) {
             EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
         }
         EventQueue.trigger(UpdateModifierHandlesPos)
     };
 
-    override handleKeyDown(e: KeyboardEvent): void {
-        if (e.key === 'Escape') {
-            const { clearSelectedImage } = useImageStore.getState();
-            clearSelectedImage();
-            console.log('Image placement cancelled, clearing image store');
-        }
-    }
-    override handleKeyUp(e: KeyboardEvent): void {
+    // override handleKeyDown(e: KeyboardEvent): void {
+    //     if (e.key === 'Escape') {
+    //         const { clearSelectedImage } = useImageStore.getState();
+    //         clearSelectedImage();
+    //         console.log('Image placement cancelled, clearing image store');
+    //     }
+    // }
+    // override handleKeyUp(e: KeyboardEvent): void {
 
-    }
+    // }
 
-    override toolChange(): void {
-        const { clearSelectedImage } = useImageStore.getState();
-        clearSelectedImage();
+    // override toolChange(): void {
+    //     const { clearSelectedImage } = useImageStore.getState();
+    //     clearSelectedImage();
 
-        super.toolChange()
-        console.log('ImageTool cleaned up');
+    //     super.toolChange()
+    //     console.log('ImageTool cleaned up');
 
-    }
+    // }
 }
 
 export default ImageTool;

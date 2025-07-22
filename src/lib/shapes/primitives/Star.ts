@@ -180,6 +180,9 @@ class Star extends Shape {
 
         return inside;
     }
+    override cleanUp(): void {
+        
+    }
     override destroy(): void {
 
     }

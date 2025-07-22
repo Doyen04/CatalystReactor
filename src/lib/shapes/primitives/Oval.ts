@@ -296,7 +296,9 @@ class Oval extends Shape {
     rotate(r: number) {
         this.rotation = r
     }
-
+    override cleanUp(): void {
+        
+    }
     override destroy(): void {
 
     }

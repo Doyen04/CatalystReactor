@@ -220,7 +220,9 @@ class PImage extends Rectangle {
             path.delete(); // Clean up WASM memory
         }
     }
-
+    override cleanUp(): void {
+        
+    }
     override destroy(): void {
 
     }

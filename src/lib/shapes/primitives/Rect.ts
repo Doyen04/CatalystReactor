@@ -285,7 +285,9 @@ class Rectangle extends Shape {
             y >= this.y &&
             y <= this.y + this.height;
     }
-
+    override cleanUp(): void {
+        
+    }
     override destroy(): void {
 
     }
