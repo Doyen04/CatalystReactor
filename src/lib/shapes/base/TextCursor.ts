@@ -57,7 +57,7 @@ class TextCursor {
         this.resource.strokePaint.setColor(this.resource.canvasKit.BLACK);
         this.resource.strokePaint.setStrokeWidth(2)
     }
-    
+
     setCursorPositionFromCoord(paragraph: Paragraph, text: string, fontSize: number, lineHeight: number, x: number, y: number) {
         const { pos } = paragraph.getGlyphPositionAtCoordinate(x - this.x, y - this.y);
 
@@ -177,7 +177,6 @@ class TextCursor {
             if (rects.length > 0) {
                 const charX = rects[0].rect[0]; // left edge of character
                 const charRight = rects[0].rect[2]; // right edge of character
-                console.log(charX, charRight, targetX);
 
                 if (targetX >= charX && targetX <= charRight) {
                     const charMidpoint = (charX + charRight) / 2;
