@@ -48,6 +48,7 @@ class PText extends Shape {
     }
     diableEditing() {
         this.isEdit = false
+        this.cursor.stopCursorBlink()
     }
     startEditing() {
         this.isEdit = true
@@ -213,7 +214,7 @@ class PText extends Shape {
         this.cursor.setCursorPos(start);
         this.clearSelection();
     }
-    selectAll(){
+    selectAll() {
         this.selectionStart = 0
         this.selectionEnd = this.text.length
         this.setUpParagraph()
