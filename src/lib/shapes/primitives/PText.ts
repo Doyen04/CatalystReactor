@@ -103,10 +103,6 @@ class PText extends Shape {
         return { ...this.textStyle }
     }
 
-    updateStyles() {
-        this.setStyles(this.textStyle)
-    }
-
     pointInShape(x: number, y: number): boolean {
         const w = (this.width == 0) ? this.TWidth : this.width
         const h = (this.height == 0) ? this.THeight : this.height
@@ -340,14 +336,14 @@ class PText extends Shape {
     setFontSize(size: number): void {
         this.textStyle.fontSize = size;
 
-        this.updateStyles();//i tink it is not comp
+        //work on this
         this.calculateBoundingRect();//i tink it is not comp
     }
 
     setFontFamily(fontFamily: string): void {
         this.textStyle.fontFamily.unshift(fontFamily);
 
-        this.updateStyles();//i tink it is not comp
+       //work on this
         this.calculateBoundingRect();//i tink it is not comp
     }
 
