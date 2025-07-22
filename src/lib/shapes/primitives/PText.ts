@@ -99,34 +99,6 @@ class PText extends Shape {
         return [this.resource.textStyle, this.resource.paragraphStyle]
     }
 
-    //remove this function
-    private extractFontNames(): string[] {
-        if (!this.resource.canvasKit || !this.resource.fontData.length) return [];
-
-        const fontNames: string[] = [];
-
-        try {
-            // Create a temporary FontMgr to parse font data
-            const fontMgr = this.resource.fontMgr.FromData(...this.resource.fontData);
-
-            // Get the number of font families
-            const familyCount = fontMgr.countFamilies();
-
-            for (let i = 0; i < familyCount; i++) {
-                const familyName = fontMgr.getFamilyName(i);
-                if (familyName) {
-                    fontNames.push(familyName);
-                    console.log(`Font family ${i}: ${familyName}`);
-                }
-            }
-        }
-        catch (error) {
-            console.error('Error extracting font names:', error);
-        }
-
-        return fontNames;
-    }
-
     get getTextStyle(): TextStyleProp {
         return { ...this.textStyle }
     }
