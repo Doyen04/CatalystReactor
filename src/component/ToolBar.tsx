@@ -9,6 +9,7 @@ import { useImageStore } from "@hooks/imageStore";
 import { loadImage } from "@/util/loadFile";
 
 function ToolBar() {
+
     const { openFilePicker } = useFilePicker({
         accept: 'image/*',
         multiple: true,
@@ -72,16 +73,20 @@ function ToolBar() {
             tip: 'Image'
         }
     ];
+
     const TextTool = {
         toolName: 'text',
         icon: <Type className={"w-4 h-4"} />,
         tip: 'Text'
     }
+
     const { setTool, tool: currentTool } = useToolStore()
     if (!currentTool) {
         setTool(SelectTools[0])
     }
+
     const isOpen = useRef(false)
+    
     useEffect(() => {
         if (currentTool?.toolName === 'img' && !isOpen.current) {
             console.log('open file picker');

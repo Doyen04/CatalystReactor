@@ -1,3 +1,4 @@
+import { useToolStore } from "@hooks/useTool";
 import EventQueue, { EventTypes } from "@lib/core/EventQueue"
 import SceneNode from "@lib/core/SceneGraph";
 import { Coord } from "@lib/types/shapes";
@@ -32,9 +33,11 @@ abstract class Tool {
         this.selectedScene = node
     }
     handlePointerUp(coord: Coord, e: MouseEvent) {
+        const { setDefaultTool } = useToolStore.getState()
         EventQueue.trigger(FinalizeShape)
         EventQueue.trigger(UpdateModifierHandlesPos)
         EventQueue.trigger(Render)
+        setDefaultTool()
     }
     handlePointerMove(dragStart: Coord, e: MouseEvent) {
 
@@ -44,9 +47,8 @@ abstract class Tool {
     abstract handleKeyDown(e: KeyboardEvent): void;
     abstract handleKeyUp(e: KeyboardEvent): void;
 
-    toolChange(): void {console.log('tool changed');
-    
-
+    toolChange(): void {
+        console.log('tool changed');
         if (!this.createdScene) return
         this.createdScene = null
     }

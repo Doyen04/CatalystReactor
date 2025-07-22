@@ -42,7 +42,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                         {...props}
                     >
                         {tool.icon}
-                        {children}
+                        {children} 
                     </button>
                     {
                         (tool.tip) &&

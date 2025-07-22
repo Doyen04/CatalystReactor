@@ -46,11 +46,12 @@ class ImageTool extends Tool {
     override handleKeyUp(e: KeyboardEvent): void {
 
     }
-    override cleanUp(): void {
+    
+    override toolChange(): void {
         const { clearSelectedImage } = useImageStore.getState();
         clearSelectedImage();
 
-        super.cleanUp()
+        super.toolChange()
         console.log('ImageTool cleaned up');
         
     }
