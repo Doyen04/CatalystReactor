@@ -120,7 +120,7 @@ abstract class Shape implements IShape {
     }
 
     setHovered(bool: boolean) {
-        EventQueue.trigger(Render)
+        // EventQueue.trigger(Render)
         this.isHover = bool
     }
     abstract destroy(): void;

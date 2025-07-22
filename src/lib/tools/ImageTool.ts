@@ -23,7 +23,7 @@ class ImageTool extends Tool {
             EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
         }
         EventQueue.trigger(UpdateModifierHandlesPos)
-        EventQueue.trigger(Render)
+        // EventQueue.trigger(Render)
     }
     override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
 

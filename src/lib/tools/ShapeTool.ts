@@ -19,7 +19,7 @@ class ShapeTool extends Tool {
 
         EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
         EventQueue.trigger(UpdateModifierHandlesPos)
-        EventQueue.trigger(Render)
+        // EventQueue.trigger(Render)
     }
     setShape(shape: ShapeType) {
         this.shapeType = shape

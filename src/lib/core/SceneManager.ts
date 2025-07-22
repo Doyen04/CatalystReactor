@@ -4,10 +4,11 @@ import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 import EventQueue, { EventTypes } from './EventQueue'
 import { Coord, ShapeType } from "@lib/types/shapes";
 import PImage from "@lib/shapes/primitives/Image";
+import { useSceneStore } from "@hooks/sceneStore";
 
 const {
-    FinalizeShape, DrawScene, CreateScene, SceneCreated, FinaliseSelection,
-    ShowHovered, SelectObject,SceneSelected,
+    FinalizeShape, DrawScene, CreateScene, FinaliseSelection,
+    ShowHovered, SelectObject,
     DragObject,
 } = EventTypes
 
@@ -105,7 +106,8 @@ class SceneManager {
         } else {
             const result = this.selectShape(x, y)
             if (result) {
-                EventQueue.trigger(SceneSelected, result)
+                const { setSelectedScene } = useSceneStore.getState()
+                setSelectedScene(result)
             }
         }
     }
@@ -137,7 +139,6 @@ class SceneManager {
             console.log('no selected shape');
             return
         }
-
         this.selected.shape.moveShape(dx, dy)
     }
 
@@ -204,7 +205,8 @@ class SceneManager {
             this.addNode(scene);
             this.transientScene = scene;
             this.shapeMod.setShape(shape);
-            EventQueue.trigger(SceneCreated, scene)
+            const { setCreatedScene } = useSceneStore.getState()
+            setCreatedScene(scene)
         }
     }
 

@@ -140,7 +140,7 @@ class ShapeModifier {
         return this.shape
     }
     setIsHovered(bool: boolean) {
-        EventQueue.trigger(Render)
+        // EventQueue.trigger(Render)
         this.isHovered = bool
     }
     CanDraw(): boolean {
