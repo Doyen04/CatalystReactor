@@ -17,8 +17,6 @@ class KeyboardTool {
         this.currentTool = tool
     }
     handleKeyDown(e: KeyboardEvent) {
-        console.log('keyboard');
-        console.log('inside keybooard');
         switch (e.key) {
             case 'Delete':
             case 'Backspace':

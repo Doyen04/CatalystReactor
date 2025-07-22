@@ -24,7 +24,6 @@ class PText extends Shape {
     private TWidth: number = 0;
     private THeight: number = 0;
     private cursor: TextCursor;
-    private fontMgr: FontMgr;
     private builder: ParagraphBuilder;
     private paragraph: Paragraph | null;
     private selectionStart: number = 0;
@@ -38,7 +37,6 @@ class PText extends Shape {
         this.cursor = new TextCursor(x, y, 0)
 
         this.paragraph = null
-        this.fontMgr = null
         this.builder = null
         this.setTextStyle()
         this.setUpBuilder()
@@ -245,14 +243,8 @@ class PText extends Shape {
 
             return
         }
-        const fontData = this.resource.fontData
-
         const [textStyle, paragraphStyle] = this.setStyles(this.textStyle);
-
-        this.fontMgr = this.resource.fontMgr.FromData(...fontData)
-        console.log(this.fontMgr, fontData);
-
-        this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.fontMgr);
+        this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.resource.fontMgr);
 
     }
 
@@ -376,12 +368,9 @@ class PText extends Shape {
         if (this.builder) {
             this.builder.delete()
         }
-        if (this.fontMgr) {
-            this.fontMgr.delete()
-        }
-        // if(this.paragraph){
-        //     this.paragraph.delete()
-        // }// not sure if i should delete
+        if(this.paragraph){
+            this.paragraph.delete()
+        }// not sure if i should delete
         //add more from this class
     }
 }
