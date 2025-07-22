@@ -194,7 +194,7 @@ class PText extends Shape {
     selectAll() {
         this.selectionStart = 0
         this.selectionEnd = this.text.length
-        this.cursor.setCursorPos(this.selectionEnd)
+        this.cursor.setCursorPos(this.text.length)
         this.setUpParagraph()
     }
 
@@ -340,7 +340,7 @@ class PText extends Shape {
     setFontFamily(fontFamily: string): void {
         this.textStyle.fontFamily.unshift(fontFamily);
 
-       //work on this
+        //work on this
         this.calculateBoundingRect();//i tink it is not comp
     }
 
@@ -373,7 +373,7 @@ class PText extends Shape {
         if (this.builder) {
             this.builder.delete()
         }
-        if(this.paragraph){
+        if (this.paragraph) {
             this.paragraph.delete()
         }// not sure if i should delete
         //add more from this class

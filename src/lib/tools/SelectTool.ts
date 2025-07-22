@@ -44,7 +44,7 @@ class SelectTool extends Tool {
         console.log('Single click - normal selection')
         if (this.currentScene ) {
             const shape = this.currentScene.getShape()
-            if (shape.canEdit()) {
+            if (shape.canEdit() && shape.pointInShape(e.offsetX, e.offsetY)) {
                 shape.setCursorPosFromCoord(e.offsetX, e.offsetY)
             }
         }
@@ -54,7 +54,7 @@ class SelectTool extends Tool {
 
     private handleDoubleClick(e: MouseEvent) {
         console.log('Double click detected')
-
+        
         if (this.currentScene) {
             const shape = this.currentScene.getShape()
 
