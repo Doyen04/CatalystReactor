@@ -387,6 +387,7 @@ class PText extends Shape {
     }
     override cleanUp(): void {
         this.cursor.destroy()
+        this.diableEditing()
     }
     override destroy(): void {
         this.cursor.destroy()

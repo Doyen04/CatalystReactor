@@ -59,13 +59,13 @@ class InputManager {
     }
 
     onKeyDown(e: KeyboardEvent) {
-        console.log(e);
+        console.log('e down');
 
         EventQueue.trigger(KeyDown, e)
     }
 
     onKeyUp(e: KeyboardEvent) {
-        console.log(e);
+        console.log('e up');
 
         EventQueue.trigger(KeyUp, e)
     }

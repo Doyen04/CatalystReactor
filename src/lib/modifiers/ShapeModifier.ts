@@ -64,7 +64,7 @@ class ShapeModifier {
             return null
         }
     }
-    handleRemoveModifer() {
+    handleRemoveModiferHandle() {
         if (!this.selectedModifier) return
         this.selectedModifier.isDragging = false
         this.selectedModifier.resetAnchorPoint()

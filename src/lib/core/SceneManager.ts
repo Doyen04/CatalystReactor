@@ -92,14 +92,13 @@ class SceneManager {
 
         return null;
     }
-
+    
+    cleanUp() {
+        this.handleTinyShapes()
+        this.transientScene = null
+    }
     handleSelectionCleanUp() {
-        this.shapeMod.handleRemoveModifer()
-
-        const { setCurrentScene, getActiveScene } = useSceneStore.getState()
-        const active = getActiveScene()
-        active.getShape().cleanUp()
-        setCurrentScene(null)
+        this.shapeMod.handleRemoveModiferHandle()
         this.modifierSelected = false
     }
 
@@ -110,9 +109,15 @@ class SceneManager {
             return
         } else {
             const result = this.selectShape(x, y)
+            const { setCurrentScene, getActiveScene } = useSceneStore.getState()
             if (result) {
-                const { setCurrentScene } = useSceneStore.getState()
                 setCurrentScene(result)
+            } else {
+                const active = getActiveScene()
+                if (active) {
+                    active.getShape().cleanUp()
+                }
+                setCurrentScene(null)
             }
         }
     }
@@ -215,10 +220,6 @@ class SceneManager {
         }
     }
 
-    cleanUp() {
-        this.handleTinyShapes()
-        this.transientScene = null
-    }
 
     handleTinyShapes(): void {
         if (!this.transientScene?.shape) return;

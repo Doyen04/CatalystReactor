@@ -2,6 +2,7 @@ import { Coord, IShape } from "@lib/types/shapes";
 import Tool from "./Tool";
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import PText from "@lib/shapes/primitives/PText";
+import { useSceneStore } from "@hooks/sceneStore";
 
 const { ShowHovered, SelectObject, DragObject, FinaliseSelection, Render, UpdateModifierHandlesPos } = EventTypes
 
@@ -54,9 +55,10 @@ class SelectTool extends Tool {
     }
 
     override handleTextKey(e: KeyboardEvent): void {
+        
         if (this.currentScene) {
             const shape = this.currentScene.getShape()
-
+            
             if (shape instanceof PText && shape.canEdit()) {
                 this.insertTextIntoShape(e, shape)
             }
