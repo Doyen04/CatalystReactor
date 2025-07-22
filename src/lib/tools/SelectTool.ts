@@ -42,6 +42,12 @@ class SelectTool extends Tool {
     }
     private handleSingleClick(e: MouseEvent) {
         console.log('Single click - normal selection')
+        if (this.currentScene ) {
+            const shape = this.currentScene.getShape()
+            if (shape.canEdit()) {
+                shape.setCursorPosFromCoord(e.offsetX, e.offsetY)
+            }
+        }
         EventQueue.trigger(SelectObject, e.offsetX, e.offsetY)
         // EventQueue.trigger(Render)
     }

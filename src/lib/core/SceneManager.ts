@@ -109,7 +109,7 @@ class SceneManager {
             return
         } else {
             const result = this.selectShape(x, y)
-            const { setCurrentScene, getActiveScene } = useSceneStore.getState()
+            const { setCurrentScene, getActiveScene } = useSceneStore.getState()//update
             if (result) {
                 setCurrentScene(result)
             } else {

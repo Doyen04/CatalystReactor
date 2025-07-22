@@ -57,6 +57,13 @@ class TextCursor {
         this.resource.strokePaint.setColor(this.resource.canvasKit.BLACK);
         this.resource.strokePaint.setStrokeWidth(2)
     }
+    setCursorPositionFromCoord(paragraph: Paragraph, text: string, fontSize: number, lineHeight: number, x: number, y: number) {
+        const { pos } = paragraph.getGlyphPositionAtCoordinate(x - this.x, y - this.y);
+        console.log(pos, '0000000');
+
+        this.cursorIndex = pos;
+        this.calculateCursorCoord(text, fontSize, lineHeight, paragraph)
+    }
 
     calculateCursorCoord(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph) {
         const cursorPos = this.calculateCursorRect(text, fontSize, lineHeight, paragraph);
@@ -206,7 +213,7 @@ class TextCursor {
         const { below } = this.findCurrentAboveBelowLine(lines);
         if (below == null) return this.cursorIndex;
 
-       const coord = this.calculateCursorRect(text, fontSize, lineHeight, paragraph);
+        const coord = this.calculateCursorRect(text, fontSize, lineHeight, paragraph);
 
         return this.findBestIndexInLine(below, coord[0], paragraph);
     }
