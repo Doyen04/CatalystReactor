@@ -40,7 +40,7 @@ class Renderer {
         EventQueue.unSubscribeAll(Render)
     }
     addEvent() {
-        EventQueue.subscribe(CreateSurface, this.makeSurface.bind(this))
+        EventQueue.subscribe(CreateSurface, this.setUpRendering.bind(this))
         EventQueue.subscribe(Render, this.setCanRender.bind(this))
     }
     setCanRender(){

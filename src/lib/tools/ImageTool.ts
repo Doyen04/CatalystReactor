@@ -10,7 +10,7 @@ class ImageTool extends Tool {
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
         const { hasImages, selectedImageFiles } = useImageStore.getState();
         console.log(selectedImageFiles.length, 'selectedImageFiles');
-        
+
         if (!hasImages()) {
             console.warn('No images available. Please select images first.');
             return;
@@ -18,23 +18,22 @@ class ImageTool extends Tool {
 
         EventQueue.trigger(CreateScene, 'img', dragStart.x, dragStart.y)
     }
-    override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-        if (this.createdScene) {
-            EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
-        }
-        EventQueue.trigger(UpdateModifierHandlesPos)
-        // EventQueue.trigger(Render)
-    }
     override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
 
         const { clearSelectedImage, hasNoImages } = useImageStore.getState();
         if (hasNoImages()) {
             clearSelectedImage();
             console.log('Image placement completed, clearing image store');
-            
+
         }
         super.handlePointerUp?.(dragStart, e);
     }
+    override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
+        if (this.createdScene) {
+            EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
+        }
+        EventQueue.trigger(UpdateModifierHandlesPos)
+    };
 
     override handleKeyDown(e: KeyboardEvent): void {
         if (e.key === 'Escape') {
@@ -46,14 +45,14 @@ class ImageTool extends Tool {
     override handleKeyUp(e: KeyboardEvent): void {
 
     }
-    
+
     override toolChange(): void {
         const { clearSelectedImage } = useImageStore.getState();
         clearSelectedImage();
 
         super.toolChange()
         console.log('ImageTool cleaned up');
-        
+
     }
 }
 

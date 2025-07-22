@@ -16,11 +16,11 @@ class ShapeTool extends Tool {
         EventQueue.trigger(CreateScene, this.shapeType, dragStart.x, dragStart.y)
     }
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-
-        EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
+        if (this.createdScene) {
+            EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
+        }
         EventQueue.trigger(UpdateModifierHandlesPos)
-        // EventQueue.trigger(Render)
-    }
+    };
     setShape(shape: ShapeType) {
         this.shapeType = shape
     }

@@ -1,6 +1,5 @@
 import SelectTool from '@/lib/tools/SelectTool'
 import ShapeTool from '@/lib/tools/ShapeTool'
-import TextTool from '@/lib/tools/TextTool'
 import Tool from '@/lib/tools/SelectTool'
 import EventQueue, { EventTypes } from './EventQueue'
 import { ToolType } from '@lib/types/shapeTypes'
@@ -35,7 +34,7 @@ class ToolManager {
                 currentTool = new ShapeTool('polygon')
                 break;
             case 'text':
-                currentTool = new TextTool()
+                currentTool = new ShapeTool('text')
                 break;
             case 'img':
                 currentTool = new ImageTool()
