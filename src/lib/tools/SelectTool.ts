@@ -2,7 +2,7 @@ import { Coord, IShape } from "@lib/types/shapes";
 import Tool from "./Tool";
 import EventQueue, { EventTypes } from "@lib/core/EventQueue"
 
-const { ShowHovered, SelectObject, DragObject, FinaliseSelection, Render, UpdateModifierHandlesPos } = EventTypes
+const { ShowHovered, SelectObject, DragObject, FinaliseSelection, DeleteScene, Render, UpdateModifierHandlesPos } = EventTypes
 
 class SelectTool extends Tool {
     private lastMouseCoord: Coord | null = null
@@ -15,6 +15,7 @@ class SelectTool extends Tool {
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
         this.handleClickCount(e)
     }
+
     private handleClickCount(e: MouseEvent) {
         const currentTime = Date.now()
         if (currentTime - this.lastClickTime > this.doubleClickDelay) {
@@ -33,6 +34,7 @@ class SelectTool extends Tool {
             this.clickCount = 0
         }, this.doubleClickDelay)
     }
+
     private processClick(e: MouseEvent, clickCount: number) {
         if (clickCount >= 2) {
             this.handleDoubleClick(e)
@@ -40,11 +42,12 @@ class SelectTool extends Tool {
             this.handleSingleClick(e)
         }
     }
+
     private handleSingleClick(e: MouseEvent) {
         console.log('Single click - normal selection')
-        if (this.currentScene ) {
+        if (this.currentScene) {
             const shape = this.currentScene.getShape()
-            if (shape.canEdit() && shape.pointInShape(e.offsetX, e.offsetY)) {
+            if (this.canEdit(shape) && shape.pointInShape(e.offsetX, e.offsetY)) {
                 shape.setCursorPosFromCoord(e.offsetX, e.offsetY)
             }
         }
@@ -54,7 +57,7 @@ class SelectTool extends Tool {
 
     private handleDoubleClick(e: MouseEvent) {
         console.log('Double click detected')
-        
+
         if (this.currentScene) {
             const shape = this.currentScene.getShape()
 
@@ -96,7 +99,7 @@ class SelectTool extends Tool {
         if (this.currentScene) {
             const shape = this.currentScene.getShape()
 
-            if (shape.canEdit()) {
+            if (this.canEdit(shape)) {
                 this.moveTextCursor(e, shape)
             } else {
                 this.moveCurrentShape(e, shape)
@@ -109,7 +112,7 @@ class SelectTool extends Tool {
         if (this.currentScene) {
             const shape = this.currentScene.getShape()
 
-            if (shape.canEdit()) {
+            if (this.canEdit(shape)) {
                 shape.insertText(e.key, e.shiftKey)
             }
         }
@@ -119,17 +122,17 @@ class SelectTool extends Tool {
         if (this.currentScene) {
             const shape = this.currentScene.getShape()
 
-            if (shape.canEdit()) {
+            if (this.canEdit(shape)) {
                 shape.insertText('\n', e.shiftKey)
             }
         }
     }
 
     override handleDelete(e: KeyboardEvent): void {
-         if (this.currentScene) {
+        if (this.currentScene) {
             const shape = this.currentScene.getShape()
 
-            if (shape.canEdit()) {
+            if (this.canEdit(shape)) {
                 switch (e.key) {
                     case "Delete":
                         shape.deleteText('forward')
@@ -141,6 +144,9 @@ class SelectTool extends Tool {
                         console.log('delete direction not implemented');
                         break;
                 }
+            } else {
+                console.log('rrrrr');
+                EventQueue.trigger(DeleteScene)
             }
         }
     }
@@ -189,6 +195,18 @@ class SelectTool extends Tool {
                 break;
         }
         EventQueue.trigger(UpdateModifierHandlesPos)
+    }
+
+    canEdit(shape: any) {
+        return typeof (shape as any).canEdit === 'function' && (shape as any).canEdit()
+    }
+
+    override toolChange(): void {
+        super.toolChange()
+        if (this.clickTimer) {
+            clearTimeout(this.clickTimer)
+            this.clickTimer = null
+        }
     }
 }
 

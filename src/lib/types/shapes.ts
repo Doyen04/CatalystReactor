@@ -1,6 +1,28 @@
 import type Handle from "@lib/modifiers/Handles";
 import { Canvas } from "canvaskit-wasm";
 
+export interface Transform {
+    x: number;
+    y: number;
+    rotation?: number;
+    scale?: number;
+    anchorPoint?: number;
+    isFlippedX?: boolean;
+    isFlippedY?: boolean;
+    originalX?: number;
+    originalY?: number;
+}
+
+export interface Size {
+    width: number;
+    height: number;
+}
+
+export interface Properties {
+    transform: Transform;
+    size: Size;
+}
+
 export interface BoundingRect {
     left: number;
     top: number;
@@ -21,8 +43,6 @@ export interface IShape {
     id?: string;
     type?: ShapeType;
     boundingRect: BoundingRect;
-    rotation: number;
-    scale: number;
     fill: string | number[];
     strokeWidth: number;
     strokeColor: string | number[];
@@ -33,6 +53,7 @@ export interface IShape {
     getModifierHandlesPos(handle: Handle): Coord;
 
     drawDefault(): void;
+    getProperties(): Properties;
     pointInShape(x: number, y: number): boolean;
     moveShape(mx: number, my: number): void;
     calculateBoundingRect(): void;

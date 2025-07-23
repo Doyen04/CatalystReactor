@@ -2,11 +2,10 @@ import Handle from '@lib/modifiers/Handles'
 import { SizeRadiusModifierPos } from '@/lib/modifiers/ShapeModifier';
 import Shape from '../base/Shape';
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
-import { Corner } from '@lib/types/shapes';
+import { Corner, Properties, Size } from '@lib/types/shapes';
 
 class Rectangle extends Shape {
-    width: number;
-    height: number;
+    dimension: Size;
     bdradius: {
         'top-left': number,
         'top-right': number,
@@ -14,15 +13,10 @@ class Rectangle extends Shape {
         'bottom-right': number,
         'locked': boolean
     };
-    originalX: number;
-    originalY: number;
-    isFlippedX: boolean;
-    isFlippedY: boolean;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
-        this.width = 0;
-        this.height = 0;
+        this.dimension = { width: 0, height: 0 }
         this.bdradius = {
             'top-left': 0,
             'top-right': 0,
@@ -30,18 +24,18 @@ class Rectangle extends Shape {
             'bottom-right': 0,
             locked: false,
         };
-        this.originalX = x;
-        this.originalY = y;
-        this.isFlippedX = false;
-        this.isFlippedY = false;
+        this.transform.originalX = x;
+        this.transform.originalY = y;
+        this.transform.isFlippedX = false;
+        this.transform.isFlippedY = false;
         this.calculateBoundingRect()
     }
 
     override moveShape(dx: number, dy: number): void {
-        this.x += dx;
-        this.y += dy;
-        this.originalX += dx;
-        this.originalY += dy;
+        this.transform.x += dx;
+        this.transform.y += dy;
+        this.transform.originalX += dx;
+        this.transform.originalY += dy;
         this.calculateBoundingRect();
     }
 
@@ -50,64 +44,64 @@ class Rectangle extends Shape {
         const deltaX = (mx - dragStart.x);
         const deltaY = (my - dragStart.y);
 
-        this.isFlippedX = deltaX < 0;
-        this.isFlippedY = deltaY < 0;
+        this.transform.isFlippedX = deltaX < 0;
+        this.transform.isFlippedY = deltaY < 0;
 
-        this.originalX = dragStart.x;
-        this.originalY = dragStart.y;
+        this.transform.originalX = dragStart.x;
+        this.transform.originalY = dragStart.y;
 
         if (shiftKey) {
             const size = Math.max(Math.abs(deltaX), Math.abs(deltaY));
-            this.width = size;
-            this.height = size;
+            this.dimension.width = size;
+            this.dimension.height = size;
 
             if (deltaX >= 0) {
-                this.x = this.originalX;
+                this.transform.x = this.transform.originalX;
             } else {
-                this.x = this.originalX - size;
+                this.transform.x = this.transform.originalX - size;
             }
 
             if (deltaY >= 0) {
-                this.y = this.originalY;
+                this.transform.y = this.transform.originalY;
             } else {
-                this.y = this.originalY - size;
+                this.transform.y = this.transform.originalY - size;
             }
         } else {
-            this.width = Math.abs(deltaX);
-            this.height = Math.abs(deltaY);
-            this.x = Math.min(dragStart.x, mx);
-            this.y = Math.min(dragStart.y, my);
+            this.dimension.width = Math.abs(deltaX);
+            this.dimension.height = Math.abs(deltaY);
+            this.transform.x = Math.min(dragStart.x, mx);
+            this.transform.y = Math.min(dragStart.y, my);
         }
 
         this.calculateBoundingRect();
     }
 
     override setCoord(x: number, y: number): void {
-        this.x = x;
-        this.y = y;
+        this.transform.x = x;
+        this.transform.y = y;
 
         this.calculateBoundingRect()
     }
 
     //move to shape
     override setDim(width: number, height: number): void {
-    
-        this.width = width;
-        this.height = height;
+
+        this.dimension.width = width;
+        this.dimension.height = height;
 
         this.calculateBoundingRect()
     }
 
     override getDim(): { width: number, height: number } {
-        return { width: this.width, height: this.height }
+        return { width: this.dimension.width, height: this.dimension.height }
     }
 
     override calculateBoundingRect(): void {
         this.boundingRect = {
-            top: this.y,
-            left: this.x,
-            bottom: this.y + this.height,
-            right: this.x + this.width
+            top: this.transform.y,
+            left: this.transform.x,
+            bottom: this.transform.y + this.dimension.height,
+            right: this.transform.x + this.dimension.width
         };
     }
 
@@ -123,7 +117,7 @@ class Rectangle extends Shape {
 
         this.setPaint();
 
-        const rect = this.resource.canvasKit.LTRBRect(this.x, this.y, this.x + this.width, this.y + this.height);
+        const rect = this.resource.canvasKit.LTRBRect(this.transform.x, this.transform.y, this.transform.x + this.dimension.width, this.transform.y + this.dimension.height);
 
         if (this.hasRadius()) {
             this.drawRoundedRect(canvas, rect);
@@ -163,7 +157,7 @@ class Rectangle extends Shape {
             br: this.bdradius['bottom-right'],
             bl: this.bdradius['bottom-left']
         };
-        const [x, y, w, h] = [this.x, this.y, this.width, this.height];
+        const [x, y, w, h] = [this.transform.x, this.transform.y, this.dimension.width, this.dimension.height];
         const CanvasKit = this.resource?.canvasKit;
 
         const p = new CanvasKit.Path();
@@ -209,7 +203,7 @@ class Rectangle extends Shape {
     updateBorderRadius(newRadius: number, pos: Corner) {
         console.log(newRadius, pos);
 
-        const max = Math.min(this.width, this.height) / 2;
+        const max = Math.min(this.dimension.width, this.dimension.height) / 2;
         this.bdradius[pos] = Math.max(0, Math.min(newRadius, max));
     }
 
@@ -249,20 +243,20 @@ class Rectangle extends Shape {
 
         switch (handle.pos) {
             case 'top-left':
-                x = this.x + (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.y + (handle.isDragging || r >= padding ? r : padding) - size;
+                x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.transform.y + (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'top-right':
-                x = this.x + this.width - (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.y + (handle.isDragging || r >= padding ? r : padding) - size;
+                x = this.transform.x + this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.transform.y + (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'bottom-left':
-                x = this.x + (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.y + this.height - (handle.isDragging || r >= padding ? r : padding) - size;
+                x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.transform.y + this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'bottom-right':
-                x = this.x + this.width - (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.y + this.height - (handle.isDragging || r >= padding ? r : padding) - size;
+                x = this.transform.x + this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.transform.y + this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
         }
 
@@ -280,13 +274,16 @@ class Rectangle extends Shape {
     }
 
     override pointInShape(x: number, y: number): boolean {
-        return x >= this.x &&
-            x <= this.x + this.width &&
-            y >= this.y &&
-            y <= this.y + this.height;
+        return x >= this.transform.x &&
+            x <= this.transform.x + this.dimension.width &&
+            y >= this.transform.y &&
+            y <= this.transform.y + this.dimension.height;
+    }
+    override getProperties(): Properties {
+        return { transform: this.transform, size: this.dimension }
     }
     override cleanUp(): void {
-        
+
     }
     override destroy(): void {
 

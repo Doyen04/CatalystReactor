@@ -7,25 +7,14 @@ class PImage extends Rectangle {
     private imageLoaded: boolean = false;
     private aspectRatio: number = 1;
     private maintainAspectRatio: boolean = true;
-    
+    private IWidth: number;
+    private IHeight: number;
+
     constructor(x: number, y: number, imageElem: ArrayBuffer) {
         super(x, y);
-        this.width = 0;
-        this.height = 0;
-        this.fill = '#fff';
-        this.strokeColor = '#000';
-        this.bdradius = {
-            'top-left': 0,
-            'top-right': 0,
-            'bottom-left': 0,
-            'bottom-right': 0,
-            locked: false,
-        };
-        this.originalX = x;
-        this.originalY = y;
-        this.isFlippedX = false;
-        this.isFlippedY = false;
-        
+        this.IWidth = 0;
+        this.IHeight = 0;
+
         if (imageElem) {
             this.setImageElement(imageElem);
         }
@@ -47,43 +36,24 @@ class PImage extends Rectangle {
     private createCanvasKitImage(): void {
         if (!this.imageElement || !this.resource?.canvasKit) return;
         const uint8Array = new Uint8Array(this.imageElement);
-        
+
         this.canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(uint8Array);
         if (this.canvasKitImage) {
-            this.width = this.canvasKitImage.width();
-            this.height = this.canvasKitImage.height();
+            this.IWidth = this.canvasKitImage.width();
+            this.IHeight = this.canvasKitImage.height();
 
-            this.aspectRatio = this.width / this.height;
+            this.aspectRatio = this.IWidth / this.IHeight;
             if (this.maintainAspectRatio) {
                 // Maintain aspect ratio based on which dimension is set
-                if (this.width > 0 && this.height === 0) {
-                    this.height = this.width / this.aspectRatio;
-                } else if (this.height > 0 && this.width === 0) {
-                    this.width = this.height * this.aspectRatio;
+                if (this.IWidth > 0 && this.IHeight === 0) {
+                    this.IHeight = this.IWidth / this.aspectRatio;
+                } else if (this.IHeight > 0 && this.IWidth === 0) {
+                    this.IWidth = this.IHeight * this.aspectRatio;
                 }
             }
 
             this.calculateBoundingRect();
         }
-    }
-
-    override setDim(width: number, height: number): void {
-        this.width = width;
-        this.height = height;
-        console.log('inimageseething dim');
-        
-        this.calculateBoundingRect()
-    }
-
-    override setCoord(x: number, y: number): void {
-        this.x = x;
-        this.y = y;
-
-        this.calculateBoundingRect()
-    }
-
-    override getDim(): { width: number, height: number } {
-        return { width: this.width, height: this.height }
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -150,17 +120,17 @@ class PImage extends Rectangle {
         if (!this.resource?.canvasKit || !this.canvasKitImage) return;
         canvas.save();
         const ck = this.resource.canvasKit;
-        const srcRect = ck.XYWHRect(0, 0, this.canvasKitImage.width(), this.canvasKitImage.height());
+        const srcRect = ck.XYWHRect(0, 0, this.IWidth, this.IHeight);
         const dstRect = ck.XYWHRect(this.x, this.y, this.width, this.height);
 
         if (this.hasRadius()) {
             this.clipToRoundedRect(canvas, dstRect);
         }
-        
+
         canvas.drawImageRectCubic(
             this.canvasKitImage, srcRect, dstRect,
-            1/3,
-            1/3,
+            1 / 3,
+            1 / 3,
             null
         );
         canvas.restore();
@@ -220,11 +190,18 @@ class PImage extends Rectangle {
             path.delete(); // Clean up WASM memory
         }
     }
+
     override cleanUp(): void {
-        
+
     }
     override destroy(): void {
-
+        this.imageElement = null
+        this.canvasKitImage.delete()
+        this.imageLoaded = null
+        this.aspectRatio = null
+        this.maintainAspectRatio = null
+        this.IWidth = 0
+        this.IHeight = 0
     }
 }
 

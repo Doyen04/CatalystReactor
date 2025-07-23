@@ -15,8 +15,8 @@ abstract class Tool {
 
     }
     get currentScene(): SceneNode | null {
-        const { getActiveScene } = useSceneStore.getState()
-        return getActiveScene()
+        const { currentScene } = useSceneStore.getState()
+        return currentScene
     }
     handlePointerUp(coord: Coord, e: MouseEvent) {
         const { setDefaultTool } = useToolStore.getState()

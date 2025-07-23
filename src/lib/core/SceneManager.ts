@@ -8,7 +8,7 @@ import { useSceneStore } from "@hooks/sceneStore";
 
 const {
     FinalizeShape, DrawScene, CreateScene, FinaliseSelection,
-    ShowHovered, SelectObject,
+    ShowHovered, SelectObject, DeleteScene,
     DragObject,
 } = EventTypes
 
@@ -45,6 +45,7 @@ class SceneManager {
         EventQueue.subscribe(SelectObject, this.selectObject.bind(this))
         EventQueue.subscribe(DragObject, this.dragSelectedObject.bind(this))
         EventQueue.subscribe(FinaliseSelection, this.handleSelectionCleanUp.bind(this))
+        EventQueue.subscribe(DeleteScene, this.handleDeleteScene.bind(this))
 
     }
     removeEvent() {
@@ -71,6 +72,13 @@ class SceneManager {
         return this.transientScene
     }
 
+    removeNode(node: SceneNode) {
+        if (node.parent) {
+            node.parent.removeChildNode(node);
+            // this.pushHistory();
+        }
+    }
+
     addNode(node: SceneNode, parent?: SceneNode) {
         if (!parent) {
             this.scene.addChildNode(node)
@@ -81,6 +89,16 @@ class SceneManager {
         // this.render();
     }
 
+    handleDeleteScene() {
+        const {currentScene, clearCurrentScene, clearProperties } = useSceneStore.getState()
+        currentScene.getShape().destroy()
+        this.removeNode(currentScene)
+        this.shapeMod.setShape(null)
+        clearCurrentScene()
+        clearProperties()
+        this.selected = null
+    }
+
     getCollidedScene(x: number, y: number): SceneNode | null {
         const flattened = this.flattenScene();
 
@@ -89,14 +107,14 @@ class SceneManager {
                 return node;
             }
         }
-
         return null;
     }
-    
+
     cleanUp() {
         this.handleTinyShapes()
         this.transientScene = null
     }
+
     handleSelectionCleanUp() {
         this.shapeMod.handleRemoveModiferHandle()
         this.modifierSelected = false
@@ -109,13 +127,12 @@ class SceneManager {
             return
         } else {
             const result = this.selectShape(x, y)
-            const { setCurrentScene, getActiveScene } = useSceneStore.getState()//update
+            const { setCurrentScene, currentScene } = useSceneStore.getState()//update
             if (result) {
                 setCurrentScene(result)
             } else {
-                const active = getActiveScene()
-                if (active) {
-                    active.getShape().cleanUp()
+                if (currentScene) {
+                    currentScene.getShape().cleanUp()
                 }
                 setCurrentScene(null)
             }
@@ -195,12 +212,6 @@ class SceneManager {
         return flattened
     }
 
-    removeNode(node: SceneNode) {
-        if (node.parent) {
-            node.parent.removeChildNode(node);
-            // this.pushHistory();
-        }
-    }
 
     updateTransientScene(dragStart: Coord, x: number, y: number, shiftKey: boolean) {
         this.transientScene.shape.setSize(dragStart, x, y, shiftKey)
@@ -220,7 +231,6 @@ class SceneManager {
         }
     }
 
-
     handleTinyShapes(): void {
         if (!this.transientScene?.shape) return;
 
@@ -228,9 +238,6 @@ class SceneManager {
         const width = right - left;
         const height = bottom - top;
         const minSize = 5;
-        if (this.transientScene.getShape() instanceof PImage) {
-            this.transientScene.shape.drawDefault()//work beterter on this
-        }
 
         if (width < minSize || height < minSize) {
             this.transientScene.shape.drawDefault()

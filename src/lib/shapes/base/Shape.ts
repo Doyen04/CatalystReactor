@@ -4,32 +4,24 @@
 import Handle from "@lib/modifiers/Handles"
 import { SizeRadiusModifierPos } from "@/lib/modifiers/ShapeModifier";
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, IShape } from "@lib/types/shapes";
+import { BoundingRect, IShape, Properties, Transform } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 
 const { Render } = EventTypes
 
 abstract class Shape implements IShape {
-    protected x: number;
-    protected y: number;
-    rotation: number;
-    scale: number;
+    protected transform : Transform;
     fill: string | number[];
     strokeWidth: number;
     strokeColor: string | number[];
     boundingRect: BoundingRect;
     private isHover: boolean;
-    anchorPoint: number;
 
     constructor({ x = 0, y = 0, rotation = 0, scale = 1, fill = "#fff", strokeWidth = 1, strokeColor = '#000' } = {}) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
-        this.x = x;
-        this.y = y;
-        this.rotation = rotation;
-        this.scale = scale;
+        this.transform = { x, y, rotation, scale, anchorPoint: null };
         this.fill = fill;
-        this.anchorPoint = null
         this.strokeColor = strokeColor;
         this.strokeWidth = strokeWidth;
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
@@ -82,16 +74,17 @@ abstract class Shape implements IShape {
     abstract setDim(width: number, height: number): void;
     abstract getDim(): { width: number, height: number };
     abstract setCoord(x: number, y: number): void;
+    abstract getProperties(): Properties;
     abstract cleanUp(): void;
     
     getCoord(): { x: number, y: number } {
-        return { x: this.x, y: this.y }
+        return { x: this.transform.x, y: this.transform.y }
     }
 
     drawDefault() {
         const defSize = 100
         this.setDim(defSize, defSize)
-        this.setCoord(this.x - (defSize / 2), this.y - (defSize / 2))
+        this.setCoord(this.transform.x - (defSize / 2), this.transform.y - (defSize / 2))
     }
 
     setPaint(): void {

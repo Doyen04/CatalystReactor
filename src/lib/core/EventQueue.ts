@@ -2,31 +2,32 @@ import { Coord, ShapeType } from "@lib/types/shapes";
 import SceneNode from "./SceneGraph";
 
 enum EventTypes {
-    PointerDown = 'pointer:down',
-    PointerUp = 'pointer:up',
-    PointerMove = 'pointer:move',
-    PointerDrag = 'pointer:drag',
-    KeyDown = 'key:down',
-    KeyUp = 'key:up',
+    PointerDown = 'pointer:down',//
+    PointerUp = 'pointer:up',//
+    PointerMove = 'pointer:move',//
+    PointerDrag = 'pointer:drag',//
+    KeyDown = 'key:down',//
+    KeyUp = 'key:up',//
 
-    CreateScene = 'create:scene',
-    SceneCreated = 'scene:created',
-    DrawScene = 'draw:shape',
-    FinalizeShape = 'finish:draw',
+    CreateScene = 'create:scene',//
+    // SceneCreated = 'scene:created',
+    DrawScene = 'draw:shape',//
+    FinalizeShape = 'finish:draw',//
+    DeleteScene = 'delete:scene',
 
-    CreateSurface = 'create:surface',
-    ShowHovered = 'hovered:shape',
+    CreateSurface = 'create:surface',//
+    ShowHovered = 'hovered:shape',//
 
-    SelectObject = 'select:object',
-    SceneSelected = 'scene:selected',
-    DragObject = 'drag:object',
-    FinaliseSelection = 'selection:finished',
-    RemoveSelectedModifier = 'remove:modifier',
-    UpdateModifierHandlesPos = 'update:modifier',
-    EditText = 'insert:text',
-    ToolChange = 'tool:change',
-    ModifierSelected = 'modifier:selected',
-    Render = 'render:scene',
+    SelectObject = 'select:object',//
+    // SceneSelected = 'scene:selected',
+    DragObject = 'drag:object',//
+    FinaliseSelection = 'selection:finished',//
+    // RemoveSelectedModifier = 'remove:modifier',
+    UpdateModifierHandlesPos = 'update:modifier',//
+    // EditText = 'insert:text',
+    ToolChange = 'tool:change',//
+    // ModifierSelected = 'modifier:selected',
+    Render = 'render:scene',//
 }
 
 type Handlers = {
@@ -37,21 +38,22 @@ type Handlers = {
     [EventTypes.KeyDown]: (e: KeyboardEvent) => void;
     [EventTypes.KeyUp]: (e: KeyboardEvent) => void;
     [EventTypes.CreateScene]: (type: ShapeType, x: number, y: number) => void;
-    [EventTypes.SceneCreated]: (Scene: SceneNode) => void;
+    // [EventTypes.SceneCreated]: (Scene: SceneNode) => void;
     [EventTypes.DrawScene]: (dragStart: Coord, x: number, y: number, shiftKey: boolean) => void;
     [EventTypes.FinalizeShape]: () => void;
+    [EventTypes.DeleteScene]: () => void;
     [EventTypes.CreateSurface]: () => void;
     [EventTypes.ShowHovered]: (x: number, y: number) => void;
     [EventTypes.SelectObject]: (x: number, y: number) => void;
-    [EventTypes.SceneSelected]: (Scene: SceneNode) => void;
-    [EventTypes.ModifierSelected]: () => void;
+    // [EventTypes.SceneSelected]: (Scene: SceneNode) => void;
+    // [EventTypes.ModifierSelected]: () => void;
     // [EventTypes.DragShape]: (dx: number, dy: number) => void;
     [EventTypes.DragObject]: (dx: number, dy: number, e: MouseEvent) => void;
 
     [EventTypes.FinaliseSelection]: () => void;
-    [EventTypes.RemoveSelectedModifier]: () => void;
+    // [EventTypes.RemoveSelectedModifier]: () => void;
     [EventTypes.UpdateModifierHandlesPos]: () => void;
-    [EventTypes.EditText]: (e: KeyboardEvent) => void;
+    // [EventTypes.EditText]: (e: KeyboardEvent) => void;
     [EventTypes.ToolChange]: (tool: any) => void;
     [EventTypes.Render]: () => void;
 };
