@@ -3,6 +3,7 @@ import { SizeRadiusModifierPos } from '@/lib/modifiers/ShapeModifier';
 import Shape from '../base/Shape';
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
 import { Corner, Properties, Size } from '@lib/types/shapes';
+import { useSceneStore } from '@hooks/sceneStore';
 
 class Rectangle extends Shape {
     dimension: Size;
@@ -36,7 +37,21 @@ class Rectangle extends Shape {
         this.transform.y += dy;
         this.transform.originalX += dx;
         this.transform.originalY += dy;
+        
         this.calculateBoundingRect();
+        this.propertyChanged()//find a way to prevent modifiers from calling this
+    }
+
+    private setBorderRadius(radius: number): void {
+        this.bdradius = {
+            'top-left': radius,
+            'top-right': radius,
+            'bottom-left': radius,
+            'bottom-right': radius,
+            locked: true
+        };
+
+        this.propertyChanged()//find a way to prevent modifiers from calling this
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -72,14 +87,16 @@ class Rectangle extends Shape {
             this.transform.x = Math.min(dragStart.x, mx);
             this.transform.y = Math.min(dragStart.y, my);
         }
-
+        
         this.calculateBoundingRect();
+        this.propertyChanged()
     }
 
     override setCoord(x: number, y: number): void {
         this.transform.x = x;
         this.transform.y = y;
-
+        
+        this.propertyChanged()//find a way to prevent modifiers from calling this
         this.calculateBoundingRect()
     }
 
@@ -88,12 +105,64 @@ class Rectangle extends Shape {
 
         this.dimension.width = width;
         this.dimension.height = height;
-
+       
+        this.propertyChanged()//find a way to prevent modifiers from calling this
         this.calculateBoundingRect()
     }
-
+    
     override getDim(): { width: number, height: number } {
         return { width: this.dimension.width, height: this.dimension.height }
+    }
+
+    override getProperties(): Properties {
+        return { transform: { ...this.transform }, size: { ...this.dimension } }
+    }
+
+    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
+        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+        SizeRadiusModifierPos.forEach(pos => {
+            handles.push(new Handle(0, 0, size, pos, 'radius', fill, strokeColor))
+        })
+        return handles;
+    }
+
+    getRadiusModiferHandlesPos(handle: Handle): { x: number; y: number; } {
+        const r = this.bdradius[handle.pos];
+        const padding = 15;
+        const size = handle.size
+
+        let x: number, y: number;
+
+        switch (handle.pos) {
+            case 'top-left':
+                x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.transform.y + (handle.isDragging || r >= padding ? r : padding) - size;
+                break;
+            case 'top-right':
+                x = this.transform.x + this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.transform.y + (handle.isDragging || r >= padding ? r : padding) - size;
+                break;
+            case 'bottom-left':
+                x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.transform.y + this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
+                break;
+            case 'bottom-right':
+                x = this.transform.x + this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.transform.y + this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
+                break;
+        }
+
+        return { x, y };
+    }
+
+    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+
+        if (handle.type === 'radius') {
+            return this.getRadiusModiferHandlesPos(handle);
+        } else if (handle.type === 'size') {
+            return super.getSizeModifierHandlesPos(handle);
+        }
+        return { x: 0, y: 0 };
     }
 
     override calculateBoundingRect(): void {
@@ -207,16 +276,6 @@ class Rectangle extends Shape {
         this.bdradius[pos] = Math.max(0, Math.min(newRadius, max));
     }
 
-    private setBorderRadius(radius: number): void {
-        this.bdradius = {
-            'top-left': radius,
-            'top-right': radius,
-            'bottom-left': radius,
-            'bottom-right': radius,
-            locked: true
-        };
-    }
-
     toggleRadiusLock(): void {
         this.bdradius.locked = !this.bdradius.locked;
         if (this.bdradius.locked) {
@@ -226,62 +285,13 @@ class Rectangle extends Shape {
         }
     }
 
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
-        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        SizeRadiusModifierPos.forEach(pos => {
-            handles.push(new Handle(0, 0, size, pos, 'radius', fill, strokeColor))
-        })
-        return handles;
-    }
-
-    getRadiusModiferHandlesPos(handle: Handle): { x: number; y: number; } {
-        const r = this.bdradius[handle.pos];
-        const padding = 15;
-        const size = handle.size
-
-        let x: number, y: number;
-
-        switch (handle.pos) {
-            case 'top-left':
-                x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.transform.y + (handle.isDragging || r >= padding ? r : padding) - size;
-                break;
-            case 'top-right':
-                x = this.transform.x + this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.transform.y + (handle.isDragging || r >= padding ? r : padding) - size;
-                break;
-            case 'bottom-left':
-                x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.transform.y + this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
-                break;
-            case 'bottom-right':
-                x = this.transform.x + this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.transform.y + this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
-                break;
-        }
-
-        return { x, y };
-    }
-
-    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
-
-        if (handle.type === 'radius') {
-            return this.getRadiusModiferHandlesPos(handle);
-        } else if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle);
-        }
-        return { x: 0, y: 0 };
-    }
-
     override pointInShape(x: number, y: number): boolean {
         return x >= this.transform.x &&
             x <= this.transform.x + this.dimension.width &&
             y >= this.transform.y &&
             y <= this.transform.y + this.dimension.height;
     }
-    override getProperties(): Properties {
-        return { transform: this.transform, size: this.dimension }
-    }
+
     override cleanUp(): void {
 
     }

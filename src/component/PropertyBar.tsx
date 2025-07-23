@@ -18,7 +18,7 @@ interface ShapeProperties {
 }
 
 function PropertyBar() {
-    const { currentScene } = useSceneStore();
+    const { currentScene,currentShapeProperties } = useSceneStore();
     const [selectedShape, setSelectedShape] = useState<IShape | null>(null);
     const [properties, setProperties] = useState<ShapeProperties | null>(null);
 
@@ -26,12 +26,12 @@ function PropertyBar() {
         const updateSelectedShape = () => {
             
             if (currentScene) {
-                console.log(currentScene.getShape().getProperties());
+                console.log(currentShapeProperties);
             }
         };
 
         updateSelectedShape();
-    }, [currentScene]);
+    }, [currentShapeProperties]);
 
     const isTextShape = (shape: IShape): shape is PText => {
         return shape instanceof PText ||

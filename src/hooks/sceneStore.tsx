@@ -6,7 +6,7 @@ interface SceneStore {
     currentScene: SceneNode | null
     currentShapeProperties: Properties | null
     setCurrentScene: (scene: SceneNode | null) => void
-    // setCurrentShapeProperties: (properties: Properties | null) => void
+    setCurrentShapeProperties: (properties: Properties | null) => void
     updateProperty: (key: string, value: any) => void
     clearProperties: () => void
     clearCurrentScene: () => void;
@@ -19,11 +19,11 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
     setCurrentScene: (scene) => {
         set({
             currentScene: scene, 
-            currentShapeProperties: scene.getShape().getProperties()
+            currentShapeProperties: scene.getShape()?.getProperties()
          })
     },
 
-    // setCurrentShapeProperties: (properties) => set({ currentShapeProperties: properties }),
+    setCurrentShapeProperties: (properties) => set({ currentShapeProperties: properties }),
 
     updateProperty: (key, value) => set((state) => {
         if (!state.currentShapeProperties) return state

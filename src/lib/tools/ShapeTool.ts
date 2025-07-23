@@ -13,7 +13,6 @@ class ShapeTool extends Tool {
         this.shapeType = shape
     }
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
-
         EventQueue.trigger(CreateScene, this.shapeType, dragStart.x, dragStart.y)
     }
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {

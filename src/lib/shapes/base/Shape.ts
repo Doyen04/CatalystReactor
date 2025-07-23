@@ -7,11 +7,12 @@ import { CanvasKitResources } from "@lib/core/CanvasKitResource";
 import { BoundingRect, IShape, Properties, Transform } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
+import { useSceneStore } from "@hooks/sceneStore";
 
 const { Render } = EventTypes
 
 abstract class Shape implements IShape {
-    protected transform : Transform;
+    protected transform: Transform;
     fill: string | number[];
     strokeWidth: number;
     strokeColor: string | number[];
@@ -28,6 +29,19 @@ abstract class Shape implements IShape {
         this.isHover = false;
     }
 
+    abstract getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[];
+    abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; };
+    abstract pointInShape(x: number, y: number): boolean;
+    abstract moveShape(mx: number, my: number): void;
+    abstract calculateBoundingRect(): void;
+    abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
+    abstract draw(canvas: Canvas): void;
+    abstract setDim(width: number, height: number): void;
+    abstract getDim(): { width: number, height: number };
+    abstract setCoord(x: number, y: number): void;
+    abstract getProperties(): Properties;
+    abstract cleanUp(): void;
+
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
         if (resources) {
@@ -36,6 +50,14 @@ abstract class Shape implements IShape {
             console.log('resources is null');
 
             return null
+        }
+    }
+
+      propertyChanged() {
+        const { setCurrentShapeProperties, currentScene } = useSceneStore.getState()
+       
+        if (currentScene) {
+            setCurrentShapeProperties(currentScene.getShape().getProperties())
         }
     }
 
@@ -64,23 +86,10 @@ abstract class Shape implements IShape {
         }
     }
 
-    abstract getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[];
-    abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; };
-    abstract pointInShape(x: number, y: number): boolean;
-    abstract moveShape(mx: number, my: number): void;
-    abstract calculateBoundingRect(): void;
-    abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
-    abstract draw(canvas: Canvas): void;
-    abstract setDim(width: number, height: number): void;
-    abstract getDim(): { width: number, height: number };
-    abstract setCoord(x: number, y: number): void;
-    abstract getProperties(): Properties;
-    abstract cleanUp(): void;
-    
     getCoord(): { x: number, y: number } {
         return { x: this.transform.x, y: this.transform.y }
     }
-
+  
     drawDefault() {
         const defSize = 100
         this.setDim(defSize, defSize)

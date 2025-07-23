@@ -90,7 +90,7 @@ class SceneManager {
     }
 
     handleDeleteScene() {
-        const {currentScene, clearCurrentScene, clearProperties } = useSceneStore.getState()
+        const { currentScene, clearCurrentScene, clearProperties } = useSceneStore.getState()
         currentScene.getShape().destroy()
         this.removeNode(currentScene)
         this.shapeMod.setShape(null)
@@ -127,14 +127,14 @@ class SceneManager {
             return
         } else {
             const result = this.selectShape(x, y)
-            const { setCurrentScene, currentScene } = useSceneStore.getState()//update
+            const { setCurrentScene, currentScene, clearCurrentScene } = useSceneStore.getState()//update
             if (result) {
                 setCurrentScene(result)
             } else {
                 if (currentScene) {
                     currentScene.getShape().cleanUp()
                 }
-                setCurrentScene(null)
+                clearCurrentScene()
             }
         }
     }
