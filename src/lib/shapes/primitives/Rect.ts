@@ -282,9 +282,15 @@ class Rectangle extends Shape {
 
     updateBorderRadius(newRadius: number, pos: Corner) {
         console.log(newRadius, pos);
-
+        
         const max = Math.min(this.dimension.width, this.dimension.height) / 2;
-        this.bdradius[pos] = Math.max(0, Math.min(newRadius, max));
+        let newRad = Math.max(0, Math.min(newRadius, max));
+        if (this.bdradius.locked) {
+            this.setBorderRadius(newRad)
+            return
+        }
+
+        this.bdradius[pos] = newRad
     }
 
     toggleRadiusLock(): void {
