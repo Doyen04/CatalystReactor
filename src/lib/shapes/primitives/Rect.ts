@@ -2,18 +2,14 @@ import Handle from '@lib/modifiers/Handles'
 import { SizeRadiusModifierPos } from '@/lib/modifiers/ShapeModifier';
 import Shape from '../base/Shape';
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
-import { Corner, Properties, Size } from '@lib/types/shapes';
-import { useSceneStore } from '@hooks/sceneStore';
+import { BorderRadius, Corner, Properties, Size } from '@lib/types/shapes';
+import EventQueue, { EventTypes } from '@lib/core/EventQueue';
+
+const { UpdateModifierHandlesPos } = EventTypes
 
 class Rectangle extends Shape {
     dimension: Size;
-    bdradius: {
-        'top-left': number,
-        'top-right': number,
-        'bottom-left': number,
-        'bottom-right': number,
-        'locked': boolean
-    };
+    bdradius: BorderRadius
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
@@ -37,7 +33,7 @@ class Rectangle extends Shape {
         this.transform.y += dy;
         this.transform.originalX += dx;
         this.transform.originalY += dy;
-        
+
         this.calculateBoundingRect();
         this.propertyChanged()//find a way to prevent modifiers from calling this
     }
@@ -87,7 +83,7 @@ class Rectangle extends Shape {
             this.transform.x = Math.min(dragStart.x, mx);
             this.transform.y = Math.min(dragStart.y, my);
         }
-        
+
         this.calculateBoundingRect();
         this.propertyChanged()
     }
@@ -95,7 +91,7 @@ class Rectangle extends Shape {
     override setCoord(x: number, y: number): void {
         this.transform.x = x;
         this.transform.y = y;
-        
+
         this.propertyChanged()//find a way to prevent modifiers from calling this
         this.calculateBoundingRect()
     }
@@ -105,17 +101,32 @@ class Rectangle extends Shape {
 
         this.dimension.width = width;
         this.dimension.height = height;
-       
+
         this.propertyChanged()//find a way to prevent modifiers from calling this
         this.calculateBoundingRect()
     }
-    
+
+    override setProperties(prop: Properties): void {
+        this.transform = prop.transform
+        this.dimension = prop.size
+        this.style = prop.style
+        this.bdradius = prop.borderRadius
+
+        this.calculateBoundingRect()
+        EventQueue.trigger(UpdateModifierHandlesPos)
+    }
+
     override getDim(): { width: number, height: number } {
         return { width: this.dimension.width, height: this.dimension.height }
     }
 
     override getProperties(): Properties {
-        return { transform: { ...this.transform }, size: { ...this.dimension } }
+        return {
+            transform: { ...this.transform },
+            size: { ...this.dimension },
+            style: { ...this.style },
+            borderRadius: { ...this.bdradius }
+        }
     }
 
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {

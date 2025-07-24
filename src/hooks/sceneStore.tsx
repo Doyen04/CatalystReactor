@@ -18,16 +18,24 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
 
     setCurrentScene: (scene) => {
         set({
-            currentScene: scene, 
+            currentScene: scene,
             currentShapeProperties: scene.getShape()?.getProperties()
-         })
+        })
     },
 
     setCurrentShapeProperties: (properties) => set({ currentShapeProperties: properties }),
 
     updateProperty: (key, value) => set((state) => {
         if (!state.currentShapeProperties) return state
-
+        
+        const shape = state.currentScene.getShape();
+        if (shape) {
+            const currentProps = shape.getProperties();
+            shape.setProperties({
+                ...currentProps,
+                [key]: value
+            });
+        }
         return {
             currentShapeProperties: {
                 ...state.currentShapeProperties,

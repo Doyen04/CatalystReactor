@@ -4,27 +4,21 @@
 import Handle from "@lib/modifiers/Handles"
 import { SizeRadiusModifierPos } from "@/lib/modifiers/ShapeModifier";
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, IShape, Properties, Transform } from "@lib/types/shapes";
+import { BoundingRect, IShape, Properties, Style, Transform } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
-import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import { useSceneStore } from "@hooks/sceneStore";
 
-const { Render } = EventTypes
 
 abstract class Shape implements IShape {
     protected transform: Transform;
-    fill: string | number[];
-    strokeWidth: number;
-    strokeColor: string | number[];
+    protected style: Style;
     boundingRect: BoundingRect;
     private isHover: boolean;
 
     constructor({ x = 0, y = 0, rotation = 0, scale = 1, fill = "#fff", strokeWidth = 1, strokeColor = '#000' } = {}) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
         this.transform = { x, y, rotation, scale, anchorPoint: null };
-        this.fill = fill;
-        this.strokeColor = strokeColor;
-        this.strokeWidth = strokeWidth;
+        this.style = { fill, strokeColor, strokeWidth };
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
         this.isHover = false;
     }
@@ -40,6 +34,7 @@ abstract class Shape implements IShape {
     abstract getDim(): { width: number, height: number };
     abstract setCoord(x: number, y: number): void;
     abstract getProperties(): Properties;
+    abstract setProperties(prop: Properties): void;
     abstract cleanUp(): void;
 
     get resource(): CanvasKitResources {
@@ -53,9 +48,9 @@ abstract class Shape implements IShape {
         }
     }
 
-      propertyChanged() {
+    propertyChanged() {
         const { setCurrentShapeProperties, currentScene } = useSceneStore.getState()
-       
+
         if (currentScene) {
             setCurrentShapeProperties(currentScene.getShape().getProperties())
         }
@@ -89,7 +84,7 @@ abstract class Shape implements IShape {
     getCoord(): { x: number, y: number } {
         return { x: this.transform.x, y: this.transform.y }
     }
-  
+
     drawDefault() {
         const defSize = 100
         this.setDim(defSize, defSize)
@@ -100,25 +95,25 @@ abstract class Shape implements IShape {
         if (!this.resource) return
         const cnvsKit = this.resource
 
-        const fill = (Array.isArray(this.fill)) ? this.fill : cnvsKit.canvasKit.parseColorString(this.fill)
-        let strokeColor = (Array.isArray(this.strokeColor)) ? this.strokeColor : cnvsKit.canvasKit.parseColorString(this.strokeColor)
+        const fill = (Array.isArray(this.style.fill)) ? this.style.fill : cnvsKit.canvasKit.parseColorString(this.style.fill)
+        let strokeColor = (Array.isArray(this.style.strokeColor)) ? this.style.strokeColor : cnvsKit.canvasKit.parseColorString(this.style.strokeColor)
 
         strokeColor = (this.isHover == false) ? strokeColor : cnvsKit.canvasKit.Color(0, 0, 255)
 
         cnvsKit.paint.setColor(fill);
 
         cnvsKit.strokePaint.setColor(strokeColor);
-        cnvsKit.strokePaint.setStrokeWidth(this.strokeWidth);
+        cnvsKit.strokePaint.setStrokeWidth(this.style.strokeWidth);
     }
 
-    setStrokeColor(color: string | number[]): void {
-        this.strokeColor = color;
+    setStrokeColor(color: string): void {
+        this.style.strokeColor = color;
     }
     setStrokeWidth(width: number): void {
-        this.strokeWidth = width;
+        this.style.strokeWidth = width;
     }
-    setFill(color: string | number[]): void {
-        this.fill = color;
+    setFill(color: string): void {
+        this.style.fill = color;
     }
 
     setHovered(bool: boolean) {

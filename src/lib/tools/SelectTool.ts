@@ -145,7 +145,7 @@ class SelectTool extends Tool {
                         break;
                 }
             } else {
-                console.log('rrrrr');
+                console.log('rrrrr', 'deleting');
                 EventQueue.trigger(DeleteScene)
             }
         }
@@ -198,7 +198,7 @@ class SelectTool extends Tool {
     }
 
     canEdit(shape: any) {
-        return typeof (shape as any).canEdit === 'function' && (shape as any).canEdit()
+        return shape && typeof (shape as any).canEdit === 'function' && (shape as any).canEdit()
     }
 
     override toolChange(): void {

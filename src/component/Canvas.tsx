@@ -64,7 +64,7 @@ function Canvas() {
 
     return (
         <div className={'canvasContainer'}>
-            <canvas ref={canvasRef} className={'canvas'}>
+            <canvas ref={canvasRef} className={'canvas'} tabIndex={0}>
                 Your browser does not support the HTML5 canvas tag.
             </canvas>
             <div className={'overlay'}>

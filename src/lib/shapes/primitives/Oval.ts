@@ -1,7 +1,7 @@
 import Handle from "@/lib/modifiers/Handles";
 import Shape from "../base/Shape"
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
-import { Coord } from "@lib/types/shapes";
+import { Coord, Properties } from "@lib/types/shapes";
 
 class Oval extends Shape {
     private radiusX: number;
@@ -21,29 +21,31 @@ class Oval extends Shape {
         this.radiusX = 0;
         this.radiusY = 0;
         this.ratio = 0;
-        this.isFlippedX = false;
-        this.isFlippedY = false;
+        this.transform.isFlippedX = false;
+        this.transform.isFlippedY = false;
         this.centerX = 0;
         this.centerY = 0;
         this.calculateBoundingRect();
     }
 
     override moveShape(mx: number, my: number): void {
-        this.x += mx;
-        this.y += my;
+        this.transform.x += mx;
+        this.transform.y += my;
         this.centerX += mx;
         this.centerY += my;
         this.calculateBoundingRect();
+        this.propertyChanged()
     }
-    
+
     setRadius(radius: number): void {
         this.radiusX = radius;
         this.radiusY = radius;
 
-        this.centerX = this.x + radius
-        this.centerY = this.y + radius
+        this.centerX = this.transform.x + radius
+        this.centerY = this.transform.y + radius
 
         this.calculateBoundingRect()
+        this.propertyChanged()
     }
 
     //move to shape
@@ -51,58 +53,35 @@ class Oval extends Shape {
         this.radiusX = width / 2;
         this.radiusY = height / 2;
 
-        this.centerX = this.x + this.radiusX
-        this.centerY = this.y + this.radiusY
+        this.centerX = this.transform.x + this.radiusX
+        this.centerY = this.transform.y + this.radiusY
 
         this.calculateBoundingRect()
-    }
-
-    override getDim(): { width: number, height: number } {
-        return { width: this.radiusX * 2, height: this.radiusY * 2 }
-    }
-
-    isTorus(): boolean {
-        return this.ratio > 0;
+        this.propertyChanged()
     }
 
     setRatio(nx: number) {
         this.ratio = nx
+
+        this.propertyChanged()
+    }
+
+    override setCoord(centerX: number, centerY: number): void {
+        this.transform.x = centerX;
+        this.transform.y = centerY;
+
+        this.centerX = this.transform.x + this.radiusX
+        this.centerY = this.transform.y + this.radiusY
+
+        this.calculateBoundingRect()
+        this.propertyChanged()
     }
 
     setArc(startAngle: number, endAngle: number) {
         this.startAngle = startAngle;
         this.endAngle = endAngle;
-    }
 
-    isArc(): boolean {
-        return Math.abs(this.endAngle - this.startAngle) < 2 * Math.PI;
-    }
-
-    getArcAngles(): { start: number, end: number } {
-        return { start: this.startAngle, end: this.endAngle };
-    }
-
-    getCenterCoord(): { x: number, y: number } {
-        return { x: this.centerX, y: this.centerY }
-    }
-
-    override calculateBoundingRect(): void {
-        this.boundingRect = {
-            top: this.y,
-            left: this.x,
-            bottom: this.y + this.radiusY * 2,
-            right: this.x + this.radiusX * 2
-        }
-    }
-
-    override setCoord(centerX: number, centerY: number): void {
-        this.x = centerX;
-        this.y = centerY;
-
-        this.centerX = this.x + this.radiusX
-        this.centerY = this.y + this.radiusY
-
-        this.calculateBoundingRect()
+        this.propertyChanged()
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -121,8 +100,8 @@ class Oval extends Shape {
             this.centerX = dragStart.x + (deltaX >= 0 ? this.radiusX : -this.radiusX);
             this.centerY = dragStart.y + (deltaY >= 0 ? this.radiusY : -this.radiusY);
 
-            this.x = deltaX >= 0 ? dragStart.x : dragStart.x - radius;
-            this.y = deltaY >= 0 ? dragStart.y : dragStart.y - radius;
+            this.transform.x = deltaX >= 0 ? dragStart.x : dragStart.x - radius;
+            this.transform.y = deltaY >= 0 ? dragStart.y : dragStart.y - radius;
         } else {
             // Oval mode
             this.radiusX = Math.abs(deltaX) / 2;
@@ -131,11 +110,120 @@ class Oval extends Shape {
             this.centerX = (dragStart.x + mx) / 2;
             this.centerY = (dragStart.y + my) / 2;
 
-            this.x = deltaX < 0 ? mx : dragStart.x;
-            this.y = deltaY < 0 ? my : dragStart.y;
+            this.transform.x = deltaX < 0 ? mx : dragStart.x;
+            this.transform.y = deltaY < 0 ? my : dragStart.y;
         }
 
         this.calculateBoundingRect();
+        this.propertyChanged()
+    }
+    
+    override setProperties(prop: Properties): void {
+        this.transform = prop.transform
+        this.setDim(prop.size.width, prop.size.height)
+        this.style = prop.style
+    }
+
+    override getDim(): { width: number, height: number } {
+        return { width: this.radiusX * 2, height: this.radiusY * 2 }
+    }
+
+    override getProperties(): Properties {
+        return { transform: this.transform, size: this.getDim(), style: this.style }
+    }
+
+    getArcAngles(): { start: number, end: number } {
+        return { start: this.startAngle, end: this.endAngle };
+    }
+
+    getCenterCoord(): { x: number, y: number } {
+        return { x: this.centerX, y: this.centerY }
+    }
+
+    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
+        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+        handles.push(new Handle(0, 0, size, 'arc-end', 'arc', fill, strokeColor))
+        handles.push(new Handle(0, 0, size, 'arc-start', 'arc', fill, strokeColor))
+        handles.push(new Handle(0, 0, size, 'center', 'ratio', fill, strokeColor))
+        return handles;
+    }
+
+    override getModifierHandlesPos(handle: Handle): Coord {
+        if (handle.type == 'size') {
+            return super.getSizeModifierHandlesPos(handle);
+        } else if (handle.type == 'ratio') {
+            return this.getRatioModifierHandlesPos(handle);
+        } else if (handle.type == 'arc') {
+            return this.getArcModifierHandlesPos(handle)
+        }
+        else {
+            return { x: 0, y: 0 }
+        }
+    }
+
+    private getRatioModifierHandlesPos(handle: Handle): Coord {
+        const size = handle.size;
+
+        if (this.ratio === 0) {
+            return {
+                x: this.centerX - size,
+                y: this.centerY - size
+            };
+        }
+
+        const innerRadiusX = this.radiusX * this.ratio;
+        const innerRadiusY = this.radiusY * this.ratio;
+
+        const handleAngle = (handle.isDragging) ? handle.handleRatioAngle : (this.startAngle + this.endAngle) / 2
+
+        const handleX = this.centerX + innerRadiusX * Math.cos(handleAngle);
+        const handleY = this.centerY + innerRadiusY * Math.sin(handleAngle);
+
+        return {
+            x: handleX - size,
+            y: handleY - size
+        };
+    }
+
+    private getArcModifierHandlesPos(handle: Handle): Coord {
+        const size = handle.size;
+        const gap = 20;
+
+        const outerRx = this.radiusX;
+        const outerRy = this.radiusY;
+        const innerRx = this.radiusX * this.ratio;
+        const innerRy = this.radiusY * this.ratio;
+
+        const rx = (this.ratio === 0) ? outerRx - gap : (outerRx + innerRx) / 2;
+        const ry = (this.ratio === 0) ? outerRy - gap : (outerRy + innerRy) / 2;
+
+        const theta = (handle.pos === 'arc-end') ? this.endAngle : this.startAngle;
+
+        // Compute handle's center point along ellipse, then offset by handle size
+        const handleCenterX = this.centerX + rx * Math.cos(theta);
+        const handleCenterY = this.centerY + ry * Math.sin(theta);
+
+        return {
+            x: handleCenterX - size,
+            y: handleCenterY - size
+        };
+    }
+
+    override calculateBoundingRect(): void {
+        this.boundingRect = {
+            top: this.transform.y,
+            left: this.transform.x,
+            bottom: this.transform.y + this.radiusY * 2,
+            right: this.transform.x + this.radiusX * 2
+        }
+    }
+
+    isArc(): boolean {
+        return Math.abs(this.endAngle - this.startAngle) < 2 * Math.PI;
+    }
+
+    isTorus(): boolean {
+        return this.ratio > 0;
     }
 
     override draw(canvas: Canvas): void {
@@ -208,74 +296,6 @@ class Oval extends Shape {
         path.close();
     }
 
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
-        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        handles.push(new Handle(0, 0, size, 'arc-end', 'arc', fill, strokeColor))
-        handles.push(new Handle(0, 0, size, 'arc-start', 'arc', fill, strokeColor))
-        handles.push(new Handle(0, 0, size, 'center', 'ratio', fill, strokeColor))
-        return handles;
-    }
-
-    override getModifierHandlesPos(handle: Handle): Coord {
-        if (handle.type == 'size') {
-            return super.getSizeModifierHandlesPos(handle);
-        } else if (handle.type == 'ratio') {
-            return this.getRatioModifierHandlesPos(handle);
-        } else if (handle.type == 'arc') {
-            return this.getArcModifierHandlesPos(handle)
-        }
-        else {
-            return { x: 0, y: 0 }
-        }
-    }
-
-    private getRatioModifierHandlesPos(handle: Handle): Coord {
-        const size = handle.size;
-
-        if (this.ratio === 0) {
-            return {
-                x: this.centerX - size,
-                y: this.centerY - size
-            };
-        }
-
-        const innerRadiusX = this.radiusX * this.ratio;
-        const innerRadiusY = this.radiusY * this.ratio;
-
-        const handleAngle = (handle.isDragging) ? handle.handleRatioAngle : (this.startAngle + this.endAngle) / 2
-
-        const handleX = this.centerX + innerRadiusX * Math.cos(handleAngle);
-        const handleY = this.centerY + innerRadiusY * Math.sin(handleAngle);
-
-        return {
-            x: handleX - size,
-            y: handleY - size
-        };
-    }
-
-    private getArcModifierHandlesPos(handle: Handle): Coord {
-        const size = handle.size;
-        const gap = 20;
-
-        const outerRx = this.radiusX;
-        const outerRy = this.radiusY;
-        const innerRx = this.radiusX * this.ratio;
-        const innerRy = this.radiusY * this.ratio;
-
-        const rx = (this.ratio === 0) ? outerRx - gap : (outerRx + innerRx) / 2;
-        const ry = (this.ratio === 0) ? outerRy - gap : (outerRy + innerRy) / 2;
-
-        const theta = (handle.pos === 'arc-end') ? this.endAngle : this.startAngle;
-
-        // Compute handle's center point along ellipse, then offset by handle size
-        const handleCenterX = this.centerX + rx * Math.cos(theta);
-        const handleCenterY = this.centerY + ry * Math.sin(theta);
-
-        return {
-            x: handleCenterX - size,
-            y: handleCenterY - size
-        };
-    }
 
 
     override pointInShape(x: number, y: number): boolean {
@@ -294,10 +314,10 @@ class Oval extends Shape {
     }
 
     rotate(r: number) {
-        this.rotation = r
+        this.transform.rotation = r
     }
     override cleanUp(): void {
-        
+
     }
     override destroy(): void {
 

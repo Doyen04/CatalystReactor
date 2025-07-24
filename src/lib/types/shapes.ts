@@ -18,9 +18,25 @@ export interface Size {
     height: number;
 }
 
+export interface Style {
+    fill: string;
+    strokeWidth: number;
+    strokeColor: string;
+}
+
+export interface BorderRadius {
+    'top-left': number,
+    'top-right': number,
+    'bottom-left': number,
+    'bottom-right': number,
+    'locked': boolean
+}
+
 export interface Properties {
     transform: Transform;
     size: Size;
+    style: Style
+    borderRadius?: BorderRadius
 }
 
 export interface BoundingRect {
@@ -43,9 +59,6 @@ export interface IShape {
     id?: string;
     type?: ShapeType;
     boundingRect: BoundingRect;
-    fill: string | number[];
-    strokeWidth: number;
-    strokeColor: string | number[];
 
     // Methods that all shapes should implement
     getModifierHandles(size: number, fill: string, strokeColor: string | number[]): any[];
@@ -54,6 +67,7 @@ export interface IShape {
 
     drawDefault(): void;
     getProperties(): Properties;
+    setProperties(prop: Properties): void;
     pointInShape(x: number, y: number): boolean;
     moveShape(mx: number, my: number): void;
     calculateBoundingRect(): void;
