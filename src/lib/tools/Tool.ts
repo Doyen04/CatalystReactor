@@ -1,28 +1,22 @@
-import { useSceneStore } from "@hooks/sceneStore";
 import { useToolStore } from "@hooks/useTool";
-import EventQueue, { EventTypes } from "@lib/core/EventQueue"
-import SceneNode from "@lib/core/SceneGraph";
+import ModifierManager from "@lib/core/ModifierManager";
+import SceneManager from "@lib/core/SceneManager";
+import ShapeManager from "@lib/core/ShapeManager";
 import { Coord } from "@lib/types/shapes";
 
-const { FinalizeShape, UpdateModifierHandlesPos, DrawScene, Render } = EventTypes
-
 abstract class Tool {
+    sceneManager: SceneManager | null = null;
+    shapeManager: ShapeManager | null = null
+    modifierManager: ModifierManager | null = null
 
-    constructor() {
-        this.setUpEvent()
-    }
-    setUpEvent() {
-
-    }
-    get currentScene(): SceneNode | null {
-        const { currentScene } = useSceneStore.getState()
-        return currentScene
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, modifierManager: ModifierManager) {
+        this.sceneManager = sceneManager
+        this.shapeManager = shapeManager
+        this.modifierManager = modifierManager
     }
     handlePointerUp(coord: Coord, e: MouseEvent) {
+        this.shapeManager.handleTinyShapes()
         const { setDefaultTool } = useToolStore.getState()
-        EventQueue.trigger(FinalizeShape)
-        EventQueue.trigger(UpdateModifierHandlesPos)
-        // EventQueue.trigger(Render)
         setDefaultTool()
     }
     handleTextKey(e: KeyboardEvent): void {
@@ -34,7 +28,7 @@ abstract class Tool {
     handleEnter(e: KeyboardEvent): void {
 
     };
-    handleDelete(e:KeyboardEvent):void{
+    handleDelete(e: KeyboardEvent): void {
 
     }
 

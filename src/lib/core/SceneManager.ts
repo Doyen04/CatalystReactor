@@ -3,8 +3,6 @@ import ShapeModifier from "@lib/modifiers/ShapeModifier";
 import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 import EventQueue, { EventTypes } from './EventQueue'
 import { Coord, ShapeType } from "@lib/types/shapes";
-import PImage from "@lib/shapes/primitives/Image";
-import { useSceneStore } from "@hooks/sceneStore";
 
 const {
     FinalizeShape, DrawScene, CreateScene, FinaliseSelection,
@@ -15,17 +13,13 @@ const {
 class SceneManager {
     private scene: SceneNode
     selected: SceneNode | null;
-    transientScene: SceneNode | null;
-    shapeMod: ShapeModifier;
     hoveredScene: SceneNode | null;
     modifierSelected: boolean;
 
     constructor() {
         this.scene = new SceneNode()
-        this.transientScene = null
         this.selected = null
         this.hoveredScene = null
-        this.shapeMod = new ShapeModifier()
         this.modifierSelected = false
         //remember to add a shape created event
 
@@ -36,9 +30,9 @@ class SceneManager {
         this.addEvent()
     }
     addEvent() {
-        EventQueue.subscribe(CreateScene, this.createScene.bind(this))
-        EventQueue.subscribe(DrawScene, this.updateTransientScene.bind(this))
-        EventQueue.subscribe(FinalizeShape, this.cleanUp.bind(this))
+        // EventQueue.subscribe(CreateScene, this.createScene.bind(this))
+        // EventQueue.subscribe(DrawScene, this.updateTransientScene.bind(this))
+        // EventQueue.subscribe(FinalizeShape, this.cleanUp.bind(this))
 
         EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
 
@@ -49,9 +43,9 @@ class SceneManager {
 
     }
     removeEvent() {
-        EventQueue.unSubscribeAll(CreateScene)
-        EventQueue.unSubscribeAll(DrawScene)
-        EventQueue.unSubscribeAll(FinalizeShape)
+        // EventQueue.unSubscribeAll(CreateScene)
+        // EventQueue.unSubscribeAll(DrawScene)
+        // EventQueue.unSubscribeAll(FinalizeShape)
 
         EventQueue.unSubscribeAll(ShowHovered)
 
@@ -63,14 +57,9 @@ class SceneManager {
     getScene(): SceneNode {
         return this.scene
     }
-
-    getDimModifier(): ShapeModifier {
-        return this.shapeMod
-    }
-
-    getTransientScene(): SceneNode {
-        return this.transientScene
-    }
+    // getTransientScene(): SceneNode {
+    //     return this.transientScene
+    // }
 
     removeNode(node: SceneNode) {
         if (node.parent) {
@@ -90,13 +79,13 @@ class SceneManager {
     }
 
     handleDeleteScene() {
-        const { currentScene, clearCurrentScene, clearProperties } = useSceneStore.getState()
-        currentScene.getShape().destroy()
-        this.removeNode(currentScene)
-        this.shapeMod.setShape(null)
-        clearCurrentScene()
-        clearProperties()
-        this.selected = null
+        // const { currentScene, clearCurrentScene, clearProperties } = useSceneStore.getState()
+        // currentScene.getShape().destroy()
+        // this.removeNode(currentScene)
+        // this.shapeMod.setShape(null)
+        // clearCurrentScene()
+        // clearProperties()
+        // this.selected = null
     }
 
     getCollidedScene(x: number, y: number): SceneNode | null {
@@ -108,11 +97,6 @@ class SceneManager {
             }
         }
         return null;
-    }
-
-    cleanUp() {
-        this.handleTinyShapes()
-        this.transientScene = null
     }
 
     handleSelectionCleanUp() {
@@ -127,15 +111,15 @@ class SceneManager {
             return
         } else {
             const result = this.selectShape(x, y)
-            const { setCurrentScene, currentScene, clearCurrentScene } = useSceneStore.getState()//update
-            if (result) {
-                setCurrentScene(result)
-            } else {
-                if (currentScene) {
-                    currentScene.getShape().cleanUp()
-                }
-                clearCurrentScene()
-            }
+            // const { setCurrentScene, currentScene, clearCurrentScene } = useSceneStore.getState()//update
+            // if (result) {
+            //     setCurrentScene(result)
+            // } else {
+            //     if (currentScene) {
+            //         currentScene.getShape().cleanUp()
+            //     }
+            //     clearCurrentScene()
+            // }
         }
     }
 
@@ -157,16 +141,8 @@ class SceneManager {
         if (this.modifierSelected) {
             this.shapeMod.handleModifierDrag(dx, dy, e)
         } else {
-            this.dragSelectedShape(dx, dy, e)
+            // this.dragSelectedShape(dx, dy, e)
         }
-    }
-
-    dragSelectedShape(dx: number, dy: number, e: MouseEvent) {
-        if (!this.selected) {
-            console.log('no selected shape');
-            return
-        }
-        this.selected.shape.moveShape(dx, dy)
     }
 
     showHovered(x: number, y: number) {
@@ -210,39 +186,6 @@ class SceneManager {
 
         this.scene.children.forEach(child => traverse(child));
         return flattened
-    }
-
-
-    updateTransientScene(dragStart: Coord, x: number, y: number, shiftKey: boolean) {
-        this.transientScene.shape.setSize(dragStart, x, y, shiftKey)
-    }
-
-    createScene(type: ShapeType, x: number, y: number): void {
-        // Create a new shape based on the type and add it to the scene
-        const shape = ShapeFactory.createShape(type, { x, y });
-        if (shape) {
-            const scene: SceneNode = new SceneNode();
-            scene.shape = shape
-            this.addNode(scene);
-            this.transientScene = scene;//check this
-            this.shapeMod.setShape(shape);
-            const { setCurrentScene } = useSceneStore.getState()
-            setCurrentScene(scene)
-        }
-    }
-
-    handleTinyShapes(): void {
-        if (!this.transientScene?.shape) return;
-
-        const { left, top, right, bottom } = this.transientScene.shape.boundingRect;
-        const width = right - left;
-        const height = bottom - top;
-        const minSize = 5;
-
-        if (width < minSize || height < minSize) {
-            this.transientScene.shape.drawDefault()
-            console.log('Shape removed: too small add default size');
-        }
     }
 
     destroy() {

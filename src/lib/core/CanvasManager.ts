@@ -6,6 +6,8 @@ import ToolManager from "./ToolManager";
 
 import type Matrix from "./Matrix";
 import { ToolType } from '@lib/types/shapeTypes';
+import ShapeManager from './ShapeManager';
+import ModifierManager from './ModifierManager';
 
 
 class CanvasManager {
@@ -13,6 +15,8 @@ class CanvasManager {
     sceneManager: SceneManager;
     renderer: Renderer;
     toolManager: ToolManager;
+    shapeManager: ShapeManager;
+    modifierManager: ModifierManager;
 
     undoStack: never[];
     redoStack: never[];
@@ -20,14 +24,13 @@ class CanvasManager {
     constructor(canvas: HTMLCanvasElement) {
 
         // this.skCnvs = null
-        console.log('init scene');
+        this.shapeManager = new ShapeManager()
+        this.modifierManager = new ModifierManager()
         this.sceneManager = new SceneManager();
-        console.log('init render');
-        this.renderer = new Renderer(canvas, this.sceneManager)
-        console.log('init input');
+        this.renderer = new Renderer(canvas, this.sceneManager, this.modifierManager)
         this.inputManager = new InputManager(canvas)
-        console.log('init tool');
-        this.toolManager = new ToolManager()
+        this.toolManager = new ToolManager(this.sceneManager, this.shapeManager, this.modifierManager)
+
 
         // Input handling state
         this.undoStack = [];
@@ -87,15 +90,15 @@ class CanvasManager {
             this.inputManager.destroy()
             this.inputManager = null
         }
-        if (this.renderer){
+        if (this.renderer) {
             this.renderer.destroy()
             this.renderer = null
         }
-        if (this.sceneManager){
+        if (this.sceneManager) {
             this.sceneManager.destroy()
             this.sceneManager = null
         }
-        if (this.toolManager){
+        if (this.toolManager) {
             this.toolManager.destroy()
             this.toolManager = null
         }

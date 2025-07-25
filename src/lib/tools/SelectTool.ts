@@ -1,8 +1,8 @@
 import { Coord, IShape } from "@lib/types/shapes";
 import Tool from "./Tool";
-import EventQueue, { EventTypes } from "@lib/core/EventQueue"
-
-const { ShowHovered, SelectObject, DragObject, FinaliseSelection, DeleteScene, Render, UpdateModifierHandlesPos } = EventTypes
+import SceneManager from "@lib/core/SceneManager";
+import ShapeManager from "@lib/core/ShapeManager";
+import ModifierManager from "@lib/core/ModifierManager";
 
 class SelectTool extends Tool {
     private lastMouseCoord: Coord | null = null
@@ -10,6 +10,10 @@ class SelectTool extends Tool {
     private clickCount: number = 0
     private lastClickTime: number = 0
     private doubleClickDelay: number = 300 // milliseconds
+
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, modifierManager: ModifierManager) {
+        super(sceneManager, shapeManager, modifierManager)
+    }
 
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
@@ -45,21 +49,27 @@ class SelectTool extends Tool {
 
     private handleSingleClick(e: MouseEvent) {
         console.log('Single click - normal selection')
-        if (this.currentScene) {
-            const shape = this.currentScene.getShape()
+
+        const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
+        if (scene) {
+            const shape = scene.getShape()
+            this.shapeManager.attachShape(shape)
+            this.modifierManager.attachShape(shape)
             if (this.canEdit(shape) && shape.pointInShape(e.offsetX, e.offsetY)) {
                 shape.setCursorPosFromCoord(e.offsetX, e.offsetY)
             }
+        } else {
+            this.shapeManager.detachShape()
+            this.modifierManager.detachShape()
         }
-        EventQueue.trigger(SelectObject, e.offsetX, e.offsetY)
-        // EventQueue.trigger(Render)
+
     }
 
     private handleDoubleClick(e: MouseEvent) {
         console.log('Double click detected')
 
-        if (this.currentScene) {
-            const shape = this.currentScene.getShape()
+        if (this.shapeManager.currentShape) {
+            const shape = this.shapeManager.currentShape
 
             if (shape.pointInShape(e.offsetX, e.offsetY)) {
                 shape.startEditing()
@@ -69,13 +79,18 @@ class SelectTool extends Tool {
     }
 
     override handlePointerUp() {
-        EventQueue.trigger(FinaliseSelection)
-        EventQueue.trigger(UpdateModifierHandlesPos)
+
+        // EventQueue.trigger(FinaliseSelection)
+        // EventQueue.trigger(UpdateModifierHandlesPos)
         // EventQueue.trigger(Render)
     }
 
     override handlePointerMove(dragStart: Coord, e: MouseEvent): void {
-        EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
+        const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
+        if (scene) {
+            const shape = scene.getShape()
+        }
+        // EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
     }
 
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
@@ -88,16 +103,15 @@ class SelectTool extends Tool {
         const dx = e.offsetX - this.lastMouseCoord.x
         const dy = e.offsetY - this.lastMouseCoord.y
 
-        EventQueue.trigger(DragObject, dx, dy, e)
+        this.shapeManager.dragShape(dx, dy)
+        this.modifierManager.update()
 
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
-        EventQueue.trigger(UpdateModifierHandlesPos)
-        // EventQueue.trigger(Render)
     }
 
     override handleArrowKeys(e: KeyboardEvent): void {
-        if (this.currentScene) {
-            const shape = this.currentScene.getShape()
+        if (this.shapeManager.currentShape) {
+            const shape = this.shapeManager.currentShape
 
             if (this.canEdit(shape)) {
                 this.moveTextCursor(e, shape)
@@ -109,8 +123,8 @@ class SelectTool extends Tool {
 
     override handleTextKey(e: KeyboardEvent): void {
 
-        if (this.currentScene) {
-            const shape = this.currentScene.getShape()
+        if (this.shapeManager.currentShape) {
+            const shape = this.shapeManager.currentShape
 
             if (this.canEdit(shape)) {
                 shape.insertText(e.key, e.shiftKey)
@@ -119,8 +133,8 @@ class SelectTool extends Tool {
     }
 
     override handleEnter(e: KeyboardEvent) {
-        if (this.currentScene) {
-            const shape = this.currentScene.getShape()
+        if (this.shapeManager.currentShape) {
+            const shape = this.shapeManager.currentShape
 
             if (this.canEdit(shape)) {
                 shape.insertText('\n', e.shiftKey)
@@ -129,8 +143,8 @@ class SelectTool extends Tool {
     }
 
     override handleDelete(e: KeyboardEvent): void {
-        if (this.currentScene) {
-            const shape = this.currentScene.getShape()
+        if (this.shapeManager.currentShape) {
+            const shape = this.shapeManager.currentShape
 
             if (this.canEdit(shape)) {
                 switch (e.key) {
@@ -146,7 +160,7 @@ class SelectTool extends Tool {
                 }
             } else {
                 console.log('rrrrr', 'deleting');
-                EventQueue.trigger(DeleteScene)
+
             }
         }
     }
@@ -171,7 +185,6 @@ class SelectTool extends Tool {
                     break;
             }
         }
-        EventQueue.trigger(UpdateModifierHandlesPos)
     }
 
     moveCurrentShape(e: KeyboardEvent, shape: IShape): void {
@@ -194,7 +207,7 @@ class SelectTool extends Tool {
                 console.log('direction not implemented');
                 break;
         }
-        EventQueue.trigger(UpdateModifierHandlesPos)
+        this.modifierManager.update()
     }
 
     canEdit(shape: any) {

@@ -3,9 +3,7 @@ import { SizeRadiusModifierPos } from '@/lib/modifiers/ShapeModifier';
 import Shape from '../base/Shape';
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
 import { BorderRadius, Corner, Properties, Size } from '@lib/types/shapes';
-import EventQueue, { EventTypes } from '@lib/core/EventQueue';
 
-const { UpdateModifierHandlesPos } = EventTypes
 
 class Rectangle extends Shape {
     dimension: Size;
@@ -35,7 +33,6 @@ class Rectangle extends Shape {
         this.transform.originalY += dy;
 
         this.calculateBoundingRect();
-        this.propertyChanged()//find a way to prevent modifiers from calling this
     }
 
     private setBorderRadius(radius: number): void {
@@ -47,7 +44,6 @@ class Rectangle extends Shape {
             locked: true
         };
 
-        this.propertyChanged()//find a way to prevent modifiers from calling this
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -85,14 +81,12 @@ class Rectangle extends Shape {
         }
 
         this.calculateBoundingRect();
-        this.propertyChanged()
     }
 
     override setCoord(x: number, y: number): void {
         this.transform.x = x;
         this.transform.y = y;
 
-        this.propertyChanged()//find a way to prevent modifiers from calling this
         this.calculateBoundingRect()
     }
 
@@ -102,21 +96,17 @@ class Rectangle extends Shape {
         this.dimension.width = width;
         this.dimension.height = height;
 
-        this.propertyChanged()//find a way to prevent modifiers from calling this
         this.calculateBoundingRect()
     }
 
     override setProperties(prop: Properties): void {
-        console.log(prop.borderRadius, this.bdradius, 'setting');
         this.transform = prop.transform
         this.dimension = prop.size
         this.style = prop.style
         this.bdradius = prop.borderRadius
 
         this.checkRadiusLock()
-        console.log(this.bdradius, 'setting');
         this.calculateBoundingRect()
-        EventQueue.trigger(UpdateModifierHandlesPos)
     }
 
     override getDim(): { width: number, height: number } {

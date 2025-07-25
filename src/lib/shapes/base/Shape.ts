@@ -48,14 +48,6 @@ abstract class Shape implements IShape {
         }
     }
 
-    propertyChanged() {
-        const { setCurrentShapeProperties, currentScene } = useSceneStore.getState()
-
-        if (currentScene) {
-            setCurrentShapeProperties(currentScene.getShape().getProperties())
-        }
-    }
-
     getSizeModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles: Handle[] = [];
         SizeRadiusModifierPos.forEach(pos => {

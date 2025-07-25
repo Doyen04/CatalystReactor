@@ -1,13 +1,15 @@
-import { Canvas, CanvasKit, Paint, Surface } from "canvaskit-wasm";
+import { Canvas, Surface } from "canvaskit-wasm";
 import EventQueue, { EventTypes, } from './EventQueue'
 import SceneManager from "./SceneManager";
 import type SceneNode from "./SceneGraph";
 import CanvasKitResources from "./CanvasKitResource";
+import ModifierManager from "./ModifierManager";
 
 const { CreateSurface, Render } = EventTypes
 
 class Renderer {
     sceneManager: SceneManager
+    modifierManager: ModifierManager
     surf: Surface | null;
     canvasEl: HTMLCanvasElement
 
@@ -21,9 +23,10 @@ class Renderer {
     private canrender: boolean = false;
 
 
-    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager) {
+    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager, modifierManager: ModifierManager) {
         this.canvasEl = canvasEl;
         this.sceneManager = sceneManager;
+        this.modifierManager = modifierManager
         this.surf = null;
         this.animationId = null
 
@@ -35,6 +38,7 @@ class Renderer {
         this.removeEvent()
         this.addEvent()
     }
+
     removeEvent() {
         EventQueue.unSubscribeAll(CreateSurface)
         EventQueue.unSubscribeAll(Render)
@@ -43,7 +47,7 @@ class Renderer {
         EventQueue.subscribe(CreateSurface, this.setUpRendering.bind(this))
         EventQueue.subscribe(Render, this.setCanRender.bind(this))
     }
-    setCanRender(){
+    setCanRender() {
         this.canrender = true
     }
     get resource(): CanvasKitResources {
@@ -144,8 +148,7 @@ class Renderer {
         skCnvs.scale(this.dpr, this.dpr);
 
         const scene = this.sceneManager.getScene()
-        const shapeModifier = this.sceneManager.getDimModifier()
-        const transientShape = this.sceneManager.getTransientScene()
+
         scene.updateWorldMatrix();
 
         const rect = this.resource.canvasKit.LTRBRect(10, 10, 250, 100);
@@ -153,14 +156,7 @@ class Renderer {
         skCnvs!.drawRect(rect, this.resource.strokePaint!);
 
         this.renderNode(skCnvs, scene);
-
-        if (transientShape) {
-            transientShape.shape.draw(skCnvs)
-        }
-
-        if (shapeModifier.hasShape()) {
-            shapeModifier.draw(skCnvs);
-        }
+        this.modifierManager.draw(skCnvs);
 
         skCnvs!.restore();
         this.surf.flush();

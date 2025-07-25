@@ -4,15 +4,25 @@ import Tool from '@/lib/tools/SelectTool'
 import EventQueue, { EventTypes } from './EventQueue'
 import { ToolType } from '@lib/types/shapeTypes'
 import ImageTool from '@lib/tools/ImageTool'
-import KeyboardTool from '@lib/tools/KeyboardTool'
+import KeyboardTool from '@lib/tools/keyboardTool'
+import SceneManager from './SceneManager'
+import ShapeManager from './ShapeManager'
+import ModifierManager from './ModifierManager'
 
 const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes
 
 class ToolManager {
     currentTool: Tool
     keyboardTool: KeyboardTool;
-    constructor() {
-        this.currentTool = new SelectTool()
+    sceneManager: SceneManager;
+    shapeManager: ShapeManager;
+    modifierManager: ModifierManager
+
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, modifierManager: ModifierManager) {
+        this.sceneManager = sceneManager
+        this.shapeManager = shapeManager
+        this.modifierManager = modifierManager
+        this.currentTool = new SelectTool(this.sceneManager, this.shapeManager, this.modifierManager)
         this.keyboardTool = new KeyboardTool(this.currentTool)
         this.setUpEvent()
     }
@@ -21,25 +31,25 @@ class ToolManager {
         let currentTool = null
         switch (tool) {
             case 'select':
-                currentTool = new SelectTool()
+                currentTool = new SelectTool(this.sceneManager, this.shapeManager, this.modifierManager )
                 break;
             case 'rect':
-                currentTool = new ShapeTool('rect')
+                currentTool = new ShapeTool('rect', this.sceneManager, this.shapeManager,this.modifierManager )
                 break;
             case 'oval':
-                currentTool = new ShapeTool('oval')
+                currentTool = new ShapeTool('oval', this.sceneManager, this.shapeManager,this.modifierManager )
                 break;
             case 'star':
-                currentTool = new ShapeTool('star')
+                currentTool = new ShapeTool('star', this.sceneManager, this.shapeManager,this.modifierManager )
                 break;
             case 'polygon':
-                currentTool = new ShapeTool('polygon')
+                currentTool = new ShapeTool('polygon', this.sceneManager, this.shapeManager,this.modifierManager )
                 break;
             case 'text':
-                currentTool = new ShapeTool('text')
+                currentTool = new ShapeTool('text', this.sceneManager, this.shapeManager,this.modifierManager )
                 break;
             case 'img':
-                currentTool = new ImageTool()
+                currentTool = new ImageTool(this.sceneManager, this.shapeManager,this.modifierManager )
                 break;
             default:
                 console.log('ttool not implemented');
@@ -57,6 +67,7 @@ class ToolManager {
             this.keyboardTool.setCurrentTool(tool)
         }
     }
+
     setUpEvent() {
         this.removeEvent()
         this.addEvent()
@@ -78,8 +89,8 @@ class ToolManager {
         EventQueue.unSubscribeAll(PointerDrag)
         EventQueue.unSubscribeAll(PointerMove)
         EventQueue.unSubscribeAll(PointerUp)
-         EventQueue.unSubscribeAll(KeyDown)
-        EventQueue.unSubscribeAll(KeyUp) 
+        EventQueue.unSubscribeAll(KeyDown)
+        EventQueue.unSubscribeAll(KeyUp)
         EventQueue.unSubscribeAll(ToolChange)
     }
     destroy() {

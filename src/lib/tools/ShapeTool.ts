@@ -1,26 +1,34 @@
 import { ShapeType } from "@lib/types/shapes";
 import Tool from "./Tool";
-import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import { Coord } from "@lib/types/shapes";
-import PText from "@lib/shapes/primitives/PText";
+import ShapeFactory from "@lib/shapes/base/ShapeFactory";
+import SceneNode from "@lib/core/SceneGraph";
+import SceneManager from "@lib/core/SceneManager";
+import ShapeManager from "@lib/core/ShapeManager";
+import ModifierManager from "@lib/core/ModifierManager";
 
-const { CreateScene, DrawScene, UpdateModifierHandlesPos, Render } = EventTypes
 
 class ShapeTool extends Tool {
     shapeType: ShapeType
-    constructor(shape: ShapeType) {
-        super()
+    constructor(shape: ShapeType, sceneManager: SceneManager, shapeManager:ShapeManager, modifierManager: ModifierManager) {
+        super(sceneManager,shapeManager, modifierManager)
         this.shapeType = shape
     }
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
-        EventQueue.trigger(CreateScene, this.shapeType, dragStart.x, dragStart.y)
+        const shape = ShapeFactory.createShape(this.shapeType, { x: e.offsetX, y: e.offsetY });
+        if (shape) {
+            const scene: SceneNode = new SceneNode();
+            scene.shape = shape
+            this.sceneManager.addNode(scene);
+            this.shapeManager.attachShape(shape)
+            this.modifierManager.attachShape(shape)
+        }
     }
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-        if (this.currentScene) {
-            EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
-        }
-        EventQueue.trigger(UpdateModifierHandlesPos)//rembter to move into shape
+        this.shapeManager.drawShape(dragStart, e)
+        this.modifierManager.update()
     };
+
     setShape(shape: ShapeType) {
         this.shapeType = shape
     }

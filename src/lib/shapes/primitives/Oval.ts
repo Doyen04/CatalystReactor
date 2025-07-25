@@ -34,7 +34,6 @@ class Oval extends Shape {
         this.centerX += mx;
         this.centerY += my;
         this.calculateBoundingRect();
-        this.propertyChanged()
     }
 
     setRadius(radius: number): void {
@@ -45,7 +44,6 @@ class Oval extends Shape {
         this.centerY = this.transform.y + radius
 
         this.calculateBoundingRect()
-        this.propertyChanged()
     }
 
     //move to shape
@@ -57,13 +55,10 @@ class Oval extends Shape {
         this.centerY = this.transform.y + this.radiusY
 
         this.calculateBoundingRect()
-        this.propertyChanged()
     }
 
     setRatio(nx: number) {
         this.ratio = nx
-
-        this.propertyChanged()
     }
 
     override setCoord(centerX: number, centerY: number): void {
@@ -74,14 +69,11 @@ class Oval extends Shape {
         this.centerY = this.transform.y + this.radiusY
 
         this.calculateBoundingRect()
-        this.propertyChanged()
     }
 
     setArc(startAngle: number, endAngle: number) {
         this.startAngle = startAngle;
         this.endAngle = endAngle;
-
-        this.propertyChanged()
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -115,7 +107,6 @@ class Oval extends Shape {
         }
 
         this.calculateBoundingRect();
-        this.propertyChanged()
     }
     
     override setProperties(prop: Properties): void {
