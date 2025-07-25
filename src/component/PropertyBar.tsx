@@ -5,9 +5,6 @@ import Input from "@ui/Input";
 import { twMerge } from "tailwind-merge";
 // import PText from "@lib/shapes/primitives/PText";
 
-// interface ShapeProperties {
-
-// }
 
 function PropertyBar() {
     const { currentShapeProperties, updateProperty } = useSceneStore();
