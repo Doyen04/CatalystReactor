@@ -36,11 +36,9 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
                 [key]: value
             });
         }
+        const newProps = shape.getProperties();
         return {
-            currentShapeProperties: {
-                ...state.currentShapeProperties,
-                [key]: value
-            }
+            currentShapeProperties: newProps
         }
     }),
 

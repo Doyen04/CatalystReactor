@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useSceneStore } from "@hooks/sceneStore";
 import { Properties } from "@lib/types/shapes";
-import Input from "@ui/input";
+import Input from "@ui/Input";
 import { twMerge } from "tailwind-merge";
 // import PText from "@lib/shapes/primitives/PText";
 
