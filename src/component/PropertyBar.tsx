@@ -12,11 +12,6 @@ import { twMerge } from "tailwind-merge";
 function PropertyBar() {
     const { currentShapeProperties, updateProperty } = useSceneStore();
 
-    useEffect(() => {
-        console.log(currentShapeProperties);
-
-    }, [currentShapeProperties])
-
     const handlePropertyChange = (e: ChangeEvent<HTMLInputElement>, key: string) => {
         const { transform, size, style, borderRadius } = currentShapeProperties
         console.log(key, style);

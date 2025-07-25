@@ -40,6 +40,9 @@ class ModifierManager {
         if (this.hoveredShape) {
             this.hoveredShape.setHovered(false)
         }
+        if (this.shapeModifier.hasShape()) {
+            this.shapeModifier.setIsHovered(false)
+        }
         this.hoveredShape = null
     }
     draw(canvas: Canvas) {

@@ -114,8 +114,6 @@ class Rectangle extends Shape {
     }
 
     override getProperties(): Properties {
-        console.log(this.bdradius, 'getting');
-        
         return {
             transform: { ...this.transform },
             size: { ...this.dimension },
