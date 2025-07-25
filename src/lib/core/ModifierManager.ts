@@ -16,22 +16,32 @@ class ModifierManager {
     setSelectedShape(shape: IShape) {
 
     }
-    detachShape(){
+    detachShape() {
         this.shapeModifier.setShape(null)
     }
-    update(){
+    update() {
         this.shapeModifier.updateResizerPositions()
     }
     setHoveredShape(shape: IShape) {
+        if (this.hoveredShape) {
 
+            this.hoveredShape.setHovered(false)
+        }
+        this.hoveredShape = shape
+        this.hoveredShape.setHovered(true)
     }
-    draw(canvas:Canvas) {
-        this.shapeModifier.draw(canvas)
+    resetHovered() {
+        if (this.hoveredShape) {
+            this.hoveredShape.setHovered(false)
+        }
+        this.hoveredShape = null
     }
-    hasShape() {
-
+    draw(canvas: Canvas) {
+        if (this.shapeModifier.hasShape()) {
+            this.shapeModifier.draw(canvas)
+        }
     }
-    // Additional methods: move, resize, updateBorderRadius, etc.
+    //tional methods: move, resize, updateBorderRadius, etc.
 }
 
 export default ModifierManager;

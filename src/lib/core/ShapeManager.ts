@@ -40,6 +40,8 @@ class ShapeManager {
         this.shape = shape;
         // Optionally sync initial props:
         const props = shape.getProperties();
+        console.log(props);
+        
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
 

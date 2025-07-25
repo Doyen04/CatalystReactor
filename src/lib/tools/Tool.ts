@@ -16,6 +16,7 @@ abstract class Tool {
     }
     handlePointerUp(coord: Coord, e: MouseEvent) {
         this.shapeManager.handleTinyShapes()
+        this.modifierManager.update()
         const { setDefaultTool } = useToolStore.getState()
         setDefaultTool()
     }
