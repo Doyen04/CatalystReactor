@@ -12,10 +12,16 @@ class ShapeManager {
 
     drawShape(dragStart: Coord, e: MouseEvent) {
         this.shape.setSize(dragStart, e.offsetX, e.offsetY, e.shiftKey)
+        const props = this.shape.getProperties();
+        
+        useSceneStore.getState().setCurrentShapeProperties(props);
     }
 
     dragShape(x: number, y: number) {
         this.shape.moveShape(x, y)
+        const props = this.shape.getProperties();
+        
+        useSceneStore.getState().setCurrentShapeProperties(props);
     }
 
     handleTinyShapes(): void {
@@ -39,9 +45,7 @@ class ShapeManager {
     attachShape(shape: IShape) {
         this.shape = shape;
         // Optionally sync initial props:
-        const props = shape.getProperties();
-        console.log(props);
-        
+        const props = this.shape.getProperties();
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
 

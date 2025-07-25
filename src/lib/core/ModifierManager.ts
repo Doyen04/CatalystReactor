@@ -24,8 +24,14 @@ class ModifierManager {
     }
     setHoveredShape(shape: IShape) {
         if (this.hoveredShape) {
-
             this.hoveredShape.setHovered(false)
+        }
+        if (this.shapeModifier.hasShape()) {
+            this.shapeModifier.setIsHovered(false)
+        }
+        if (this.shapeModifier.getShape() == this.hoveredShape) {
+            this.shapeModifier.setIsHovered(true)
+            return
         }
         this.hoveredShape = shape
         this.hoveredShape.setHovered(true)
