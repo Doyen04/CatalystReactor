@@ -1,4 +1,5 @@
 // ShapeModifier.ts
+import Handle from '@lib/modifiers/Handles';
 import ShapeModifier from '@lib/modifiers/ShapeModifier';
 import { Coord, IShape, } from '@lib/types/shapes';
 import { Canvas } from 'canvaskit-wasm';
@@ -13,11 +14,17 @@ class ModifierManager {
     attachShape(shape: IShape) {
         this.shapeModifier.setShape(shape)
     }
+    getCollidedModifier(x: number, y: number): Handle {
+        return this.shapeModifier.selectModifier(x, y)
+    }
     setSelectedShape(shape: IShape) {
 
     }
     detachShape() {
         this.shapeModifier.setShape(null)
+    }
+    drag(x: number, y: number, e: MouseEvent) {
+        this.shapeModifier.handleModifierDrag(x, y, e)
     }
     update() {
         this.shapeModifier.updateResizerPositions()

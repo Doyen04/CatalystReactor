@@ -4,6 +4,11 @@ import { Properties } from "@lib/types/shapes";
 import Input from "@ui/Input";
 import { twMerge } from "tailwind-merge";
 import { useCanvasManagerStore } from "@hooks/useCanvasManager";
+import { MoveHorizontal } from "lucide-react";
+import Section from "@ui/Section";
+import LockButton from "@ui/LockedButton";
+import BorderRadius from "@ui/BorderRadius";
+import BorderRadiusAll from "@ui/BorderRadiusAll";
 // import PText from "@lib/shapes/primitives/PText";
 
 
@@ -23,7 +28,23 @@ function PropertyBar() {
         ];
 
         for (const { prop, name } of propertyMap) {
-            if (key in prop) {
+            if (borderRadius.locked && key in borderRadius && typeof value == "number") {
+                updateProperty("borderRadius", {
+                    "top-left": value,
+                    "top-right": value,
+                    "bottom-left": value,
+                    "bottom-right": value,
+                    locked: true
+                });
+                shapeManager?.updateProperty("borderRadius", {
+                    "top-left": value,
+                    "top-right": value,
+                    "bottom-left": value,
+                    "bottom-right": value,
+                    locked: true
+                });
+            }
+            else if (key in prop) {
                 updateProperty(name, { ...prop, [key]: value });
                 if (shapeManager) {
                     shapeManager.updateProperty(name as keyof Properties, { ...prop, [key]: value });
@@ -34,16 +55,31 @@ function PropertyBar() {
     };
 
     const toggle = (e, key: string, value: boolean) => {
-        const { borderRadius } = currentShapeProperties
-        if (key in borderRadius) {
-            console.log(key, e, value);
-            console.log(Object.values(borderRadius));
-            updateProperty('borderRadius', {
-                ...borderRadius,
-                [key]: value
-            })
+        const { borderRadius } = currentShapeProperties;
+        if (key !== "locked") return;
+
+        let newBorderRadius;
+        if (value) {
+            const maxRadius = Math.max(
+                borderRadius["top-left"],
+                borderRadius["top-right"],
+                borderRadius["bottom-left"],
+                borderRadius["bottom-right"]
+            );
+            newBorderRadius = {
+                "top-left": maxRadius,
+                "top-right": maxRadius,
+                "bottom-left": maxRadius,
+                "bottom-right": maxRadius,
+                locked: true
+            };
+        } else {
+            newBorderRadius = { ...borderRadius, locked: false };
         }
-    }
+
+        updateProperty('borderRadius', newBorderRadius);
+        shapeManager?.updateProperty('borderRadius', newBorderRadius);
+    };
 
 
     if (!currentShapeProperties) {
@@ -63,6 +99,7 @@ function PropertyBar() {
     const size = currentShapeProperties?.size;
     const style = currentShapeProperties?.style
     const borderRadius = currentShapeProperties?.borderRadius
+    const arcSegment = currentShapeProperties?.arcSegment
 
     return (
         <div className="propertybar">
@@ -70,56 +107,65 @@ function PropertyBar() {
                 header
             </div>
             <div className="propertybar-body">
-                {transform &&
-                    <section className="object-transform">
-                        <div className="text-left p-0.5 text-black font-medium text-xs">
-                            Transform
-                        </div>
-                        <div className="flex h-fit w-fit gap-3 text-black text-sm font-mono">
-                            <Input type={'number'} title={'X'} objKey={"x"} value={transform.x} callBack={handlePropertyChange} />
-                            <Input type={'number'} title={"Y"} objKey={"y"} value={transform.y} callBack={handlePropertyChange} />
-                        </div>
-                    </section>
-                }
-                {size &&
-                    <section className="object-transform">
-                        <div className="text-left p-0.5 text-black font-medium text-xs">
-                            Dimension
-                        </div>
-                        <div className="flex h-fit w-fit gap-3 text-black text-sm font-mono">
-                            <Input type={'number'} title={"W"} objKey={"width"} value={size.width} callBack={handlePropertyChange} />
-                            <Input type={'number'} title={"H"} objKey={"height"} value={size.height} callBack={handlePropertyChange} />
-                        </div>
-                    </section>
-                }
-                {style &&
-                    <section className="object-transform">
-                        <div className="text-left p-0.5 text-black font-medium text-xs">
-                            Style
-                        </div>
-                        <div className="flex h-fit w-fit gap-3 text-black text-sm font-mono">
-                            <Input type={'color'} title={"Fill"} objKey={"fill"} value={String(style.fill)} callBack={handlePropertyChange} />
-                            <Input type={'color'} title={"Stroke"} objKey={"strokeColor"} value={String(style.strokeColor)} callBack={handlePropertyChange} />
-                        </div>
-                    </section>
-                }
-                {borderRadius &&
-                    <section className="object-transform">
-                        <div className="text-left p-0.5 text-black font-medium text-xs">
-                            Border Radius
-                        </div>
-                        <div className="grid grid-cols-5 grid-rows-2 justify-items-center items-center gap-2 text-black text-sm font-mono w-fit h-fit">
-                            <Input className="col-span-2" type={'number'} title={"tl"} objKey={"top-left"} value={borderRadius["top-left"]} callBack={handlePropertyChange} />
-                            <Input className="col-span-2" type={'number'} title={"tr"} objKey={"top-right"} value={borderRadius["top-right"]} callBack={handlePropertyChange} />
-                            <button onClick={(e) => toggle(e, 'locked', !borderRadius.locked)} className={twMerge(`col-span-1 w-6 h-6 bg-white rounded flex items-center justify-center ${borderRadius.locked ? "bg-blue-500" : ''}`)}>
-                                O
-                            </button>
-                            <Input className="col-span-2" type={'number'} title={"bl"} objKey={"bottom-left"} value={borderRadius["bottom-left"]} callBack={handlePropertyChange} />
-                            <Input className="col-span-2" type={'number'} title={"br"} objKey={"bottom-right"} value={borderRadius["bottom-right"]} callBack={handlePropertyChange} />
-                        </div>
-                    </section>
-                }
+                {transform && (
+                    <Section title="Transform">
+                        <Input type="number" title="X" objKey="x"
+                            value={transform.x} callBack={handlePropertyChange} />
+                        <Input type="number" title="Y" objKey="y"
+                            value={transform.y} callBack={handlePropertyChange} />
+                    </Section>
+                )}
+                {size && (
+                    <Section title="Dimension">
+                        <Input type="number" title="W" objKey="width"
+                            value={size.width} callBack={handlePropertyChange} />
+                        <Input type="number" title="H" objKey="height"
+                            value={size.height} callBack={handlePropertyChange} />
+                    </Section>
+                )}
+                {style && (
+                    <Section title="Style">
+                        <Input type="color" title="Fill" objKey="fill"
+                            value={String(style.fill)} callBack={handlePropertyChange} />
+                        <Input type="color" title="Stroke" objKey="strokeColor"
+                            value={String(style.strokeColor)} callBack={handlePropertyChange} />
+                    </Section>
+                )}
+                {arcSegment && (
+                    <Section title="Arc-Segment">
+                        <Input type="number" title="arc-start" objKey="startAngle"
+                            value={String(arcSegment.startAngle)} callBack={handlePropertyChange} />
+                        <Input type="number" title="arc-end" objKey="endAngle"
+                            value={String(arcSegment.endAngle)} callBack={handlePropertyChange} />
+                        <Input type="number" title="Ratio" objKey="ratio"
+                            value={String(arcSegment.ratio)} callBack={handlePropertyChange} />
+                    </Section>
+                )}
+                {borderRadius && (
+                    <Section title="Border Radius">
+                        {borderRadius.locked ? (
+                            <>
+                                <Input className="col-span-4" type="number" icon={<BorderRadius size={20} />} objKey="top-left"
+                                    value={borderRadius["top-left"]} callBack={handlePropertyChange} />
+                                <LockButton locked={borderRadius.locked} onClick={e => toggle(e, 'locked', !borderRadius.locked)} />
+                            </>
+                        ) : (
+                            <div className="grid grid-cols-5 grid-rows-2 justify-items-center items-center gap-2 w-fit h-fit">
+                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="top-left" />} objKey="top-left"
+                                    value={borderRadius["top-left"]} callBack={handlePropertyChange} />
+                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="top-right" />} objKey="top-right"
+                                    value={borderRadius["top-right"]} callBack={handlePropertyChange} />
+                                <LockButton locked={borderRadius.locked} onClick={e => toggle(e, 'locked', !borderRadius.locked)} />
+                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="bottom-left" />} objKey="bottom-left"
+                                    value={borderRadius["bottom-left"]} callBack={handlePropertyChange} />
+                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="bottom-right" />} objKey="bottom-right"
+                                    value={borderRadius["bottom-right"]} callBack={handlePropertyChange} />
+                            </div>
+                        )}
+                    </Section>
+                )}
             </div>
+
         </div>
     );
 }

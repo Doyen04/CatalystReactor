@@ -1,26 +1,23 @@
 import Handle from "@/lib/modifiers/Handles";
 import Shape from "../base/Shape"
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
-import { Coord, Properties } from "@lib/types/shapes";
+import { ArcSegment, Coord, Properties } from "@lib/types/shapes";
 
 class Oval extends Shape {
     private radiusX: number;
     private radiusY: number;
-    private ratio: number;
 
     private isFlippedX: boolean;
     private isFlippedY: boolean;
     private centerX: number;
     private centerY: number;
-    private startAngle: number = 0;
-    private endAngle: number = 2 * Math.PI;
-
+    private arcSegment: ArcSegment;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
+        this.arcSegment = { startAngle: 0, endAngle: 2 * Math.PI, ratio: 0 }
         this.radiusX = 0;
         this.radiusY = 0;
-        this.ratio = 0;
         this.transform.isFlippedX = false;
         this.transform.isFlippedY = false;
         this.centerX = 0;
@@ -58,7 +55,7 @@ class Oval extends Shape {
     }
 
     setRatio(nx: number) {
-        this.ratio = nx
+        this.arcSegment.ratio = nx
     }
 
     override setCoord(centerX: number, centerY: number): void {
@@ -72,8 +69,8 @@ class Oval extends Shape {
     }
 
     setArc(startAngle: number, endAngle: number) {
-        this.startAngle = startAngle;
-        this.endAngle = endAngle;
+        this.arcSegment.startAngle = startAngle;
+        this.arcSegment.endAngle = endAngle;
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -108,7 +105,7 @@ class Oval extends Shape {
 
         this.calculateBoundingRect();
     }
-    
+
     override setProperties(prop: Properties): void {
         this.transform = prop.transform
         this.setDim(prop.size.width, prop.size.height)
@@ -120,11 +117,11 @@ class Oval extends Shape {
     }
 
     override getProperties(): Properties {
-        return { transform: this.transform, size: this.getDim(), style: this.style }
+        return { transform: this.transform, size: this.getDim(), style: this.style, arcSegment: this.arcSegment }
     }
 
     getArcAngles(): { start: number, end: number } {
-        return { start: this.startAngle, end: this.endAngle };
+        return { start: this.arcSegment.startAngle, end: this.arcSegment.endAngle };
     }
 
     getCenterCoord(): { x: number, y: number } {
@@ -155,17 +152,17 @@ class Oval extends Shape {
     private getRatioModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size;
 
-        if (this.ratio === 0) {
+        if (this.arcSegment.ratio === 0) {
             return {
                 x: this.centerX - size,
                 y: this.centerY - size
             };
         }
 
-        const innerRadiusX = this.radiusX * this.ratio;
-        const innerRadiusY = this.radiusY * this.ratio;
+        const innerRadiusX = this.radiusX * this.arcSegment.ratio;
+        const innerRadiusY = this.radiusY * this.arcSegment.ratio;
 
-        const handleAngle = (handle.isDragging) ? handle.handleRatioAngle : (this.startAngle + this.endAngle) / 2
+        const handleAngle = (handle.isDragging) ? handle.handleRatioAngle : (this.arcSegment.startAngle + this.arcSegment.endAngle) / 2
 
         const handleX = this.centerX + innerRadiusX * Math.cos(handleAngle);
         const handleY = this.centerY + innerRadiusY * Math.sin(handleAngle);
@@ -182,13 +179,13 @@ class Oval extends Shape {
 
         const outerRx = this.radiusX;
         const outerRy = this.radiusY;
-        const innerRx = this.radiusX * this.ratio;
-        const innerRy = this.radiusY * this.ratio;
+        const innerRx = this.radiusX * this.arcSegment.ratio;
+        const innerRy = this.radiusY * this.arcSegment.ratio;
 
-        const rx = (this.ratio === 0) ? outerRx - gap : (outerRx + innerRx) / 2;
-        const ry = (this.ratio === 0) ? outerRy - gap : (outerRy + innerRy) / 2;
+        const rx = (this.arcSegment.ratio === 0) ? outerRx - gap : (outerRx + innerRx) / 2;
+        const ry = (this.arcSegment.ratio === 0) ? outerRy - gap : (outerRy + innerRy) / 2;
 
-        const theta = (handle.pos === 'arc-end') ? this.endAngle : this.startAngle;
+        const theta = (handle.pos === 'arc-end') ? this.arcSegment.endAngle : this.arcSegment.startAngle;
 
         // Compute handle's center point along ellipse, then offset by handle size
         const handleCenterX = this.centerX + rx * Math.cos(theta);
@@ -210,11 +207,11 @@ class Oval extends Shape {
     }
 
     isArc(): boolean {
-        return Math.abs(this.endAngle - this.startAngle) < 2 * Math.PI;
+        return Math.abs(this.arcSegment.endAngle - this.arcSegment.startAngle) < 2 * Math.PI;
     }
 
     isTorus(): boolean {
-        return this.ratio > 0;
+        return this.arcSegment.ratio > 0;
     }
 
     override draw(canvas: Canvas): void {
@@ -238,13 +235,13 @@ class Oval extends Shape {
         const path = new canvasKit.Path();
 
         const innerRect = canvasKit.LTRBRect(
-            this.centerX - this.radiusX * this.ratio,
-            this.centerY - this.radiusY * this.ratio,
-            this.centerX + this.radiusX * this.ratio,
-            this.centerY + this.radiusY * this.ratio
+            this.centerX - this.radiusX * this.arcSegment.ratio,
+            this.centerY - this.radiusY * this.arcSegment.ratio,
+            this.centerX + this.radiusX * this.arcSegment.ratio,
+            this.centerY + this.radiusY * this.arcSegment.ratio
         );
-        const startDegrees = this.startAngle * 180 / Math.PI;
-        const sweepDegrees = (this.endAngle - this.startAngle) * 180 / Math.PI;
+        const startDegrees = this.arcSegment.startAngle * 180 / Math.PI;
+        const sweepDegrees = (this.arcSegment.endAngle - this.arcSegment.startAngle) * 180 / Math.PI;
 
         if (this.isTorus() && !this.isArc()) {
             this.drawTorus(rect, innerRect, path)
@@ -272,11 +269,11 @@ class Oval extends Shape {
     }
 
     private drawComplexTorusArc(rect: Rect, innerRect: Rect, path: Path, startDegrees: number, sweepDegrees: number) {
-        const innerStartX = this.centerX + (this.radiusX * this.ratio) * Math.cos(this.startAngle);
-        const innerStartY = this.centerY + (this.radiusY * this.ratio) * Math.sin(this.startAngle);
+        const innerStartX = this.centerX + (this.radiusX * this.arcSegment.ratio) * Math.cos(this.arcSegment.startAngle);
+        const innerStartY = this.centerY + (this.radiusY * this.arcSegment.ratio) * Math.sin(this.arcSegment.startAngle);
 
-        const outerEndX = this.centerX + this.radiusX * Math.cos(this.endAngle);
-        const outerEndY = this.centerY + this.radiusY * Math.sin(this.endAngle);
+        const outerEndX = this.centerX + this.radiusX * Math.cos(this.arcSegment.endAngle);
+        const outerEndY = this.centerY + this.radiusY * Math.sin(this.arcSegment.endAngle);
 
         path.moveTo(innerStartX, innerStartY);
         path.arcToOval(innerRect, startDegrees, sweepDegrees, false);

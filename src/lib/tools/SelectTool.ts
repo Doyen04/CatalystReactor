@@ -48,24 +48,29 @@ class SelectTool extends Tool {
 
     private handleSingleClick(e: MouseEvent) {
         console.log('Single click - normal selection')
-
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
-        if (scene) {
-            const shape = scene.getShape()
-            this.shapeManager.attachShape(shape)
-            if (this.canEdit(shape) && shape.pointInShape(e.offsetX, e.offsetY)) {
-                shape.setCursorPosFromCoord(e.offsetX, e.offsetY)
-            }
-        } else {
+        if (!scene) {
             this.shapeManager.detachShape()
+            return
         }
+        const clickedShape = scene.getShape()
+
+        if (this.shapeManager.hasShape() && this.shapeManager.currentShape == clickedShape) {
+            this.shapeManager.collide(e.offsetX, e.offsetY);
+        } else {
+            this.shapeManager.attachShape(clickedShape)
+            if (this.canEdit(clickedShape) && clickedShape.pointInShape(e.offsetX, e.offsetY)) {
+                clickedShape.setCursorPosFromCoord(e.offsetX, e.offsetY)
+            }
+        }
+
 
     }
 
     private handleDoubleClick(e: MouseEvent) {
         console.log('Double click detected')
 
-        if (this.shapeManager.currentShape) {
+        if (this.shapeManager.hasShape()) {
             const shape = this.shapeManager.currentShape
 
             if (shape.pointInShape(e.offsetX, e.offsetY)) {
@@ -87,7 +92,7 @@ class SelectTool extends Tool {
         if (scene) {
             const shape = scene.getShape()
             this.shapeManager.modifierMgr.setHoveredShape(shape)
-        }else{
+        } else {
             this.shapeManager.modifierMgr.resetHovered()
         }
         // EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
@@ -102,111 +107,112 @@ class SelectTool extends Tool {
 
         const dx = e.offsetX - this.lastMouseCoord.x
         const dy = e.offsetY - this.lastMouseCoord.y
-
-        this.shapeManager.dragShape(dx, dy)
+        if (this.shapeManager.hasShape()) {
+            this.shapeManager.drag(dx, dy, e)
+        }
 
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
     }
 
-    override handleArrowKeys(e: KeyboardEvent): void {
-        if (this.shapeManager.currentShape) {
-            const shape = this.shapeManager.currentShape
+    // override handleArrowKeys(e: KeyboardEvent): void {
+    //     if (this.shapeManager.currentShape) {
+    //         const shape = this.shapeManager.currentShape
 
-            if (this.canEdit(shape)) {
-                this.moveTextCursor(e, shape)
-            } else {
-                this.moveCurrentShape(e, shape)
-            }
-        }
-    }
+    //         if (this.canEdit(shape)) {
+    //             this.moveTextCursor(e, shape)
+    //         } else {
+    //             this.moveCurrentShape(e, shape)
+    //         }
+    //     }
+    // }
 
-    override handleTextKey(e: KeyboardEvent): void {
+    // override handleTextKey(e: KeyboardEvent): void {
 
-        if (this.shapeManager.currentShape) {
-            const shape = this.shapeManager.currentShape
+    //     if (this.shapeManager.currentShape) {
+    //         const shape = this.shapeManager.currentShape
 
-            if (this.canEdit(shape)) {
-                shape.insertText(e.key, e.shiftKey)
-            }
-        }
-    }
+    //         if (this.canEdit(shape)) {
+    //             shape.insertText(e.key, e.shiftKey)
+    //         }
+    //     }
+    // }
 
-    override handleEnter(e: KeyboardEvent) {
-        if (this.shapeManager.currentShape) {
-            const shape = this.shapeManager.currentShape
+    // override handleEnter(e: KeyboardEvent) {
+    //     if (this.shapeManager.currentShape) {
+    //         const shape = this.shapeManager.currentShape
 
-            if (this.canEdit(shape)) {
-                shape.insertText('\n', e.shiftKey)
-            }
-        }
-    }
+    //         if (this.canEdit(shape)) {
+    //             shape.insertText('\n', e.shiftKey)
+    //         }
+    //     }
+    // }
 
-    override handleDelete(e: KeyboardEvent): void {
-        if (this.shapeManager.currentShape) {
-            const shape = this.shapeManager.currentShape
+    // override handleDelete(e: KeyboardEvent): void {
+    //     if (this.shapeManager.currentShape) {
+    //         const shape = this.shapeManager.currentShape
 
-            if (this.canEdit(shape)) {
-                switch (e.key) {
-                    case "Delete":
-                        shape.deleteText('forward')
-                        break;
-                    case "Backspace":
-                        shape.deleteText('backward')
-                        break;
-                    default:
-                        console.log('delete direction not implemented');
-                        break;
-                }
-            } else {
-                console.log('rrrrr', 'deleting');
+    //         if (this.canEdit(shape)) {
+    //             switch (e.key) {
+    //                 case "Delete":
+    //                     shape.deleteText('forward')
+    //                     break;
+    //                 case "Backspace":
+    //                     shape.deleteText('backward')
+    //                     break;
+    //                 default:
+    //                     console.log('delete direction not implemented');
+    //                     break;
+    //             }
+    //         } else {
+    //             console.log('rrrrr', 'deleting');
 
-            }
-        }
-    }
+    //         }
+    //     }
+    // }
 
-    moveTextCursor(e: KeyboardEvent, shape: IShape) {
-        if (shape) {
-            switch (e.key) {
-                case 'ArrowUp':
-                    shape.moveCursor('up', e.shiftKey)
-                    break;
-                case 'ArrowDown':
-                    shape.moveCursor('down', e.shiftKey)
-                    break;
-                case 'ArrowLeft':
-                    shape.moveCursor('left', e.shiftKey)
-                    break;
-                case 'ArrowRight':
-                    shape.moveCursor('right', e.shiftKey)
-                    break;
-                default:
-                    console.log('direction not implemented');
-                    break;
-            }
-        }
-    }
+    // moveTextCursor(e: KeyboardEvent, shape: IShape) {
+    //     if (shape) {
+    //         switch (e.key) {
+    //             case 'ArrowUp':
+    //                 shape.moveCursor('up', e.shiftKey)
+    //                 break;
+    //             case 'ArrowDown':
+    //                 shape.moveCursor('down', e.shiftKey)
+    //                 break;
+    //             case 'ArrowLeft':
+    //                 shape.moveCursor('left', e.shiftKey)
+    //                 break;
+    //             case 'ArrowRight':
+    //                 shape.moveCursor('right', e.shiftKey)
+    //                 break;
+    //             default:
+    //                 console.log('direction not implemented');
+    //                 break;
+    //         }
+    //     }
+    // }
 
-    moveCurrentShape(e: KeyboardEvent, shape: IShape): void {
-        console.log(e.key);
+    // moveCurrentShape(e: KeyboardEvent, shape: IShape): void {
+    //     console.log(e.key);
 
-        switch (e.key) {
-            case 'ArrowUp':
-                shape.moveShape(0, -2)
-                break;
-            case 'ArrowDown':
-                shape.moveShape(0, 2)
-                break;
-            case 'ArrowLeft':
-                shape.moveShape(-2, 0)
-                break;
-            case 'ArrowRight':
-                shape.moveShape(2, 0)
-                break;
-            default:
-                console.log('direction not implemented');
-                break;
-        }
-    }
+    //     switch (e.key) {
+    //         case 'ArrowUp':
+    //             shape.moveShape(0, -2)
+    //             break;
+    //         case 'ArrowDown':
+    //             shape.moveShape(0, 2)
+    //             break;
+    //         case 'ArrowLeft':
+    //             shape.moveShape(-2, 0)
+    //             break;
+    //         case 'ArrowRight':
+    //             shape.moveShape(2, 0)
+    //             break;
+    //         default:
+    //             console.log('direction not implemented');
+    //             break;
+    //     }
+    // }
 
     canEdit(shape: any) {
         return shape && typeof (shape as any).canEdit === 'function' && (shape as any).canEdit()

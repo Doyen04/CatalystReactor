@@ -31,12 +31,18 @@ export interface BorderRadius {
     'bottom-right': number,
     'locked': boolean
 }
+export interface ArcSegment {
+    startAngle: number;
+    endAngle: number;
+    ratio: number
+}
 
 export interface Properties {
     transform: Transform;
     size: Size;
     style: Style
     borderRadius?: BorderRadius
+    arcSegment?: ArcSegment;
 }
 
 export interface BoundingRect {

@@ -1,17 +1,18 @@
-import React, { ChangeEvent, forwardRef, HTMLInputTypeAttribute, useMemo } from 'react'
+import React, { ChangeEvent, forwardRef, HTMLInputTypeAttribute, ReactNode, useMemo } from 'react'
 import { twMerge } from 'tailwind-merge'
 import ColorPicker from './ColorPicker';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-    title: string;
-    value: number | string ;
+    title?: string;
+    icon?: ReactNode
+    value: number | string;
     objKey: string;
     type: HTMLInputTypeAttribute;
     callBack: (e: ChangeEvent<HTMLInputElement>, key: string) => void
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ title, type, objKey, callBack, className, value, ...props }, ref) => {
+    ({ title, icon, type, objKey, callBack, className, value, ...props }, ref) => {
 
         if (type === 'color') {
             return (
@@ -36,7 +37,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             items-center gap-1 p-0.5 border border-transparent
              hover:border-gray-500 hover:focus-within:border-blue-500 
              transition-colors ${className}`)}>
-                <p className="px-1 font-semibold text-gray-700">{title}</p>
+                <p className="px-1 font-semibold text-gray-700">{title ?? icon}</p>
                 <input
                     ref={ref}
                     type={type}

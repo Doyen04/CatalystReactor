@@ -2,14 +2,17 @@
 import { useSceneStore } from '@hooks/sceneStore';
 import { Coord, IShape, Properties } from '@lib/types/shapes';
 import ModifierManager from './ModifierManager';
+import Handle from '@lib/modifiers/Handles';
 
 class ShapeManager {
     private shape: IShape | null = null;
     private modifierManager: ModifierManager | null
+    private selectedHandle: Handle | null;
 
     constructor(modifierManager: ModifierManager) {
         this.shape = null
         this.modifierManager = modifierManager
+        this.selectedHandle = null
     }
 
     drawShape(dragStart: Coord, e: MouseEvent) {
@@ -20,10 +23,15 @@ class ShapeManager {
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
 
-    dragShape(x: number, y: number) {
-        this.shape.moveShape(x, y)
+    drag(x: number, y: number, e: MouseEvent) {
+        if (this.selectedHandle) {
+            this.modifierManager.drag(x, y, e)
+
+        } else {
+            this.shape.moveShape(x, y)
+            this.modifierManager.update()
+        }
         const props = this.shape.getProperties();
-        this.modifierManager.update()
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
 
@@ -47,6 +55,10 @@ class ShapeManager {
     }
     get modifierMgr(): ModifierManager {
         return this.modifierManager
+    }
+
+    hasShape(): boolean {
+        return this.shape != null
     }
 
     attachShape(shape: IShape) {
@@ -73,6 +85,15 @@ class ShapeManager {
             }
         );
         this.modifierManager.update()
+        // const props = this.shape.getProperties();
+        // useSceneStore.getState().setCurrentShapeProperties(props);
+    }
+    collide(x: number, y: number) {
+        if (!this.shape) return null;
+        const handle = this.modifierManager.getCollidedModifier(x, y)
+        if (handle) {
+            this.selectedHandle = handle
+        }
     }
 
     // Additional methods: move, resize, updateBorderRadius, etc.

@@ -104,8 +104,6 @@ class Rectangle extends Shape {
         this.dimension = prop.size
         this.style = prop.style
         this.bdradius = prop.borderRadius
-
-        this.checkRadiusLock()
         this.calculateBoundingRect()
     }
 
