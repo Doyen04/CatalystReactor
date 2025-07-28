@@ -1,7 +1,7 @@
 import Handle from '@/lib/modifiers/Handles';
 import Shape from '../base/Shape';
 import type { Canvas, } from "canvaskit-wasm";
-import { Corner, HandleType, Properties } from '@lib/types/shapes';
+import { Corner, HandleType, Properties, Sides } from '@lib/types/shapes';
 import { Points } from '@lib/types/shapeTypes';
 
 class Star extends Shape {
@@ -73,12 +73,6 @@ class Star extends Shape {
         this.calculateBoundingRect();
     }
 
-    override setProperties(prop: Properties): void {
-        this.transform = prop.transform
-        this.setDim(prop.size.width, prop.size.height)
-        this.style = prop.style
-    }
-
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
         const deltaX = mx - dragStart.x;
         const deltaY = my - dragStart.y;
@@ -120,8 +114,22 @@ class Star extends Shape {
         this.transform.rotation = rotation % 360;
     }
 
+    setRatio(rat: number) {
+        this.ratio = rat
+        this.points = this.generateStarPoints();
+        this.calculateBoundingRect()
+    }
+
+    override setProperties(prop: Properties): void {
+        this.transform = prop.transform
+        this.setDim(prop.size.width, prop.size.height)
+        this.style = prop.style
+        this.setSpikes(prop.spikesRatio.spikes)
+        this.setRatio(prop.spikesRatio.ratio)
+    }
+
     override getProperties(): Properties {
-        return { transform: this.transform, size: this.getDim(), style: this.style }
+        return { transform: this.transform, size: this.getDim(), style: this.style, spikesRatio: { spikes: this.spikes, ratio: this.ratio } }
     }
     override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         if (handle.type === 'size') {

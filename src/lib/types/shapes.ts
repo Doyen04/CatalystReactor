@@ -41,6 +41,11 @@ export interface Sides {
     sides: number;
 }
 
+export interface SpikesRatio{
+    spikes:number;
+    ratio:number;
+}
+
 export interface Properties {
     transform: Transform;
     size: Size;
@@ -48,6 +53,7 @@ export interface Properties {
     borderRadius?: BorderRadius
     arcSegment?: ArcSegment;
     sides?: Sides;
+    spikesRatio?: SpikesRatio;
 }
 
 export interface BoundingRect {

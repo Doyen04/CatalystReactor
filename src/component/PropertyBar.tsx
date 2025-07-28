@@ -16,9 +16,8 @@ function PropertyBar() {
     const { shapeManager } = useCanvasManagerStore()
 
     const handlePropertyChange = (e: ChangeEvent<HTMLInputElement>, key: string) => {
-        const { transform, size, style, borderRadius, sides } = currentShapeProperties
+        const { transform, size, style, borderRadius, sides, spikesRatio } = currentShapeProperties
         const value = e.currentTarget.type === "number" ? parseFloat(e.currentTarget.value) || 0 : e.currentTarget.value;
-        console.log(key, sides, key in sides);
 
         const propertyMap = [
             { prop: transform, name: "transform" },
@@ -26,7 +25,8 @@ function PropertyBar() {
             { prop: style, name: "style" },
             { prop: borderRadius, name: "borderRadius" },
             { prop: arcSegment, name: "arcSegment" },
-            { prop: sides, name: "sides" }
+            { prop: sides, name: "sides" },
+            { prop: spikesRatio, name: "spikesRatio" },
         ];
 
         for (const { prop, name } of propertyMap) {
@@ -105,6 +105,7 @@ function PropertyBar() {
     const borderRadius = currentShapeProperties?.borderRadius
     const arcSegment = currentShapeProperties?.arcSegment
     const sides = currentShapeProperties?.sides
+    const spikesRatio = currentShapeProperties?.spikesRatio
 
     return (
         <div className="propertybar">
@@ -134,6 +135,14 @@ function PropertyBar() {
                             value={String(style.fill)} callBack={handlePropertyChange} />
                         <Input type="color" title="Stroke" objKey="strokeColor"
                             value={String(style.strokeColor)} callBack={handlePropertyChange} />
+                    </Section>
+                )}
+                {spikesRatio && (
+                    <Section title="Spikes-Ratio">
+                        <Input type="number" title="Spikes" objKey="spikes"
+                            value={spikesRatio.spikes} callBack={handlePropertyChange} />
+                        <Input type="nuber" title="Ratio" objKey="ratio"
+                            value={spikesRatio.ratio} callBack={handlePropertyChange} />
                     </Section>
                 )}
                 {arcSegment && (
