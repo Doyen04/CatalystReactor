@@ -16,18 +16,6 @@ abstract class Tool {
         const { setDefaultTool } = useToolStore.getState()
         setDefaultTool()
     }
-    handleTextKey(e: KeyboardEvent): void {
-
-    };
-    handleArrowKeys(e: KeyboardEvent): void {
-
-    };
-    handleEnter(e: KeyboardEvent): void {
-
-    };
-    handleDelete(e: KeyboardEvent): void {
-
-    }
 
     handlePointerMove(dragStart: Coord, e: MouseEvent): void {
 

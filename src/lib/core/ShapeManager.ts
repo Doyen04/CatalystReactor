@@ -35,6 +35,14 @@ class ShapeManager {
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
 
+    move(x: number, y: number) {
+        this.shape.moveShape(x, y)
+        const props = this.shape.getProperties();
+        this.modifierManager.update()
+
+        useSceneStore.getState().setCurrentShapeProperties(props);
+    }
+
     handleTinyShapes(): void {
         if (!this.shape) return;
 
@@ -88,7 +96,7 @@ class ShapeManager {
         const props = this.shape.getProperties();
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
-    finishDrag(){
+    finishDrag() {
         this.selectedHandle = null
     }
     collide(x: number, y: number) {

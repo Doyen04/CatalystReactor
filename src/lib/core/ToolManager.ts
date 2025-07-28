@@ -21,7 +21,7 @@ class ToolManager {
         this.sceneManager = sceneManager
         this.shapeManager = shapeManager
         this.currentTool = new SelectTool(this.sceneManager, this.shapeManager)
-        this.keyboardTool = new KeyboardTool(this.currentTool)
+        this.keyboardTool = new KeyboardTool(this.shapeManager)
         this.setUpEvent()
     }
 
@@ -62,7 +62,6 @@ class ToolManager {
         if (tool !== this.currentTool) {
             if (this.currentTool) this.currentTool.toolChange()
             this.currentTool = tool
-            this.keyboardTool.setCurrentTool(tool)
         }
     }
 
