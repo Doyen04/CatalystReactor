@@ -3,49 +3,36 @@ import { useSceneStore } from "@hooks/sceneStore";
 import { Properties } from "@lib/types/shapes";
 import Input from "@ui/Input";
 import { twMerge } from "tailwind-merge";
+import { useCanvasManagerStore } from "@hooks/useCanvasManager";
 // import PText from "@lib/shapes/primitives/PText";
 
 
 function PropertyBar() {
     const { currentShapeProperties, updateProperty } = useSceneStore();
+    const { shapeManager } = useCanvasManagerStore()
 
     const handlePropertyChange = (e: ChangeEvent<HTMLInputElement>, key: string) => {
         const { transform, size, style, borderRadius } = currentShapeProperties
-        console.log(key, style);
+        const value = e.currentTarget.type === "number" ? parseFloat(e.currentTarget.value) || 0 : e.currentTarget.value;
 
-        if (key in transform) {
-            const value = parseFloat(e.currentTarget.value) || 0
-            console.log(Object.values(transform));
-            updateProperty('transform', {
-                ...transform,
-                [key]: value
-            })
-        } else if (key in size) {
-            const value = parseFloat(e.currentTarget.value) || 0
-            console.log(Object.values(size));
-            updateProperty('size', {
-                ...size,
-                [key]: value
-            })
-        } else if (key in style) {
-            const value = e.currentTarget.value
-            console.log(key, e, value);
-            console.log(Object.values(style));
-            updateProperty('style', {
-                ...style,
-                [key]: value
-            })
-        } else if (key in borderRadius) {
-            const value = e.currentTarget.value
-            console.log(key, e, value);
-            console.log(Object.values(borderRadius));
-            updateProperty('borderRadius', {
-                ...borderRadius,
-                [key]: value
-            })
+        const propertyMap = [
+            { prop: transform, name: "transform" },
+            { prop: size, name: "size" },
+            { prop: style, name: "style" },
+            { prop: borderRadius, name: "borderRadius" }
+        ];
+
+        for (const { prop, name } of propertyMap) {
+            if (key in prop) {
+                updateProperty(name, { ...prop, [key]: value });
+                if (shapeManager) {
+                    shapeManager.updateProperty(name as keyof Properties, { ...prop, [key]: value });
+                }
+                break;
+            }
         }
-
     };
+
     const toggle = (e, key: string, value: boolean) => {
         const { borderRadius } = currentShapeProperties
         if (key in borderRadius) {

@@ -16,13 +16,11 @@ class ToolManager {
     keyboardTool: KeyboardTool;
     sceneManager: SceneManager;
     shapeManager: ShapeManager;
-    modifierManager: ModifierManager
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, modifierManager: ModifierManager) {
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager) {
         this.sceneManager = sceneManager
         this.shapeManager = shapeManager
-        this.modifierManager = modifierManager
-        this.currentTool = new SelectTool(this.sceneManager, this.shapeManager, this.modifierManager)
+        this.currentTool = new SelectTool(this.sceneManager, this.shapeManager)
         this.keyboardTool = new KeyboardTool(this.currentTool)
         this.setUpEvent()
     }
@@ -31,25 +29,25 @@ class ToolManager {
         let currentTool = null
         switch (tool) {
             case 'select':
-                currentTool = new SelectTool(this.sceneManager, this.shapeManager, this.modifierManager )
+                currentTool = new SelectTool(this.sceneManager, this.shapeManager )
                 break;
             case 'rect':
-                currentTool = new ShapeTool('rect', this.sceneManager, this.shapeManager,this.modifierManager )
+                currentTool = new ShapeTool('rect', this.sceneManager, this.shapeManager )
                 break;
             case 'oval':
-                currentTool = new ShapeTool('oval', this.sceneManager, this.shapeManager,this.modifierManager )
+                currentTool = new ShapeTool('oval', this.sceneManager, this.shapeManager )
                 break;
             case 'star':
-                currentTool = new ShapeTool('star', this.sceneManager, this.shapeManager,this.modifierManager )
+                currentTool = new ShapeTool('star', this.sceneManager, this.shapeManager )
                 break;
             case 'polygon':
-                currentTool = new ShapeTool('polygon', this.sceneManager, this.shapeManager,this.modifierManager )
+                currentTool = new ShapeTool('polygon', this.sceneManager, this.shapeManager )
                 break;
             case 'text':
-                currentTool = new ShapeTool('text', this.sceneManager, this.shapeManager,this.modifierManager )
+                currentTool = new ShapeTool('text', this.sceneManager, this.shapeManager )
                 break;
             case 'img':
-                currentTool = new ImageTool(this.sceneManager, this.shapeManager,this.modifierManager )
+                currentTool = new ImageTool(this.sceneManager, this.shapeManager )
                 break;
             default:
                 console.log('ttool not implemented');

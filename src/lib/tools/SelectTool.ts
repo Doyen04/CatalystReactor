@@ -2,7 +2,6 @@ import { Coord, IShape } from "@lib/types/shapes";
 import Tool from "./Tool";
 import SceneManager from "@lib/core/SceneManager";
 import ShapeManager from "@lib/core/ShapeManager";
-import ModifierManager from "@lib/core/ModifierManager";
 
 class SelectTool extends Tool {
     private lastMouseCoord: Coord | null = null
@@ -11,8 +10,8 @@ class SelectTool extends Tool {
     private lastClickTime: number = 0
     private doubleClickDelay: number = 300 // milliseconds
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, modifierManager: ModifierManager) {
-        super(sceneManager, shapeManager, modifierManager)
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager) {
+        super(sceneManager, shapeManager)
     }
 
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
@@ -54,13 +53,11 @@ class SelectTool extends Tool {
         if (scene) {
             const shape = scene.getShape()
             this.shapeManager.attachShape(shape)
-            this.modifierManager.attachShape(shape)
             if (this.canEdit(shape) && shape.pointInShape(e.offsetX, e.offsetY)) {
                 shape.setCursorPosFromCoord(e.offsetX, e.offsetY)
             }
         } else {
             this.shapeManager.detachShape()
-            this.modifierManager.detachShape()
         }
 
     }
@@ -89,9 +86,9 @@ class SelectTool extends Tool {
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
         if (scene) {
             const shape = scene.getShape()
-            this.modifierManager.setHoveredShape(shape)
+            this.shapeManager.modifierManager.setHoveredShape(shape)
         }else{
-            this.modifierManager.resetHovered()
+            this.shapeManager.modifierManager.resetHovered()
         }
         // EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
     }
@@ -107,7 +104,6 @@ class SelectTool extends Tool {
         const dy = e.offsetY - this.lastMouseCoord.y
 
         this.shapeManager.dragShape(dx, dy)
-        this.modifierManager.update()
 
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
     }
@@ -210,7 +206,6 @@ class SelectTool extends Tool {
                 console.log('direction not implemented');
                 break;
         }
-        this.modifierManager.update()
     }
 
     canEdit(shape: any) {

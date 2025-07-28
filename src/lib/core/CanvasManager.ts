@@ -24,12 +24,12 @@ class CanvasManager {
     constructor(canvas: HTMLCanvasElement) {
 
         // this.skCnvs = null
-        this.shapeManager = new ShapeManager()
         this.modifierManager = new ModifierManager()
+        this.shapeManager = new ShapeManager(this.modifierManager)
         this.sceneManager = new SceneManager();
         this.renderer = new Renderer(canvas, this.sceneManager, this.modifierManager)
         this.inputManager = new InputManager(canvas)
-        this.toolManager = new ToolManager(this.sceneManager, this.shapeManager, this.modifierManager)
+        this.toolManager = new ToolManager(this.sceneManager, this.shapeManager)
 
 
         // Input handling state

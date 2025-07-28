@@ -1,5 +1,4 @@
 import { useToolStore } from "@hooks/useTool";
-import ModifierManager from "@lib/core/ModifierManager";
 import SceneManager from "@lib/core/SceneManager";
 import ShapeManager from "@lib/core/ShapeManager";
 import { Coord } from "@lib/types/shapes";
@@ -7,16 +6,13 @@ import { Coord } from "@lib/types/shapes";
 abstract class Tool {
     sceneManager: SceneManager | null = null;
     shapeManager: ShapeManager | null = null
-    modifierManager: ModifierManager | null = null
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, modifierManager: ModifierManager) {
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager) {
         this.sceneManager = sceneManager
         this.shapeManager = shapeManager
-        this.modifierManager = modifierManager
     }
     handlePointerUp(coord: Coord, e: MouseEvent) {
         this.shapeManager.handleTinyShapes()
-        this.modifierManager.update()
         const { setDefaultTool } = useToolStore.getState()
         setDefaultTool()
     }

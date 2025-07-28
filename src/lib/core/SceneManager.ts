@@ -24,29 +24,11 @@ class SceneManager {
         this.addEvent()
     }
     addEvent() {
-        // EventQueue.subscribe(CreateScene, this.createScene.bind(this))
-        // EventQueue.subscribe(DrawScene, this.updateTransientScene.bind(this))
-        // EventQueue.subscribe(FinalizeShape, this.cleanUp.bind(this))
-
-        // EventQueue.subscribe(ShowHovered, this.showHovered.bind(this))
-
-        // EventQueue.subscribe(SelectObject, this.selectObject.bind(this))
-        // EventQueue.subscribe(DragObject, this.dragSelectedObject.bind(this))
-        // EventQueue.subscribe(FinaliseSelection, this.handleSelectionCleanUp.bind(this))
-        EventQueue.subscribe(DeleteScene, this.handleDeleteScene.bind(this))
+        // EventQueue.subscribe(DeleteScene, this.handleDeleteScene.bind(this))
 
     }
     removeEvent() {
-        // EventQueue.unSubscribeAll(CreateScene)
-        // EventQueue.unSubscribeAll(DrawScene)
-        // EventQueue.unSubscribeAll(FinalizeShape)
-
-        // EventQueue.unSubscribeAll(ShowHovered)
-
-        // EventQueue.unSubscribeAll(SelectObject)
-        // EventQueue.unSubscribeAll(DragObject)
-        EventQueue.unSubscribeAll(FinaliseSelection)
-
+        // EventQueue.unSubscribeAll(FinaliseSelection)
     }
     getScene(): SceneNode {
         return this.scene
@@ -70,16 +52,6 @@ class SceneManager {
         }
         // this.pushHistory();
         // this.render();
-    }
-
-    handleDeleteScene() {
-        // const { currentScene, clearCurrentScene, clearProperties } = useSceneStore.getState()
-        // currentScene.getShape().destroy()
-        // this.removeNode(currentScene)
-        // this.shapeMod.setShape(null)
-        // clearCurrentScene()
-        // clearProperties()
-        // this.selected = null
     }
 
     getCollidedScene(x: number, y: number): SceneNode | null {
