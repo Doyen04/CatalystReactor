@@ -110,6 +110,7 @@ class Oval extends Shape {
         this.transform = prop.transform
         this.setDim(prop.size.width, prop.size.height)
         this.style = prop.style
+        this.arcSegment = prop.arcSegment
     }
 
     override getDim(): { width: number, height: number } {

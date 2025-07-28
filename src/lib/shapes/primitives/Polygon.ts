@@ -1,6 +1,6 @@
 import type { Canvas } from "canvaskit-wasm";
 import Shape from "../base/Shape";
-import { Corner, HandleType } from "@lib/types/shapes";
+import { Corner, HandleType, Properties, Sides } from "@lib/types/shapes";
 import Handle from "@lib/modifiers/Handles";
 import { Points } from "@lib/types/shapeTypes";
 
@@ -8,8 +8,8 @@ class Polygon extends Shape {
     centerX: number;
     centerY: number;
     bRadius: number;
-    sides: number;
-    point: Points[]
+    sides: Sides;
+    points: Points[]
     radiusX: number;
     radiusY: number;
 
@@ -18,70 +18,42 @@ class Polygon extends Shape {
         this.centerX = 0;
         this.centerY = 0;
         this.bRadius = 0;
-        this.sides = 5;
+        this.sides = { sides: 5 };
         this.radiusX = 0;
         this.radiusY = 0;
-        this.point = this.generateRegularPolygon();
+        this.points = this.generateRegularPolygon();
     }
+
+    override moveShape(dx: number, dy: number): void {
+        this.transform.x += dx;
+        this.transform.y += dy;
+        this.centerX += dx;
+        this.centerY += dy;
+
+        this.points = this.generateRegularPolygon()
+        this.calculateBoundingRect();
+    }
+
     override setDim(width: number, height: number) {
         this.radiusX = width / 2;
         this.radiusY = height / 2;
 
-        this.centerX = this.x + this.radiusX
-        this.centerY = this.y + this.radiusY
+        this.centerX = this.transform.x + this.radiusX
+        this.centerY = this.transform.y + this.radiusY
 
-        this.point = this.generateRegularPolygon();
+        this.points = this.generateRegularPolygon();
         this.calculateBoundingRect()
     }
-    
+
     override setCoord(x: number, y: number): void {
-        this.x = x;
-        this.y = y;
+        this.transform.x = x;
+        this.transform.y = y;
 
-        this.centerX = this.x + this.radiusX
-        this.centerY = this.y + this.radiusY
+        this.centerX = this.transform.x + this.radiusX
+        this.centerY = this.transform.y + this.radiusY
 
-        this.point = this.generateRegularPolygon();
+        this.points = this.generateRegularPolygon();
         this.calculateBoundingRect()
-    }
-
-    private generateRegularPolygon(): Points[] {
-        const points: Points[] = [];
-        const angleStep = (2 * Math.PI) / this.sides;
-
-        for (let i = 0; i < this.sides; i++) {
-            const angle = i * angleStep - (Math.PI / 2); // Start from top
-            const x = this.centerX + this.radiusX * Math.cos(angle);
-            const y = this.centerY + this.radiusY * Math.sin(angle);
-            const res: Points = [x, y];
-            points.push(res);
-        }
-
-        return points;
-    }
-
-    override moveShape(dx: number, dy: number): void {
-        this.x += dx;
-        this.y += dy;
-        this.centerX += dx;
-        this.centerY += dy;
-
-        this.point = this.generateRegularPolygon()
-        this.calculateBoundingRect();
-    }
-
-    override calculateBoundingRect(): void {
-        const left = this.x;
-        const top = this.y;
-        const right = this.x + this.radiusX * 2;
-        const bottom = this.y + this.radiusY * 2;
-
-        this.boundingRect = {
-            left: left,
-            top: top,
-            right: right,
-            bottom: bottom
-        };
     }
 
     override setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void {
@@ -105,53 +77,27 @@ class Polygon extends Shape {
             this.radiusY = newRadiusY;
         }
 
-        this.x = this.centerX - this.radiusX;
-        this.y = this.centerY - this.radiusY;
+        this.transform.x = this.centerX - this.radiusX;
+        this.transform.y = this.centerY - this.radiusY;
 
-        this.point = this.generateRegularPolygon();
+        this.points = this.generateRegularPolygon();
         this.calculateBoundingRect();
     }
 
-
-    override draw(canvas: Canvas): void {
-        if (!this.resource) return
-
-        this.setPaint();
-
-        const path = new this.resource.canvasKit.Path();
-        const [startX, startY] = this.point[0];
-        path.moveTo(startX, startY);
-
-        for (let i = 1; i < this.point.length; i++) {
-            const [x, y] = this.point[i];
-            path.lineTo(x, y);
-        }
-
-        path.close();
-
-        canvas.drawPath(path, this.resource.paint);
-        canvas.drawPath(path, this.resource.strokePaint);
-
-        path.delete();
+    setSides(sides:number){
+        this.sides = {sides}
+        this.points = this.generateRegularPolygon()
     }
 
-    override pointInShape(x: number, y: number): boolean {
-        const pts = this.point;
-        const n = pts.length;
-        if (n < 3) return false;
+    override setProperties(prop: Properties): void {
+        this.transform = prop.transform
+        this.setDim(prop.size.width, prop.size.height)
+        this.style = prop.style
+        this.setSides(prop.sides.sides)
+    }
 
-        let inside = false;
-        for (let i = 0, j = n - 1; i < n; j = i++) {
-            const [xi, yi] = pts[i];
-            const [xj, yj] = pts[j];
-            const intersects =
-                (yi > y) !== (yj > y) &&
-                x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-
-            if (intersects) inside = !inside;
-        }
-
-        return inside;
+    override getProperties(): Properties {
+        return { transform: this.transform, size: this.getDim(), style: this.style, sides: this.sides }
     }
 
     override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
@@ -169,8 +115,79 @@ class Polygon extends Shape {
     override getDim(): { width: number, height: number } {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
+
+    private generateRegularPolygon(): Points[] {
+        const points: Points[] = [];
+        const angleStep = (2 * Math.PI) / this.sides.sides;
+
+        for (let i = 0; i < this.sides.sides; i++) {
+            const angle = i * angleStep - (Math.PI / 2); // Start from top
+            const x = this.centerX + this.radiusX * Math.cos(angle);
+            const y = this.centerY + this.radiusY * Math.sin(angle);
+            const res: Points = [x, y];
+            points.push(res);
+        }
+
+        return points;
+    }
+
+    override calculateBoundingRect(): void {
+        const left = this.transform.x;
+        const top = this.transform.y;
+        const right = this.transform.x + this.radiusX * 2;
+        const bottom = this.transform.y + this.radiusY * 2;
+
+        this.boundingRect = {
+            left: left,
+            top: top,
+            right: right,
+            bottom: bottom
+        };
+    }
+
+    override draw(canvas: Canvas): void {
+        if (!this.resource) return
+
+        this.setPaint();
+
+        const path = new this.resource.canvasKit.Path();
+        const [startX, startY] = this.points[0];
+        path.moveTo(startX, startY);
+
+        for (let i = 1; i < this.points.length; i++) {
+            const [x, y] = this.points[i];
+            path.lineTo(x, y);
+        }
+
+        path.close();
+
+        canvas.drawPath(path, this.resource.paint);
+        canvas.drawPath(path, this.resource.strokePaint);
+
+        path.delete();
+    }
+
+    override pointInShape(x: number, y: number): boolean {
+        const pts = this.points;
+        const n = pts.length;
+        if (n < 3) return false;
+
+        let inside = false;
+        for (let i = 0, j = n - 1; i < n; j = i++) {
+            const [xi, yi] = pts[i];
+            const [xj, yj] = pts[j];
+            const intersects =
+                (yi > y) !== (yj > y) &&
+                x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+
+            if (intersects) inside = !inside;
+        }
+
+        return inside;
+    }
+
     override cleanUp(): void {
-        
+
     }
     override destroy(): void {
 

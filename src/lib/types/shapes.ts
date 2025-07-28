@@ -37,12 +37,17 @@ export interface ArcSegment {
     ratio: number
 }
 
+export interface Sides {
+    sides: number;
+}
+
 export interface Properties {
     transform: Transform;
     size: Size;
     style: Style
     borderRadius?: BorderRadius
     arcSegment?: ArcSegment;
+    sides?: Sides;
 }
 
 export interface BoundingRect {

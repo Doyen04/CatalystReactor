@@ -9,6 +9,7 @@ import Section from "@ui/Section";
 import LockButton from "@ui/LockedButton";
 import BorderRadius from "@ui/BorderRadius";
 import BorderRadiusAll from "@ui/BorderRadiusAll";
+import { AngleIcon } from "@ui/ArcSegment";
 // import PText from "@lib/shapes/primitives/PText";
 
 
@@ -17,18 +18,25 @@ function PropertyBar() {
     const { shapeManager } = useCanvasManagerStore()
 
     const handlePropertyChange = (e: ChangeEvent<HTMLInputElement>, key: string) => {
-        const { transform, size, style, borderRadius } = currentShapeProperties
+        const { transform, size, style, borderRadius, sides } = currentShapeProperties
         const value = e.currentTarget.type === "number" ? parseFloat(e.currentTarget.value) || 0 : e.currentTarget.value;
+        console.log(key, sides, key in sides);
 
         const propertyMap = [
             { prop: transform, name: "transform" },
             { prop: size, name: "size" },
             { prop: style, name: "style" },
-            { prop: borderRadius, name: "borderRadius" }
+            { prop: borderRadius, name: "borderRadius" },
+            { prop: arcSegment, name: "arcSegment" },
+            { prop: sides, name: "sides" }
         ];
 
         for (const { prop, name } of propertyMap) {
-            if (borderRadius.locked && key in borderRadius && typeof value == "number") {
+            if (!prop) continue
+
+            console.log(key, prop,name, propertyMap);
+
+            if (key == 'radii' && borderRadius && borderRadius.locked && typeof value == "number") {
                 updateProperty("borderRadius", {
                     "top-left": value,
                     "top-right": value,
@@ -100,6 +108,7 @@ function PropertyBar() {
     const style = currentShapeProperties?.style
     const borderRadius = currentShapeProperties?.borderRadius
     const arcSegment = currentShapeProperties?.arcSegment
+    const sides = currentShapeProperties?.sides
 
     return (
         <div className="propertybar">
@@ -132,20 +141,27 @@ function PropertyBar() {
                     </Section>
                 )}
                 {arcSegment && (
-                    <Section title="Arc-Segment">
-                        <Input type="number" title="arc-start" objKey="startAngle"
+                    <Section title="Arc-Segment" childClass="gap-0">
+                        <Input type="number" icon={<AngleIcon startAngle={arcSegment.startAngle} endAngle={arcSegment.endAngle} ratio={arcSegment.ratio} />} objKey="startAngle"
                             value={String(arcSegment.startAngle)} callBack={handlePropertyChange} />
-                        <Input type="number" title="arc-end" objKey="endAngle"
+                        <Input type="number" title="" objKey="endAngle"
                             value={String(arcSegment.endAngle)} callBack={handlePropertyChange} />
-                        <Input type="number" title="Ratio" objKey="ratio"
+                        <Input type="number" title="" objKey="ratio"
                             value={String(arcSegment.ratio)} callBack={handlePropertyChange} />
+                    </Section>
+                )}
+                {sides && (
+                    <Section title="Sides">
+                        <Input type="number" title={"sides"} objKey="sides"
+                            value={sides.sides} callBack={handlePropertyChange} />
+
                     </Section>
                 )}
                 {borderRadius && (
                     <Section title="Border Radius">
                         {borderRadius.locked ? (
                             <>
-                                <Input className="col-span-4" type="number" icon={<BorderRadius size={20} />} objKey="top-left"
+                                <Input className="col-span-4" type="number" icon={<BorderRadius size={20} />} objKey="radii"
                                     value={borderRadius["top-left"]} callBack={handlePropertyChange} />
                                 <LockButton locked={borderRadius.locked} onClick={e => toggle(e, 'locked', !borderRadius.locked)} />
                             </>

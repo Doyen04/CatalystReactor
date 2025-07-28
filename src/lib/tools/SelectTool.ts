@@ -81,7 +81,7 @@ class SelectTool extends Tool {
     }
 
     override handlePointerUp() {
-
+        this.shapeManager.finishDrag()
         // EventQueue.trigger(FinaliseSelection)
         // EventQueue.trigger(UpdateModifierHandlesPos)
         // EventQueue.trigger(Render)

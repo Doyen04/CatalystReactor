@@ -66,6 +66,8 @@ class ShapeManager {
         this.modifierManager.attachShape(shape)
         // Optionally sync initial props:
         const props = this.shape.getProperties();
+        console.log(props);
+        
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
 
@@ -87,6 +89,9 @@ class ShapeManager {
         this.modifierManager.update()
         // const props = this.shape.getProperties();
         // useSceneStore.getState().setCurrentShapeProperties(props);
+    }
+    finishDrag(){
+        this.selectedHandle = null
     }
     collide(x: number, y: number) {
         if (!this.shape) return null;
