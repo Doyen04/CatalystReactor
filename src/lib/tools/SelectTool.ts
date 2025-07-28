@@ -86,9 +86,9 @@ class SelectTool extends Tool {
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
         if (scene) {
             const shape = scene.getShape()
-            this.shapeManager.modifierManager.setHoveredShape(shape)
+            this.shapeManager.modifierMgr.setHoveredShape(shape)
         }else{
-            this.shapeManager.modifierManager.resetHovered()
+            this.shapeManager.modifierMgr.resetHovered()
         }
         // EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
     }
