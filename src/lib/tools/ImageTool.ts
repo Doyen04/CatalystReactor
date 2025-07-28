@@ -1,11 +1,16 @@
 import { Coord } from "@lib/types/shapes";
 import Tool from "./Tool";
-import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import { useImageStore } from "@hooks/imageStore";
-
-const { CreateScene, DrawScene, UpdateModifierHandlesPos, Render } = EventTypes
+import SceneManager from "@lib/core/SceneManager";
+import ShapeManager from "@lib/core/ShapeManager";
+import SceneNode from "@lib/core/SceneGraph";
+import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 
 class ImageTool extends Tool {
+
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager) {
+        super(sceneManager, shapeManager)
+    }
 
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
         const { hasImages, selectedImageFiles } = useImageStore.getState();
@@ -15,8 +20,14 @@ class ImageTool extends Tool {
             console.warn('No images available. Please select images first.');
             return;
         }
+        const shape = ShapeFactory.createShape('img', { x: e.offsetX, y: e.offsetY });
+        if (shape) {
+            const scene: SceneNode = new SceneNode();
+            scene.shape = shape
+            this.sceneManager.addNode(scene);
+            this.shapeManager.attachShape(shape)
+        }
 
-        EventQueue.trigger(CreateScene, 'img', dragStart.x, dragStart.y)
     }
     override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
 
@@ -29,10 +40,7 @@ class ImageTool extends Tool {
         super.handlePointerUp?.(dragStart, e);
     }
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-        if (this.currentScene) {
-            EventQueue.trigger(DrawScene, dragStart, e.offsetX, e.offsetY, e.shiftKey)
-        }
-        EventQueue.trigger(UpdateModifierHandlesPos)
+        this.shapeManager.drawShape(dragStart, e)
     };
 
     // override handleKeyDown(e: KeyboardEvent): void {
