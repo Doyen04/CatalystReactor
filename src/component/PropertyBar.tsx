@@ -1,16 +1,14 @@
-import React, { ChangeEvent, useEffect, useMemo, useState } from "react";
+import React, { ChangeEvent } from "react";
 import { useSceneStore } from "@hooks/sceneStore";
 import { Properties } from "@lib/types/shapes";
 import Input from "@ui/Input";
-import { twMerge } from "tailwind-merge";
 import { useCanvasManagerStore } from "@hooks/useCanvasManager";
-import { MoveHorizontal } from "lucide-react";
+import { Hexagon } from "lucide-react";
 import Section from "@ui/Section";
 import LockButton from "@ui/LockedButton";
 import BorderRadius from "@ui/BorderRadius";
 import BorderRadiusAll from "@ui/BorderRadiusAll";
 import { AngleIcon } from "@ui/ArcSegment";
-// import PText from "@lib/shapes/primitives/PText";
 
 
 function PropertyBar() {
@@ -33,8 +31,6 @@ function PropertyBar() {
 
         for (const { prop, name } of propertyMap) {
             if (!prop) continue
-
-            console.log(key, prop,name, propertyMap);
 
             if (key == 'radii' && borderRadius && borderRadius.locked && typeof value == "number") {
                 updateProperty("borderRadius", {
@@ -152,7 +148,7 @@ function PropertyBar() {
                 )}
                 {sides && (
                     <Section title="Sides">
-                        <Input type="number" title={"sides"} objKey="sides"
+                        <Input type="number" icon={<Hexagon size={20} />} objKey="sides"
                             value={sides.sides} callBack={handlePropertyChange} />
 
                     </Section>

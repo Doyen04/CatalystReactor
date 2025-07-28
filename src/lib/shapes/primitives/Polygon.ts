@@ -85,6 +85,7 @@ class Polygon extends Shape {
     }
 
     setSides(sides:number){
+        sides = Math.max(3, sides)
         this.sides = {sides}
         this.points = this.generateRegularPolygon()
     }
@@ -93,6 +94,7 @@ class Polygon extends Shape {
         this.transform = prop.transform
         this.setDim(prop.size.width, prop.size.height)
         this.style = prop.style
+        console.log(prop, 'inside poly');
         this.setSides(prop.sides.sides)
     }
 

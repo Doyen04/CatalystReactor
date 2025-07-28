@@ -1,14 +1,12 @@
 import Handle from '@/lib/modifiers/Handles';
 import Shape from '../base/Shape';
 import type { Canvas, } from "canvaskit-wasm";
-import { Corner, HandleType } from '@lib/types/shapes';
+import { Corner, HandleType, Properties } from '@lib/types/shapes';
 import { Points } from '@lib/types/shapeTypes';
 
 class Star extends Shape {
     radiusX: number;
     radiusY: number;
-    // innerRadiusX: number;
-    // innerRadiusY: number;
     spikes: number;
     centerX: number;
     centerY: number;
@@ -44,20 +42,30 @@ class Star extends Shape {
         return points;
     }
 
+    override moveShape(mx: number, my: number): void {
+        this.transform.x += mx;
+        this.transform.y += my;
+        this.centerX += mx;
+        this.centerY += my;
+
+        this.points = this.generateStarPoints();
+        this.calculateBoundingRect();
+    }
+
     setDim(width: number, height: number) {
         this.radiusX = width / 2;
         this.radiusY = height / 2;
 
-        this.centerX = this.x + this.radiusX
-        this.centerY = this.y + this.radiusY
+        this.centerX = this.transform.x + this.radiusX
+        this.centerY = this.transform.y + this.radiusY
 
         this.points = this.generateStarPoints();
         this.calculateBoundingRect()
     }
-    
+
     override setCoord(x: number, y: number): void {
-        this.x = x;
-        this.y = y;
+        this.transform.x = x;
+        this.transform.y = y;
         this.centerX = x + this.radiusX;
         this.centerY = y + this.radiusY;
 
@@ -65,33 +73,10 @@ class Star extends Shape {
         this.calculateBoundingRect();
     }
 
-    override draw(canvas: Canvas): void {
-        if (!this.resource) return
-
-        this.setPaint();
-        const path = new this.resource.canvasKit.Path();
-
-        path.moveTo(this.points[0][0], this.points[0][1]);
-
-        for (let i = 1; i < this.points.length; i++) {
-            path.lineTo(this.points[i][0], this.points[i][1]);
-        }
-        path.close();
-
-        canvas.drawPath(path, this.resource.paint);
-        canvas.drawPath(path, this.resource.strokePaint);
-
-        path.delete(); // Clean up path object
-    }
-
-    override moveShape(mx: number, my: number): void {
-        this.x += mx;
-        this.y += my;
-        this.centerX += mx;
-        this.centerY += my;
-
-        this.points = this.generateStarPoints();
-        this.calculateBoundingRect();
+    override setProperties(prop: Properties): void {
+        this.transform = prop.transform
+        this.setDim(prop.size.width, prop.size.height)
+        this.style = prop.style
     }
 
     override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
@@ -117,11 +102,59 @@ class Star extends Shape {
         }
 
         // Update position for bounding calculations
-        this.x = this.centerX - this.radiusX;
-        this.y = this.centerY - this.radiusY;
+        this.transform.x = this.centerX - this.radiusX;
+        this.transform.y = this.centerY - this.radiusY;
 
         this.points = this.generateStarPoints();
         this.calculateBoundingRect();
+    }
+
+    setSpikes(points: number): void {
+        this.spikes = Math.max(3, points);
+
+        this.points = this.generateStarPoints();
+        this.calculateBoundingRect()
+    }
+
+    setRotation(rotation: number): void {
+        this.transform.rotation = rotation % 360;
+    }
+
+    override getProperties(): Properties {
+        return { transform: this.transform, size: this.getDim(), style: this.style }
+    }
+    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+        if (handle.type === 'size') {
+            return super.getSizeModifierHandlesPos(handle);
+        }
+        return { x: 0, y: 0 };
+    }
+    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
+        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+        return handles;
+    }
+
+    override getDim(): { width: number; height: number; } {
+        return { width: this.radiusX * 2, height: this.radiusY * 2 }
+    }
+
+    override draw(canvas: Canvas): void {
+        if (!this.resource) return
+
+        this.setPaint();
+        const path = new this.resource.canvasKit.Path();
+
+        path.moveTo(this.points[0][0], this.points[0][1]);
+
+        for (let i = 1; i < this.points.length; i++) {
+            path.lineTo(this.points[i][0], this.points[i][1]);
+        }
+        path.close();
+
+        canvas.drawPath(path, this.resource.paint);
+        canvas.drawPath(path, this.resource.strokePaint);
+
+        path.delete(); // Clean up path object
     }
 
     override calculateBoundingRect(): void {
@@ -134,33 +167,6 @@ class Star extends Shape {
         const bottom = this.centerY + maxRadiusY;
 
         this.boundingRect = { left, top, right, bottom };
-    }
-
-    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
-        if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle);
-        }
-        return { x: 0, y: 0 };
-    }
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
-        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        return handles;
-    }
-    
-    override getDim(): { width: number; height: number; } {
-        return { width: this.radiusX * 2, height: this.radiusY * 2 }
-    }
-
-    // Additional star-specific methods
-    setSpikes(points: number): void {
-        this.spikes = Math.max(3, points);
-
-        this.points = this.generateStarPoints();
-        this.calculateBoundingRect()
-    }
-
-    setRotation(rotation: number): void {
-        this.rotation = rotation % 360;
     }
 
     override pointInShape(x: number, y: number): boolean {
@@ -181,7 +187,7 @@ class Star extends Shape {
         return inside;
     }
     override cleanUp(): void {
-        
+
     }
     override destroy(): void {
 

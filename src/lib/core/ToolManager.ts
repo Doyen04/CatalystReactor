@@ -71,7 +71,6 @@ class ToolManager {
         this.addEvent()
     }
     addEvent() {
-        console.log(this.currentTool);
 
         EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown.bind(this.currentTool))
         EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag.bind(this.currentTool))
