@@ -1,15 +1,16 @@
 // Handle.ts
 import type { Canvas } from "canvaskit-wasm";
-import ShapeFactory from "@/lib/shapes/base/ShapeFactory";
 import { Corner, HandleType, IShape } from "@lib/types/shapes";
+import CanvasKitResources from "@lib/core/CanvasKitResource";
 
 export default class Handle {
     x: number;
     y: number;
     size: number;
     type: HandleType;
-    shape: IShape;
     pos: Corner;
+    stroke: string | number[]
+    fill: string | number[]
     isDragging: boolean = false;
     handleArcAngle: number | null = null;
     handleRatioAngle: number | null = null;
@@ -18,24 +19,29 @@ export default class Handle {
     constructor(x: number, y: number, size: number, pos: Corner, type: HandleType, fill: string | number[], stroke: string | number[]) {
         this.x = x;
         this.y = y;
-        this.pos = pos
+        this.pos = pos;
         this.size = size;
         this.type = type;
+        this.stroke = stroke;
+        this.fill = fill
 
         // By default, use Oval for radius, Rect for size
         if (type === "radius" || type === 'arc' || type === 'ratio') {
-            this.shape = ShapeFactory.createShape('oval', { x, y });
-            this.shape.setRadius(size);
             if (type === 'arc' || type === 'ratio') {
                 this.handleArcAngle = 0
                 this.handleRatioAngle = 0
             }
-        } else {
-            this.shape = ShapeFactory.createShape('rect', { x, y });
-            this.shape.setDim(size, size);
         }
-        this.shape.setStrokeColor(stroke)
-        this.shape.setFill(fill)
+    }
+    get resource(): CanvasKitResources {
+        const resources = CanvasKitResources.getInstance();
+        if (resources) {
+            return resources
+        } else {
+            console.log('resources is null');
+
+            return null
+        }
     }
     resetAnchorPoint() {
         this.anchorPoint = { x: 0, y: 0 }
@@ -44,13 +50,22 @@ export default class Handle {
     updatePosition(x: number, y: number) {
         this.x = x;
         this.y = y;
-
-        this.shape.setCoord(x, y);
-
-        this.shape.calculateBoundingRect();
     }
-    isCollide(x: number, y: number): boolean {
-        return this.shape.pointInShape(x, y)
+    isCollide(px: number, py: number): boolean {
+        // Rectangle handle
+        if (this.type !== "radius" && this.type !== "arc" && this.type !== "ratio") {
+            return (
+                px >= this.x - this.size / 2 &&
+                px <= this.x + this.size / 2 &&
+                py >= this.y - this.size / 2 &&
+                py <= this.y + this.size / 2
+            );
+        }
+        // Oval handle (circle collision)
+        const dx = px - this.x;
+        const dy = py - this.y;
+        const r = this.size / 2;
+        return dx * dx + dy * dy <= r * r;
     }
     updateShapeRadii(dx: number, dy: number, e: MouseEvent, shape: IShape) {
 
@@ -146,7 +161,7 @@ export default class Handle {
     clampAngleToArc(t: number, start: number, end: number, prev: number): number {
         const TWO_PI = 2 * Math.PI;
 
-        let t0 = (t < 0) ? t + TWO_PI : t
+        const t0 = (t < 0) ? t + TWO_PI : t
 
         if (t0 < start) return prev;
         if (t0 > end) return prev;
@@ -226,7 +241,7 @@ export default class Handle {
         const deltaY = e.offsetY - y;
         const radiusX = width / 2;
         const radiusY = height / 2;
-        const { start, end } = shape.getArcAngles()
+        const { start } = shape.getArcAngles()
 
         //parametric deg
         let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX);
@@ -238,8 +253,49 @@ export default class Handle {
 
         shape.setArc(start, start + sweep);
     }
+    createPaint() {
+        if (!this.resource) return
+        const cnvsKit = this.resource
+
+        const fill = (Array.isArray(this.fill)) ? this.fill : cnvsKit.canvasKit.parseColorString(this.fill)
+        const strokeColor = (Array.isArray(this.stroke)) ? this.stroke : cnvsKit.canvasKit.parseColorString(this.stroke)
+
+
+        cnvsKit.paint.setColor(fill);
+
+        cnvsKit.strokePaint.setColor(strokeColor);
+        cnvsKit.strokePaint.setStrokeWidth(1);
+
+        return { fill: this.resource.paint, stroke: this.resource.strokePaint }
+    }
+
+    drawRect(canvas: Canvas) {
+        const { fill, stroke } = this.createPaint();
+        const rect = this.resource.canvasKit.LTRBRect(
+            this.x - this.size / 2, this.y - this.size / 2,
+            this.x + this.size / 2, this.y + this.size / 2
+        );
+        canvas.drawRect(rect, fill);
+        canvas.drawRect(rect, stroke);
+    }
+
+
+    // Draw a small oval at (x, y)
+    drawOval(canvas: Canvas) {
+        const { fill, stroke } = this.createPaint();
+        const ovalRect = this.resource.canvasKit.LTRBRect(
+            this.x - this.size / 2, this.y - this.size / 2,
+            this.x + this.size / 2, this.y + this.size / 2
+        );
+        canvas.drawOval(ovalRect, fill);
+        canvas.drawOval(ovalRect, stroke);
+    }
 
     draw(canvas: Canvas) {
-        this.shape.draw(canvas);
+        if (this.type === "radius" || this.type === "arc" || this.type === "ratio") {
+            this.drawOval(canvas);
+        } else {
+            this.drawRect(canvas);
+        }
     }
 }

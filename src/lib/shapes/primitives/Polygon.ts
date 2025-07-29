@@ -1,6 +1,6 @@
 import type { Canvas } from "canvaskit-wasm";
 import Shape from "../base/Shape";
-import { Corner, HandleType, Properties, Sides } from "@lib/types/shapes";
+import { Properties, Sides } from "@lib/types/shapes";
 import Handle from "@lib/modifiers/Handles";
 import { Points } from "@lib/types/shapeTypes";
 

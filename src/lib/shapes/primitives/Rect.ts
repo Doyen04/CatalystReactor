@@ -1,8 +1,7 @@
 import Handle from '@lib/modifiers/Handles'
-import { SizeRadiusModifierPos } from '@/lib/modifiers/ShapeModifier';
-import Shape from '../base/Shape';
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
-import { BorderRadius, Corner, Properties, Size } from '@lib/types/shapes';
+import { BorderRadius, Corner, Properties, Size, SizeRadiusModifierPos } from '@lib/types/shapes';
+import Shape from '../base/Shape';
 
 
 class Rectangle extends Shape {
@@ -205,20 +204,20 @@ class Rectangle extends Shape {
         const canvasKit = this.resource.canvasKit;
 
         // Method 1: Using RRectXY (simpler but uniform corners)
-        //if (this.bdradius.locked) {
-            // const radius = this.bdradius['top-left'];
-            // const rrect = canvasKit.RRectXY(rect, radius, radius);
-            // canvas.drawRRect(rrect, this.resource.paint);
-            // canvas.drawRRect(rrect, this.resource.strokePaint);
-            // return;
-        //} else {
+        if (this.bdradius.locked) {
+            const radius = this.bdradius['top-left'];
+            const rrect = canvasKit.RRectXY(rect, radius, radius);
+            canvas.drawRRect(rrect, this.resource.paint);
+            canvas.drawRRect(rrect, this.resource.strokePaint);
+            return;
+        } else {
             const path = this.makeCustomRRectPath()
 
             canvas.drawPath(path, this.resource.paint);
             canvas.drawPath(path, this.resource.strokePaint);
 
             path.delete(); // Clean up WASM memory
-       // }
+       }
     }
 
     protected makeCustomRRectPath(): Path {
@@ -272,10 +271,8 @@ class Rectangle extends Shape {
     }
 
     updateBorderRadius(newRadius: number, pos: Corner) {
-        console.log(newRadius, pos);
-
         const max = Math.min(this.dimension.width, this.dimension.height) / 2;
-        let newRad = Math.max(0, Math.min(newRadius, max));
+        const newRad = Math.max(0, Math.min(newRadius, max));
         if (this.bdradius.locked) {
             this.setBorderRadius(newRad)
             return
@@ -284,13 +281,13 @@ class Rectangle extends Shape {
         this.bdradius[pos] = newRad
     }
 
-    checkRadiusLock(): void {
-        if (this.bdradius.locked) {
-            const radius = Math.max(this.bdradius['top-left'], this.bdradius['top-right'],
-                this.bdradius['bottom-left'], this.bdradius['bottom-right']);
-            this.setBorderRadius(radius);
-        }
-    }
+    // checkRadiusLock(): void {
+    //     if (this.bdradius.locked) {
+    //         const radius = Math.max(this.bdradius['top-left'], this.bdradius['top-right'],
+    //             this.bdradius['bottom-left'], this.bdradius['bottom-right']);
+    //         this.setBorderRadius(radius);
+    //     }
+    // }
 
     override pointInShape(x: number, y: number): boolean {
         return x >= this.transform.x &&

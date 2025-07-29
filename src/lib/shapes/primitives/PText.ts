@@ -1,9 +1,10 @@
 import Shape from "../base/Shape";
 import TextCursor from '../base/TextCursor'
-import { Canvas, Color, FontMgr, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from "canvaskit-wasm";
+import { Canvas, Color, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from "canvaskit-wasm";
 import Handle from "@lib/modifiers/Handles";
+import { Properties, Size } from "@lib/types/shapes";
 
-//TODO: make sure resources is done in canvaskitresources and all font is loaded there then use style to target it
+//TODO:optimise this guy  make sure resources is done in canvaskitresources and all font is loaded there then use style to target it
 
 interface TextStyleProp {
     textColor: string | number[];
@@ -19,8 +20,7 @@ interface TextStyleProp {
 class PText extends Shape {
     private text: string = "";
     private textStyle: TextStyleProp;
-    private width: number = 0;
-    private height: number = 0;
+    private dimension: Size;
     private TWidth: number = 0;
     private THeight: number = 0;
     private cursor: TextCursor;
@@ -33,7 +33,7 @@ class PText extends Shape {
     constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
         this.text = text || "";
-
+        this.dimension = { width: 0, height: 0 }
         this.cursor = new TextCursor(x, y, 0)
 
         this.paragraph = null
@@ -55,6 +55,73 @@ class PText extends Shape {
     canEdit(): boolean {
         return this.isEdit
     }
+
+    get getTextStyle(): TextStyleProp {
+        return { ...this.textStyle }
+    }
+
+    getText(): string {
+        return this.text;
+    }
+
+    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+        if (handle.type === 'size') {
+            return super.getSizeModifierHandlesPos(handle);
+        }
+        return { x: 0, y: 0 };
+    }
+
+    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
+        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+        return handles;
+    }
+
+    override getDim(): { width: number, height: number } {
+
+        return {
+            width: ((this.dimension.width > 0) ? this.dimension.width : this.TWidth),
+            height: ((this.dimension.height > 0) ? this.dimension.height : this.THeight)
+        }
+    }
+    getProperties(): Properties {
+        return { transform: this.transform, size: this.dimension, style: this.style }
+    }
+    setProperties(prop: Properties): void {
+        this.transform = prop.transform
+        this.dimension = prop.size
+        this.style = prop.style
+    }
+    setFontSize(size: number): void {
+        this.textStyle.fontSize = size;
+
+        //work on this
+        this.calculateBoundingRect();//i tink it is not comp
+    }
+
+    setFontFamily(fontFamily: string): void {
+        this.textStyle.fontFamily.unshift(fontFamily);
+
+        //work on this
+        this.calculateBoundingRect();//i tink it is not comp
+    }
+
+    override setDim(width: number, height: number): void {
+        this.dimension.width = width
+        this.dimension.height = height
+
+        this.setUpParagraph()
+        this.calculateTextDim()
+        this.calculateBoundingRect();
+        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
+    }
+
+    override setCoord(x: number, y: number): void {
+        this.transform.x = x
+        this.transform.y = y
+        this.cursor.setCoord(x, y)
+        this.calculateBoundingRect()
+    }
+
     private setTextStyle() {
         if (!this.resource) {
             console.log('no canvas kit resources');
@@ -63,7 +130,7 @@ class PText extends Shape {
         this.textStyle = {
             textColor: [0, 0, 0, 1],
             textAlign: this.resource.canvasKit.TextAlign.Left,
-            fontSize: 16,
+            fontSize: 12,
             fontWeight: 500,
             fontFamily: ["Inter", "sans-serif"],
             lineHeight: 1.2,
@@ -97,62 +164,41 @@ class PText extends Shape {
         return [this.resource.textStyle, this.resource.paragraphStyle]
     }
 
-    get getTextStyle(): TextStyleProp {
-        return { ...this.textStyle }
+    override moveShape(mx: number, my: number): void {
+        this.transform.x += mx;
+        this.transform.y += my;
+        this.cursor.setCoord(this.transform.x, this.transform.y)
+
+        this.calculateBoundingRect()
+
+    }
+
+    override setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
+        // For text, we might adjust font size instead of traditional sizing
+        const deltaX = (mx - dragStart.x);
+        const deltaY = (my - dragStart.y);
+
+        this.dimension.width = Math.abs(deltaX);
+        this.dimension.height = Math.abs(deltaY);
+        this.transform.x = Math.min(dragStart.x, mx);
+        this.transform.y = Math.min(dragStart.y, my);
+        this.calculateBoundingRect();
     }
 
     pointInShape(x: number, y: number): boolean {
-        const w = (this.width == 0) ? this.TWidth : this.width
-        const h = (this.height == 0) ? this.THeight : this.height
-        return x >= this.x && x <= this.x + w && y >= this.y && y <= this.y + h;
+        const w = (this.dimension.width == 0) ? this.TWidth : this.dimension.width
+        const h = (this.dimension.height == 0) ? this.THeight : this.dimension.height
+        return x >= this.transform.x && x <= this.transform.x + w && y >= this.transform.y && y <= this.transform.y + h;
     }
 
     calculateBoundingRect(): void {
 
         this.boundingRect = {
-            left: this.x,
-            top: this.y,
-            right: this.x + ((this.width > 0) ? this.width : this.TWidth),
-            bottom: this.y + ((this.height > 0) ? this.height : this.THeight),
+            left: this.transform.x,
+            top: this.transform.y,
+            right: this.transform.x + ((this.dimension.width > 0) ? this.dimension.width : this.TWidth),
+            bottom: this.transform.y + ((this.dimension.height > 0) ? this.dimension.height : this.THeight),
         };
-    }
-
-    override setDim(width: number, height: number): void {
-        this.width = width
-        this.height = height
-
-        this.setUpParagraph()
-        this.calculateTextDim()
-        this.calculateBoundingRect();
-        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
-    }
-
-    override setCoord(x: number, y: number): void {
-        this.x = x
-        this.y = y
-        this.cursor.setCoord(x, y)
-        this.calculateBoundingRect()
-    }
-
-    moveShape(mx: number, my: number): void {
-        this.x += mx;
-        this.y += my;
-        this.cursor.setCoord(this.x, this.y)
-
-        this.calculateBoundingRect()
-
-    }
-
-    setSize(dragStart: { x: number; y: number; }, mx: number, my: number, shiftKey: boolean): void {
-        // For text, we might adjust font size instead of traditional sizing
-        const deltaX = (mx - dragStart.x);
-        const deltaY = (my - dragStart.y);
-
-        this.width = Math.abs(deltaX);
-        this.height = Math.abs(deltaY);
-        this.x = Math.min(dragStart.x, mx);
-        this.y = Math.min(dragStart.y, my);
-        this.calculateBoundingRect();
     }
 
     draw(canvas: Canvas): void {
@@ -162,7 +208,7 @@ class PText extends Shape {
         }
 
         try {
-            canvas.drawParagraph(this.paragraph, this.x, this.y);
+            canvas.drawParagraph(this.paragraph, this.transform.x, this.transform.y);
             this.cursor.draw(canvas)
 
         } catch (error) {
@@ -232,7 +278,6 @@ class PText extends Shape {
         const end = Math.max(this.selectionStart, this.selectionEnd);
         const text = this.text.substring(start, end);
         navigator.clipboard.writeText(text)
-
     }
 
     pasteText() {
@@ -293,7 +338,7 @@ class PText extends Shape {
 
         this.paragraph = this.builder.build();
 
-        this.paragraph.layout(((this.width > 0) ? this.width : 1000));
+        this.paragraph.layout(((this.dimension.width > 0) ? this.dimension.width : 1000));
     }
 
     calculateTextDim() {
@@ -326,44 +371,6 @@ class PText extends Shape {
         this.setUpParagraph()
     }
 
-    getText(): string {
-        return this.text;
-    }
-
-    setFontSize(size: number): void {
-        this.textStyle.fontSize = size;
-
-        //work on this
-        this.calculateBoundingRect();//i tink it is not comp
-    }
-
-    setFontFamily(fontFamily: string): void {
-        this.textStyle.fontFamily.unshift(fontFamily);
-
-        //work on this
-        this.calculateBoundingRect();//i tink it is not comp
-    }
-
-
-    override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
-        if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle);
-        }
-        return { x: 0, y: 0 };
-    }
-
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
-        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        return handles;
-    }
-
-    override getDim(): { width: number, height: number } {
-
-        return {
-            width: ((this.width > 0) ? this.width : this.TWidth),
-            height: ((this.height > 0) ? this.height : this.THeight)
-        }
-    }
     override cleanUp(): void {
         this.cursor.stopCursorBlink()
         this.diableEditing()

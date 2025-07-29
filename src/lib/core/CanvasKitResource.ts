@@ -10,7 +10,7 @@ export class CanvasKitResources {
     private cnvsStrokePaint: Paint;
     private cnvsTextStyle: TextStyle;
     private cnvsParagraphStyle: ParagraphStyle;
-    private cnvsFontMgr: FontMgr;
+    private cnvsFontMgr: FontMgr | null;
     private cnvsCanvasKit: CanvasKit;
 
     private constructor(canvasKit: CanvasKit) {

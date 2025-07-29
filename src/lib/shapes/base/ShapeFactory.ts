@@ -28,7 +28,7 @@ export default class ShapeFactory {
             case "text":
                 shape = new PText(options.x, options.y);
                 break;
-            case "img":
+            case "img": {
                 const { getNextImage } = useImageStore.getState();
                 const img = getNextImage()
 
@@ -38,6 +38,7 @@ export default class ShapeFactory {
                 }
                 shape = new PImage(options.x, options.y, img);
                 break;
+            }
             default:
                 throw new Error(`Unsupported shape type: ${type}`);
         }

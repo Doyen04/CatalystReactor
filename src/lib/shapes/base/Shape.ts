@@ -2,11 +2,9 @@
 // 📐 Abstract Base Shape Class
 
 import Handle from "@lib/modifiers/Handles"
-import { SizeRadiusModifierPos } from "@/lib/modifiers/ShapeModifier";
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, IShape, Properties, Style, Transform } from "@lib/types/shapes";
+import { BoundingRect, IShape, Properties, SizeRadiusModifierPos, Style, Transform } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
-import { useSceneStore } from "@hooks/sceneStore";
 
 
 abstract class Shape implements IShape {

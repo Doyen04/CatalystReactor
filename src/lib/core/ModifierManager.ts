@@ -1,7 +1,7 @@
 // ShapeModifier.ts
 import Handle from '@lib/modifiers/Handles';
 import ShapeModifier from '@lib/modifiers/ShapeModifier';
-import { Coord, IShape, } from '@lib/types/shapes';
+import { IShape, } from '@lib/types/shapes';
 import { Canvas } from 'canvaskit-wasm';
 
 class ModifierManager {
@@ -17,9 +17,7 @@ class ModifierManager {
     getCollidedModifier(x: number, y: number): Handle {
         return this.shapeModifier.selectModifier(x, y)
     }
-    setSelectedShape(shape: IShape) {
 
-    }
     detachShape() {
         this.shapeModifier.setShape(null)
     }

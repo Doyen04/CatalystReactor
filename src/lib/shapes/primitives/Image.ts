@@ -61,11 +61,11 @@ class PImage extends Rectangle {
         const deltaX = (mx - dragStart.x);
         const deltaY = (my - dragStart.y);
 
-        this.isFlippedX = deltaX < 0;
-        this.isFlippedY = deltaY < 0;
+        this.transform.isFlippedX = deltaX < 0;
+        this.transform.isFlippedY = deltaY < 0;
 
-        this.originalX = dragStart.x;
-        this.originalY = dragStart.y;
+        this.transform.originalX = dragStart.x;
+        this.transform.originalY = dragStart.y;
 
         if (shiftKey || this.maintainAspectRatio) {
             // When shift is held OR aspect ratio should be maintained
@@ -84,33 +84,33 @@ class PImage extends Rectangle {
                     size = absY > absX * this.aspectRatio ? absY : absX * this.aspectRatio;
                 }
 
-                this.width = size;
-                this.height = size / this.aspectRatio;
+                this.dimension.width = size;
+                this.dimension.height = size / this.aspectRatio;
             } else {
                 // Shift key held - make square
                 size = Math.max(Math.abs(deltaX), Math.abs(deltaY));
-                this.width = size;
-                this.height = size;
+                this.dimension.width = size;
+                this.dimension.height = size;
             }
 
             // Position based on drag direction // check this
             if (deltaX >= 0) {
-                this.x = this.originalX;
+                this.transform.x = this.transform.originalX;
             } else {
-                this.x = this.originalX - this.width;
+                this.transform.x = this.transform.originalX - this.dimension.width;
             }
 
             if (deltaY >= 0) {
-                this.y = this.originalY;
+                this.transform.y = this.transform.originalY;
             } else {
-                this.y = this.originalY - this.height;
+                this.transform.y = this.transform.originalY - this.dimension.height;
             }
         } else {
             // Free resizing without aspect ratio constraint
-            this.width = Math.abs(deltaX);
-            this.height = Math.abs(deltaY);
-            this.x = Math.min(dragStart.x, mx);
-            this.y = Math.min(dragStart.y, my);
+            this.dimension.width = Math.abs(deltaX);
+            this.dimension.height = Math.abs(deltaY);
+            this.transform.x = Math.min(dragStart.x, mx);
+            this.transform.y = Math.min(dragStart.y, my);
         }
 
         this.calculateBoundingRect();
@@ -121,12 +121,12 @@ class PImage extends Rectangle {
         canvas.save();
         const ck = this.resource.canvasKit;
         const srcRect = ck.XYWHRect(0, 0, this.IWidth, this.IHeight);
-        const dstRect = ck.XYWHRect(this.x, this.y, this.width, this.height);
+        const dstRect = ck.XYWHRect(this.transform.x, this.transform.y, this.dimension.width, this.dimension.height);
 
         if (this.hasRadius()) {
             this.clipToRoundedRect(canvas, dstRect);
         }
-
+        // remove later
         canvas.drawImageRectCubic(
             this.canvasKitImage, srcRect, dstRect,
             1 / 3,
@@ -141,10 +141,10 @@ class PImage extends Rectangle {
             this.drawRoundedRectOutline(canvas);
         } else {
             const borderRect = ck.XYWHRect(
-                this.x + this.strokeWidth / 2,
-                this.y + this.strokeWidth / 2,
-                this.width - this.strokeWidth,
-                this.height - this.strokeWidth
+                this.transform.x + this.style.strokeWidth / 2,
+                this.transform.y + this.style.strokeWidth / 2,
+                this.dimension.width - this.style.strokeWidth,
+                this.dimension.height - this.style.strokeWidth
             );
             canvas.drawRect(borderRect, this.resource.strokePaint);
         }
@@ -154,12 +154,12 @@ class PImage extends Rectangle {
         if (!this.resource) return;
 
         const ck = this.resource.canvasKit;
-        const strokeOffset = this.strokeWidth / 2;
+        const strokeOffset = this.style.strokeWidth / 2;
         const rect = ck.XYWHRect(
-            this.x + strokeOffset,
-            this.y + strokeOffset,
-            this.width - this.strokeWidth,
-            this.height - this.strokeWidth
+            this.transform.x + strokeOffset,
+            this.transform.y + strokeOffset,
+            this.dimension.width - this.style.strokeWidth,
+            this.dimension.height - this.style.strokeWidth
         );
 
         if (this.bdradius.locked) {

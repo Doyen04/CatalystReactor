@@ -1,10 +1,10 @@
-import EventQueue from './EventQueue';
-import InputManager from "./InputManger";
+// import EventQueue from './EventQueue';
+
+import InputManager from "./InputManager";
 import SceneManager from "./SceneManager";
 import Renderer from "./Renderer";
 import ToolManager from "./ToolManager";
 
-import type Matrix from "./Matrix";
 import { ToolType } from '@lib/types/shapeTypes';
 import ShapeManager from './ShapeManager';
 import ModifierManager from './ModifierManager';
@@ -36,7 +36,7 @@ class CanvasManager {
         this.undoStack = [];
         this.redoStack = [];
 
-        EventQueue.getEventNames()
+        // EventQueue.getEventNames()
     }
 
     setTool(tool: string): void {
@@ -77,7 +77,7 @@ class CanvasManager {
         // return this.canvas.toDataURL('image/png');
     }
 
-    convertToSkiaMatrix(matrix: Matrix) {
+    convertToSkiaMatrix() {
         // // Convert your Matrix to CanvasKit matrix format
         // const skMatrix = this.canvasKit!.Matrix.identity(); // Implement based on your Matrix class
         // // Apply conversion logic here using the 'matrix' parameter
@@ -102,7 +102,7 @@ class CanvasManager {
             this.toolManager.destroy()
             this.toolManager = null
         }
-        EventQueue.removeAllEvent()
+        // EventQueue.removeAllEvent()
     }
 
     render() {

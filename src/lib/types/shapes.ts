@@ -1,5 +1,5 @@
 import type Handle from "@lib/modifiers/Handles";
-import { Canvas } from "canvaskit-wasm";
+import type { Canvas } from "canvaskit-wasm";
 
 export interface Transform {
     x: number;
@@ -68,6 +68,13 @@ export interface Coord {
     y: number;
 }
 
+export const SizeRadiusModifierPos: Corner[] = [
+    'top-left',
+    'top-right',
+    'bottom-left',
+    'bottom-right'
+];
+
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img';
 export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end';
 export type HandleType = 'size' | 'radius' | 'arc' | 'ratio';
@@ -78,7 +85,7 @@ export interface IShape {
     boundingRect: BoundingRect;
 
     // Methods that all shapes should implement
-    getModifierHandles(size: number, fill: string, strokeColor: string | number[]): any[];
+    getModifierHandles(size: number, fill: string, strokeColor: string | number[]): Handle[];
     getSizeModifierHandlesPos(handle: Handle): Coord;
     getModifierHandlesPos(handle: Handle): Coord;
 
@@ -120,7 +127,7 @@ export interface IShapeModifier {
     setShape(shape: IShape): void;
     getShape(): IShape | null;
     hasShape(): boolean;
-    draw(canvas: any): void;
+    draw(canvas: Canvas): void;
     selectModifier(x: number, y: number): void;
     setIsHovered(bool: boolean): void;
 }

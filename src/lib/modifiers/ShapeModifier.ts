@@ -1,17 +1,11 @@
 import type { Canvas } from "canvaskit-wasm";
-import { Corner, IShape } from "@lib/types/shapes"
+import { IShape } from "@lib/types/shapes"
 import Handle from "./Handles";
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
+import SText from "@lib/shapes/primitives/SText";
 
-const { Render, UpdateModifierHandlesPos } = EventTypes
-
-export const SizeRadiusModifierPos: Corner[] = [
-    'top-left',
-    'top-right',
-    'bottom-left',
-    'bottom-right'
-];
+const { UpdateModifierHandlesPos } = EventTypes
 
 class ShapeModifier {
     private shape: IShape | null;
@@ -22,6 +16,7 @@ class ShapeModifier {
     private handles: Handle[];
     private isHovered: boolean;
     private selectedModifier: Handle | null;
+    private font: SText;
 
     constructor() {
         this.shape = null;
@@ -30,6 +25,7 @@ class ShapeModifier {
         this.handles = [];
         this.isHovered = false;
         this.selectedModifier = null
+        this.font = new SText(0, 0)
 
         this.setUpEvent()
     }
@@ -64,6 +60,7 @@ class ShapeModifier {
             return null
         }
     }
+
     handleRemoveModiferHandle() {
         if (!this.selectedModifier) return
         this.selectedModifier.isDragging = false
@@ -118,7 +115,7 @@ class ShapeModifier {
             const { x, y } = this.shape.getModifierHandlesPos(resizer);
             resizer.updatePosition(x, y);
         }
-
+        this.font?.setText("56 X 56")
     }
     setPaint(): void {
         if (!this.resource) return
@@ -165,6 +162,7 @@ class ShapeModifier {
         const rect = this.resource.canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);
 
         canvas.drawRect(rect, this.resource.strokePaint);
+        this.font.draw(canvas)
 
         this.handles.forEach(handle => {
             if (handle.type !== 'size' && this.isHovered) {

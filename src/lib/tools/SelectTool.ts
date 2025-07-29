@@ -113,8 +113,8 @@ class SelectTool extends Tool {
 
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
     }
-    canEdit(shape: any) {
-        return shape && typeof (shape as any).canEdit === 'function' && (shape as any).canEdit()
+    canEdit(shape: IShape) {
+        return shape && typeof (shape).canEdit === 'function' && (shape).canEdit()
     }
 
     override toolChange(): void {
