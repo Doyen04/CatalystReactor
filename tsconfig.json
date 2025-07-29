@@ -29,6 +29,9 @@
             ],
             "@util/*": [
                 "src/util/*"
+            ],
+            "@helper/*": [
+                "src/lib/helper/*"
             ]
         }
     }

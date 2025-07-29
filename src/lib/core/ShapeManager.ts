@@ -2,22 +2,28 @@
 import { useSceneStore } from '@hooks/sceneStore';
 import { Coord, IShape, Properties } from '@lib/types/shapes';
 import ShapeModifier from '@lib/modifiers/ShapeModifier';
+import throttle from '@lib/helper/throttle';
 
 class ShapeManager {
     private shape: IShape | null = null;
     private shapeModifier: ShapeModifier | null
+    private throttledUpdate: (properties: Properties) => void;
 
     constructor(shapeModifier: ShapeModifier) {
         this.shape = null
         this.shapeModifier = shapeModifier
+        this.throttledUpdate = throttle(useSceneStore.getState().setCurrentShapeProperties)
     }
+
 
     drawShape(dragStart: Coord, e: MouseEvent) {
         this.shape.setSize(dragStart, e.offsetX, e.offsetY, e.shiftKey)
-        const props = this.shape.getProperties();
+
         this.shapeModifier.update()
 
-        useSceneStore.getState().setCurrentShapeProperties(props);
+        const props = this.shape.getProperties();
+        this.throttledUpdate(props)
+        // useSceneStore.getState().setCurrentShapeProperties(props);
     }
 
     drag(x: number, y: number, e: MouseEvent) {
@@ -29,15 +35,15 @@ class ShapeManager {
         }
         this.shapeModifier.update()
         const props = this.shape.getProperties();
-        useSceneStore.getState().setCurrentShapeProperties(props);
+        this.throttledUpdate(props)
     }
 
     move(x: number, y: number) {
         this.shape.moveShape(x, y)
-        const props = this.shape.getProperties();
         this.shapeModifier.update()
 
-        useSceneStore.getState().setCurrentShapeProperties(props);
+        const props = this.shape.getProperties();
+        this.throttledUpdate(props)
     }
 
     handleTinyShapes(): void {
@@ -71,7 +77,7 @@ class ShapeManager {
         this.shapeModifier.attachShape(shape)
         // Optionally sync initial props:
         const props = this.shape.getProperties();
-        useSceneStore.getState().setCurrentShapeProperties(props);
+        this.throttledUpdate(props)
     }
 
     detachShape() {
@@ -91,7 +97,7 @@ class ShapeManager {
         );
         this.shapeModifier.update()
         const props = this.shape.getProperties();
-        useSceneStore.getState().setCurrentShapeProperties(props);
+        this.throttledUpdate(props)
     }
 
     finishDrag() {
