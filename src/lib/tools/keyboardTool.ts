@@ -1,4 +1,4 @@
-import { Coord, IShape } from "@lib/types/shapes";
+import { IShape } from "@lib/types/shapes";
 import { isPrintableCharUnicode } from "@/util/textUtil";
 import ShapeManager from "@lib/core/ShapeManager";
 
@@ -80,6 +80,7 @@ class KeyboardTool {
     private handleEscape() {
 
     }
+    
     private handleTab(e: KeyboardEvent) {
 
     }
@@ -99,7 +100,7 @@ class KeyboardTool {
             if (this.canEdit(shape)) {
                 this.moveTextCursor(e, shape)
             } else {
-                this.moveCurrentShape(e, shape)
+                this.moveCurrentShape(e,)
             }
         }
     }
@@ -126,7 +127,7 @@ class KeyboardTool {
         }
     }
 
-    moveCurrentShape(e: KeyboardEvent, shape: IShape): void {
+    moveCurrentShape(e: KeyboardEvent): void {
         console.log(e.key);
         switch (e.key) {
             case 'ArrowUp':
@@ -147,8 +148,8 @@ class KeyboardTool {
         }
     }
 
-    canEdit(shape: any) {
-        return shape && typeof (shape as any).canEdit === 'function' && (shape as any).canEdit()
+    canEdit(shape: IShape) {
+        return shape && typeof (shape as IShape).canEdit === 'function' && (shape as IShape).canEdit()
     }
 
 }

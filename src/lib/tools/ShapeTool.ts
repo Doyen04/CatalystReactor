@@ -9,8 +9,8 @@ import ShapeManager from "@lib/core/ShapeManager";
 
 class ShapeTool extends Tool {
     shapeType: ShapeType
-    constructor(shape: ShapeType, sceneManager: SceneManager, shapeManager:ShapeManager) {
-        super(sceneManager,shapeManager)
+    constructor(shape: ShapeType, sceneManager: SceneManager, shapeManager:ShapeManager,cnvs: HTMLCanvasElement) {
+        super(sceneManager,shapeManager,cnvs)
         this.shapeType = shape
     }
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {

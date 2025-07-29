@@ -24,7 +24,7 @@ class SText extends Shape {
         this.padding = 2
         this.textStyle = {
             textColor: [1, 1, 1, 1],
-            fontSize: 12,
+            fontSize: 10,
             fontFamily: ["Inter", "sans-serif"],
         };
         const typeface = this.resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(this.resource.fontData[0])

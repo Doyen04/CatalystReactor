@@ -33,22 +33,22 @@ class ToolManager {
                 currentTool = new SelectTool(this.sceneManager, this.shapeManager, this.cnvsElm )
                 break;
             case 'rect':
-                currentTool = new ShapeTool('rect', this.sceneManager, this.shapeManager )
+                currentTool = new ShapeTool('rect', this.sceneManager, this.shapeManager ,this.cnvsElm)
                 break;
             case 'oval':
-                currentTool = new ShapeTool('oval', this.sceneManager, this.shapeManager )
+                currentTool = new ShapeTool('oval', this.sceneManager, this.shapeManager ,this.cnvsElm)
                 break;
             case 'star':
-                currentTool = new ShapeTool('star', this.sceneManager, this.shapeManager )
+                currentTool = new ShapeTool('star', this.sceneManager, this.shapeManager ,this.cnvsElm)
                 break;
             case 'polygon':
-                currentTool = new ShapeTool('polygon', this.sceneManager, this.shapeManager )
+                currentTool = new ShapeTool('polygon', this.sceneManager, this.shapeManager ,this.cnvsElm)
                 break;
             case 'text':
-                currentTool = new ShapeTool('text', this.sceneManager, this.shapeManager )
+                currentTool = new ShapeTool('text', this.sceneManager, this.shapeManager ,this.cnvsElm)
                 break;
             case 'img':
-                currentTool = new ImageTool(this.sceneManager, this.shapeManager )
+                currentTool = new ImageTool(this.sceneManager, this.shapeManager ,this.cnvsElm)
                 break;
             default:
                 console.log('ttool not implemented');

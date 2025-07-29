@@ -8,8 +8,8 @@ import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 
 class ImageTool extends Tool {
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager) {
-        super(sceneManager, shapeManager)
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
+        super(sceneManager, shapeManager, cnvs)
     }
 
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
