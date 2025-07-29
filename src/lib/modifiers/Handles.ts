@@ -272,8 +272,8 @@ export default class Handle {
     drawRect(canvas: Canvas) {
         const { fill, stroke } = this.createPaint();
         const rect = this.resource.canvasKit.LTRBRect(
-            this.x - this.size / 2, this.y - this.size / 2,
-            this.x + this.size / 2, this.y + this.size / 2
+            this.x, this.y,
+            this.x + this.size, this.y + this.size
         );
         canvas.drawRect(rect, fill);
         canvas.drawRect(rect, stroke);
@@ -284,8 +284,8 @@ export default class Handle {
     drawOval(canvas: Canvas) {
         const { fill, stroke } = this.createPaint();
         const ovalRect = this.resource.canvasKit.LTRBRect(
-            this.x - this.size / 2, this.y - this.size / 2,
-            this.x + this.size / 2, this.y + this.size / 2
+            this.x, this.y,
+            this.x + this.size * 2, this.y + this.size * 2
         );
         canvas.drawOval(ovalRect, fill);
         canvas.drawOval(ovalRect, stroke);

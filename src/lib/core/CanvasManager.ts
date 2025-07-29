@@ -1,4 +1,4 @@
-// import EventQueue from './EventQueue';
+import EventQueue from './EventQueue';
 
 import InputManager from "./InputManager";
 import SceneManager from "./SceneManager";
@@ -36,7 +36,7 @@ class CanvasManager {
         this.undoStack = [];
         this.redoStack = [];
 
-        // EventQueue.getEventNames()
+        EventQueue.getEventNames()
     }
 
     setTool(tool: string): void {
@@ -102,7 +102,7 @@ class CanvasManager {
             this.toolManager.destroy()
             this.toolManager = null
         }
-        // EventQueue.removeAllEvent()
+        EventQueue.removeAllEvent()
     }
 
     render() {

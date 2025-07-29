@@ -35,22 +35,24 @@ function Canvas() {
         };
 
         const load = async () => {
+            if (!canvasRef.current) return
             try {
                 console.log('starting to load refs');
                 cleanupExisting()
 
                 const canvasKit = await CanvasKitInit({ locateFile: () => canvasKitWasmUrl })
+
                 await CanvasKitResources.loadInterFont()
                 // is there a better way
                 //why do this line downward run twice withut running cleanupexisting first fixed
                 if (canvasResourcesRef.current || canvasManagerRef.current) return
 
                 canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
-                 canvasManagerRef.current = new CanvasManager(canvasRef.current);
+                canvasManagerRef.current = new CanvasManager(canvasRef.current);
                 setCanvasManager(canvasManagerRef.current)
                 console.log('Initializing Canvasmanager with CanvasKit');
             } catch (error) {
-                console.log(error);
+                console.log(error, 'error loading canvaskit');
             }
         }
 
@@ -59,12 +61,12 @@ function Canvas() {
             console.log('clean up');
             cleanupExisting()
         }
-    }, [canvasRef]);
+    }, [canvasRef, setCanvasManager]);
 
     useEffect(() => {
         if (!canvasManager) return;
         canvasManager.setTool(tool.toolName);
-    }, [tool]);
+    }, [canvasManager, tool]);
 
     return (
         <div className={'canvasContainer'}>

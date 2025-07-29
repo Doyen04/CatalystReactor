@@ -25,7 +25,7 @@ class ShapeModifier {
         this.handles = [];
         this.isHovered = false;
         this.selectedModifier = null
-        this.font = new SText(0, 0)
+        this.font = new SText(200, 0)
 
         this.setUpEvent()
     }
@@ -115,7 +115,16 @@ class ShapeModifier {
             const { x, y } = this.shape.getModifierHandlesPos(resizer);
             resizer.updatePosition(x, y);
         }
-        this.font?.setText("56 X 56")
+        this.updateText()
+    }
+    updateText() {
+        const { bottom, left } = this.shape.boundingRect
+        const { width, height } = this.shape.getDim()
+        const { width: tWidth } = this.font.getDim()
+        
+        const pos = (width - tWidth) / 2
+        this.font.setCoord(left + pos, bottom + 5)
+        this.font.setText(`${width} X ${height}`)
     }
     setPaint(): void {
         if (!this.resource) return

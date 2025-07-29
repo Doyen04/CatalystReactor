@@ -14,18 +14,22 @@ class SText extends Shape {
     private textStyle: SimpleTextStyle;
     private dimension: Size;
     private font: Font;
+    private padding: number;
 
     constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
         this.style = { fill: "#0000ff", strokeColor: "#0000ff", strokeWidth: 0 }
         this.text = text || "";
         this.dimension = { width: 0, height: 0 };
+        this.padding = 2
         this.textStyle = {
-            textColor: [0, 0, 0, 1],
+            textColor: [1, 1, 1, 1],
             fontSize: 12,
             fontFamily: ["Inter", "sans-serif"],
         };
-        const typeface = this.resource.canvasKit.Typeface.GetDefault()
+        const typeface = this.resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(this.resource.fontData[0])
+        console.log(typeface, 'inside text');
+
         this.font = new this.resource.canvasKit.Font(typeface, this.textStyle.fontSize);
 
         this.calculateBoundingRect();
@@ -78,7 +82,7 @@ class SText extends Shape {
     }
 
     override getDim(): { width: number; height: number } {
-        return { width: this.dimension.width, height: this.dimension.height };
+        return { width: this.dimension.width + (this.padding * 2), height: this.dimension.height + (this.padding * 2) };
     }
 
     override getProperties(): Properties {
@@ -97,8 +101,12 @@ class SText extends Shape {
 
     calculateBoundingRect(): void {
         // Simple estimation: width = fontSize * text.length * 0.6, height = fontSize
-        const width = this.textStyle.fontSize * this.text.length * 0.6;
-        const height = this.textStyle.fontSize;
+        const glyphs = this.font.getGlyphIDs(this.text);
+        const widths = this.font.getGlyphWidths(glyphs);
+        const metrics = this.font.getMetrics();
+        const width = widths.reduce((a, w) => a + w, 0);
+        const height = metrics.descent - metrics.ascent;
+
         this.dimension.width = width;
         this.dimension.height = height;
         this.boundingRect = {
@@ -108,18 +116,43 @@ class SText extends Shape {
             bottom: this.transform.y + height,
         };
     }
+    setTextPaint(fill: string | number[], stroke?: string | number[]) {
+        if (!this.resource) return
+        const cnvsKit = this.resource
+
+        const fillcolor = (Array.isArray(fill)) ? fill : cnvsKit.canvasKit.parseColorString(fill)
+        cnvsKit.paint.setColor(fillcolor);
+
+        if (stroke) {
+            const strokeColor = (Array.isArray(stroke)) ? stroke : cnvsKit.canvasKit.parseColorString(stroke)
+            cnvsKit.strokePaint.setColor(strokeColor);
+            cnvsKit.strokePaint.setStrokeWidth(1);
+        }
+
+        return { fill: this.resource.paint, stroke: this.resource.strokePaint }
+    }
 
     draw(canvas: Canvas): void {
         if (!this.resource) {
             console.log('No CanvasKit resources');
             return;
         }
+        const { fill: fillShape, stroke } = this.setTextPaint(this.style.fill, this.style.strokeColor)
+        const rect = this.resource.canvasKit.LTRBRect(this.transform.x - this.padding,
+            this.transform.y - this.padding, this.transform.x + this.dimension.width + this.padding,
+            this.transform.y + this.dimension.height + this.padding);
+
+        const rrect = this.resource.canvasKit.RRectXY(rect, 3, 3);
+        canvas.drawRRect(rrect, fillShape);
+        canvas.drawRRect(rrect, stroke);
+
+        const { fill } = this.setTextPaint(this.textStyle.textColor)
         try {
             canvas.drawText(
                 this.text,
                 this.transform.x,
                 this.transform.y + this.textStyle.fontSize, // baseline
-                this.resource.paint,
+                fill,
                 this.font
             );
         } catch (error) {
