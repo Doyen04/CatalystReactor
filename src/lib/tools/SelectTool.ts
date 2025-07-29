@@ -10,8 +10,8 @@ class SelectTool extends Tool {
     private lastClickTime: number = 0
     private doubleClickDelay: number = 300 // milliseconds
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager) {
-        super(sceneManager, shapeManager)
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
+        super(sceneManager, shapeManager, cnvs)
     }
 
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
@@ -48,22 +48,20 @@ class SelectTool extends Tool {
 
     private handleSingleClick(e: MouseEvent) {
         console.log('Single click - normal selection')
+        const selected = this.shapeManager.collide(e.offsetX, e.offsetY);
+        if (selected) {
+            return
+        }
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
         if (!scene) {
             this.shapeManager.detachShape()
             return
         }
         const clickedShape = scene.getShape()
-
-        if (this.shapeManager.hasShape() && this.shapeManager.currentShape == clickedShape) {
-            this.shapeManager.collide(e.offsetX, e.offsetY);
-        } else {
-            this.shapeManager.attachShape(clickedShape)
-            if (this.canEdit(clickedShape) && clickedShape.pointInShape(e.offsetX, e.offsetY)) {
-                clickedShape.setCursorPosFromCoord(e.offsetX, e.offsetY)
-            }
+        this.shapeManager.attachShape(clickedShape)
+        if (this.canEdit(clickedShape) && clickedShape.pointInShape(e.offsetX, e.offsetY)) {
+            clickedShape.setCursorPosFromCoord(e.offsetX, e.offsetY)
         }
-
 
     }
 
@@ -94,6 +92,15 @@ class SelectTool extends Tool {
             this.shapeManager.modifierMgr.setHoveredShape(shape)
         } else {
             this.shapeManager.modifierMgr.resetHovered()
+        }
+
+        const handle = this.shapeManager.modifierMgr.handleHovering(e.offsetX, e.offsetY)
+        if (handle) {
+            return
+        }
+
+        if (this.cnvsElm && this.cnvsElm.style.cursor != "default") {
+            this.cnvsElm.style.cursor = "default";
         }
         // EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
     }

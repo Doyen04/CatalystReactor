@@ -2,6 +2,7 @@
 import { useSceneStore } from '@hooks/sceneStore';
 import { Coord, IShape, Properties } from '@lib/types/shapes';
 import ShapeModifier from '@lib/modifiers/ShapeModifier';
+import Handle from '@lib/modifiers/Handles';
 
 class ShapeManager {
     private shape: IShape | null = null;
@@ -93,13 +94,20 @@ class ShapeManager {
         const props = this.shape.getProperties();
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
+
     finishDrag() {
         this.shapeModifier.handleRemoveModiferHandle()
         this.shapeModifier.update()
     }
-    collide(x: number, y: number) {
+
+    collide(x: number, y: number): Handle | IShape | null {
         if (!this.shape) return null;
-        this.shapeModifier.selectModifier(x, y)
+
+        const handle = this.shapeModifier.selectModifier(x, y)
+        if (handle) {
+            return handle
+        }
+        return this.shape.pointInShape(x, y) ? this.shape : null
     }
 
     // Additional methods: move, resize, updateBorderRadius, etc.

@@ -43,7 +43,7 @@ export default class Handle {
             return null
         }
     }
-    
+
     resetAnchorPoint() {
         this.anchorPoint = { x: 0, y: 0 }
     }
@@ -54,17 +54,18 @@ export default class Handle {
     }
     isCollide(px: number, py: number): boolean {
         // Rectangle handle
+        const hpad = 3
         if (this.type !== "radius" && this.type !== "arc" && this.type !== "ratio") {
             return (
-                px >= this.x &&
-                px <= this.x + this.size &&
-                py >= this.y &&
-                py <= this.y + this.size
+                px >= this.x - hpad &&
+                px <= this.x + this.size + hpad &&
+                py >= this.y - hpad &&
+                py <= this.y + this.size + hpad
             );
         }
         // Oval handle (circle collision)
-        const dx = px - this.x;
-        const dy = py - this.y;
+        const dx = px - (this.x);
+        const dy = py - (this.y);
         const r = this.size * 2;
         return dx * dx + dy * dy <= r * r;
     }

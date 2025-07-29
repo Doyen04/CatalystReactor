@@ -6,10 +6,12 @@ import { Coord } from "@lib/types/shapes";
 abstract class Tool {
     sceneManager: SceneManager | null = null;
     shapeManager: ShapeManager | null = null
+    cnvsElm: HTMLCanvasElement
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager) {
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
         this.sceneManager = sceneManager
         this.shapeManager = shapeManager
+        this.cnvsElm = cnvs
     }
     handlePointerUp(coord: Coord, e: MouseEvent) {
         this.shapeManager.handleTinyShapes()

@@ -8,18 +8,20 @@ import SText from "@lib/shapes/primitives/SText";
 const { UpdateModifierHandlesPos } = EventTypes
 
 class ShapeModifier {
+    cnvsElm: HTMLCanvasElement;
     private shape: IShape | null;
     private hoveredShape: IShape | null;
     private strokeColor: string | number[];
     private strokeWidth: number;
     private fill: string = '#fff'
-    private size: number = 5; // Default radius for the resizers
+    private size: number = 6; // Default radius for the resizers
     private handles: Handle[];
     private isHovered: boolean;
     private selectedModifierHandle: Handle | null;
     private font: SText;
 
-    constructor() {
+    constructor(cnvs: HTMLCanvasElement) {
+        this.cnvsElm = cnvs
         this.shape = null;
         this.hoveredShape = null
         this.strokeColor = '#00f';
@@ -166,6 +168,9 @@ class ShapeModifier {
     //     // EventQueue.trigger(Render)
     //     this.isHovered = bool
     // }
+    hovered(): boolean {
+        return this.isHovered
+    }
     CanDraw(): boolean {
         if (!this.shape) return false;
         const { left, top, right, bottom } = this.shape.boundingRect;
@@ -175,6 +180,7 @@ class ShapeModifier {
 
         return (width < minSize || height < minSize)
     }
+
     setHoveredShape(shape: IShape) {
         if (this.hoveredShape) {
             this.hoveredShape.setHovered(false)
@@ -189,6 +195,7 @@ class ShapeModifier {
         this.hoveredShape = shape
         this.hoveredShape.setHovered(true)
     }
+
     resetHovered() {
         if (this.hoveredShape) {
             this.hoveredShape.setHovered(false)
@@ -198,11 +205,52 @@ class ShapeModifier {
         }
         this.hoveredShape = null
     }
+
+    handleHovering(x: number, y: number) {
+        const handle = this.selectModifier(x, y)
+
+        this.setCursorForHandle(handle)
+        return handle
+    }
+
+    setCursorForHandle(handle: Handle) {
+        if (!handle) {
+            const cursor = "default"
+            if (this.cnvsElm) {
+                this.cnvsElm.style.cursor = cursor;
+            }
+            return
+        };
+
+        let cursor = "default";
+        if (handle.type == 'size') {
+            switch (handle.pos) {
+                case 'top-left':
+                    cursor = 'nwse-resize'
+                    break;
+                case 'top-right':
+                    cursor = 'nesw-resize'
+                    break;
+                case 'bottom-left':
+                    cursor = 'nesw-resize'
+                    break;
+                case 'bottom-right':
+                    cursor = 'nwse-resize'
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        // Set the cursor on the canvas element
+        if (this.cnvsElm) {
+            this.cnvsElm.style.cursor = cursor;
+        }
+    }
+
     draw(canvas: Canvas): void {
 
         if (!this.shape || this.CanDraw() || !this.resource) {
-            console.log('too small or no shape or no resources');
-
             return;
         }
         this.setPaint();
@@ -222,6 +270,7 @@ class ShapeModifier {
             }
         });
     }
+
     destroy() {
         if (this.shape) {
             this.shape.destroy()
