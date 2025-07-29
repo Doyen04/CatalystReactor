@@ -3,13 +3,13 @@ import EventQueue, { EventTypes, } from './EventQueue'
 import SceneManager from "./SceneManager";
 import type SceneNode from "./SceneGraph";
 import CanvasKitResources from "./CanvasKitResource";
-import ModifierManager from "./ModifierManager";
+import ShapeModifier from "@lib/modifiers/ShapeModifier";
 
 const { CreateSurface, Render } = EventTypes
 
 class Renderer {
     sceneManager: SceneManager
-    modifierManager: ModifierManager
+    shapeModifier: ShapeModifier
     surf: Surface | null;
     canvasEl: HTMLCanvasElement
 
@@ -23,10 +23,10 @@ class Renderer {
     private canrender: boolean = false;
 
 
-    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager, modifierManager: ModifierManager) {
+    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager, shapeModifier: ShapeModifier) {
         this.canvasEl = canvasEl;
         this.sceneManager = sceneManager;
-        this.modifierManager = modifierManager
+        this.shapeModifier = shapeModifier
         this.surf = null;
         this.animationId = null
 
@@ -156,7 +156,7 @@ class Renderer {
         skCnvs!.drawRect(rect, this.resource.strokePaint!);
 
         this.renderNode(skCnvs, scene);
-        this.modifierManager.draw(skCnvs);
+        this.shapeModifier.draw(skCnvs);
 
         skCnvs!.restore();
         this.surf.flush();

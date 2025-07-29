@@ -7,7 +7,8 @@ import ToolManager from "./ToolManager";
 
 import { ToolType } from '@lib/types/shapeTypes';
 import ShapeManager from './ShapeManager';
-import ModifierManager from './ModifierManager';
+import ShapeModifier from '@lib/modifiers/ShapeModifier';
+// import ModifierManager from './ModifierManager';
 
 
 class CanvasManager {
@@ -16,7 +17,7 @@ class CanvasManager {
     renderer: Renderer;
     toolManager: ToolManager;
     shapeManager: ShapeManager;
-    modifierManager: ModifierManager;
+    shapeModifier: ShapeModifier;
 
     undoStack: never[];
     redoStack: never[];
@@ -24,10 +25,10 @@ class CanvasManager {
     constructor(canvas: HTMLCanvasElement) {
 
         // this.skCnvs = null
-        this.modifierManager = new ModifierManager()
-        this.shapeManager = new ShapeManager(this.modifierManager)
+        this.shapeModifier = new ShapeModifier()
+        this.shapeManager = new ShapeManager(this.shapeModifier)
         this.sceneManager = new SceneManager();
-        this.renderer = new Renderer(canvas, this.sceneManager, this.modifierManager)
+        this.renderer = new Renderer(canvas, this.sceneManager, this.shapeModifier)
         this.inputManager = new InputManager(canvas)
         this.toolManager = new ToolManager(this.sceneManager, this.shapeManager)
 

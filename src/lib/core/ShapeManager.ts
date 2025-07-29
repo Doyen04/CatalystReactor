@@ -1,36 +1,33 @@
 // ShapeManager.ts
 import { useSceneStore } from '@hooks/sceneStore';
 import { Coord, IShape, Properties } from '@lib/types/shapes';
-import ModifierManager from './ModifierManager';
-import Handle from '@lib/modifiers/Handles';
+import ShapeModifier from '@lib/modifiers/ShapeModifier';
 
 class ShapeManager {
     private shape: IShape | null = null;
-    private modifierManager: ModifierManager | null
-    private selectedHandle: Handle | null;
+    private shapeModifier: ShapeModifier | null
 
-    constructor(modifierManager: ModifierManager) {
+    constructor(shapeModifier: ShapeModifier) {
         this.shape = null
-        this.modifierManager = modifierManager
-        this.selectedHandle = null
+        this.shapeModifier = shapeModifier
     }
 
     drawShape(dragStart: Coord, e: MouseEvent) {
         this.shape.setSize(dragStart, e.offsetX, e.offsetY, e.shiftKey)
         const props = this.shape.getProperties();
-        this.modifierManager.update()
+        this.shapeModifier.update()
 
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
 
     drag(x: number, y: number, e: MouseEvent) {
-        if (this.selectedHandle) {
-            this.modifierManager.drag(x, y, e)
+        if (this.shapeModifier.hasSelectedHandle()) {
+            this.shapeModifier.drag(x, y, e)
 
         } else {
             this.shape.moveShape(x, y)
-            this.modifierManager.update()
         }
+        this.shapeModifier.update()
         const props = this.shape.getProperties();
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
@@ -38,7 +35,7 @@ class ShapeManager {
     move(x: number, y: number) {
         this.shape.moveShape(x, y)
         const props = this.shape.getProperties();
-        this.modifierManager.update()
+        this.shapeModifier.update()
 
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
@@ -55,14 +52,14 @@ class ShapeManager {
             this.shape.drawDefault()
             console.log('Shape removed: too small add default size');
         }
-        this.modifierManager.update()
+        this.shapeModifier.update()
     }
 
     get currentShape(): IShape {
         return this.shape
     }
-    get modifierMgr(): ModifierManager {
-        return this.modifierManager
+    get modifierMgr(): ShapeModifier {
+        return this.shapeModifier
     }
 
     hasShape(): boolean {
@@ -71,7 +68,7 @@ class ShapeManager {
 
     attachShape(shape: IShape) {
         this.shape = shape;
-        this.modifierManager.attachShape(shape)
+        this.shapeModifier.attachShape(shape)
         // Optionally sync initial props:
         const props = this.shape.getProperties();
         useSceneStore.getState().setCurrentShapeProperties(props);
@@ -79,7 +76,7 @@ class ShapeManager {
 
     detachShape() {
         this.shape = null
-        this.modifierManager.detachShape()
+        this.shapeModifier.detachShape()
         useSceneStore.getState().clearProperties()
     }
 
@@ -92,19 +89,17 @@ class ShapeManager {
                 [key]: value
             }
         );
-        this.modifierManager.update()
+        this.shapeModifier.update()
         const props = this.shape.getProperties();
         useSceneStore.getState().setCurrentShapeProperties(props);
     }
     finishDrag() {
-        this.selectedHandle = null
+        this.shapeModifier.handleRemoveModiferHandle()
+        this.shapeModifier.update()
     }
     collide(x: number, y: number) {
         if (!this.shape) return null;
-        const handle = this.modifierManager.getCollidedModifier(x, y)
-        if (handle) {
-            this.selectedHandle = handle
-        }
+        this.shapeModifier.selectModifier(x, y)
     }
 
     // Additional methods: move, resize, updateBorderRadius, etc.

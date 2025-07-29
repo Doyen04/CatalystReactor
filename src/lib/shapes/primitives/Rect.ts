@@ -107,7 +107,7 @@ class Rectangle extends Shape {
     }
 
     override getDim(): { width: number, height: number } {
-        return { width: this.dimension.width, height: this.dimension.height }
+        return { width: Math.floor(this.dimension.width), height: Math.floor(this.dimension.height) }
     }
 
     override getProperties(): Properties {
@@ -133,7 +133,7 @@ class Rectangle extends Shape {
         const size = handle.size
 
         let x: number, y: number;
-
+        
         switch (handle.pos) {
             case 'top-left':
                 x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;
@@ -217,7 +217,7 @@ class Rectangle extends Shape {
             canvas.drawPath(path, this.resource.strokePaint);
 
             path.delete(); // Clean up WASM memory
-       }
+        }
     }
 
     protected makeCustomRRectPath(): Path {

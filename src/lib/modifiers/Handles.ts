@@ -43,6 +43,7 @@ export default class Handle {
             return null
         }
     }
+    
     resetAnchorPoint() {
         this.anchorPoint = { x: 0, y: 0 }
     }
@@ -55,24 +56,24 @@ export default class Handle {
         // Rectangle handle
         if (this.type !== "radius" && this.type !== "arc" && this.type !== "ratio") {
             return (
-                px >= this.x - this.size / 2 &&
-                px <= this.x + this.size / 2 &&
-                py >= this.y - this.size / 2 &&
-                py <= this.y + this.size / 2
+                px >= this.x &&
+                px <= this.x + this.size &&
+                py >= this.y &&
+                py <= this.y + this.size
             );
         }
         // Oval handle (circle collision)
         const dx = px - this.x;
         const dy = py - this.y;
-        const r = this.size / 2;
+        const r = this.size * 2;
         return dx * dx + dy * dy <= r * r;
     }
+
     updateShapeRadii(dx: number, dy: number, e: MouseEvent, shape: IShape) {
 
         const { left, right, top, bottom } = shape.boundingRect;
 
         let cornerX, cornerY, distX, distY, newRadius = 0;
-        this.isDragging = true;
 
         switch (this.pos) {
             case 'top-left':
@@ -172,7 +173,6 @@ export default class Handle {
 
         const { x, y } = shape.getCenterCoord()
         const { width, height } = shape.getDim()
-        this.isDragging = true
 
         const radiusX = width / 2;
         const radiusY = height / 2;
@@ -215,6 +215,7 @@ export default class Handle {
             this.updateShapeArcStart(dx, dy, e, shape)
         }
     }
+
     updateShapeArcStart(dx: number, dy: number, e: MouseEvent, shape: IShape) {
         const { x, y } = shape.getCenterCoord();
         const { width, height } = shape.getDim()
@@ -253,6 +254,7 @@ export default class Handle {
 
         shape.setArc(start, start + sweep);
     }
+
     createPaint() {
         if (!this.resource) return
         const cnvsKit = this.resource

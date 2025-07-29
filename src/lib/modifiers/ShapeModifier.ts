@@ -9,22 +9,24 @@ const { UpdateModifierHandlesPos } = EventTypes
 
 class ShapeModifier {
     private shape: IShape | null;
+    private hoveredShape: IShape | null;
     private strokeColor: string | number[];
     private strokeWidth: number;
     private fill: string = '#fff'
     private size: number = 5; // Default radius for the resizers
     private handles: Handle[];
     private isHovered: boolean;
-    private selectedModifier: Handle | null;
+    private selectedModifierHandle: Handle | null;
     private font: SText;
 
     constructor() {
         this.shape = null;
+        this.hoveredShape = null
         this.strokeColor = '#00f';
         this.strokeWidth = 1;
         this.handles = [];
         this.isHovered = false;
-        this.selectedModifier = null
+        this.selectedModifierHandle = null
         this.font = new SText(200, 0)
 
         this.setUpEvent()
@@ -40,16 +42,18 @@ class ShapeModifier {
         EventQueue.unSubscribeAll(UpdateModifierHandlesPos)
     }
 
-    setShape(shape: IShape) {
+    attachShape(shape: IShape) {
         this.handles = []
         this.shape = shape;
         if (!this.shape) {
             console.log('no shape for shape modifier');
             return
         }
+
         this.handles = this.shape.getModifierHandles(this.size, this.fill, this.strokeColor);
         this.updateResizerPositions();
     }
+
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
         if (resources) {
@@ -62,10 +66,11 @@ class ShapeModifier {
     }
 
     handleRemoveModiferHandle() {
-        if (!this.selectedModifier) return
-        this.selectedModifier.isDragging = false
-        this.selectedModifier.resetAnchorPoint()
-        this.selectedModifier = null
+        console.log('finished');
+        if (!this.selectedModifierHandle) return
+        this.selectedModifierHandle.isDragging = false
+        this.selectedModifierHandle.resetAnchorPoint()
+        this.selectedModifierHandle = null
     }
 
     selectModifier(x: number, y: number) {
@@ -78,32 +83,39 @@ class ShapeModifier {
                 break
             }
         }
-        this.selectedModifier = selected
+        this.selectedModifierHandle = selected
         return selected
     }
 
     handleModifierDrag(x: number, y: number, e: MouseEvent) {
-        if (this.selectedModifier) {
-            switch (this.selectedModifier.type) {
+        if (this.selectedModifierHandle) {
+            switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    this.selectedModifier.updateShapeRadii(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateShapeRadii(x, y, e, this.shape)
                     break;
                 case 'size':
-                    this.selectedModifier.updateShapeDim(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateShapeDim(x, y, e, this.shape)
                     break;
                 case 'ratio':
-                    this.selectedModifier.updateShapeRatio(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateShapeRatio(x, y, e, this.shape)
                     break;
                 case 'arc':
-                    this.selectedModifier.updateShapeArc(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateShapeArc(x, y, e, this.shape)
                     break;
                 default:
                     break;
             }
         }
+    }
+
+    update() {
         this.updateResizerPositions()
     }
 
+    drag(x: number, y: number, e: MouseEvent) {
+        this.selectedModifierHandle.isDragging = true
+        this.handleModifierDrag(x, y, e)
+    }
     updateResizerPositions() {
         if (!this.shape) {
             console.log(' no shape for updateresizer');
@@ -121,7 +133,7 @@ class ShapeModifier {
         const { bottom, left } = this.shape.boundingRect
         const { width, height } = this.shape.getDim()
         const { width: tWidth } = this.font.getDim()
-        
+
         const pos = (width - tWidth) / 2
         this.font.setCoord(left + pos, bottom + 5)
         this.font.setText(`${width} X ${height}`)
@@ -141,13 +153,19 @@ class ShapeModifier {
     hasShape() {
         return this.shape !== null;
     }
+    hasSelectedHandle() {
+        return this.selectedModifierHandle !== null
+    }
     getShape() {
         return this.shape
     }
-    setIsHovered(bool: boolean) {
-        // EventQueue.trigger(Render)
-        this.isHovered = bool
+    detachShape() {
+        this.shape = null
     }
+    // setIsHovered(bool: boolean) {
+    //     // EventQueue.trigger(Render)
+    //     this.isHovered = bool
+    // }
     CanDraw(): boolean {
         if (!this.shape) return false;
         const { left, top, right, bottom } = this.shape.boundingRect;
@@ -157,7 +175,29 @@ class ShapeModifier {
 
         return (width < minSize || height < minSize)
     }
-
+    setHoveredShape(shape: IShape) {
+        if (this.hoveredShape) {
+            this.hoveredShape.setHovered(false)
+        }
+        if (this.shape) {
+            this.isHovered = false
+        }
+        if (this.shape == this.hoveredShape) {
+            this.isHovered = true
+            return
+        }
+        this.hoveredShape = shape
+        this.hoveredShape.setHovered(true)
+    }
+    resetHovered() {
+        if (this.hoveredShape) {
+            this.hoveredShape.setHovered(false)
+        }
+        if (this.shape) {
+            this.isHovered = false
+        }
+        this.hoveredShape = null
+    }
     draw(canvas: Canvas): void {
 
         if (!this.shape || this.CanDraw() || !this.resource) {
@@ -193,7 +233,7 @@ class ShapeModifier {
         this.size = 0
         this.handles = []
         this.isHovered = null
-        this.selectedModifier = null
+        this.selectedModifierHandle = null
 
     }
 
