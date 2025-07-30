@@ -33,6 +33,7 @@ export default class Handle {
             }
         }
     }
+    
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
         if (resources) {
@@ -52,6 +53,7 @@ export default class Handle {
         this.x = x;
         this.y = y;
     }
+
     isCollide(px: number, py: number): boolean {
         // Rectangle handle
         const hpad = 3

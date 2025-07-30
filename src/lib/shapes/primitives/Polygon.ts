@@ -124,10 +124,9 @@ class Polygon extends Shape {
 
     private getVerticesModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
-        const hPad = 7;
         if (this.points.length > 0) {
             const [x, y] = this.points[1];
-            return { x: x - size, y: y + hPad };
+            return { x: x - size, y: y - size};
         }
         return { x: this.centerX, y: this.centerY };
     }
