@@ -26,7 +26,7 @@ export default class Handle {
         this.fill = fill
 
         // By default, use Oval for radius, Rect for size
-        if (type === "radius" || type === 'arc' || type === 'ratio') {
+        if (type !== "size") {
             if (type === 'arc' || type === 'ratio') {
                 this.handleArcAngle = 0
                 this.handleRatioAngle = 0
@@ -55,7 +55,7 @@ export default class Handle {
     isCollide(px: number, py: number): boolean {
         // Rectangle handle
         const hpad = 3
-        if (this.type !== "radius" && this.type !== "arc" && this.type !== "ratio") {
+        if (this.type === "size") {
             return (
                 px >= this.x - hpad &&
                 px <= this.x + this.size + hpad &&
@@ -295,7 +295,7 @@ export default class Handle {
     }
 
     draw(canvas: Canvas) {
-        if (this.type === "radius" || this.type === "arc" || this.type === "ratio") {
+        if (this.type !== "size") {
             this.drawOval(canvas);
         } else {
             this.drawRect(canvas);
