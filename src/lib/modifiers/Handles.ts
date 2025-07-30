@@ -31,6 +31,8 @@ export default class Handle {
                 this.handleArcAngle = 0
                 this.handleRatioAngle = 0
             }
+        }else{
+            this.size = 6; // Default size for the rect shaped resizers
         }
     }
 
