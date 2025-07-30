@@ -26,12 +26,12 @@ export default class Handle {
 
         // By default, use Oval for radius, Rect for size
         if (type !== "size") {
-            this.size =  4
+            this.size = 4
             if (type === 'arc' || type === 'ratio') {
                 this.handleArcAngle = 0
                 this.handleRatioAngle = 0
             }
-        }else{
+        } else {
             this.size = 6; // Default size for the rect shaped resizers
         }
     }
@@ -78,7 +78,7 @@ export default class Handle {
 
         const { left, right, top, bottom } = shape.boundingRect;
 
-        let cornerX, cornerY, distX, distY, newRadius = 0;
+        let cornerX: number, cornerY: number, distX: number, distY: number, newRadius = 0;
 
         switch (this.pos) {
             case 'top-left':
@@ -117,6 +117,17 @@ export default class Handle {
                     newRadius = Math.min(Math.abs(distX), Math.abs(distY));
                 }
                 break;
+            case 'top':
+                cornerY = top;
+                 distY = e.offsetY - cornerY;
+                if (distY >= 0) {
+                    newRadius = Math.abs(distY);
+                }
+                break
+            default:
+                console.log('not implemented position for radius handle');
+
+                break
         }
         shape.updateBorderRadius(newRadius, this.pos);
     }

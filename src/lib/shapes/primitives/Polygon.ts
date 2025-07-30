@@ -1,6 +1,6 @@
-import type { Canvas } from "canvaskit-wasm";
+import type { Canvas, Path } from "canvaskit-wasm";
 import Shape from "../base/Shape";
-import { Properties, Sides } from "@lib/types/shapes";
+import { HandlePos, Properties, Sides } from "@lib/types/shapes";
 import Handle from "@lib/modifiers/Handles";
 import { Points } from "@lib/types/shapeTypes";
 
@@ -33,7 +33,15 @@ class Polygon extends Shape {
         this.points = this.generateRegularPolygon()
         this.calculateBoundingRect();
     }
+    updateBorderRadius(newRadius: number, pos: HandlePos) {
+        if (pos != 'top') return;
 
+        const { width, height } = this.getDim();
+        const max = Math.min(width, height) / 2;
+        const newRad = Math.max(0, Math.min(newRadius, max));
+
+        this.bRadius = newRad
+    }
     override setDim(width: number, height: number) {
         this.radiusX = width / 2;
         this.radiusY = height / 2;
@@ -114,10 +122,10 @@ class Polygon extends Shape {
     }
     private getRadiusModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
-        const hPad = 7;
+        const padding = 7;
         if (this.points.length > 0) {
             const [x, y] = this.points[0];
-            return { x: x - size, y: y + hPad };
+            return { x: x - size, y: y + (handle.isDragging || this.bRadius >= padding ? this.bRadius : padding) };
         }
         return { x: this.centerX, y: this.centerY };
     }
@@ -134,8 +142,8 @@ class Polygon extends Shape {
 
     override getModifierHandles(fill: string | number[], strokeColor: string | number[],): Handle[] {
         const handles = super.getSizeModifierHandles(fill, strokeColor);
-        handles.push(new Handle(0, 0,'top', 'radius', fill, strokeColor));
-        handles.push(new Handle(0, 0,'right', 'vertices', fill, strokeColor));
+        handles.push(new Handle(0, 0, 'top', 'radius', fill, strokeColor));
+        handles.push(new Handle(0, 0, 'right', 'vertices', fill, strokeColor));
         return handles;
     }
 
@@ -173,26 +181,87 @@ class Polygon extends Shape {
     }
 
     override draw(canvas: Canvas): void {
-        if (!this.resource) return
-
+        if (!this.resource) return;
         this.setPaint();
 
         const path = new this.resource.canvasKit.Path();
-        const [startX, startY] = this.points[0];
-        path.moveTo(startX, startY);
 
-        for (let i = 1; i < this.points.length; i++) {
-            const [x, y] = this.points[i];
-            path.lineTo(x, y);
+        if (this.points.length > 3) {
+            // Not enough points for a polygon, draw as regular lines
+            if (this.bRadius == 0) {
+                const [startX, startY] = this.points[0];
+                path.moveTo(startX, startY);
+                for (let i = 1; i < this.points.length; i++) {
+                    const [x, y] = this.points[i];
+                    path.lineTo(x, y);
+                }
+                path.close();
+            }
+            else {
+                // Create rounded polygon
+                this.createRoundedPolygonPath(path, this.points, this.bRadius);
+            }
         }
-
-        path.close();
 
         canvas.drawPath(path, this.resource.paint);
         canvas.drawPath(path, this.resource.strokePaint);
-
         path.delete();
     }
+
+    private createRoundedPolygonPath(path: Path, points: number[][], radius: number): void {
+        const numPoints = points.length;
+
+        for (let i = 0; i < numPoints; i++) {
+            const prevIndex = (i - 1 + numPoints) % numPoints;
+            const currIndex = i;
+            const nextIndex = (i + 1) % numPoints;
+
+            const prev = points[prevIndex];
+            const curr = points[currIndex];
+            const next = points[nextIndex];
+
+            // Calculate vectors from current point to adjacent points
+            const vec1 = [prev[0] - curr[0], prev[1] - curr[1]];
+            const vec2 = [next[0] - curr[0], next[1] - curr[1]];
+
+            // Calculate lengths
+            const len1 = Math.sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1]);
+            const len2 = Math.sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]);
+
+            // Normalize vectors
+            const norm1 = [vec1[0] / len1, vec1[1] / len1];
+            const norm2 = [vec2[0] / len2, vec2[1] / len2];
+
+            // Calculate the maximum radius for this corner to avoid overlaps
+            const maxRadius = Math.min(len1 / 2, len2 / 2, radius);
+
+            // Calculate start and end points of the arc
+            const startPoint = [
+                curr[0] + norm1[0] * maxRadius,
+                curr[1] + norm1[1] * maxRadius
+            ];
+            const endPoint = [
+                curr[0] + norm2[0] * maxRadius,
+                curr[1] + norm2[1] * maxRadius
+            ];
+
+            if (i === 0) {
+                // Move to the start point of the first arc
+                path.moveTo(startPoint[0], startPoint[1]);
+            } else {
+                // Line to the start point of this arc
+                path.lineTo(startPoint[0], startPoint[1]);
+            }
+
+            // Add the rounded corner arc
+            // Calculate control points for quadratic curve approximation
+            const controlPoint = curr;
+            path.quadTo(controlPoint[0], controlPoint[1], endPoint[0], endPoint[1]);
+        }
+
+        path.close();
+    }
+
 
     override pointInShape(x: number, y: number): boolean {
         const pts = this.points;
