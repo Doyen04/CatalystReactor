@@ -2,6 +2,7 @@ import { Coord, IShape } from "@lib/types/shapes";
 import Tool from "./Tool";
 import SceneManager from "@lib/core/SceneManager";
 import ShapeManager from "@lib/core/ShapeManager";
+import Handle from "@lib/modifiers/Handles";
 
 class SelectTool extends Tool {
     private lastMouseCoord: Coord | null = null
@@ -85,22 +86,59 @@ class SelectTool extends Tool {
         // EventQueue.trigger(Render)
     }
 
+    setCursorForHandle(handle: Handle) {
+        if (!handle) {
+            const cursor = "default"
+            if (this.cnvsElm) {
+                this.cnvsElm.style.cursor = cursor;
+            }
+            return
+        };
+
+        let cursor = "default";
+        if (handle.type == 'size') {
+            switch (handle.pos) {
+                case 'top-left':
+                    cursor = 'nwse-resize'
+                    break;
+                case 'top-right':
+                    cursor = 'nesw-resize'
+                    break;
+                case 'bottom-left':
+                    cursor = 'nesw-resize'
+                    break;
+                case 'bottom-right':
+                    cursor = 'nwse-resize'
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        // Set the cursor on the canvas element
+        if (this.cnvsElm) {
+            this.cnvsElm.style.cursor = cursor;
+        }
+    }
+
     override handlePointerMove(dragStart: Coord, e: MouseEvent): void {
+        const handle = this.shapeManager.modifierMgr.collideHandle(e.offsetX, e.offsetY)
+        if (handle) {
+            this.setCursorForHandle(handle)
+        }
+        const isCollide = this.shapeManager.modifierMgr.collide(e.offsetX, e.offsetY)
+        if (isCollide) {
+            this.shapeManager.modifierMgr.setIsHovered(true)
+        } else {
+            this.shapeManager.modifierMgr.setIsHovered(false)
+        }
+
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
         if (scene) {
             const shape = scene.getShape()
             this.shapeManager.modifierMgr.setHoveredShape(shape)
         } else {
             this.shapeManager.modifierMgr.resetHovered()
-        }
-
-        const handle = this.shapeManager.modifierMgr.handleHovering(e.offsetX, e.offsetY)
-        if (handle) {
-            return
-        }
-
-        if (this.cnvsElm && this.cnvsElm.style.cursor != "default") {
-            this.cnvsElm.style.cursor = "default";
         }
     }
 

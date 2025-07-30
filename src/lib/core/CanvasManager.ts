@@ -25,7 +25,7 @@ class CanvasManager {
     constructor(canvas: HTMLCanvasElement) {
 
         // this.skCnvs = null
-        this.shapeModifier = new ShapeModifier(canvas)
+        this.shapeModifier = new ShapeModifier()
         this.shapeManager = new ShapeManager(this.shapeModifier)
         this.sceneManager = new SceneManager();
         this.renderer = new Renderer(canvas, this.sceneManager, this.shapeModifier)
