@@ -101,6 +101,9 @@ class ShapeModifier {
                 case 'arc':
                     this.selectedModifierHandle.updateShapeArc(x, y, e, this.shape)
                     break;
+                case 'vertices':
+                    this.selectedModifierHandle.updateShapeVertices(x, y, e, this.shape)
+                    break;
                 default:
                     break;
             }

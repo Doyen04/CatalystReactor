@@ -271,6 +271,10 @@ export default class Handle {
         shape.setArc(start, start + sweep);
     }
 
+    updateShapeVertices(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+        const { x, y } = shape.getCoord();
+    }
+
     createPaint() {
         if (!this.resource) return
         const cnvsKit = this.resource
