@@ -132,13 +132,76 @@ class Polygon extends Shape {
 
     private getVerticesModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
-        if (this.points.length > 0) {
-            const [x, y] = this.points[1];
-            return { x: x - size, y: y - size };
+        if (this.points.length > 1) {
+            // If border radius is set, use the tangent point for vertex 1
+            if (this.bRadius > 0) {
+                const i = 1;
+                const n = this.points.length;
+                const prev = this.points[(i - 1 + n) % n];
+                const curr = this.points[i];
+                const next = this.points[(i + 1) % n];
+                // Vector from previous to current
+                const vec1 = [prev[0] - curr[0], prev[1] - curr[1]];
+                const vec2 = [next[0] - curr[0], next[1] - curr[1]];
+
+                // Calculate lengths
+                const len1 = Math.sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1]);
+                const len2 = Math.sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]);
+
+                // Normalize vectors
+                const norm1 = [vec1[0] / len1, vec1[1] / len1];
+                const norm2 = [vec2[0] / len2, vec2[1] / len2];
+
+                // Calculate the maximum radius for this corner to avoid overlaps
+                const maxRadius = Math.min(len1 / 2, len2 / 2, this.bRadius);
+
+                // Calculate start and end points of the arc
+                const startPoint = [
+                    curr[0] + norm1[0] * maxRadius,
+                    curr[1] + norm1[1] * maxRadius
+                ];
+                const endPoint = [
+                    curr[0] + norm2[0] * maxRadius,
+                    curr[1] + norm2[1] * maxRadius
+                ];
+
+                const prevObj = { x: startPoint[0], y: startPoint[1] };
+                const currObj = { x: curr[0], y: curr[1] };
+                const nextObj = { x: endPoint[0], y: endPoint[1] };
+                const { x: tangentX, y: tangentY } = this.computeQuadPoint(prevObj, currObj, nextObj, 0.5);
+
+                console.log('tangentX, tangentY', tangentX, tangentY);
+
+                return { x: tangentX - size, y: tangentY - size };
+            } else {
+                // No border radius, use raw vertex
+                const [x, y] = this.points[1];
+                return { x: x - size, y: y - size };
+            }
         }
         return { x: this.centerX, y: this.centerY };
     }
 
+    computeQuadPoint(P0: { x: number; y: number }, P1: { x: number; y: number }, P2: { x: number; y: number }, t: number) {
+        const x = (1 - t) * (1 - t) * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x;
+        const y = (1 - t) * (1 - t) * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y;
+        return { x, y };
+    }
+    computeQuadTangent(P0, P1, P2, t, normalize = false) {
+        const v0 = { x: P1.x - P0.x, y: P1.y - P0.y };
+        const v1 = { x: P2.x - P1.x, y: P2.y - P1.y };
+        const Bp = {
+            x: 2 * (1 - t) * v0.x + 2 * t * v1.x,
+            y: 2 * (1 - t) * v0.y + 2 * t * v1.y
+        };
+
+        if (normalize) {
+            const len = Math.hypot(Bp.x, Bp.y) || 1;
+            return { x: Bp.x / len, y: Bp.y / len };
+        }
+
+        return Bp;
+    }
 
     override getModifierHandles(fill: string | number[], strokeColor: string | number[],): Handle[] {
         const handles = super.getSizeModifierHandles(fill, strokeColor);
