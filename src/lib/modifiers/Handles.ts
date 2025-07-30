@@ -1,6 +1,6 @@
 // Handle.ts
 import type { Canvas } from "canvaskit-wasm";
-import { Corner, HandleType, IShape } from "@lib/types/shapes";
+import { HandlePos, HandleType, IShape } from "@lib/types/shapes";
 import CanvasKitResources from "@lib/core/CanvasKitResource";
 
 export default class Handle {
@@ -8,7 +8,7 @@ export default class Handle {
     y: number;
     size: number;
     type: HandleType;
-    pos: Corner;
+    pos: HandlePos;
     stroke: string | number[]
     fill: string | number[]
     isDragging: boolean = false;
@@ -16,7 +16,7 @@ export default class Handle {
     handleRatioAngle: number | null = null;
     private anchorPoint: { x: number, y: number } = { x: 0, y: 0 }
 
-    constructor(x: number, y: number, size: number, pos: Corner, type: HandleType, fill: string | number[], stroke: string | number[]) {
+    constructor(x: number, y: number, size: number, pos: HandlePos, type: HandleType, fill: string | number[], stroke: string | number[]) {
         this.x = x;
         this.y = y;
         this.pos = pos;

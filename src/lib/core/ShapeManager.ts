@@ -8,6 +8,7 @@ class ShapeManager {
     private shape: IShape | null = null;
     private shapeModifier: ShapeModifier | null
     private throttledUpdate: (properties: Properties) => void;
+    private selected: boolean = false;
 
     constructor(shapeModifier: ShapeModifier) {
         this.shape = null
@@ -72,6 +73,10 @@ class ShapeManager {
         return this.shape != null
     }
 
+    hasSelection(): boolean {
+        return this.selected
+    }
+
     attachShape(shape: IShape) {
         this.shape = shape;
         this.shapeModifier.attachShape(shape)
@@ -101,18 +106,25 @@ class ShapeManager {
     }
 
     finishDrag() {
+        if (!this.shape) return;
+        this.selected = false;
         this.shapeModifier.handleRemoveModiferHandle()
         this.shapeModifier.update()
     }
 
     collide(x: number, y: number): boolean {
-        if (!this.shape) return false;
+        if (!this.shape) {
+            this.selected = false;
+            return false;
+        }
 
         const handle = this.shapeModifier.selectModifier(x, y)
         if (handle) {
+            this.selected = true
             return true
         }
-        return this.shape.pointInShape(x, y) ? true : false
+        this.selected = this.shape.pointInShape(x, y) ? true : false
+        return this.selected
     }
 
     // Additional methods: move, resize, updateBorderRadius, etc.

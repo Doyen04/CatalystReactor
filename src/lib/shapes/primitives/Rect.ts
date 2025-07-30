@@ -1,6 +1,6 @@
 import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Path, Rect } from "canvaskit-wasm";
-import { BorderRadius, Corner, Properties, Size, SizeRadiusModifierPos } from '@lib/types/shapes';
+import { BorderRadius, HandlePos, Properties, Size, SizeRadiusModifierPos } from '@lib/types/shapes';
 import Shape from '../base/Shape';
 
 
@@ -270,7 +270,7 @@ class Rectangle extends Shape {
         return p;
     }
 
-    updateBorderRadius(newRadius: number, pos: Corner) {
+    updateBorderRadius(newRadius: number, pos: HandlePos) {
         const max = Math.min(this.dimension.width, this.dimension.height) / 2;
         const newRad = Math.max(0, Math.min(newRadius, max));
         if (this.bdradius.locked) {

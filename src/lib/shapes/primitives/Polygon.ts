@@ -84,9 +84,9 @@ class Polygon extends Shape {
         this.calculateBoundingRect();
     }
 
-    setSides(sides:number){
+    setSides(sides: number) {
         sides = Math.max(3, sides)
-        this.sides = {sides}
+        this.sides = { sides }
         this.points = this.generateRegularPolygon()
     }
 
@@ -105,12 +105,24 @@ class Polygon extends Shape {
     override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         if (handle.type === 'size') {
             return super.getSizeModifierHandlesPos(handle);
+        } else if (handle.type == 'radius') {
+            return this.getRadiusModifierHandlesPos(handle);
         }
         return { x: 0, y: 0 };
     }
-
+    private getRadiusModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+        const size = handle.size;
+        const hPad = 7;
+        if (this.points.length > 0) {
+            const [x, y] = this.points[0];
+            return { x: x - size, y: y + hPad };
+        }
+        return { x: this.centerX, y: this.centerY };
+    }
+    
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+        handles.push(new Handle(0, 0, size, 'top', 'radius', fill, strokeColor));
         return handles;
     }
 

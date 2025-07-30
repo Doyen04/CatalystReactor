@@ -68,7 +68,7 @@ export interface Coord {
     y: number;
 }
 
-export const SizeRadiusModifierPos: Corner[] = [
+export const SizeRadiusModifierPos: HandlePos[] = [
     'top-left',
     'top-right',
     'bottom-left',
@@ -76,7 +76,7 @@ export const SizeRadiusModifierPos: Corner[] = [
 ];
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img';
-export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end';
+export type HandlePos = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end' | 'top';
 export type HandleType = 'size' | 'radius' | 'arc' | 'ratio';
 
 export interface IShape {
@@ -108,7 +108,7 @@ export interface IShape {
     getArcAngles?(): { start: number, end: number }
     setRatio?(r: number): void;
     getCenterCoord?(): { x: number, y: number };
-    updateBorderRadius?(r: number, pos: Corner): void;
+    updateBorderRadius?(r: number, pos: HandlePos): void;
     diableEditing?(): void;
     startEditing?(): void;
     setArc?(startAngle: number, endAngle: number): void;

@@ -1,7 +1,7 @@
 import Handle from '@/lib/modifiers/Handles';
 import Shape from '../base/Shape';
 import type { Canvas, } from "canvaskit-wasm";
-import { Corner, HandleType, Properties, Sides } from '@lib/types/shapes';
+import {Properties } from '@lib/types/shapes';
 import { Points } from '@lib/types/shapeTypes';
 
 class Star extends Shape {
@@ -13,7 +13,7 @@ class Star extends Shape {
     ratio: number;
     points: Points[]
 
-    constructor(x: number, y: number, { rotation = 0, ...shapeProps } = {}) {
+    constructor(x: number, y: number, {...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
         this.radiusX = 0;
         this.radiusY = 0;

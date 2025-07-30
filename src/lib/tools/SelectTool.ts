@@ -102,7 +102,6 @@ class SelectTool extends Tool {
         if (this.cnvsElm && this.cnvsElm.style.cursor != "default") {
             this.cnvsElm.style.cursor = "default";
         }
-        // EventQueue.trigger(ShowHovered, e.offsetX, e.offsetY)
     }
 
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
@@ -114,7 +113,7 @@ class SelectTool extends Tool {
 
         const dx = e.offsetX - this.lastMouseCoord.x
         const dy = e.offsetY - this.lastMouseCoord.y
-        if (this.shapeManager.hasShape()) {
+        if (this.shapeManager.hasSelection()) {
             this.shapeManager.drag(dx, dy, e)
         }
 
