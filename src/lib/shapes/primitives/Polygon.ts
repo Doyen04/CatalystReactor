@@ -3,6 +3,7 @@ import Shape from "../base/Shape";
 import { HandlePos, Properties, Sides } from "@lib/types/shapes";
 import Handle from "@lib/modifiers/Handles";
 import { Points } from "@lib/types/shapeTypes";
+import clamp from "@lib/helper/clamp";
 
 class Polygon extends Shape {
     centerX: number;
@@ -33,6 +34,7 @@ class Polygon extends Shape {
         this.points = this.generateRegularPolygon()
         this.calculateBoundingRect();
     }
+
     updateBorderRadius(newRadius: number, pos: HandlePos) {
         if (pos != 'top') return;
 
@@ -42,6 +44,7 @@ class Polygon extends Shape {
 
         this.bRadius = newRad
     }
+
     override setDim(width: number, height: number) {
         this.radiusX = width / 2;
         this.radiusY = height / 2;
@@ -92,8 +95,9 @@ class Polygon extends Shape {
         this.calculateBoundingRect();
     }
 
-    setSides(sides: number) {
-        sides = Math.max(3, sides)
+    setVertexCount(sides: number) {
+
+        sides = clamp(sides, 3, 60);
         this.sides = { sides }
         this.points = this.generateRegularPolygon()
     }
@@ -103,13 +107,15 @@ class Polygon extends Shape {
         this.setDim(prop.size.width, prop.size.height)
         this.style = prop.style
         console.log(prop, 'inside poly');
-        this.setSides(prop.sides.sides)
+        this.setVertexCount(prop.sides.sides)
     }
 
     override getProperties(): Properties {
         return { transform: this.transform, size: this.getDim(), style: this.style, sides: this.sides }
     }
-
+    getVertexCount():number{
+        return this.sides.sides
+    }
     override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         if (handle.type === 'size') {
             return super.getSizeModifierHandlesPos(handle);
@@ -120,6 +126,7 @@ class Polygon extends Shape {
         }
         return { x: 0, y: 0 };
     }
+
     private getRadiusModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
         const padding = 7;
@@ -204,7 +211,7 @@ class Polygon extends Shape {
 
         const path = new this.resource.canvasKit.Path();
 
-        if (this.points.length > 3) {
+        if (this.points.length >= 3) {
             // Not enough points for a polygon, draw as regular lines
             if (this.bRadius == 0) {
                 const [startX, startY] = this.points[0];

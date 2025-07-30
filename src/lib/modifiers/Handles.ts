@@ -2,6 +2,7 @@
 import type { Canvas } from "canvaskit-wasm";
 import { HandlePos, HandleType, IShape } from "@lib/types/shapes";
 import CanvasKitResources from "@lib/core/CanvasKitResource";
+import clamp from "@lib/helper/clamp";
 
 export default class Handle {
     x: number;
@@ -119,7 +120,7 @@ export default class Handle {
                 break;
             case 'top':
                 cornerY = top;
-                 distY = e.offsetY - cornerY;
+                distY = e.offsetY - cornerY;
                 if (distY >= 0) {
                     newRadius = Math.abs(distY);
                 }
@@ -271,10 +272,27 @@ export default class Handle {
         shape.setArc(start, start + sweep);
     }
 
-    updateShapeVertices(dx: number, dy: number, e: MouseEvent, shape: IShape) {
-        const { x, y } = shape.getCoord();
-    }
+    // ...existing code...
+updateShapeVertices(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    const GAP = 20; // defined distance for both x and y
 
+    const isWithinGap =
+        Math.abs(e.offsetY - this.y) < GAP &&
+        Math.abs(e.offsetX - this.x) < GAP;
+
+    if (isWithinGap) {
+        let count = shape.getVertexCount();
+        if ((dy < 0 && e.offsetY < this.y) || (dx < 0 && e.offsetX < this.x)) {
+            count = clamp(count + 1, 3, 60);
+            shape.setVertexCount(count);
+        }
+        else if ((dy > 0 && e.offsetY > this.y) || (dx > 0 && e.offsetX > this.x)) {
+            count = clamp(count - 1, 3, 60);
+            shape.setVertexCount(count);
+        }
+    }
+}
+// ...existing code...
     createPaint() {
         if (!this.resource) return
         const cnvsKit = this.resource

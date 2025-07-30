@@ -3,6 +3,7 @@ import Shape from '../base/Shape';
 import type { Canvas, } from "canvaskit-wasm";
 import { Properties } from '@lib/types/shapes';
 import { Points } from '@lib/types/shapeTypes';
+import clamp from '@lib/helper/clamp';
 
 class Star extends Shape {
     radiusX: number;
@@ -103,8 +104,8 @@ class Star extends Shape {
         this.calculateBoundingRect();
     }
 
-    setSpikes(points: number): void {
-        this.spikes = Math.max(3, points);
+    setVertexCount(points: number): void {
+        this.spikes = clamp(points, 3, 60);
 
         this.points = this.generateStarPoints();
         this.calculateBoundingRect()
@@ -124,10 +125,13 @@ class Star extends Shape {
         this.transform = prop.transform
         this.setDim(prop.size.width, prop.size.height)
         this.style = prop.style
-        this.setSpikes(prop.spikesRatio.spikes)
+        this.setVertexCount(prop.spikesRatio.spikes)
         this.setRatio(prop.spikesRatio.ratio)
     }
 
+    getVertexCount():number{
+        return this.spikes
+    }
     override getProperties(): Properties {
         return { transform: this.transform, size: this.getDim(), style: this.style, spikesRatio: { spikes: this.spikes, ratio: this.ratio } }
     }
@@ -180,6 +184,9 @@ class Star extends Shape {
         return handles;
     }
 
+    getCenterCoord(): { x: number, y: number } {
+        return { x: this.centerX, y: this.centerY }
+    }
     override getDim(): { width: number; height: number; } {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
