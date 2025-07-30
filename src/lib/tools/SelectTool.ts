@@ -123,12 +123,12 @@ class SelectTool extends Tool {
 
     override handlePointerMove(dragStart: Coord, e: MouseEvent): void {
         const handle = this.shapeManager.modifierMgr.collideHandle(e.offsetX, e.offsetY)
-        if (handle) {
-            this.setCursorForHandle(handle)
-        }
+        this.setCursorForHandle(handle)
+
         const isCollide = this.shapeManager.modifierMgr.collide(e.offsetX, e.offsetY)
         if (isCollide) {
             this.shapeManager.modifierMgr.setIsHovered(true)
+            return
         } else {
             this.shapeManager.modifierMgr.setIsHovered(false)
         }
