@@ -126,7 +126,7 @@ class Polygon extends Shape {
         const size = handle.size;
         if (this.points.length > 0) {
             const [x, y] = this.points[1];
-            return { x: x - size, y: y - size};
+            return { x: x - size, y: y - size };
         }
         return { x: this.centerX, y: this.centerY };
     }
@@ -135,7 +135,7 @@ class Polygon extends Shape {
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
         handles.push(new Handle(0, 0, size, 'top', 'radius', fill, strokeColor));
-         handles.push(new Handle(0, 0, size, 'right', 'vertices', fill, strokeColor));
+        handles.push(new Handle(0, 0, size, 'right', 'vertices', fill, strokeColor));
         return handles;
     }
 

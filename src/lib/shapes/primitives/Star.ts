@@ -1,7 +1,7 @@
 import Handle from '@/lib/modifiers/Handles';
 import Shape from '../base/Shape';
 import type { Canvas, } from "canvaskit-wasm";
-import {Properties } from '@lib/types/shapes';
+import { Properties } from '@lib/types/shapes';
 import { Points } from '@lib/types/shapeTypes';
 
 class Star extends Shape {
@@ -13,7 +13,7 @@ class Star extends Shape {
     ratio: number;
     points: Points[]
 
-    constructor(x: number, y: number, {...shapeProps } = {}) {
+    constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
         this.radiusX = 0;
         this.radiusY = 0;
@@ -134,11 +134,37 @@ class Star extends Shape {
     override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         if (handle.type === 'size') {
             return super.getSizeModifierHandlesPos(handle);
+        } else if (handle.type == 'radius') {
+            return this.getRadiusModifierHandlesPos(handle);
+        } else if (handle.type === 'vertices') {
+            return this.getVerticesModifierHandlesPos(handle);
         }
         return { x: 0, y: 0 };
     }
+    
+    private getRadiusModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+        const size = handle.size;
+        const hPad = 7;
+        if (this.points.length > 0) {
+            const [x, y] = this.points[0];
+            return { x: x - size, y: y + hPad };
+        }
+        return { x: this.centerX, y: this.centerY };
+    }
+
+    private getVerticesModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+        const size = handle.size;
+        if (this.points.length > 0) {
+            const [x, y] = this.points[1];
+            return { x: x - size, y: y - size };
+        }
+        return { x: this.centerX, y: this.centerY };
+    }
+
     override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
         const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+        handles.push(new Handle(0, 0, size, 'top', 'radius', fill, strokeColor));
+        handles.push(new Handle(0, 0, size, 'right', 'vertices', fill, strokeColor));
         return handles;
     }
 
