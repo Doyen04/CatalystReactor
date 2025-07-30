@@ -188,7 +188,8 @@ class ShapeModifier {
         if (this.shape) {
             this.isHovered = false
         }
-        if (this.shape == this.hoveredShape) {
+
+        if (this.shape && this.shape == shape) {
             this.isHovered = true
             return
         }
