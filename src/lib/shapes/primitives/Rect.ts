@@ -119,10 +119,10 @@ class Rectangle extends Shape {
         }
     }
 
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
-        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
+        const handles = super.getSizeModifierHandles(fill, strokeColor);
         SizeRadiusModifierPos.forEach(pos => {
-            handles.push(new Handle(0, 0, size, pos, 'radius', fill, strokeColor))
+            handles.push(new Handle(0, 0, pos, 'radius', fill, strokeColor))
         })
         return handles;
     }

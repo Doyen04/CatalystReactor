@@ -71,8 +71,8 @@ class PText extends Shape {
         return { x: 0, y: 0 };
     }
 
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
-        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
+    override getModifierHandles(fill: string | number[], strokeColor: string | number[],): Handle[] {
+        const handles = super.getSizeModifierHandles( fill, strokeColor);
         return handles;
     }
 

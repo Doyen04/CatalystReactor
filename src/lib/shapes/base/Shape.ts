@@ -21,7 +21,7 @@ abstract class Shape implements IShape {
         this.isHover = false;
     }
 
-    abstract getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[];
+    abstract getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[];
     abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; };
     abstract pointInShape(x: number, y: number): boolean;
     abstract moveShape(mx: number, my: number): void;
@@ -46,10 +46,10 @@ abstract class Shape implements IShape {
         }
     }
 
-    getSizeModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
+    getSizeModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles: Handle[] = [];
         SizeRadiusModifierPos.forEach(pos => {
-            handles.push(new Handle(0, 0, size, pos, 'size', fill, strokeColor));
+            handles.push(new Handle(0, 0, pos, 'size', fill, strokeColor));
         });
         return handles;
     }

@@ -16,24 +16,24 @@ export default class Handle {
     handleRatioAngle: number | null = null;
     private anchorPoint: { x: number, y: number } = { x: 0, y: 0 }
 
-    constructor(x: number, y: number, size: number, pos: HandlePos, type: HandleType, fill: string | number[], stroke: string | number[]) {
+    constructor(x: number, y: number, pos: HandlePos, type: HandleType, fill: string | number[], stroke: string | number[]) {
         this.x = x;
         this.y = y;
         this.pos = pos;
-        this.size = size;
         this.type = type;
         this.stroke = stroke;
         this.fill = fill
 
         // By default, use Oval for radius, Rect for size
         if (type !== "size") {
+            this.size =  4
             if (type === 'arc' || type === 'ratio') {
                 this.handleArcAngle = 0
                 this.handleRatioAngle = 0
             }
         }
     }
-    
+
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
         if (resources) {

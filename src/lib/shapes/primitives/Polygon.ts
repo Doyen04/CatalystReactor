@@ -132,10 +132,10 @@ class Polygon extends Shape {
     }
 
 
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
-        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        handles.push(new Handle(0, 0, size, 'top', 'radius', fill, strokeColor));
-        handles.push(new Handle(0, 0, size, 'right', 'vertices', fill, strokeColor));
+    override getModifierHandles(fill: string | number[], strokeColor: string | number[],): Handle[] {
+        const handles = super.getSizeModifierHandles(fill, strokeColor);
+        handles.push(new Handle(0, 0,'top', 'radius', fill, strokeColor));
+        handles.push(new Handle(0, 0,'right', 'vertices', fill, strokeColor));
         return handles;
     }
 

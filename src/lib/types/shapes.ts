@@ -76,7 +76,7 @@ export const SizeRadiusModifierPos: HandlePos[] = [
 ];
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img';
-export type HandlePos = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end' | 'top' | 'right';
+export type HandlePos = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end' | 'top' | 'right' | 'between';
 export type HandleType = 'size' | 'radius' | 'arc' | 'ratio' | 'vertices';
 
 export interface IShape {
@@ -85,7 +85,7 @@ export interface IShape {
     boundingRect: BoundingRect;
 
     // Methods that all shapes should implement
-    getModifierHandles(size: number, fill: string, strokeColor: string | number[]): Handle[];
+    getModifierHandles(fill: string, strokeColor: string | number[]): Handle[];
     getSizeModifierHandlesPos(handle: Handle): Coord;
     getModifierHandlesPos(handle: Handle): Coord;
 

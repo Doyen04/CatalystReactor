@@ -14,7 +14,6 @@ class ShapeModifier {
     private strokeColor: string | number[];
     private strokeWidth: number;
     private fill: string = '#fff'
-    private size: number = 6; // Default radius for the resizers
     private handles: Handle[];
     private isHovered: boolean;
     private selectedModifierHandle: Handle | null;
@@ -52,7 +51,7 @@ class ShapeModifier {
             return
         }
 
-        this.handles = this.shape.getModifierHandles(this.size, this.fill, this.strokeColor);
+        this.handles = this.shape.getModifierHandles(this.fill, this.strokeColor);
         this.updateResizerPositions();
     }
 
@@ -280,7 +279,6 @@ class ShapeModifier {
         this.strokeColor = ''
         this.strokeWidth = 0
         this.fill = ''
-        this.size = 0
         this.handles = []
         this.isHovered = null
         this.selectedModifierHandle = null

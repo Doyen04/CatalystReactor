@@ -129,11 +129,11 @@ class Oval extends Shape {
         return { x: this.centerX, y: this.centerY }
     }
 
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
-        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        handles.push(new Handle(0, 0, size, 'arc-end', 'arc', fill, strokeColor))
-        handles.push(new Handle(0, 0, size, 'arc-start', 'arc', fill, strokeColor))
-        handles.push(new Handle(0, 0, size, 'center', 'ratio', fill, strokeColor))
+    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
+        const handles = super.getSizeModifierHandles(fill, strokeColor);
+        handles.push(new Handle(0, 0, 'arc-end', 'arc', fill, strokeColor))
+        handles.push(new Handle(0, 0, 'arc-start', 'arc', fill, strokeColor))
+        handles.push(new Handle(0, 0, 'center', 'ratio', fill, strokeColor))
         return handles;
     }
 

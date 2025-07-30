@@ -138,13 +138,15 @@ class Star extends Shape {
             return this.getRadiusModifierHandlesPos(handle);
         } else if (handle.type === 'vertices') {
             return this.getVerticesModifierHandlesPos(handle);
+        } else if (handle.type === 'ratio') {
+            return this.getRatioModifierHandlesPos(handle);
         }
         return { x: 0, y: 0 };
     }
-    
+
     private getRadiusModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
-        const hPad = 7;
+        const hPad = 10;
         if (this.points.length > 0) {
             const [x, y] = this.points[0];
             return { x: x - size, y: y + hPad };
@@ -152,7 +154,7 @@ class Star extends Shape {
         return { x: this.centerX, y: this.centerY };
     }
 
-    private getVerticesModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+    private getRatioModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
         if (this.points.length > 0) {
             const [x, y] = this.points[1];
@@ -161,10 +163,20 @@ class Star extends Shape {
         return { x: this.centerX, y: this.centerY };
     }
 
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[],): Handle[] {
-        const handles = super.getSizeModifierHandles(size, fill, strokeColor);
-        handles.push(new Handle(0, 0, size, 'top', 'radius', fill, strokeColor));
-        handles.push(new Handle(0, 0, size, 'right', 'vertices', fill, strokeColor));
+    private getVerticesModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+        const size = handle.size;
+        if (this.points.length > 0) {
+            const [x, y] = this.points[2];
+            return { x: x - size, y: y - size };
+        }
+        return { x: this.centerX, y: this.centerY };
+    }
+
+    override getModifierHandles(fill: string | number[], strokeColor: string | number[],): Handle[] {
+        const handles = super.getSizeModifierHandles( fill, strokeColor);
+        handles.push(new Handle(0, 0, 'top', 'radius', fill, strokeColor));
+        handles.push(new Handle(0, 0, 'right', 'vertices', fill, strokeColor));
+        handles.push(new Handle(0, 0, 'between', 'ratio', fill, strokeColor));
         return handles;
     }
 
