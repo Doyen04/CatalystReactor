@@ -91,13 +91,33 @@ class Rectangle extends Shape {
 
     //move to shape
     override setDim(width: number, height: number): void {
-
         this.dimension.width = width;
         this.dimension.height = height;
 
+        this.computeAllRadius();
         this.calculateBoundingRect()
     }
 
+    computeAllRadius(){
+        const max = Math.max(
+            this.bdradius['top-left'],
+            this.bdradius['top-right'],
+            this.bdradius['bottom-left'],
+            this.bdradius['bottom-right']
+        )
+        const nMax = Math.min(this.dimension.width, this.dimension.height) / 2;
+        const ratio = nMax / max;
+        //80 / 40 = 2
+        // if ratio is greater than 1 retain old radius
+        //write function to get max radius out of corner
+      
+            this.bdradius['top-left'] = this.bdradius['top-left'] * ratio;
+            this.bdradius['top-right'] = this.bdradius['top-right'] * ratio;
+            this.bdradius['bottom-left'] = this.bdradius['bottom-left'] * ratio;
+            this.bdradius['bottom-right'] = this.bdradius['bottom-right'] * ratio;
+        
+
+    }
     override setProperties(prop: Properties): void {
         this.transform = prop.transform
         this.dimension = prop.size
@@ -133,7 +153,7 @@ class Rectangle extends Shape {
         const size = handle.size
 
         let x: number, y: number;
-        
+
         switch (handle.pos) {
             case 'top-left':
                 x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;

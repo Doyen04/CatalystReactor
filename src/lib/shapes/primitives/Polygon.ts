@@ -129,7 +129,7 @@ class Polygon extends Shape {
 
     private getRadiusModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
-        const padding = 7;
+        const padding = 10;
         if (this.points.length > 0) {
             const [x, y] = this.points[0];
             return { x: x - size, y: y + (handle.isDragging || this.bRadius >= padding ? this.bRadius : padding) };
@@ -256,7 +256,13 @@ class Polygon extends Shape {
         const norm1 = [vec1[0] / len1, vec1[1] / len1];
         const norm2 = [vec2[0] / len2, vec2[1] / len2];
 
-        const maxRadius = Math.min(len1 / 2, len2 / 2, this.bRadius);
+        const dot = norm1[0] * norm2[0] + norm1[1] * norm2[1];
+        const angle = Math.acos(Math.max(-1, Math.min(1, dot)));
+
+        // Use angle-based maximum for better visual results
+        const logicalRadius = Math.min(len1 / 2, len2 / 2);
+        const halfAngle = angle / 2;
+        const maxRadius = Math.min(this.bRadius, Math.min(len1 / 2, len2 / 2) * Math.tan(halfAngle));
 
         const startPoint = [
             curr[0] + norm1[0] * maxRadius,
@@ -267,25 +273,25 @@ class Polygon extends Shape {
             curr[1] + norm2[1] * maxRadius
         ];
 
-        return { startPoint, endPoint, controlPoint: curr, maxRadius };
+        return { startPoint, endPoint, controlPoint: curr, maxRadius, logicalRadius };
     }
 
     private createRoundedPolygonPath(path: Path): void {
         const numPoints = this.points.length;
 
-        for (let i = 0; i < numPoints; i++) {
-            const { startPoint, endPoint, controlPoint } = this.computeRoundedCorner(i);
-            if (i === 0) {
-                // Move to the start point of the first arc
-                path.moveTo(startPoint[0], startPoint[1]);
-            } else {
-                // Line to the start point of this arc
-                path.lineTo(startPoint[0], startPoint[1]);
-            }
+        const firstCorner = this.computeRoundedCorner(0);
 
-            // Add the rounded corner arc
-            // Calculate control points for quadratic curve approximation
-            path.quadTo(controlPoint[0], controlPoint[1], endPoint[0], endPoint[1]);
+        if (firstCorner.maxRadius >= firstCorner.logicalRadius) {
+            const firstCorner = this.computeRoundedCorner(numPoints - 1);
+            path.moveTo(firstCorner.endPoint[0], firstCorner.endPoint[1]);
+        } else {
+            path.moveTo(firstCorner.startPoint[0], firstCorner.startPoint[1]);
+        }
+
+        for (let i = 0; i < numPoints; i++) {
+            const { controlPoint, maxRadius, endPoint } = this.computeRoundedCorner(i);
+
+            path.arcToTangent(controlPoint[0], controlPoint[1], endPoint[0], endPoint[1], maxRadius);
         }
 
         path.close();

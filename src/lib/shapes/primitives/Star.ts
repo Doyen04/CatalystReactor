@@ -1,7 +1,7 @@
 import Handle from '@/lib/modifiers/Handles';
 import Shape from '../base/Shape';
-import type { Canvas, } from "canvaskit-wasm";
-import { Properties } from '@lib/types/shapes';
+import type { Canvas, Path, } from "canvaskit-wasm";
+import { HandlePos, Properties } from '@lib/types/shapes';
 import { Points } from '@lib/types/shapeTypes';
 import clamp from '@lib/helper/clamp';
 
@@ -13,6 +13,7 @@ class Star extends Shape {
     centerY: number;
     ratio: number;
     points: Points[]
+    bRadius: number = 5;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
@@ -51,6 +52,16 @@ class Star extends Shape {
 
         this.points = this.generateStarPoints();
         this.calculateBoundingRect();
+    }
+
+    updateBorderRadius(newRadius: number, pos: HandlePos) {
+        if (pos != 'top') return;
+
+        const { width, height } = this.getDim();
+        const max = Math.min(width, height) / 2;
+        const newRad = Math.max(0, Math.min(newRadius, max));
+
+        this.bRadius = newRad
     }
 
     setDim(width: number, height: number) {
@@ -129,12 +140,13 @@ class Star extends Shape {
         this.setRatio(prop.spikesRatio.ratio)
     }
 
-    getVertexCount():number{
+    getVertexCount(): number {
         return this.spikes
     }
     override getProperties(): Properties {
         return { transform: this.transform, size: this.getDim(), style: this.style, spikesRatio: { spikes: this.spikes, ratio: this.ratio } }
     }
+
     override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         if (handle.type === 'size') {
             return super.getSizeModifierHandlesPos(handle);
@@ -150,10 +162,10 @@ class Star extends Shape {
 
     private getRadiusModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
-        const hPad = 10;
+        const padding = 10;
         if (this.points.length > 0) {
             const [x, y] = this.points[0];
-            return { x: x - size, y: y + hPad };
+            return { x: x - size, y: y + (handle.isDragging || this.bRadius >= padding ? this.bRadius : padding) };
         }
         return { x: this.centerX, y: this.centerY };
     }
@@ -177,7 +189,7 @@ class Star extends Shape {
     }
 
     override getModifierHandles(fill: string | number[], strokeColor: string | number[],): Handle[] {
-        const handles = super.getSizeModifierHandles( fill, strokeColor);
+        const handles = super.getSizeModifierHandles(fill, strokeColor);
         handles.push(new Handle(0, 0, 'top', 'radius', fill, strokeColor));
         handles.push(new Handle(0, 0, 'right', 'vertices', fill, strokeColor));
         handles.push(new Handle(0, 0, 'between', 'ratio', fill, strokeColor));
@@ -196,18 +208,68 @@ class Star extends Shape {
 
         this.setPaint();
         const path = new this.resource.canvasKit.Path();
+        if (this.bRadius > 0) {
+            this.createRoundedStarPath(path);
+        } else {
+            path.moveTo(this.points[0][0], this.points[0][1]);
 
-        path.moveTo(this.points[0][0], this.points[0][1]);
-
-        for (let i = 1; i < this.points.length; i++) {
-            path.lineTo(this.points[i][0], this.points[i][1]);
+            for (let i = 1; i < this.points.length; i++) {
+                path.lineTo(this.points[i][0], this.points[i][1]);
+            }
+            path.close();
         }
-        path.close();
 
         canvas.drawPath(path, this.resource.paint);
         canvas.drawPath(path, this.resource.strokePaint);
 
         path.delete(); // Clean up path object
+    }
+
+    private computeRoundedCorner(index: number) {
+        const n = this.points.length;
+
+        const prev = this.points[(index - 1 + n) % n];
+        const curr = this.points[index];
+        const next = this.points[(index + 1) % n];
+
+        const vec1 = [prev[0] - curr[0], prev[1] - curr[1]];
+        const vec2 = [next[0] - curr[0], next[1] - curr[1]];
+
+        const len1 = Math.hypot(vec1[0], vec1[1]);
+        const len2 = Math.hypot(vec2[0], vec2[1]);
+
+        const norm1 = [vec1[0] / len1, vec1[1] / len1];
+        const norm2 = [vec2[0] / len2, vec2[1] / len2];
+
+        const maxRadius = Math.min(len1 / 2, len2 / 2, this.bRadius);
+
+        const startPoint = [
+            curr[0] + norm1[0] * maxRadius,
+            curr[1] + norm1[1] * maxRadius
+        ];
+        const endPoint = [
+            curr[0] + norm2[0] * maxRadius,
+            curr[1] + norm2[1] * maxRadius
+        ];
+
+        return { startPoint, endPoint, controlPoint: curr, maxRadius };
+    }
+
+    private createRoundedStarPath(path: Path): void {
+        const numPoints = this.points.length;
+
+        const lastCorner = this.computeRoundedCorner(numPoints - 1);
+        path.moveTo(lastCorner.endPoint[0], lastCorner.endPoint[1]);
+        for (let i = 0; i < numPoints; i++) {
+            const { controlPoint, maxRadius } = this.computeRoundedCorner(i);
+            const nextIndex = (i + 1) % numPoints;
+            const nextCorner = this.computeRoundedCorner(nextIndex);
+
+            path.arcToTangent(controlPoint[0], controlPoint[1], nextCorner.startPoint[0], nextCorner.startPoint[1], maxRadius);
+
+        }
+
+        path.close();
     }
 
     override calculateBoundingRect(): void {
