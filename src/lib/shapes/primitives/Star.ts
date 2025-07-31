@@ -5,6 +5,7 @@ import { HandlePos, Properties } from '@lib/types/shapes';
 import { Points } from '@lib/types/shapeTypes';
 import clamp from '@lib/helper/clamp';
 
+
 class Star extends Shape {
     radiusX: number;
     radiusY: number;
@@ -209,7 +210,7 @@ class Star extends Shape {
         this.setPaint();
         const path = new this.resource.canvasKit.Path();
         if (this.bRadius > 0) {
-            this.createRoundedStarPath(path);
+            this.createRoundedStarPath(path, canvas);
         } else {
             path.moveTo(this.points[0][0], this.points[0][1]);
 
@@ -237,12 +238,31 @@ class Star extends Shape {
 
         const len1 = Math.hypot(vec1[0], vec1[1]);
         const len2 = Math.hypot(vec2[0], vec2[1]);
+        if (len1 === 0 || len2 === 0) {
+            return {
+                startPoint: curr,
+                endPoint: curr,
+                controlPoint: curr,
+                maxRadius: 0,
+                logicalRadius: 0,
+                logicalStart: curr
+            };
+        }
 
         const norm1 = [vec1[0] / len1, vec1[1] / len1];
         const norm2 = [vec2[0] / len2, vec2[1] / len2];
 
-        const maxRadius = Math.min(len1 / 2, len2 / 2, this.bRadius);
+        const logicalRadius = Math.min(len1 / 2, len2 / 2) || 0;
 
+        const dot = norm1[0] * norm2[0] + norm1[1] * norm2[1];
+        const angle = Math.acos(Math.max(-1, Math.min(1, dot)));
+
+        // const halfAngle = angle / 2;
+        //The maximum radius is proportional to the shorter edge length, scaled by how 'sharp' the angle is.
+        const maxAllowedRadius =Math.min(len1, len2) * Math.sin(angle) / 2;
+        const maxRadius = Math.min(this.bRadius, maxAllowedRadius);
+        console.log(`Max Radius: ${maxRadius}, Logical Radius: ${logicalRadius}`);
+        
         const startPoint = [
             curr[0] + norm1[0] * maxRadius,
             curr[1] + norm1[1] * maxRadius
@@ -251,22 +271,40 @@ class Star extends Shape {
             curr[0] + norm2[0] * maxRadius,
             curr[1] + norm2[1] * maxRadius
         ];
-
-        return { startPoint, endPoint, controlPoint: curr, maxRadius };
+        const logicalStart = [
+            curr[0] + norm1[0] * logicalRadius,
+            curr[1] + norm1[1] * logicalRadius
+        ];
+        return { startPoint, endPoint, controlPoint: curr, maxRadius, logicalRadius };
     }
 
-    private createRoundedStarPath(path: Path): void {
+    private createRoundedStarPath(path: Path, canvas: Canvas): void {
         const numPoints = this.points.length;
 
-        const lastCorner = this.computeRoundedCorner(numPoints - 1);
-        path.moveTo(lastCorner.endPoint[0], lastCorner.endPoint[1]);
+        const firstCorner = this.computeRoundedCorner(0);
+        console.log(firstCorner.maxRadius, firstCorner.logicalRadius,);
+
+        if (firstCorner.maxRadius >= firstCorner.logicalRadius) {
+            path.moveTo(firstCorner.logicalStart[0], firstCorner.logicalStart[1]);
+        } else {
+            path.moveTo(firstCorner.startPoint[0], firstCorner.startPoint[1]);
+        }
+
         for (let i = 0; i < numPoints; i++) {
-            const { controlPoint, maxRadius } = this.computeRoundedCorner(i);
+            const { controlPoint, maxRadius, endPoint } = this.computeRoundedCorner(i);
             const nextIndex = (i + 1) % numPoints;
             const nextCorner = this.computeRoundedCorner(nextIndex);
 
             path.arcToTangent(controlPoint[0], controlPoint[1], nextCorner.startPoint[0], nextCorner.startPoint[1], maxRadius);
 
+            const rect = this.resource.canvasKit.LTRBRect(controlPoint[0], controlPoint[1], controlPoint[0] + 5, controlPoint[1] + 5);
+            canvas.drawRect(rect, this.resource.strokePaint);
+
+            const rect2 = this.resource.canvasKit.LTRBRect(endPoint[0], endPoint[1], endPoint[0] + 5, endPoint[1] + 5);
+            canvas.drawRect(rect2, this.resource.strokePaint);
+
+            const rect3 = this.resource.canvasKit.LTRBRect(nextCorner.startPoint[0], nextCorner.startPoint[1], nextCorner.startPoint[0] + 5, nextCorner.startPoint[1] + 5);
+            canvas.drawRect(rect3, this.resource.strokePaint);
         }
 
         path.close();

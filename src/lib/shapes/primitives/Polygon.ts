@@ -252,6 +252,16 @@ class Polygon extends Shape {
 
         const len1 = Math.hypot(vec1[0], vec1[1]);
         const len2 = Math.hypot(vec2[0], vec2[1]);
+        if (len1 === 0 || len2 === 0) {
+        return {
+            startPoint: curr,
+            endPoint: curr,
+            controlPoint: curr,
+            maxRadius: 0,
+            logicalRadius: 0,
+            logicalStart: curr
+        };
+    }
 
         const norm1 = [vec1[0] / len1, vec1[1] / len1];
         const norm2 = [vec2[0] / len2, vec2[1] / len2];
@@ -272,8 +282,11 @@ class Polygon extends Shape {
             curr[0] + norm2[0] * maxRadius,
             curr[1] + norm2[1] * maxRadius
         ];
-
-        return { startPoint, endPoint, controlPoint: curr, maxRadius, logicalRadius };
+        const logicalStart = [
+            curr[0] + norm1[0] * logicalRadius,
+            curr[1] + norm1[1] * logicalRadius
+        ];
+        return { startPoint, endPoint, controlPoint: curr, maxRadius, logicalRadius, logicalStart };
     }
 
     private createRoundedPolygonPath(path: Path): void {
@@ -282,16 +295,16 @@ class Polygon extends Shape {
         const firstCorner = this.computeRoundedCorner(0);
 
         if (firstCorner.maxRadius >= firstCorner.logicalRadius) {
-            const firstCorner = this.computeRoundedCorner(numPoints - 1);
-            path.moveTo(firstCorner.endPoint[0], firstCorner.endPoint[1]);
+            path.moveTo(firstCorner.logicalStart[0], firstCorner.logicalStart[1]);
         } else {
             path.moveTo(firstCorner.startPoint[0], firstCorner.startPoint[1]);
         }
 
         for (let i = 0; i < numPoints; i++) {
-            const { controlPoint, maxRadius, endPoint } = this.computeRoundedCorner(i);
-
-            path.arcToTangent(controlPoint[0], controlPoint[1], endPoint[0], endPoint[1], maxRadius);
+            const { controlPoint, maxRadius } = this.computeRoundedCorner(i);
+            const nextIndex = (i + 1) % numPoints;
+            const nextCorner = this.computeRoundedCorner(nextIndex);
+            path.arcToTangent(controlPoint[0], controlPoint[1], nextCorner.startPoint[0], nextCorner.startPoint[1], maxRadius);
         }
 
         path.close();
