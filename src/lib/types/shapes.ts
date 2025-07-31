@@ -41,9 +41,9 @@ export interface Sides {
     sides: number;
 }
 
-export interface SpikesRatio{
-    spikes:number;
-    ratio:number;
+export interface SpikesRatio {
+    spikes: number;
+    ratio: number;
 }
 
 export interface Properties {
@@ -118,8 +118,9 @@ export interface IShape {
     setCursorPosFromCoord?(x: number, y: number): void;
     deleteText?(direction: 'forward' | 'backward'): void;
     moveCursor?(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean): void;
-    setVertexCount?(num:number):void;
-    getVertexCount?():number;
+    setVertexCount?(num: number): void;
+    getVertexCount?(): number;
+    getRegularPolygonVertex?(sides: number, index: number, startAngle?: number): { x: number, y: number };
     setStrokeColor(stroke: string | number[]): void;
     setFill(stroke: string | number[]): void;
     cleanUp(): void;

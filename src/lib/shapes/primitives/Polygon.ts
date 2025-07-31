@@ -113,7 +113,7 @@ class Polygon extends Shape {
     override getProperties(): Properties {
         return { transform: this.transform, size: this.getDim(), style: this.style, sides: this.sides }
     }
-    getVertexCount():number{
+    getVertexCount(): number {
         return this.sides.sides
     }
     override getModifierHandlesPos(handle: Handle): { x: number; y: number; } {
@@ -176,14 +176,21 @@ class Polygon extends Shape {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
 
+    getRegularPolygonVertex(sides: number, index: number, startAngle = -Math.PI / 2) {
+        const angleStep = (2 * Math.PI) / sides;
+        const angle = startAngle + index * angleStep;
+
+        const x = this.centerX + this.radiusX * Math.cos(angle);
+        const y = this.centerY + this.radiusY * Math.sin(angle);
+
+        return { x, y };
+    }
+
     private generateRegularPolygon(): Points[] {
         const points: Points[] = [];
-        const angleStep = (2 * Math.PI) / this.sides.sides;
 
         for (let i = 0; i < this.sides.sides; i++) {
-            const angle = i * angleStep - (Math.PI / 2); // Start from top
-            const x = this.centerX + this.radiusX * Math.cos(angle);
-            const y = this.centerY + this.radiusY * Math.sin(angle);
+            const { x, y } = this.getRegularPolygonVertex(this.sides.sides, i);
             const res: Points = [x, y];
             points.push(res);
         }

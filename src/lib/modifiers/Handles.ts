@@ -272,27 +272,27 @@ export default class Handle {
         shape.setArc(start, start + sweep);
     }
 
-    // ...existing code...
-updateShapeVertices(dx: number, dy: number, e: MouseEvent, shape: IShape) {
-    const GAP = 20; // defined distance for both x and y
+    updateShapeVertices(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+        const GAP = 10; // defined distance for both x and y
+        const count = shape.getVertexCount();
+        const next = clamp(count + 1, 3, 60);
+        const prev = clamp(count - 1, 3, 60);
 
-    const isWithinGap =
-        Math.abs(e.offsetY - this.y) < GAP &&
-        Math.abs(e.offsetX - this.x) < GAP;
-
-    if (isWithinGap) {
-        let count = shape.getVertexCount();
-        if ((dy < 0 && e.offsetY < this.y) || (dx < 0 && e.offsetX < this.x)) {
-            count = clamp(count + 1, 3, 60);
-            shape.setVertexCount(count);
-        }
-        else if ((dy > 0 && e.offsetY > this.y) || (dx > 0 && e.offsetX > this.x)) {
-            count = clamp(count - 1, 3, 60);
-            shape.setVertexCount(count);
+        const { x: px, y: py } = shape.getRegularPolygonVertex(prev, 1);
+        const { x: nx, y: ny } = shape.getRegularPolygonVertex(next, 1);
+        if ((e.offsetY < ny) &&
+            (Math.abs(e.offsetX - nx) < GAP ||
+            Math.abs(e.offsetY - ny) < GAP)
+        ) {
+            shape.setVertexCount(next);
+        } else if ((e.offsetY > py) &&
+            (Math.abs(e.offsetX - px) < GAP ||
+            Math.abs(e.offsetY - py) < GAP)
+        ) {
+            shape.setVertexCount(prev);
         }
     }
-}
-// ...existing code...
+
     createPaint() {
         if (!this.resource) return
         const cnvsKit = this.resource
