@@ -28,7 +28,7 @@ export default class Handle {
         // By default, use Oval for radius, Rect for size
         if (type !== "size") {
             this.size = 4
-            if (type === 'arc' || type === 'ratio') {
+            if (type === 'arc' || type === 'c-ratio') {
                 this.handleArcAngle = 0
                 this.handleRatioAngle = 0
             }
@@ -74,7 +74,26 @@ export default class Handle {
         const r = this.size * 2;
         return dx * dx + dy * dy <= r * r;
     }
+    private calculateRatioFromMousePosition(e: MouseEvent, centerX: number, centerY: number, width: number, height: number): number {
+        const deltaX = e.offsetX - centerX;
+        const deltaY = e.offsetY - centerY;
+        const radiusX = width / 2;
+        const radiusY = height / 2;
 
+        const deg = Math.atan2(deltaY, deltaX);
+        const cos = Math.cos(deg);
+        const sin = Math.sin(deg);
+
+        const ellipseRadiusAtAngle = Math.sqrt(
+            (radiusX * radiusX * radiusY * radiusY) /
+            (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin)
+        );
+
+        const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const ratio = Math.min(0.99, distanceFromCenter / ellipseRadiusAtAngle);
+
+        return ratio;
+    }
     updateShapeRadii(dx: number, dy: number, e: MouseEvent, shape: IShape) {
 
         const { left, right, top, bottom } = shape.boundingRect;
@@ -186,7 +205,7 @@ export default class Handle {
         return t0;
     }
 
-    updateShapeRatio(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateOvalRatio(dx: number, dy: number, e: MouseEvent, shape: IShape) {
 
         const { x, y } = shape.getCenterCoord()
         const { width, height } = shape.getDim()
@@ -209,20 +228,17 @@ export default class Handle {
             this.handleRatioAngle = handleAngle
         }
 
-        const deg = Math.atan2(deltaY, deltaX)
-        const cos = Math.cos(deg);
-        const sin = Math.sin(deg);
-
-        const ellipseRadiusAtAngle = Math.sqrt(
-            (radiusX * radiusX * radiusY * radiusY) /
-            (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin)
-        );
-
-        const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-        const ratio = Math.min(0.99, distanceFromCenter / ellipseRadiusAtAngle);
-        console.log(ratio);
+        const ratio = this.calculateRatioFromMousePosition(e, x, y, width, height);
         shape.setRatio(ratio)
+    }
+
+    updateStarRatio(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+        const { x, y } = shape.getCenterCoord()
+        const { width, height } = shape.getDim()
+
+        const ratio = this.calculateRatioFromMousePosition(e, x, y, width, height);
+
+        shape.setRatio(ratio);
     }
 
     updateShapeArc(dx: number, dy: number, e: MouseEvent, shape: IShape) {

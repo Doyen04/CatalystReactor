@@ -95,8 +95,11 @@ class ShapeModifier {
                 case 'size':
                     this.selectedModifierHandle.updateShapeDim(x, y, e, this.shape)
                     break;
-                case 'ratio':
-                    this.selectedModifierHandle.updateShapeRatio(x, y, e, this.shape)
+                case 'c-ratio':
+                    this.selectedModifierHandle.updateOvalRatio(x, y, e, this.shape)
+                    break;
+                case 's-ratio':
+                    this.selectedModifierHandle.updateStarRatio(x, y, e, this.shape)
                     break;
                 case 'arc':
                     this.selectedModifierHandle.updateShapeArc(x, y, e, this.shape)

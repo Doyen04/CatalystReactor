@@ -133,14 +133,14 @@ class Oval extends Shape {
         const handles = super.getSizeModifierHandles(fill, strokeColor);
         handles.push(new Handle(0, 0, 'arc-end', 'arc', fill, strokeColor))
         handles.push(new Handle(0, 0, 'arc-start', 'arc', fill, strokeColor))
-        handles.push(new Handle(0, 0, 'center', 'ratio', fill, strokeColor))
+        handles.push(new Handle(0, 0, 'center', 'c-ratio', fill, strokeColor))
         return handles;
     }
 
     override getModifierHandlesPos(handle: Handle): Coord {
         if (handle.type == 'size') {
             return super.getSizeModifierHandlesPos(handle);
-        } else if (handle.type == 'ratio') {
+        } else if (handle.type == 'c-ratio') {
             return this.getRatioModifierHandlesPos(handle);
         } else if (handle.type == 'arc') {
             return this.getArcModifierHandlesPos(handle)

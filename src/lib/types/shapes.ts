@@ -77,7 +77,7 @@ export const SizeRadiusModifierPos: HandlePos[] = [
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img';
 export type HandlePos = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end' | 'top' | 'right' | 'between';
-export type HandleType = 'size' | 'radius' | 'arc' | 'ratio' | 'vertices';
+export type HandleType = 'size' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio';
 
 export interface IShape {
     id?: string;

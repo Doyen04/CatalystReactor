@@ -149,9 +149,11 @@ class Star extends Shape {
 
         return { x, y };
     }
+
     getVertexCount(): number {
         return this.spikes
     }
+
     override getProperties(): Properties {
         return { transform: this.transform, size: this.getDim(), style: this.style, spikesRatio: { spikes: this.spikes, ratio: this.ratio } }
     }
@@ -163,7 +165,7 @@ class Star extends Shape {
             return this.getRadiusModifierHandlesPos(handle);
         } else if (handle.type === 'vertices') {
             return this.getVerticesModifierHandlesPos(handle);
-        } else if (handle.type === 'ratio') {
+        } else if (handle.type === 's-ratio') {
             return this.getRatioModifierHandlesPos(handle);
         }
         return { x: 0, y: 0 };
@@ -217,7 +219,7 @@ class Star extends Shape {
         const handles = super.getSizeModifierHandles(fill, strokeColor);
         handles.push(new Handle(0, 0, 'top', 'radius', fill, strokeColor));
         handles.push(new Handle(0, 0, 'right', 'vertices', fill, strokeColor));
-        handles.push(new Handle(0, 0, 'between', 'ratio', fill, strokeColor));
+        handles.push(new Handle(0, 0, 'between', 's-ratio', fill, strokeColor));
         return handles;
     }
 
