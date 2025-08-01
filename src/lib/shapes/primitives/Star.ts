@@ -4,6 +4,7 @@ import type { Canvas, Path, } from "canvaskit-wasm";
 import { HandlePos, Properties } from '@lib/types/shapes';
 import { Points } from '@lib/types/shapeTypes';
 import clamp from '@lib/helper/clamp';
+import computeArcPoint from '@lib/helper/pointInArc';
 
 
 class Star extends Shape {
@@ -18,7 +19,7 @@ class Star extends Shape {
     allowedRadius: number = 0;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super({ x, y, ...shapeProps });
+        super({ x, y, type: "star", ...shapeProps });
         this.radiusX = 0;
         this.radiusY = 0;
         this.spikes = 5;
@@ -30,16 +31,10 @@ class Star extends Shape {
     }
 
     private generateStarPoints(): Points[] {
-        const angleStep = (Math.PI * 2) / this.spikes;
         const points: Points[] = [];
 
         for (let i = 0; i < this.spikes * 2; i++) {
-            const angle = i * (angleStep / 2) - (Math.PI / 2);
-            const radiusX = i % 2 === 0 ? this.radiusX : this.radiusX * this.ratio;
-            const radiusY = i % 2 === 0 ? this.radiusY : this.radiusY * this.ratio;
-
-            const x = this.centerX + Math.cos(angle) * radiusX;
-            const y = this.centerY + Math.sin(angle) * radiusY;
+            const { x, y } = this.getVertex(this.spikes, i);
             points.push([x, y]);
         }
 
@@ -142,6 +137,18 @@ class Star extends Shape {
         this.setRatio(prop.spikesRatio.ratio)
     }
 
+    getVertex(sides: number, index: number, startAngle = -Math.PI / 2): { x: number, y: number } {
+        const angleStep = (Math.PI * 2) / sides;
+        const angle = index * (angleStep / 2) + startAngle;
+
+        const radiusX = index % 2 === 0 ? this.radiusX : this.radiusX * this.ratio;
+        const radiusY = index % 2 === 0 ? this.radiusY : this.radiusY * this.ratio;
+
+        const x = this.centerX + Math.cos(angle) * radiusX;
+        const y = this.centerY + Math.sin(angle) * radiusY;
+
+        return { x, y };
+    }
     getVertexCount(): number {
         return this.spikes
     }
@@ -175,8 +182,16 @@ class Star extends Shape {
     private getRatioModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
         if (this.points.length > 0) {
-            const [x, y] = this.points[1];
-            return { x: x - size, y: y - size };
+            if (this.bRadius > 0) {
+                const i = 1;
+                const array = this.calculateRoundedCornerData();//work better with rounded corners
+                const center = { x: array[i].center[0], y: array[i].center[1] };
+                const { x: tangentX, y: tangentY } = computeArcPoint(center, array[i].radius, array[i].startAngle, array[i].sweepAngle, 0.5);
+                return { x: tangentX - size, y: tangentY - size };
+            } else {
+                const [x, y] = this.points[1];
+                return { x: x - size, y: y - size };
+            }
         }
         return { x: this.centerX, y: this.centerY };
     }
@@ -184,8 +199,16 @@ class Star extends Shape {
     private getVerticesModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const size = handle.size;
         if (this.points.length > 0) {
-            const [x, y] = this.points[2];
-            return { x: x - size, y: y - size };
+            if (this.bRadius > 0) {
+                const i = 2;
+                const array = this.calculateRoundedCornerData();//work better with rounded corners
+                const center = { x: array[i].center[0], y: array[i].center[1] };
+                const { x: tangentX, y: tangentY } = computeArcPoint(center, array[i].radius, array[i].startAngle, array[i].sweepAngle, 0.5);
+                return { x: tangentX - size, y: tangentY - size };
+            } else {
+                const [x, y] = this.points[2];
+                return { x: x - size, y: y - size };
+            }
         }
         return { x: this.centerX, y: this.centerY };
     }
@@ -309,16 +332,16 @@ class Star extends Shape {
         return v;
     }
 
-    private calculateRoundedCornerData(points: Array<[number, number]>): Array<{
+    private calculateRoundedCornerData(): Array<{
         center: [number, number];
         startAngle: number;
         sweepAngle: number;
         radius: number;
         startPoint: [number, number];
     }> {
-        if (points.length < 3) return [];
+        if (this.points.length < 3) return [];
 
-        const len = points.length;
+        const len = this.points.length;
         const cornerData: Array<{
             center: [number, number];
             startAngle: number;
@@ -331,11 +354,11 @@ class Star extends Shape {
         let sinA: number, sinA90: number, radDirection: number, drawDirection: boolean, angle: number, halfAngle: number;
         let cRadius: number, lenOut: number, x: number, y: number;
 
-        p1 = points[len - 1];
+        p1 = this.points[len - 1];
 
         for (let i = 0; i < len; i++) {
-            p2 = points[i % len];
-            p3 = points[(i + 1) % len];
+            p2 = this.points[i % len];
+            p3 = this.points[(i + 1) % len];
 
             // Get vectors
             const v1 = this.asVec(p2, p1);
@@ -375,8 +398,8 @@ class Star extends Shape {
             halfAngle = angle2 / 2;
             lenOut = Math.abs(Math.cos(halfAngle) * cRadius / Math.sin(halfAngle));
 
-            if(lenOut > Math.min(v1.len, v2.len)/2) {
-                lenOut = Math.min(v1.len, v2.len)/2;
+            if (lenOut > Math.min(v1.len, v2.len) / 2) {
+                lenOut = Math.min(v1.len, v2.len) / 2;
                 cRadius = Math.abs(lenOut * Math.sin(halfAngle) / Math.cos(halfAngle));
             }
             // Calculate arc center
@@ -419,7 +442,7 @@ class Star extends Shape {
 
     private createRoundedStarPath(path: Path): void {
 
-        const cornerData = this.calculateRoundedCornerData(this.points);
+        const cornerData = this.calculateRoundedCornerData();
         path.moveTo(cornerData[0].startPoint[0], cornerData[0].startPoint[1]);
 
         for (let i = 0; i < cornerData.length; i++) {

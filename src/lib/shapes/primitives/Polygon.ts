@@ -15,7 +15,7 @@ class Polygon extends Shape {
     radiusY: number;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super({ x, y, ...shapeProps });
+        super({ x, y, type: "polygon", ...shapeProps });
         this.centerX = 0;
         this.centerY = 0;
         this.bRadius = 0;
@@ -176,7 +176,7 @@ class Polygon extends Shape {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
 
-    getRegularPolygonVertex(sides: number, index: number, startAngle = -Math.PI / 2) {
+    getVertex(sides: number, index: number, startAngle = -Math.PI / 2) {
         const angleStep = (2 * Math.PI) / sides;
         const angle = startAngle + index * angleStep;
 
@@ -190,7 +190,7 @@ class Polygon extends Shape {
         const points: Points[] = [];
 
         for (let i = 0; i < this.sides.sides; i++) {
-            const { x, y } = this.getRegularPolygonVertex(this.sides.sides, i);
+            const { x, y } = this.getVertex(this.sides.sides, i);
             const res: Points = [x, y];
             points.push(res);
         }
@@ -253,15 +253,15 @@ class Polygon extends Shape {
         const len1 = Math.hypot(vec1[0], vec1[1]);
         const len2 = Math.hypot(vec2[0], vec2[1]);
         if (len1 === 0 || len2 === 0) {
-        return {
-            startPoint: curr,
-            endPoint: curr,
-            controlPoint: curr,
-            maxRadius: 0,
-            logicalRadius: 0,
-            logicalStart: curr
-        };
-    }
+            return {
+                startPoint: curr,
+                endPoint: curr,
+                controlPoint: curr,
+                maxRadius: 0,
+                logicalRadius: 0,
+                logicalStart: curr
+            };
+        }
 
         const norm1 = [vec1[0] / len1, vec1[1] / len1];
         const norm2 = [vec2[0] / len2, vec2[1] / len2];

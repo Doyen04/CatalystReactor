@@ -9,7 +9,7 @@ class Rectangle extends Shape {
     bdradius: BorderRadius
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super({ x, y, ...shapeProps });
+        super({ x, y, type: "rect", ...shapeProps });
         this.dimension = { width: 0, height: 0 }
         this.bdradius = {
             'top-left': 0,

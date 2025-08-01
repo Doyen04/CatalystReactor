@@ -3,22 +3,34 @@
 
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, IShape, Properties, SizeRadiusModifierPos, Style, Transform } from "@lib/types/shapes";
+import { BoundingRect, IShape, Properties, ShapeType, SizeRadiusModifierPos, Style, Transform } from "@lib/types/shapes";
 import type { Canvas } from "canvaskit-wasm";
 
+interface Arguments {
+    x: number,
+    y: number,
+    type: ShapeType
+    rotation?: number,
+    scale?: number,
+    fill?: string,
+    strokeWidth?: number,
+    strokeColor?: string,
+}
 
 abstract class Shape implements IShape {
+    protected shapeType: ShapeType;
     protected transform: Transform;
     protected style: Style;
     boundingRect: BoundingRect;
     private isHover: boolean;
 
-    constructor({ x = 0, y = 0, rotation = 0, scale = 1, fill = "#fff", strokeWidth = 1, strokeColor = '#000' } = {}) {
+    constructor({ x, y, type, rotation = 0, scale = 1, fill = "#fff", strokeWidth = 1, strokeColor = '#000' }: Arguments) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
         this.transform = { x, y, rotation, scale, anchorPoint: null };
         this.style = { fill, strokeColor, strokeWidth };
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
         this.isHover = false;
+        this.shapeType = type;
     }
 
     abstract getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[];
@@ -34,6 +46,10 @@ abstract class Shape implements IShape {
     abstract getProperties(): Properties;
     abstract setProperties(prop: Properties): void;
     abstract cleanUp(): void;
+
+    getShapeType(): ShapeType {
+        return this.shapeType;
+    }
 
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();

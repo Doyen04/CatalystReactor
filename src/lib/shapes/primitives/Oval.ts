@@ -14,7 +14,7 @@ class Oval extends Shape {
     private arcSegment: ArcSegment;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super({ x, y, ...shapeProps });
+        super({ x, y, type: "oval", ...shapeProps });
         this.arcSegment = { startAngle: 0, endAngle: 2 * Math.PI, ratio: 0 }
         this.radiusX = 0;
         this.radiusY = 0;

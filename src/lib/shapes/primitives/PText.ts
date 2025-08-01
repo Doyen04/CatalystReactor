@@ -31,7 +31,7 @@ class PText extends Shape {
     private isEdit: boolean = true;
 
     constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
-        super({ x, y, ...shapeProps });
+        super({ x, y, type: "text", ...shapeProps });
         this.text = text || "";
         this.dimension = { width: 0, height: 0 }
         this.cursor = new TextCursor(x, y, 0)

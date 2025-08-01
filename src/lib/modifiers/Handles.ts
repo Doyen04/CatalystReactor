@@ -275,19 +275,22 @@ export default class Handle {
     updateShapeVertices(dx: number, dy: number, e: MouseEvent, shape: IShape) {
         const GAP = 10; // defined distance for both x and y
         const count = shape.getVertexCount();
+
         const next = clamp(count + 1, 3, 60);
         const prev = clamp(count - 1, 3, 60);
 
-        const { x: px, y: py } = shape.getRegularPolygonVertex(prev, 1);
-        const { x: nx, y: ny } = shape.getRegularPolygonVertex(next, 1);
+        const vertex = shape.getShapeType() === 'star' ? 2 : 1;
+
+        const { x: px, y: py } = shape.getVertex(prev, vertex);
+        const { x: nx, y: ny } = shape.getVertex(next, vertex);
         if ((e.offsetY < ny) &&
             (Math.abs(e.offsetX - nx) < GAP ||
-            Math.abs(e.offsetY - ny) < GAP)
+                Math.abs(e.offsetY - ny) < GAP)
         ) {
             shape.setVertexCount(next);
         } else if ((e.offsetY > py) &&
             (Math.abs(e.offsetX - px) < GAP ||
-            Math.abs(e.offsetY - py) < GAP)
+                Math.abs(e.offsetY - py) < GAP)
         ) {
             shape.setVertexCount(prev);
         }

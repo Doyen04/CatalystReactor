@@ -84,6 +84,7 @@ export interface IShape {
     type?: ShapeType;
     boundingRect: BoundingRect;
 
+    getShapeType(): ShapeType;
     // Methods that all shapes should implement
     getModifierHandles(fill: string, strokeColor: string | number[]): Handle[];
     getSizeModifierHandlesPos(handle: Handle): Coord;
@@ -120,7 +121,7 @@ export interface IShape {
     moveCursor?(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean): void;
     setVertexCount?(num: number): void;
     getVertexCount?(): number;
-    getRegularPolygonVertex?(sides: number, index: number, startAngle?: number): { x: number, y: number };
+    getVertex?(sides: number, index: number, startAngle?: number): { x: number, y: number };
     setStrokeColor(stroke: string | number[]): void;
     setFill(stroke: string | number[]): void;
     cleanUp(): void;
