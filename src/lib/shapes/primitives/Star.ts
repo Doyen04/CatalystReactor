@@ -271,14 +271,34 @@ class Star extends Shape {
     //         curr[0] + norm2[0] * maxRadius,
     //         curr[1] + norm2[1] * maxRadius
     //     ];
-    //      const logicalStart = [
+    //     const logicalStart = [
     //         curr[0] + norm1[0] * logicalRadius,
     //         curr[1] + norm1[1] * logicalRadius
     //     ];
-    //     return { startPoint, endPoint, controlPoint: curr, maxRadius, logicalRadius ,logicalStart};
+    //     return { startPoint, endPoint, controlPoint: curr, maxRadius, logicalRadius, logicalStart };
     // }
-    // Helper function to create vector from two points
-    asVec(p: [number, number], pp: [number, number]) {
+
+    // private createRoundedStarPath(path: Path): void {
+    //     if (this.points.length < 3) return;
+    //     const cornerData = this.points.map((_, i) => this.computeRoundedCorner(i));
+    //     path.moveTo(cornerData[0].startPoint[0], cornerData[0].startPoint[1]);
+    //     for (let i = 0; i < cornerData.length; i++) {
+    //         const corner = cornerData[i];
+    //         const nextCorner = cornerData[(i + 1) % cornerData.length];
+    //         const rad = (i % 2 === 0) ? corner.maxRadius : nextCorner.maxRadius
+
+    //         // path.lineTo(corner.startPoint[0], corner.startPoint[1]);
+    //         path.arcToTangent(
+    //             corner.controlPoint[0],
+    //             corner.controlPoint[1],
+    //             nextCorner.startPoint[0],
+    //             nextCorner.startPoint[1],
+    //             rad
+    //         );
+    //     }
+    // }
+
+    private asVec(p: [number, number], pp: [number, number]) {
         const v = { x: 0, y: 0, len: 0, nx: 0, ny: 0, ang: 0 };
         v.x = pp[0] - p[0];
         v.y = pp[1] - p[1];
