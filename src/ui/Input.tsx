@@ -1,6 +1,6 @@
-import React, { ChangeEvent, forwardRef, HTMLInputTypeAttribute, ReactNode, useMemo } from 'react'
+import React, { ChangeEvent, forwardRef, HTMLInputTypeAttribute, ReactNode } from 'react'
 import { twMerge } from 'tailwind-merge'
-import ColorPicker from './ColorPicker';
+import CustomPicker from './CustomPicker';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     title?: string;
@@ -21,7 +21,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                  hover:border-gray-500 hover:focus-within:border-blue-500 
                  transition-colors">
                     <p className="px-1 font-bold text-xs text-gray-700">{title}</p>
-                    <ColorPicker
+                    <CustomPicker
                         value={value as string}
                         onChange={(color) => {
                             const mockEvent = { currentTarget: { value: color } } as ChangeEvent<HTMLInputElement>;

@@ -1,19 +1,19 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+
+
+
+import hsvToRgb from '@/util/hsvToRgb';
+import parseColorToHSV from '@/util/parseToHSVA';
+import React, { useState, useRef, useEffect } from 'react';
+import { twMerge } from 'tailwind-merge';
 
 interface ColorPickerProps {
     value: string;
+    isOpen: boolean;
     onChange: (color: string) => void;
     className?: string;
 }
 
-interface HSV {
-    h: number; // 0-360
-    s: number; // 0-100
-    v: number; // 0-100
-}
-
-const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, className }) => {
-    const [isOpen, setIsOpen] = useState(false);
+const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, isOpen, className }) => {
     const [hsv, setHsv] = useState<HSV>({ h: 0, s: 100, v: 100 });
     const [alpha, setAlpha] = useState(1);
 
@@ -24,88 +24,12 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, className })
     const isDraggingSatVal = useRef(false);
     const isDraggingAlpha = useRef(false)
 
-    // Convert HSV to RGB
-    const hsvToRgb = useCallback((h: number, s: number, v: number): [number, number, number] => {
-        const c = (v / 100) * (s / 100);
-        const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-        const m = (v / 100) - c;
-
-        let r = 0, g = 0, b = 0;
-
-        if (h >= 0 && h < 60) {
-            r = c; g = x; b = 0;
-        } else if (h >= 60 && h < 120) {
-            r = x; g = c; b = 0;
-        } else if (h >= 120 && h < 180) {
-            r = 0; g = c; b = x;
-        } else if (h >= 180 && h < 240) {
-            r = 0; g = x; b = c;
-        } else if (h >= 240 && h < 300) {
-            r = x; g = 0; b = c;
-        } else if (h >= 300 && h < 360) {
-            r = c; g = 0; b = x;
-        }
-
-        return [
-            Math.round((r + m) * 255),
-            Math.round((g + m) * 255),
-            Math.round((b + m) * 255)
-        ];
-    }, []);
-
-    // Convert RGB to HSV
-    const rgbToHsv = useCallback((r: number, g: number, b: number): HSV => {
-        r /= 255;
-        g /= 255;
-        b /= 255;
-
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        const diff = max - min;
-
-        let h = 0;
-        const s = max === 0 ? 0 : (diff / max) * 100;
-        const v = max * 100;
-
-        if (diff !== 0) {
-            if (max === r) {
-                h = ((g - b) / diff) % 6;
-            } else if (max === g) {
-                h = (b - r) / diff + 2;
-            } else {
-                h = (r - g) / diff + 4;
-            }
-            h *= 60;
-            if (h < 0) h += 360;
-        }
-
-        return { h, s, v };
-    }, []);
-
-    // Parse color string to HSVA
-    const parseColor = useCallback((color: string): { hsv: HSV, alpha: number } => {
-        if (color.startsWith('#')) {
-            let hex = color.slice(1).toLowerCase();
-            if (hex.length === 3 || hex.length === 4) {
-                hex = hex.split('').map(ch => ch + ch).join('');
-            }
-            const hasAlpha = hex.length === 8;
-            const r = parseInt(hex.slice(0, 2), 16);
-            const g = parseInt(hex.slice(2, 4), 16);
-            const b = parseInt(hex.slice(4, 6), 16);
-            const a = hasAlpha ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
-            const hsv = rgbToHsv(r, g, b);
-            return { hsv, alpha: a };
-        }
-        return { hsv: { h: 0, s: 100, v: 100 }, alpha: 1 };
-    }, [rgbToHsv]);
-
     // Initialize color from prop
     useEffect(() => {
-        const initialHsv = parseColor(value);
+        const initialHsv = parseColorToHSV(value);
         setHsv(initialHsv.hsv);
         setAlpha(initialHsv.alpha)
-    }, [value, parseColor]);
+    }, [value]);
 
     // Draw hue bar
     useEffect(() => {
@@ -123,7 +47,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, className })
 
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }, [hsvToRgb, isOpen]);
+    }, [isOpen]);
 
     // Draw saturation/value area
     useEffect(() => {
@@ -151,7 +75,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, className })
         blackGradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
         ctx.fillStyle = blackGradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }, [hsv.h, hsvToRgb, isOpen]);
+    }, [hsv.h, isOpen]);
 
     // Handle hue changes
     const handleHueMouseDown = (e: React.MouseEvent) => {
@@ -216,8 +140,6 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, className })
             ? `${hexRgb}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` // 8‑digit hex
             : hexRgb;
 
-        console.log(output);
-
         onChange(output);
     };
 
@@ -254,97 +176,73 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, className })
     })();
 
     return (
-        <div className={`relative ${className}`}>
-            {/* Color Preview Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-4 h-3.5 rounded border-2 border-gray-300 cursor-pointer"
-                style={{ backgroundColor: value }}
-            />
-            {isOpen && (
-                <div className="fixed inset-0 z-40"
-                    onClick={() => setIsOpen(false)}
-                >
-                    <div onClick={(e) => e.stopPropagation()} className="absolute bottom-10 right-65 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-3 w-fit h-fit">
-                        <div onClick={() => setIsOpen(false)} className='w-5 h-5 rounded-full bg-white border-2 border-gray-500 flex items-center justify-center absolute -top-3 -left-3 cursor-pointer'>
-                            X
-                        </div>
+        <div className={twMerge(`w-fit h-fit p-3 ${className}`)}>
+            <div className='flex flex-row gap-1 '>
+                <div className='w-fit h-fit'>
+                    {/* Saturation/Value Area */}
+                    <div className="relative w-fit h-fit rounded border border-[#323232] mb-2">
+                        <canvas
+                            ref={satValCanvasRef}
+                            width={240}
+                            height={240}
+                            className="cursor-crosshair rounded"
+                            onMouseDown={handleSatValMouseDown}
+                        />
+                        {/* Saturation/Value Indicator */}
+                        <div
+                            className="absolute w-2.5 h-2.5 border-2 border-white rounded-full pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
+                            style={{
+                                left: `${(hsv.s / 100) * 240}px`,
+                                top: `${((100 - hsv.v) / 100) * 240}px`,
+                                boxShadow: '0 0 0 1px rgba(0,0,0,0.3)'
+                            }}
+                        />
+                    </div>
 
-                        <div className='flex flex-row gap-1 '>
-                            <div className='w-fit h-fit'>
-                                {/* Saturation/Value Area */}
-                                <div className="relative w-fit h-fit p-0.5 rounded bg-gray-200 mb-2">
-                                    <canvas
-                                        ref={satValCanvasRef}
-                                        width={240}
-                                        height={150}
-                                        className="cursor-crosshair rounded"
-                                        onMouseDown={handleSatValMouseDown}
-                                    />
-                                    {/* Saturation/Value Indicator */}
-                                    <div
-                                        className="absolute w-2.5 h-2.5 border-2 border-white rounded-full pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
-                                        style={{
-                                            left: `${(hsv.s / 100) * 240}px`,
-                                            top: `${((100 - hsv.v) / 100) * 150}px`,
-                                            boxShadow: '0 0 0 1px rgba(0,0,0,0.3)'
-                                        }}
-                                    />
-                                </div>
-
-                                {/* Hue Bar */}
-                                <div className="relative mb-3 rounded border-gray-200 border-2 w-fit h-fit">
-                                    <canvas
-                                        ref={hueCanvasRef}
-                                        width={240}
-                                        height={20}
-                                        className="cursor-pointer rounded"
-                                        onMouseDown={handleHueMouseDown}
-                                    />
-                                    {/* Hue Indicator */}
-                                    <div
-                                        className="absolute w-1 h-6 bg-white border border-gray-400 pointer-events-none transform -translate-x-1/2"
-                                        style={{
-                                            left: `${(hsv.h / 360) * 240}px`,
-                                            top: '-3px'
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className='w-2 h-[180px] bg-gray-700 border-2 border-gray-300 rounded relative'
-                                ref={alphaCnvsRef}
-                                onMouseDown={handleAlphaMouseDown}>
-                                <div className="absolute rounded-full w-3 h-3 border-3 border-gray-700 bg-white pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
-                                    style={{
-                                        left: '2px',
-                                        top: `${(1 - alpha) * 180}px`
-                                    }}>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Color Preview and Close */}
-                        <div className="flex items-center justify-between">
-                            <div
-                                className="w-4 h-4 border border-gray-300 rounded"
-                                style={{ backgroundColor: currentColor }}
-                            />
-                            <div className="text-xs font-mono text-gray-600">
-                                {currentColor.toUpperCase()}
-                            </div>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
-                            >
-                                Close
-                            </button>
-                        </div>
+                    {/* Hue Bar */}
+                    <div className="relative mb-3 rounded border-gray-200 border-2 w-fit h-fit">
+                        <canvas
+                            ref={hueCanvasRef}
+                            width={240}
+                            height={20}
+                            className="cursor-pointer rounded"
+                            onMouseDown={handleHueMouseDown}
+                        />
+                        {/* Hue Indicator */}
+                        <div
+                            className="absolute w-1 h-6 bg-white border border-gray-400 pointer-events-none transform -translate-x-1/2"
+                            style={{
+                                left: `${(hsv.h / 360) * 240}px`,
+                                top: '-3px'
+                            }}
+                        />
                     </div>
                 </div>
-            )}
-        </div>
-    );
-};
 
-export default ColorPicker;
+                <div className='w-2 h-[240px] bg-gray-700 border-2 border-gray-300 rounded relative'
+                    ref={alphaCnvsRef}
+                    onMouseDown={handleAlphaMouseDown}>
+                    <div className="absolute rounded-full w-3 h-3 border-3 border-gray-700 bg-white pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
+                        style={{
+                            left: '2px',
+                            top: `${(1 - alpha) * 240}px`
+                        }}>
+                    </div>
+                </div>
+            </div>
+
+            {/* Color Preview and Close */}
+            <div className="flex items-center justify-between">
+                <div
+                    className="w-4 h-4 border border-gray-300 rounded"
+                    style={{ backgroundColor: currentColor }}
+                />
+                <div className="text-xs font-mono text-gray-600">
+                    {currentColor.toUpperCase()}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default ColorPicker

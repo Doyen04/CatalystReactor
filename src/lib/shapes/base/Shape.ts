@@ -3,8 +3,8 @@
 
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, IShape, Properties, ShapeType, SizeRadiusModifierPos, Style, Transform } from "@lib/types/shapes";
-import type { Canvas, Image as CanvasKitImage } from "canvaskit-wasm";
+import { BoundingRect, IShape, Properties, ShapeType, Size, SizeRadiusModifierPos, Style, Transform } from "@lib/types/shapes";
+import type { Canvas, Image as CanvasKitImage, Shader } from "canvaskit-wasm";
 
 interface Arguments {
     x: number,
@@ -19,6 +19,10 @@ interface Arguments {
 
 abstract class Shape implements IShape {
     protected canvasKitImage: CanvasKitImage | null = null;
+    protected IWidth: number;
+    protected IHeight: number;
+    protected aspectRatio: number = 1;
+    protected maintainAspectRatio: boolean = true;
     protected shapeType: ShapeType;
     protected transform: Transform;
     protected style: Style;
@@ -127,13 +131,22 @@ abstract class Shape implements IShape {
         // EventQueue.trigger(Render)
         this.isHover = bool
     }
-    makeImageShader(matrix:number[]){
+    makeImageShader(dim: Size): Shader {
+        if (!this.resource?.canvasKit || !this.canvasKitImage) return null;
+        const ck = this.resource.canvasKit;
+        const scaleMatrix = ck.Matrix.scaled(
+            dim.width / this.IWidth,
+            dim.height / this.IHeight
+        );
+        const translateMatrix = ck.Matrix.translated(this.transform.x, this.transform.y);
+        const finalMatrix = ck.Matrix.multiply(translateMatrix, scaleMatrix);
+
         const imageShader = this.canvasKitImage.makeShaderOptions(
             this.resource.canvasKit.TileMode.Clamp,
             this.resource.canvasKit.TileMode.Clamp,
             this.resource.canvasKit.FilterMode.Linear,
             this.resource.canvasKit.MipmapMode.None,
-            matrix
+            finalMatrix
         );
         return imageShader;
     }
@@ -146,6 +159,12 @@ abstract class Shape implements IShape {
             console.error('Failed to create CanvasKit image from encoded data');
             return;
         }
+        this.IWidth = this.canvasKitImage.width();
+        this.IHeight = this.canvasKitImage.height();
+
+        this.aspectRatio = this.IWidth / this.IHeight;
+        this.calculateBoundingRect();
+
     }
     abstract destroy(): void;
 
