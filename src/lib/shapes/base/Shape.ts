@@ -4,7 +4,7 @@
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
 import { BoundingRect, IShape, Properties, ShapeType, SizeRadiusModifierPos, Style, Transform } from "@lib/types/shapes";
-import type { Canvas } from "canvaskit-wasm";
+import type { Canvas, Image as CanvasKitImage } from "canvaskit-wasm";
 
 interface Arguments {
     x: number,
@@ -18,6 +18,7 @@ interface Arguments {
 }
 
 abstract class Shape implements IShape {
+    protected canvasKitImage: CanvasKitImage | null = null;
     protected shapeType: ShapeType;
     protected transform: Transform;
     protected style: Style;
@@ -125,6 +126,26 @@ abstract class Shape implements IShape {
     setHovered(bool: boolean) {
         // EventQueue.trigger(Render)
         this.isHover = bool
+    }
+    makeImageShader(matrix:number[]){
+        const imageShader = this.canvasKitImage.makeShaderOptions(
+            this.resource.canvasKit.TileMode.Clamp,
+            this.resource.canvasKit.TileMode.Clamp,
+            this.resource.canvasKit.FilterMode.Linear,
+            this.resource.canvasKit.MipmapMode.None,
+            matrix
+        );
+        return imageShader;
+    }
+    createCanvasKitImage(backgroundImage: ArrayBuffer): void {
+        if (!backgroundImage || !this.resource?.canvasKit) return;
+        const uint8Array = new Uint8Array(backgroundImage);
+
+        this.canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(uint8Array);
+        if (!this.canvasKitImage) {
+            console.error('Failed to create CanvasKit image from encoded data');
+            return;
+        }
     }
     abstract destroy(): void;
 

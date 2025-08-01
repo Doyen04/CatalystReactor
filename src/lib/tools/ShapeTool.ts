@@ -22,6 +22,10 @@ class ShapeTool extends Tool {
             this.shapeManager.attachShape(shape)
         }
     }
+    override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
+          this.shapeManager.handleTinyShapes()
+        super.handlePointerUp?.(dragStart, e);
+    }
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
         this.shapeManager.drawShape(dragStart, e)
     };

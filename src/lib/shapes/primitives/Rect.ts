@@ -1,5 +1,5 @@
 import Handle from '@lib/modifiers/Handles'
-import type { Canvas, Path, Rect } from "canvaskit-wasm";
+import type { Canvas, Path } from "canvaskit-wasm";
 import { BorderRadius, HandlePos, Properties, Size, SizeRadiusModifierPos } from '@lib/types/shapes';
 import Shape from '../base/Shape';
 
@@ -98,7 +98,7 @@ class Rectangle extends Shape {
         this.calculateBoundingRect()
     }
 
-    computeAllRadius(){
+    computeAllRadius() {
         const max = Math.max(
             this.bdradius['top-left'],
             this.bdradius['top-right'],
@@ -110,12 +110,12 @@ class Rectangle extends Shape {
         //80 / 40 = 2
         // if ratio is greater than 1 retain old radius
         //write function to get max radius out of corner
-      
-            this.bdradius['top-left'] = this.bdradius['top-left'] * ratio;
-            this.bdradius['top-right'] = this.bdradius['top-right'] * ratio;
-            this.bdradius['bottom-left'] = this.bdradius['bottom-left'] * ratio;
-            this.bdradius['bottom-right'] = this.bdradius['bottom-right'] * ratio;
-        
+
+        this.bdradius['top-left'] = this.bdradius['top-left'] * ratio;
+        this.bdradius['top-right'] = this.bdradius['top-right'] * ratio;
+        this.bdradius['bottom-left'] = this.bdradius['bottom-left'] * ratio;
+        this.bdradius['bottom-right'] = this.bdradius['bottom-right'] * ratio;
+
 
     }
     override setProperties(prop: Properties): void {
@@ -206,37 +206,24 @@ class Rectangle extends Shape {
         if (!this.resource) return;
 
         this.setPaint();
-
+        
         const rect = this.resource.canvasKit.LTRBRect(this.transform.x, this.transform.y, this.transform.x + this.dimension.width, this.transform.y + this.dimension.height);
-
-        if (this.hasRadius()) {
-            this.drawRoundedRect(canvas, rect);
-        } else {
-            // Draw regular rectangle
-            canvas.drawRect(rect, this.resource.paint);
-            canvas.drawRect(rect, this.resource.strokePaint);
-        }
-    }
-
-    private drawRoundedRect(canvas: Canvas, rect: Rect): void {
-        if (!this.resource) return;
-
-        const canvasKit = this.resource.canvasKit;
-
-        // Method 1: Using RRectXY (simpler but uniform corners)
-        if (this.bdradius.locked) {
+        if (this.hasRadius() && this.bdradius.locked) {
             const radius = this.bdradius['top-left'];
-            const rrect = canvasKit.RRectXY(rect, radius, radius);
+            const rrect = this.resource.canvasKit.RRectXY(rect, radius, radius);
             canvas.drawRRect(rrect, this.resource.paint);
             canvas.drawRRect(rrect, this.resource.strokePaint);
             return;
-        } else {
-            const path = this.makeCustomRRectPath()
-
+        } else if (this.hasRadius()) {
+            const path = this.makeCustomRRectPath();
             canvas.drawPath(path, this.resource.paint);
             canvas.drawPath(path, this.resource.strokePaint);
-
-            path.delete(); // Clean up WASM memory
+            path.delete();
+        } else {
+            // Draw regular rectangle
+         // Method 1: Using RRectXY (simpler but uniform corners)
+            canvas.drawRect(rect, this.resource.paint);
+            canvas.drawRect(rect, this.resource.strokePaint);
         }
     }
 

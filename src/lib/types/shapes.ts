@@ -85,6 +85,7 @@ export interface IShape {
     boundingRect: BoundingRect;
 
     getShapeType(): ShapeType;
+    createCanvasKitImage(image: ArrayBuffer | null): void;
     // Methods that all shapes should implement
     getModifierHandles(fill: string, strokeColor: string | number[]): Handle[];
     getSizeModifierHandlesPos(handle: Handle): Coord;

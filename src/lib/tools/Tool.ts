@@ -14,7 +14,6 @@ abstract class Tool {
         this.cnvsElm = cnvs
     }
     handlePointerUp(coord: Coord, e: MouseEvent) {
-        this.shapeManager.handleTinyShapes()
         const { setDefaultTool } = useToolStore.getState()
         setDefaultTool()
     }

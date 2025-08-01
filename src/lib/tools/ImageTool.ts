@@ -35,9 +35,9 @@ class ImageTool extends Tool {
         if (hasNoImages()) {
             clearSelectedImage();
             console.log('Image placement completed, clearing image store');
-
+            super.handlePointerUp?.(dragStart, e);
         }
-        super.handlePointerUp?.(dragStart, e);
+        this.shapeManager.handleTinyShapes()
     }
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
         this.shapeManager.drawShape(dragStart, e)

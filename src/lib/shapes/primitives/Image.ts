@@ -1,9 +1,7 @@
-import type { Canvas, Image as CanvasKitImage, Rect } from "canvaskit-wasm";
+import type { Canvas } from "canvaskit-wasm";
 import Rectangle from './Rect';
 
 class PImage extends Rectangle {
-    private imageElement: ArrayBuffer | null = null;
-    private canvasKitImage: CanvasKitImage | null = null;
     private imageLoaded: boolean = false;
     private aspectRatio: number = 1;
     private maintainAspectRatio: boolean = true;
@@ -16,42 +14,20 @@ class PImage extends Rectangle {
         this.IHeight = 0;
 
         if (imageElem) {
-            this.setImageElement(imageElem);
+            this.createCanvasKitImage(imageElem);
         }
+        this.setUpImage()
         this.calculateBoundingRect()
     }
-
-    setImageElement(img: ArrayBuffer): void {
-        this.imageElement = img;
-        if (!this.imageElement) return;
-
-        this.imageLoaded = true;
-
-        if (this.resource?.canvasKit) {
-            this.createCanvasKitImage();
-        }
-    }
-
     //draw somewhere else first
-    private createCanvasKitImage(): void {
-        if (!this.imageElement || !this.resource?.canvasKit) return;
-        const uint8Array = new Uint8Array(this.imageElement);
+    private setUpImage(): void {
+        if (!this.canvasKitImage || !this.resource?.canvasKit) return;
 
-        this.canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(uint8Array);
         if (this.canvasKitImage) {
             this.IWidth = this.canvasKitImage.width();
             this.IHeight = this.canvasKitImage.height();
 
             this.aspectRatio = this.IWidth / this.IHeight;
-            if (this.maintainAspectRatio) {
-                // Maintain aspect ratio based on which dimension is set
-                if (this.IWidth > 0 && this.IHeight === 0) {
-                    this.IHeight = this.IWidth / this.aspectRatio;
-                } else if (this.IHeight > 0 && this.IWidth === 0) {
-                    this.IWidth = this.IHeight * this.aspectRatio;
-                }
-            }
-
             this.calculateBoundingRect();
         }
     }
@@ -69,31 +45,35 @@ class PImage extends Rectangle {
 
         if (shiftKey || this.maintainAspectRatio) {
             // When shift is held OR aspect ratio should be maintained
-            let size: number;
+            let newWidth: number;
+            let newHeight: number;
 
             if (this.maintainAspectRatio && !shiftKey) {
-                // Maintain aspect ratio based on the larger change
+                // Maintain original image aspect ratio
                 const absX = Math.abs(deltaX);
                 const absY = Math.abs(deltaY);
 
-                if (this.aspectRatio > 1) {
-                    // Wider image - prioritize width changes
-                    size = absX > absY / this.aspectRatio ? absX : absY / this.aspectRatio;
+                // Use whichever gives us the larger size (following the mouse better)
+                if (absX / this.aspectRatio >= absY) {
+                    // Width change is dominant
+                    newWidth = absX;
+                    newHeight = absX / this.aspectRatio;
                 } else {
-                    // Taller image - prioritize height changes  
-                    size = absY > absX * this.aspectRatio ? absY : absX * this.aspectRatio;
+                    // Height change is dominant
+                    newHeight = absY;
+                    newWidth = absY * this.aspectRatio;
                 }
-
-                this.dimension.width = size;
-                this.dimension.height = size / this.aspectRatio;
             } else {
-                // Shift key held - make square
-                size = Math.max(Math.abs(deltaX), Math.abs(deltaY));
-                this.dimension.width = size;
-                this.dimension.height = size;
+                // Shift key held - make square (1:1 aspect ratio)
+                const size = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+                newWidth = size;
+                newHeight = size;
             }
 
-            // Position based on drag direction // check this
+            this.dimension.width = newWidth;
+            this.dimension.height = newHeight;
+
+            // Position based on drag direction
             if (deltaX >= 0) {
                 this.transform.x = this.transform.originalX;
             } else {
@@ -118,36 +98,38 @@ class PImage extends Rectangle {
 
     override draw(canvas: Canvas): void {
         if (!this.resource?.canvasKit || !this.canvasKitImage) return;
-        canvas.save();
+
         const ck = this.resource.canvasKit;
-        const srcRect = ck.XYWHRect(0, 0, this.IWidth, this.IHeight);
-        const dstRect = ck.XYWHRect(this.transform.x, this.transform.y, this.dimension.width, this.dimension.height);
-
-        if (this.hasRadius()) {
-            this.clipToRoundedRect(canvas, dstRect);
-        }
-        // remove later
-        canvas.drawImageRectCubic(
-            this.canvasKitImage, srcRect, dstRect,
-            1 / 3,
-            1 / 3,
-            null
-        );
-        canvas.restore();
-
         this.setPaint();
 
-        if (this.hasRadius()) {
-            this.drawRoundedRectOutline(canvas);
+        const rect = ck.XYWHRect(this.transform.x, this.transform.y, this.dimension.width, this.dimension.height);
+
+        const scaleMatrix = ck.Matrix.scaled(
+            this.dimension.width / this.IWidth,
+            this.dimension.height / this.IHeight
+        );
+        const translateMatrix = ck.Matrix.translated(this.transform.x, this.transform.y);
+        const finalMatrix = ck.Matrix.multiply(translateMatrix, scaleMatrix);
+
+        const imageShader = this.makeImageShader(finalMatrix)
+
+        this.resource.paint.setShader(imageShader);
+
+        if (this.hasRadius() && this.bdradius.locked) {
+            const radius = this.bdradius['top-left'];
+            const rrect = ck.RRectXY(rect, radius, radius);
+            canvas.drawRRect(rrect, this.resource.paint);
+            canvas.drawRRect(rrect, this.resource.strokePaint);
+        } else if (this.hasRadius()) {
+            const path = this.makeCustomRRectPath();
+            canvas.drawPath(path, this.resource.paint);
+            canvas.drawPath(path, this.resource.strokePaint);
         } else {
-            const borderRect = ck.XYWHRect(
-                this.transform.x + this.style.strokeWidth / 2,
-                this.transform.y + this.style.strokeWidth / 2,
-                this.dimension.width - this.style.strokeWidth,
-                this.dimension.height - this.style.strokeWidth
-            );
-            canvas.drawRect(borderRect, this.resource.strokePaint);
+            canvas.drawRect(rect, this.resource.paint);
+            canvas.drawRect(rect, this.resource.strokePaint);
         }
+
+        this.resource.paint.setShader(null);
     }
 
     private drawRoundedRectOutline(canvas: Canvas): void {
@@ -172,30 +154,10 @@ class PImage extends Rectangle {
             path.delete();
         }
     }
-
-    private clipToRoundedRect(canvas: Canvas, rect: Rect): void {
-        if (!this.resource) return;
-
-        const ck = this.resource.canvasKit;
-
-        // Method 1: Using RRectXY (simpler but uniform corners)
-        if (this.bdradius.locked) {
-            const radius = this.bdradius['top-left'];
-            const rrect = ck.RRectXY(rect, radius, radius);
-            canvas.clipRRect(rrect, ck.ClipOp.Intersect, true);
-        } else {
-            // Method 2: Custom path for different corner radii
-            const path = this.makeCustomRRectPath();
-            canvas.clipPath(path, ck.ClipOp.Intersect, true);
-            path.delete(); // Clean up WASM memory
-        }
-    }
-
     override cleanUp(): void {
 
     }
     override destroy(): void {
-        this.imageElement = null
         this.canvasKitImage.delete()
         this.imageLoaded = null
         this.aspectRatio = null
