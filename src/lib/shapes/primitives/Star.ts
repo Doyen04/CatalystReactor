@@ -15,6 +15,7 @@ class Star extends Shape {
     ratio: number;
     points: Points[]
     bRadius: number = 5;
+    allowedRadius: number = 0;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, ...shapeProps });
@@ -210,7 +211,7 @@ class Star extends Shape {
         this.setPaint();
         const path = new this.resource.canvasKit.Path();
         if (this.bRadius > 0) {
-            this.createRoundedStarPath(path, canvas);
+            this.createRoundedStarPath(path);
         } else {
             path.moveTo(this.points[0][0], this.points[0][1]);
 
@@ -226,85 +227,197 @@ class Star extends Shape {
         path.delete(); // Clean up path object
     }
 
-    private computeRoundedCorner(index: number) {
-        const n = this.points.length;
+    // private computeRoundedCorner(index: number) {
+    //     const n = this.points.length;
 
-        const prev = this.points[(index - 1 + n) % n];
-        const curr = this.points[index];
-        const next = this.points[(index + 1) % n];
+    //     const prev = this.points[(index - 1 + n) % n];
+    //     const curr = this.points[index];
+    //     const next = this.points[(index + 1) % n];
 
-        const vec1 = [prev[0] - curr[0], prev[1] - curr[1]];
-        const vec2 = [next[0] - curr[0], next[1] - curr[1]];
+    //     const vec1 = [prev[0] - curr[0], prev[1] - curr[1]];
+    //     const vec2 = [next[0] - curr[0], next[1] - curr[1]];
 
-        const len1 = Math.hypot(vec1[0], vec1[1]);
-        const len2 = Math.hypot(vec2[0], vec2[1]);
-        if (len1 === 0 || len2 === 0) {
-            return {
-                startPoint: curr,
-                endPoint: curr,
-                controlPoint: curr,
-                maxRadius: 0,
-                logicalRadius: 0,
-                logicalStart: curr
-            };
-        }
+    //     const len1 = Math.hypot(vec1[0], vec1[1]);
+    //     const len2 = Math.hypot(vec2[0], vec2[1]);
+    //     if (len1 === 0 || len2 === 0) {
+    //         return {
+    //             startPoint: curr,
+    //             endPoint: curr,
+    //             controlPoint: curr,
+    //             maxRadius: 0,
+    //             logicalRadius: 0,
+    //             logicalStart: curr
+    //         };
+    //     }
 
-        const norm1 = [vec1[0] / len1, vec1[1] / len1];
-        const norm2 = [vec2[0] / len2, vec2[1] / len2];
+    //     const norm1 = [vec1[0] / len1, vec1[1] / len1];
+    //     const norm2 = [vec2[0] / len2, vec2[1] / len2];
 
-        const logicalRadius = Math.min(len1 / 2, len2 / 2) || 0;
+    //     const logicalRadius = Math.min(len1 / 2, len2 / 2) || 0;
 
-        const dot = norm1[0] * norm2[0] + norm1[1] * norm2[1];
-        const angle = Math.acos(Math.max(-1, Math.min(1, dot)));
+    //     const dot = norm1[0] * norm2[0] + norm1[1] * norm2[1];
+    //     const angle = Math.acos(Math.max(-1, Math.min(1, dot)));
 
-        // const halfAngle = angle / 2;
-        //The maximum radius is proportional to the shorter edge length, scaled by how 'sharp' the angle is.
-        const maxAllowedRadius =Math.min(len1, len2) * Math.sin(angle) / 2;
-        const maxRadius = Math.min(this.bRadius, maxAllowedRadius);
-        console.log(`Max Radius: ${maxRadius}, Logical Radius: ${logicalRadius}`);
-        
-        const startPoint = [
-            curr[0] + norm1[0] * maxRadius,
-            curr[1] + norm1[1] * maxRadius
-        ];
-        const endPoint = [
-            curr[0] + norm2[0] * maxRadius,
-            curr[1] + norm2[1] * maxRadius
-        ];
-        const logicalStart = [
-            curr[0] + norm1[0] * logicalRadius,
-            curr[1] + norm1[1] * logicalRadius
-        ];
-        return { startPoint, endPoint, controlPoint: curr, maxRadius, logicalRadius };
+    //     // const halfAngle = angle / 2;
+    //     //The maximum radius is proportional to the shorter edge length, scaled by how 'sharp' the angle is.
+    //     const maxAllowedRadius = Math.min(len1, len2) * Math.sin(angle) / 2;
+    //     const maxRadius = Math.min(this.bRadius, maxAllowedRadius);
+
+    //     const startPoint = [
+    //         curr[0] + norm1[0] * maxRadius,
+    //         curr[1] + norm1[1] * maxRadius
+    //     ];
+    //     const endPoint = [
+    //         curr[0] + norm2[0] * maxRadius,
+    //         curr[1] + norm2[1] * maxRadius
+    //     ];
+    //      const logicalStart = [
+    //         curr[0] + norm1[0] * logicalRadius,
+    //         curr[1] + norm1[1] * logicalRadius
+    //     ];
+    //     return { startPoint, endPoint, controlPoint: curr, maxRadius, logicalRadius ,logicalStart};
+    // }
+    // Helper function to create vector from two points
+    asVec(p: [number, number], pp: [number, number]) {
+        const v = { x: 0, y: 0, len: 0, nx: 0, ny: 0, ang: 0 };
+        v.x = pp[0] - p[0];
+        v.y = pp[1] - p[1];
+        v.len = Math.sqrt(v.x * v.x + v.y * v.y);
+        v.nx = v.x / v.len;
+        v.ny = v.y / v.len;
+        v.ang = Math.atan2(v.ny, v.nx);
+        return v;
     }
 
-    private createRoundedStarPath(path: Path, canvas: Canvas): void {
-        const numPoints = this.points.length;
+    private calculateRoundedCornerData(points: Array<[number, number]>): Array<{
+        center: [number, number];
+        startAngle: number;
+        sweepAngle: number;
+        radius: number;
+        startPoint: [number, number];
+    }> {
+        if (points.length < 3) return [];
 
-        const firstCorner = this.computeRoundedCorner(0);
-        console.log(firstCorner.maxRadius, firstCorner.logicalRadius,);
+        const len = points.length;
+        const cornerData: Array<{
+            center: [number, number];
+            startAngle: number;
+            sweepAngle: number;
+            radius: number;
+            startPoint: [number, number];
+        }> = [];
 
-        if (firstCorner.maxRadius >= firstCorner.logicalRadius) {
-            path.moveTo(firstCorner.logicalStart[0], firstCorner.logicalStart[1]);
-        } else {
-            path.moveTo(firstCorner.startPoint[0], firstCorner.startPoint[1]);
+        let p1: [number, number], p2: [number, number], p3: [number, number];
+        let sinA: number, sinA90: number, radDirection: number, drawDirection: boolean, angle: number, halfAngle: number;
+        let cRadius: number, lenOut: number, x: number, y: number;
+
+        p1 = points[len - 1];
+
+        for (let i = 0; i < len; i++) {
+            p2 = points[i % len];
+            p3 = points[(i + 1) % len];
+
+            // Get vectors
+            const v1 = this.asVec(p2, p1);
+            const v2 = this.asVec(p2, p3);
+
+            // Cross product calculations
+            sinA = v1.nx * v2.ny - v1.ny * v2.nx;
+            sinA90 = v1.nx * v2.nx - v1.ny * -v2.ny;
+            angle = Math.asin(sinA < -1 ? -1 : sinA > 1 ? 1 : sinA);
+
+            // Determine drawing direction and radius direction
+            radDirection = 1;
+            drawDirection = false;
+            if (sinA90 < 0) {
+                if (angle < 0) {
+                    angle = Math.PI + angle;
+                } else {
+                    angle = Math.PI - angle;
+                    radDirection = -1;
+                    drawDirection = true;
+                }
+            } else {
+                if (angle > 0) {
+                    radDirection = -1;
+                    drawDirection = true;
+                }
+            }
+
+            const dot = v1.nx * v2.nx + v1.ny * v2.ny;
+            const angle2 = Math.acos(Math.max(-1, Math.min(1, dot)));
+
+            //The maximum radius is proportional to the shorter edge length, scaled by how 'sharp' the angle is.
+            const maxAllowedRadius = Math.min(v1.len, v2.len) * Math.sin(angle2) / 2;
+            cRadius = Math.min(this.bRadius, maxAllowedRadius);
+
+            // Calculate distances and positions
+            halfAngle = angle2 / 2;
+            lenOut = Math.abs(Math.cos(halfAngle) * cRadius / Math.sin(halfAngle));
+
+            if(lenOut > Math.min(v1.len, v2.len)/2) {
+                lenOut = Math.min(v1.len, v2.len)/2;
+                cRadius = Math.abs(lenOut * Math.sin(halfAngle) / Math.cos(halfAngle));
+            }
+            // Calculate arc center
+            x = p2[0] + v2.nx * lenOut;
+            y = p2[1] + v2.ny * lenOut;
+            x += -v2.ny * cRadius * radDirection;
+            y += v2.nx * cRadius * radDirection;
+
+            // Calculate start and end angles
+            const startAngle = v1.ang + Math.PI / 2 * radDirection;
+            const endAngle = v2.ang - Math.PI / 2 * radDirection;
+
+            const startX = x + Math.cos(startAngle) * cRadius;
+            const startY = y + Math.sin(startAngle) * cRadius;
+
+            // Calculate sweep angle
+            let sweepAngle = endAngle - startAngle;
+            if (drawDirection) {
+                // Counter-clockwise
+                if (sweepAngle > 0) sweepAngle -= 2 * Math.PI;
+            } else {
+                // Clockwise  
+                if (sweepAngle < 0) sweepAngle += 2 * Math.PI;
+            }
+
+
+            cornerData.push({
+                center: [x, y],
+                startAngle: startAngle,
+                sweepAngle: sweepAngle,
+                radius: cRadius,
+                startPoint: [startX, startY]
+            });
+
+            p1 = p2;
         }
 
-        for (let i = 0; i < numPoints; i++) {
-            const { controlPoint, maxRadius, endPoint } = this.computeRoundedCorner(i);
-            const nextIndex = (i + 1) % numPoints;
-            const nextCorner = this.computeRoundedCorner(nextIndex);
+        return cornerData;
+    }
 
-            path.arcToTangent(controlPoint[0], controlPoint[1], nextCorner.startPoint[0], nextCorner.startPoint[1], maxRadius);
+    private createRoundedStarPath(path: Path): void {
 
-            const rect = this.resource.canvasKit.LTRBRect(controlPoint[0], controlPoint[1], controlPoint[0] + 5, controlPoint[1] + 5);
-            canvas.drawRect(rect, this.resource.strokePaint);
+        const cornerData = this.calculateRoundedCornerData(this.points);
+        path.moveTo(cornerData[0].startPoint[0], cornerData[0].startPoint[1]);
 
-            const rect2 = this.resource.canvasKit.LTRBRect(endPoint[0], endPoint[1], endPoint[0] + 5, endPoint[1] + 5);
-            canvas.drawRect(rect2, this.resource.strokePaint);
+        for (let i = 0; i < cornerData.length; i++) {
+            const corner = cornerData[i];
+            const nextCorner = cornerData[(i + 1) % cornerData.length];
+            const endAngleRad = (corner.startAngle + corner.sweepAngle);
+            const isCCW = corner.sweepAngle < 0;
 
-            const rect3 = this.resource.canvasKit.LTRBRect(nextCorner.startPoint[0], nextCorner.startPoint[1], nextCorner.startPoint[0] + 5, nextCorner.startPoint[1] + 5);
-            canvas.drawRect(rect3, this.resource.strokePaint);
+            // Draw the arc - this will automatically connect to current path position
+            path.arc(
+                corner.center[0],
+                corner.center[1],
+                corner.radius,
+                corner.startAngle,
+                endAngleRad,
+                isCCW
+            );
+            path.lineTo(nextCorner.startPoint[0], nextCorner.startPoint[1]);
         }
 
         path.close();
