@@ -26,7 +26,7 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageCh
             console.log(images, 'images');
 
             setSelectedImageUrl(urlList[0])
-            console.log(onImageChange,urlList, isOpen, files);
+            console.log(onImageChange, urlList, isOpen, files);
             setSelectedImage(images[0])
         }
     }
@@ -35,8 +35,10 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageCh
             <div className='flex flex-row gap-1 '>
                 <div className='w-[240px] h-[240px] bg-gray-100 rounded'
                     onClick={() => openFilePicker()}
-                    style={{ backgroundImage: selectedImageUrl? `url(${selectedImageUrl})` : undefined,
-                         backgroundSize: 'cover', backgroundPosition: 'center' }}
+                    style={{
+                        backgroundImage: selectedImageUrl ? `url(${selectedImageUrl})` : undefined,
+                        backgroundSize: 'auto', backgroundPosition: 'center'
+                    }}
                 >
 
                 </div>
