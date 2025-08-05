@@ -92,13 +92,42 @@ class Renderer {
             this.surf = null;
         }
 
-        this.surf = this.resource.canvasKit.MakeWebGLCanvasSurface(this.canvasEl);
+        try {
+            this.surf = this.resource.canvasKit.MakeWebGLCanvasSurface(this.canvasEl);
+            console.log(this.surf);
 
+            if (!this.surf) {
+                throw new Error("Failed to create WebGL surface - surface is null");
+            }
 
-        console.log(this.surf);
+            this.skCnvs = this.surf.getCanvas();
+            console.log("WebGL surface created successfully");
 
-        if (!this.surf) throw new Error("Could not create CanvasKit surface");
-        this.skCnvs = this.surf.getCanvas();
+        } catch (error) {
+            console.error("Failed to create WebGL surface Try fallback to CPU surface", error);
+
+            // Try fallback to CPU surface
+            try {
+                console.log("Attempting gl v1 surface fallback...");
+                this.surf = this.resource.canvasKit.MakeWebGLCanvasSurface(this.canvasEl, null, {
+                    majorVersion: 1,
+                    minorVersion: 1
+                  });
+                  
+                // this.surf = this.resource.canvasKit.MakeCanvasSurface(this.canvasEl);
+
+                if (!this.surf) {
+                    throw new Error("Failed to create gl v1 surface - surface is null");
+                }
+
+                this.skCnvs = this.surf.getCanvas();
+                console.log("gl v1 surface created successfully as fallback");
+
+            } catch (fallbackError) {
+                console.error("Both WebGL and CPU surface creation failed:", fallbackError);
+                throw new Error(`Could not create CanvasKit surface: WebGL failed (${error.message}), CPU fallback failed (${fallbackError.message})`);
+            }
+        }
 
     }
 
