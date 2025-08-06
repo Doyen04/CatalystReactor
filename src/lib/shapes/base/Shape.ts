@@ -140,10 +140,14 @@ abstract class Shape implements IShape {
     }
 
     protected isShader(obj): boolean {
-        return obj && typeof obj === 'object' && 'constructor' in obj;
+        return (
+            obj != null &&
+            typeof obj === 'object' &&
+            obj.constructor?.name === 'Shader'
+        );
     }
     protected isColor(fill): boolean {
-        return fill && Array.isArray(fill) || fill instanceof Float32Array
+        return fill instanceof Float32Array;
     }
     initPaints(): { stroke: Paint, fill: Paint } {
         const fillShader = this.setPaint(this.style.fill.color);
@@ -151,12 +155,17 @@ abstract class Shape implements IShape {
 
         this.resource.paint.setShader(null);
         this.resource.strokePaint.setShader(null);
+        // console.log('Object keys:', Object.keys(fillShader));
+        // console.log('Constructor:', fillShader.constructor?.name);
+        // console.log('Prototype:', Object.getPrototypeOf(fillShader));
+        console.log(this.isColor(fillShader), this.isShader(fillShader), fillShader, this.isColor(strokeShader), this.isShader(strokeShader), strokeShader);
 
         if (this.isColor(fillShader)) {
             this.resource.paint.setColor(fillShader as Color)
         } else if (this.isShader(fillShader)) {
             this.resource.paint.setShader(fillShader as Shader)
         }
+
         if (this.isColor(strokeShader)) {
             this.resource.strokePaint.setColor(strokeShader as Color)
         } else if (this.isShader(strokeShader)) {
