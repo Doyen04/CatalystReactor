@@ -7,11 +7,11 @@ interface BackgroundImagePickerProps {
     isOpen?: boolean;
     className?: string;
     value: ArrayBuffer;
-    onChange: (imageData: ArrayBuffer | null) => void;
+    onImageChange: (imageData: ArrayBuffer | null) => void;
 }
 
 
-const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onChange,value, isOpen, className }) => {
+const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageChange, value, isOpen, className }) => {
     const [selectedImage, setSelectedImage] = useState<ArrayBuffer | null>(null)
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
     const { openFilePicker } = useFilePicker({
@@ -27,7 +27,7 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onChange,
             console.log(images, 'images');
 
             setSelectedImageUrl(urlList[0])
-            console.log(onChange, urlList, isOpen, files,value);
+            console.log(onImageChange, urlList, isOpen, files, value);
             setSelectedImage(images[0])
         }
     }

@@ -1,7 +1,7 @@
 import { getDisplayTextFromFill, extractFillValue, imageValue, arrayBufferToDataUrl, getBackgroundStyleFromFillValue, colorValue } from '@/util/getBackgroundFill';
 import { Fill } from '@lib/types/shapes';
 import { FileImage, Paintbrush2 } from 'lucide-react';
-import React, { ChangeEvent, forwardRef, useEffect, useState } from 'react'
+import React, { forwardRef, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import BackgroundImagePicker from './backgroundImagePicker';
 import ColorPicker from './ColorPicker';
@@ -11,7 +11,7 @@ type TabType = 'color' | "image"
 interface ColorInputProps extends React.InputHTMLAttributes<HTMLDivElement> {
     fill: Fill;
     objKey: string;
-    callBack: (e: ChangeEvent<HTMLInputElement>, key: string) => void
+    callBack: (key: string, value: ArrayBuffer | string | number[]) => void
 }
 
 //vaue can eithher be arraybuffer or string |number[] or liner guys
@@ -80,16 +80,15 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                             </div>
                             {(activeTab == 'color') &&
                                 <ColorPicker value={colorValue(fillValue.value)} isOpen={isOpen}
-                                    onChange={(color) => {
-                                        const mockEvent = { currentTarget: { value: color } } as ChangeEvent<HTMLInputElement>;
-                                        callBack(mockEvent, objKey);
+                                    onColorChange={(color) => {
+                                        callBack(objKey, color);
                                     }} />
                             }
                             {(activeTab == 'image') &&
-                                <BackgroundImagePicker value={imageValue(fillValue.value)} onChange={(ArrayBuffer) => {
-                                    const mockEvent = { currentTarget: { value: ArrayBuffer } } as unknown as ChangeEvent<HTMLInputElement>;
-                                    callBack(mockEvent, objKey);
-                                }} />}
+                                <BackgroundImagePicker value={imageValue(fillValue.value)}
+                                    onImageChange={(ArrayBuffer) => {
+                                        callBack(objKey, ArrayBuffer);
+                                    }} />}
 
                         </div>
                     </div>

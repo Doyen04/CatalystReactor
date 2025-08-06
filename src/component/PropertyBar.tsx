@@ -1,6 +1,6 @@
-import React, { ChangeEvent } from "react";
+import React from "react";
 import { useSceneStore } from "@hooks/sceneStore";
-import { Properties } from "@lib/types/shapes";
+import { Fill, ImageFill, Properties, SolidFill } from "@lib/types/shapes";
 import Input from "@ui/Input";
 import { useCanvasManagerStore } from "@hooks/useCanvasManager";
 import { Hexagon } from "lucide-react";
@@ -16,9 +16,8 @@ function PropertyBar() {
     const { currentShapeProperties, updateProperty } = useSceneStore();
     const { shapeManager } = useCanvasManagerStore()
 
-    const handlePropertyChange = (e: ChangeEvent<HTMLInputElement>, key: string) => {
+    const handlePropertyChange = (key: string, value: number) => {
         const { transform, size, style, borderRadius, sides, spikesRatio } = currentShapeProperties
-        const value = e.currentTarget.type === "number" ? parseFloat(e.currentTarget.value) || 0 : e.currentTarget.value;
 
         const propertyMap = [
             { prop: transform, name: "transform" },
@@ -86,6 +85,55 @@ function PropertyBar() {
         shapeManager?.updateProperty('borderRadius', newBorderRadius);
     };
 
+    const handleColorChange = (key: string, value: ArrayBuffer | string | number[]) => {
+
+        const { style } = currentShapeProperties;
+
+        if (!style) return;
+
+        let newStyle = { ...style };
+
+        let fillValue: Fill;
+
+        if (typeof value === 'string' || Array.isArray(value)) {
+            fillValue = {
+                type: 'solid',
+                color: value
+            } as SolidFill;
+        } else if (value instanceof ArrayBuffer) {
+            fillValue = {
+                type: 'image',
+                imageData: value,
+                scaleMode: 'fill'
+            } as ImageFill;
+
+        } else {
+            return; // Invalid value type
+        }
+
+        if (key === 'fill') {
+            newStyle = {
+                ...style,
+                fill: {
+                    ...style.fill,
+                    color: fillValue
+                }
+            };
+        } else if (key === 'strokeColor') {
+            newStyle = {
+                ...style,
+                stroke: {
+                    ...style.stroke,
+                    color: fillValue
+                }
+            };
+        }
+
+        updateProperty('style', newStyle);
+        shapeManager?.updateProperty('style', newStyle);
+
+    }
+
 
     if (!currentShapeProperties) {
         return (
@@ -134,9 +182,9 @@ function PropertyBar() {
                 {style && (
                     <Section title="Style">
                         <ColorInput objKey="fill"
-                            fill={style.fill.color} callBack={handlePropertyChange} />
+                            fill={style.fill.color} callBack={handleColorChange} />
                         <ColorInput objKey="strokeColor"
-                            fill={style.stroke.color} callBack={handlePropertyChange} />
+                            fill={style.stroke.color} callBack={handleColorChange} />
                     </Section>
                 )}
 

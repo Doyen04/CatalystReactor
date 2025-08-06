@@ -9,11 +9,11 @@ import { twMerge } from 'tailwind-merge';
 interface ColorPickerProps {
     value: string;
     isOpen: boolean;
-    onChange: (color: string) => void;
+    onColorChange: (color: string) => void;
     className?: string;
 }
 
-const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, isOpen, className }) => {
+const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen, className }) => {
     const [hsv, setHsv] = useState<HSV>({ h: 0, s: 100, v: 100 });
     const [alpha, setAlpha] = useState(1);
 
@@ -140,7 +140,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, isOpen, clas
             ? `${hexRgb}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` // 8‑digit hex
             : hexRgb;
 
-        onChange(output);
+        onColorChange(output);
     };
 
     // Mouse event handlers
