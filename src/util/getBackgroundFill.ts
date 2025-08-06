@@ -30,78 +30,6 @@ const getGradientBackgroundStyle = (fill: Fill): React.CSSProperties => {
     }
 }
 
-const getImageOrColorBackgroundStyle = (urlOrColor: string, fill: Fill): React.CSSProperties => {
-    switch (fill.type) {
-        case 'solid':
-            return { backgroundColor: urlOrColor };
-
-        case 'image':
-        case 'pattern': {
-            if (urlOrColor) {
-                const imageFill = fill as ImageFill;
-                const scaleMode = imageFill.scaleMode || 'fill';
-
-                switch (scaleMode) {
-                    case 'tile':
-                        return {
-                            backgroundImage: `url(${urlOrColor})`,
-                            backgroundRepeat: 'repeat',
-                            backgroundSize: 'auto'
-                        };
-                    case 'fit':
-                        return {
-                            backgroundImage: `url(${urlOrColor})`,
-                            backgroundRepeat: 'no-repeat',
-                            backgroundSize: 'contain',
-                            backgroundPosition: 'center'
-                        };
-                    case 'stretch':
-                        return {
-                            backgroundImage: `url(${urlOrColor})`,
-                            backgroundRepeat: 'no-repeat',
-                            backgroundSize: '100% 100%'
-                        };
-                    case 'fill':
-                    default:
-                        return {
-                            backgroundImage: `url(${urlOrColor})`,
-                            backgroundRepeat: 'no-repeat',
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center'
-                        };
-                }
-            }
-            return { backgroundColor: '#808080' };
-        }
-
-    }
-}
-
-function getSolidOrImageString(fill: Fill): string {
-    switch (fill.type) {
-        case 'solid': {
-            const solid = fill as SolidFill;
-            if (Array.isArray(solid.color)) {
-                // Convert RGB array [0-1] to RGB values [0-255]
-                const [r, g, b, a = 1] = solid.color;
-                const red = Math.round(r * 255);
-                const green = Math.round(g * 255);
-                const blue = Math.round(b * 255);
-                return a < 1 ? `rgba(${red}, ${green}, ${blue}, ${a})` : `rgb(${red}, ${green}, ${blue})`;
-            }
-            return solid.color as string;
-        }
-         case 'pattern':
-        case 'image': {
-            const imageFill = fill as ImageFill
-            return arrayBufferToDataUrl(imageFill.imageData)
-        }
-        default:
-            return '#000000';
-    }
-}
-
-
 function getDisplayTextFromFill(fill: Fill): string {
     switch (fill.type) {
         case 'solid': {
@@ -122,6 +50,68 @@ function getDisplayTextFromFill(fill: Fill): string {
             return 'Pattern';
         default:
             return 'Unknown';
+    }
+}
+
+export const colorValue = (value: string | ArrayBuffer | number[]) => {
+    return (typeof value === 'string') ? value : null
+}
+
+export const imageValue = (value: string | ArrayBuffer | number[]) => {
+    return (value instanceof ArrayBuffer) ? value : null
+}
+export function getBackgroundStyleFromFillValue(value: string | ArrayBuffer | number[], fill: Fill, url?: string) {
+    switch (fill.type) {
+        case 'solid': {
+            const color = colorValue(value)
+            return { backgroundColor: color };
+        }
+        case 'image':
+        case 'pattern': {
+            if (url) {
+                const imageFill = fill as ImageFill;
+                const scaleMode = imageFill.scaleMode || 'fill';
+
+                switch (scaleMode) {
+                    case 'tile':
+                        return {
+                            backgroundImage: `url(${url})`,
+                            backgroundRepeat: 'repeat',
+                            backgroundSize: 'auto'
+                        };
+                    case 'fit':
+                        return {
+                            backgroundImage: `url(${url})`,
+                            backgroundRepeat: 'no-repeat',
+                            backgroundSize: 'contain',
+                            backgroundPosition: 'center'
+                        };
+                    case 'stretch':
+                        return {
+                            backgroundImage: `url(${url})`,
+                            backgroundRepeat: 'no-repeat',
+                            backgroundSize: '100% 100%'
+                        };
+                    case 'fill':
+                    default:
+                        return {
+                            backgroundImage: `url(${url})`,
+                            backgroundRepeat: 'no-repeat',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                        };
+                }
+            }
+            return { backgroundColor: '#808080' };
+        }
+
+        case 'linear':
+        case 'radial':
+            fill = fill as LinearGradient | RadialGradient
+            return {
+                value: '',
+            };
+
     }
 }
 
@@ -156,4 +146,4 @@ export function extractFillValue(fill: Fill): {
     }
 }
 
-export { getSolidOrImageString, getDisplayTextFromFill, getImageOrColorBackgroundStyle, getGradientBackgroundStyle }
+export { arrayBufferToDataUrl, getDisplayTextFromFill, getGradientBackgroundStyle }

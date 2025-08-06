@@ -1,4 +1,4 @@
-import { getDisplayTextFromFill, getImageOrColorBackgroundStyle, getGradientBackgroundStyle, getSolidOrImageString, extractFillValue } from '@/util/getBackgroundFill';
+import { getDisplayTextFromFill, extractFillValue, imageValue, arrayBufferToDataUrl, getBackgroundStyleFromFillValue, colorValue } from '@/util/getBackgroundFill';
 import { Fill } from '@lib/types/shapes';
 import { FileImage, Paintbrush2 } from 'lucide-react';
 import React, { ChangeEvent, forwardRef, useEffect, useState } from 'react'
@@ -22,28 +22,18 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
         const [activeTab, setActiveTab] = useState<TabType>('color');
         const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-        const value = extractFillValue(fill)
+        const fillValue = extractFillValue(fill)
         const name = getDisplayTextFromFill(fill)
-        const urlorcolor = getSolidOrImageString(fill)
 
         let backgroundStyle;
 
-        const colorValue = (value:  string | ArrayBuffer | number[])=>{
-            return (typeof value === 'string')? value : null
-        }
-
-        const imageValue = (value:  string | ArrayBuffer | number[])=>{
-            return (value instanceof ArrayBuffer)? value : null
-        }
-
-        if (fill.type === 'image' || fill.type === 'pattern' || fill.type === 'solid') {
-            if (fill.type === 'image' || fill.type === 'pattern') {
-                if (imageUrl) URL.revokeObjectURL(imageUrl);
-                setImageUrl(urlorcolor);
-            }
-            backgroundStyle = getImageOrColorBackgroundStyle(urlorcolor, fill);
+        if (fill.type === 'image' || fill.type === 'pattern') {
+            const url = arrayBufferToDataUrl(imageValue(fillValue.value))
+            if (imageUrl) URL.revokeObjectURL(imageUrl);
+            setImageUrl(url);
+            backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill, url);
         } else {
-            backgroundStyle = getGradientBackgroundStyle(fill)
+            backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill)
         }
 
         useEffect(() => {
@@ -89,14 +79,14 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                                 </button>
                             </div>
                             {(activeTab == 'color') &&
-                                <ColorPicker value={colorValue(value.value)} isOpen={isOpen}
+                                <ColorPicker value={colorValue(fillValue.value)} isOpen={isOpen}
                                     onChange={(color) => {
                                         const mockEvent = { currentTarget: { value: color } } as ChangeEvent<HTMLInputElement>;
                                         callBack(mockEvent, objKey);
                                     }} />
                             }
                             {(activeTab == 'image') &&
-                                <BackgroundImagePicker value={imageValue(value.value)} onChange={(ArrayBuffer) => {
+                                <BackgroundImagePicker value={imageValue(fillValue.value)} onChange={(ArrayBuffer) => {
                                     const mockEvent = { currentTarget: { value: ArrayBuffer } } as unknown as ChangeEvent<HTMLInputElement>;
                                     callBack(mockEvent, objKey);
                                 }} />}
