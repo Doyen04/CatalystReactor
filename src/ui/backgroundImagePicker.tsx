@@ -1,6 +1,6 @@
 import { loadImage } from "@/util/loadFile";
 import { useFilePicker } from "@hooks/useFileOpener";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface BackgroundImagePickerProps {
@@ -8,20 +8,21 @@ interface BackgroundImagePickerProps {
     className?: string;
     value: ArrayBuffer;
     onImageChange: (imageData: ArrayBuffer | null) => void;
+    setImageUrl: React.Dispatch<React.SetStateAction<string>>;
+    imageUrl: string;
 }
 
 
-const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageChange, value, isOpen, className }) => {
-    const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
+const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ imageUrl, setImageUrl, onImageChange, value, isOpen, className }) => {
 
     const handleFileSelect = async (files: FileList) => {
         if (files && files.length > 0) {
 
-            if (selectedImageUrl) URL.revokeObjectURL(selectedImageUrl)
+            if (imageUrl) URL.revokeObjectURL(imageUrl)
             const urlList = Array.from(files).map((file) => URL.createObjectURL(file))
             const images = await loadImage(urlList)
 
-            setSelectedImageUrl(urlList[0])
+            setImageUrl(urlList[0])
             onImageChange(images[0])
         }
     }
@@ -33,21 +34,12 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageCh
     })
 
     useEffect(() => {
-        if (value && !selectedImageUrl) {
+        if (value && !imageUrl) {
             const blob = new Blob([value]);
             const url = URL.createObjectURL(blob);
-            setSelectedImageUrl(url);
+            setImageUrl(url);
         }
-    }, [value,selectedImageUrl, isOpen]);
-
-
-    useEffect(() => {
-        return () => {
-            if (selectedImageUrl) {
-                URL.revokeObjectURL(selectedImageUrl);
-            }
-        };
-    }, [selectedImageUrl])
+    }, [value, imageUrl, isOpen, setImageUrl]);
 
     return (
         <div className={twMerge(`w-fit h-fit p-3 ${className}`)} >
@@ -55,7 +47,7 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageCh
                 <div className='w-[240px] h-[240px] bg-gray-100 rounded'
                     onClick={() => openFilePicker()}
                     style={{
-                        backgroundImage: selectedImageUrl ? `url(${selectedImageUrl})` : undefined,
+                        backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,
                         backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: 'contain',
                     }}
                 >

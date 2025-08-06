@@ -30,17 +30,21 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
         useEffect(() => {
             if (fill.type === 'image' || fill.type === 'pattern') {
                 const url = arrayBufferToDataUrl(imageValue(fillValue.value));
-                if (imageUrl && imageUrl !== url) {
-                    URL.revokeObjectURL(imageUrl);
-                }
-                setImageUrl(url);
+                 setImageUrl(prevUrl => {
+                    if (prevUrl && prevUrl !== url) {
+                        URL.revokeObjectURL(prevUrl);
+                    }
+                    return url;
+                });
             } else {
-                if (imageUrl) {
-                    URL.revokeObjectURL(imageUrl);
-                    setImageUrl(null);
-                }
+                setImageUrl(prevUrl => {
+                    if (prevUrl) {
+                        URL.revokeObjectURL(prevUrl);
+                    }
+                    return null;
+                });
             }
-        }, [fill.type, fillValue.value, imageUrl]);
+        }, [fill.type, fillValue.value]);
 
         if (fill.type === 'image' || fill.type === 'pattern') {
             backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill, imageUrl);
@@ -97,7 +101,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                                     }} />
                             }
                             {(activeTab == 'image') &&
-                                <BackgroundImagePicker value={imageValue(fillValue.value)}
+                                <BackgroundImagePicker value={imageValue(fillValue.value)} imageUrl={imageUrl} setImageUrl={setImageUrl}
                                     onImageChange={(ArrayBuffer) => {
                                         callBack(objKey, ArrayBuffer);
                                     }} />}
