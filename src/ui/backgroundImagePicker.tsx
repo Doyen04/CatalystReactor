@@ -13,21 +13,19 @@ interface BackgroundImagePickerProps {
 
 const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageChange, value, isOpen, className }) => {
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
-    
+
     const handleFileSelect = async (files: FileList) => {
         if (files && files.length > 0) {
-            
+
             if (selectedImageUrl) URL.revokeObjectURL(selectedImageUrl)
-                const urlList = Array.from(files).map((file) => URL.createObjectURL(file))
+            const urlList = Array.from(files).map((file) => URL.createObjectURL(file))
             const images = await loadImage(urlList)
-            
+
             setSelectedImageUrl(urlList[0])
-            
-            console.log(onImageChange, urlList, isOpen, files, value);
             onImageChange(images[0])
         }
     }
-    
+
     const { openFilePicker } = useFilePicker({
         accept: 'image/*',
         multiple: false,
@@ -40,7 +38,7 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageCh
             const url = URL.createObjectURL(blob);
             setSelectedImageUrl(url);
         }
-    }, [value, selectedImageUrl]);
+    }, [value,selectedImageUrl, isOpen]);
 
 
     useEffect(() => {
@@ -58,10 +56,9 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageCh
                     onClick={() => openFilePicker()}
                     style={{
                         backgroundImage: selectedImageUrl ? `url(${selectedImageUrl})` : undefined,
-                        backgroundSize: 'auto', backgroundPosition: 'center'
+                        backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: 'contain',
                     }}
                 >
-
                 </div>
             </div>
         </div>

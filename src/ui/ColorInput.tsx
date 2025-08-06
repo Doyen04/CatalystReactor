@@ -27,11 +27,23 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
 
         let backgroundStyle;
 
+        useEffect(() => {
+            if (fill.type === 'image' || fill.type === 'pattern') {
+                const url = arrayBufferToDataUrl(imageValue(fillValue.value));
+                if (imageUrl && imageUrl !== url) {
+                    URL.revokeObjectURL(imageUrl);
+                }
+                setImageUrl(url);
+            } else {
+                if (imageUrl) {
+                    URL.revokeObjectURL(imageUrl);
+                    setImageUrl(null);
+                }
+            }
+        }, [fill.type, fillValue.value, imageUrl]);
+
         if (fill.type === 'image' || fill.type === 'pattern') {
-            const url = arrayBufferToDataUrl(imageValue(fillValue.value))
-            if (imageUrl) URL.revokeObjectURL(imageUrl);
-            setImageUrl(url);
-            backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill, url);
+            backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill, imageUrl);
         } else {
             backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill)
         }
