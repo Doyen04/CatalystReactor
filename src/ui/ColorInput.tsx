@@ -101,7 +101,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                                     }} />
                             }
                             {(activeTab == 'image') &&
-                                <BackgroundImagePicker value={imageValue(fillValue.value)} imageUrl={imageUrl} setImageUrl={setImageUrl}
+                                <BackgroundImagePicker imageUrl={imageUrl} setImageUrl={setImageUrl}
                                     onImageChange={(ArrayBuffer) => {
                                         callBack(objKey, ArrayBuffer);
                                     }} />}
