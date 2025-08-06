@@ -3,8 +3,8 @@
 
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, IShape, Properties, ShapeType, Size, SizeRadiusModifierPos, Style, Transform } from "@lib/types/shapes";
-import type { Canvas, Image as CanvasKitImage, Shader } from "canvaskit-wasm";
+import { BoundingRect, Fill, ImageFill, IShape, LinearGradient, Properties, ShapeType, Size, SizeRadiusModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
+import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from "canvaskit-wasm";
 
 interface Arguments {
     x: number,
@@ -12,13 +12,12 @@ interface Arguments {
     type: ShapeType
     rotation?: number,
     scale?: number,
-    fill?: string,
+    _fill?: string,
     strokeWidth?: number,
     strokeColor?: string,
 }
 
 abstract class Shape implements IShape {
-    protected canvasKitImage: CanvasKitImage | null = null;
     protected IWidth: number;
     protected IHeight: number;
     protected aspectRatio: number = 1;
@@ -29,10 +28,13 @@ abstract class Shape implements IShape {
     boundingRect: BoundingRect;
     private isHover: boolean;
 
-    constructor({ x, y, type, rotation = 0, scale = 1, fill = "#fff", strokeWidth = 1, strokeColor = '#000' }: Arguments) {
+    constructor({ x, y, type, rotation = 0, scale = 1, _fill = "#fff", strokeWidth = 1, strokeColor = '#000' }: Arguments) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
         this.transform = { x, y, rotation, scale, anchorPoint: null };
-        this.style = { fill, strokeColor, strokeWidth };
+
+        const fill: SolidFill = { type: 'solid', color: _fill }
+        const stroke: SolidFill = { type: 'solid', color: strokeColor }
+        this.style = { fill: { color: fill }, stroke: { color: stroke, width: strokeWidth } };
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
         this.isHover = false;
         this.shapeType = type;
@@ -102,37 +104,89 @@ abstract class Shape implements IShape {
         this.setCoord(this.transform.x - (defSize / 2), this.transform.y - (defSize / 2))
     }
 
-    setPaint(): void {
+    //better management for canvaskit resources
+    private setPaint(fill: Fill): Color | Shader | null {
         if (!this.resource) return
-        const cnvsKit = this.resource
+        switch (fill.type) {
+            case 'solid': {
+                const solid = fill as SolidFill;
+                return (Array.isArray(solid.color)) ? new Float32Array(solid.color) :
+                    this.resource.canvasKit.parseColorString(solid.color);
+            }
+            case 'linear': {
+                const gradient = fill as LinearGradient;
+                const shader = this.resource.canvasKit.Shader.MakeLinearGradient(
+                    [gradient.x1, gradient.y1],
+                    [gradient.x2, gradient.y2],
+                    gradient.stops.map(stop => this.resource.canvasKit.parseColorString(stop.color)),
+                    gradient.stops.map(stop => stop.offset),
+                    this.resource.canvasKit.TileMode.Clamp
+                );
+                return shader
+            }
+            case 'image': {
+                const imageFill = fill as ImageFill;
+                if (!imageFill.cnvsImage) {
+                    const image = this.createCanvasKitImage(imageFill.imageData)
+                    imageFill.cnvsImage = image
+                }
+                const size = this.getDim()
+                return this.makeImageShader(size, imageFill.cnvsImage)
+            }
+            case 'pattern':
+                // Similar to image but with pattern-specific handling
+                break;
+        }
+    }
 
-        const fill = (Array.isArray(this.style.fill)) ? this.style.fill : cnvsKit.canvasKit.parseColorString(this.style.fill)
-        let strokeColor = (Array.isArray(this.style.strokeColor)) ? this.style.strokeColor : cnvsKit.canvasKit.parseColorString(this.style.strokeColor)
+    protected isShader(obj): boolean {
+        return obj && typeof obj === 'object' && 'constructor' in obj;
+    }
+    protected isColor(fill): boolean {
+        return fill && Array.isArray(fill) || fill instanceof Float32Array
+    }
+    initPaints(): { stroke: Paint, fill: Paint } {
+        const fillShader = this.setPaint(this.style.fill.color);
+        const strokeShader = this.setPaint(this.style.stroke.color)
 
-        strokeColor = (this.isHover == false) ? strokeColor : cnvsKit.canvasKit.Color(0, 0, 255)
+        this.resource.paint.setShader(null);
+        this.resource.strokePaint.setShader(null);
 
-        cnvsKit.paint.setColor(fill);
-
-        cnvsKit.strokePaint.setColor(strokeColor);
-        cnvsKit.strokePaint.setStrokeWidth(this.style.strokeWidth);
+        if (this.isColor(fillShader)) {
+            this.resource.paint.setColor(fillShader as Color)
+        } else if (this.isShader(fillShader)) {
+            this.resource.paint.setShader(fillShader as Shader)
+        }
+        if (this.isColor(strokeShader)) {
+            this.resource.strokePaint.setColor(strokeShader as Color)
+        } else if (this.isShader(strokeShader)) {
+            this.resource.strokePaint.setShader(strokeShader as Shader)
+        }
+        return { stroke: this.resource.strokePaint, fill: this.resource.paint }
     }
 
     setStrokeColor(color: string): void {
-        this.style.strokeColor = color;
+        console.log(color);
+
+        // this.style.strokeColor = color;
     }
     setStrokeWidth(width: number): void {
-        this.style.strokeWidth = width;
+        console.log(width);
+
+        // this.style.strokeWidth = width;
     }
     setFill(color: string): void {
-        this.style.fill = color;
+        console.log(color);
+
+        //     this.style.fill = color;
     }
 
     setHovered(bool: boolean) {
         // EventQueue.trigger(Render)
         this.isHover = bool
     }
-    makeImageShader(dim: Size): Shader {
-        if (!this.resource?.canvasKit || !this.canvasKitImage) return null;
+    makeImageShader(dim: Size, canvasKitImage: CanvasKitImage): Shader {
+        if (!this.resource?.canvasKit) return null;
         const ck = this.resource.canvasKit;
         const scaleMatrix = ck.Matrix.scaled(
             dim.width / this.IWidth,
@@ -141,7 +195,7 @@ abstract class Shape implements IShape {
         const translateMatrix = ck.Matrix.translated(this.transform.x, this.transform.y);
         const finalMatrix = ck.Matrix.multiply(translateMatrix, scaleMatrix);
 
-        const imageShader = this.canvasKitImage.makeShaderOptions(
+        const imageShader = canvasKitImage.makeShaderOptions(
             this.resource.canvasKit.TileMode.Clamp,
             this.resource.canvasKit.TileMode.Clamp,
             this.resource.canvasKit.FilterMode.Linear,
@@ -150,21 +204,15 @@ abstract class Shape implements IShape {
         );
         return imageShader;
     }
-    createCanvasKitImage(backgroundImage: ArrayBuffer): void {
-        if (!backgroundImage || !this.resource?.canvasKit) return;
-        const uint8Array = new Uint8Array(backgroundImage);
+    createCanvasKitImage(backgroundImage: ArrayBuffer): CanvasKitImage | null {
+        if (!backgroundImage || !this.resource?.canvasKit) return null;
 
-        this.canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(uint8Array);
-        if (!this.canvasKitImage) {
+        const cnvsimg = this.resource.canvasKit.MakeImageFromEncoded(backgroundImage);
+        if (!cnvsimg) {
             console.error('Failed to create CanvasKit image from encoded data');
             return;
         }
-        this.IWidth = this.canvasKitImage.width();
-        this.IHeight = this.canvasKitImage.height();
-
-        this.aspectRatio = this.IWidth / this.IHeight;
-        this.calculateBoundingRect();
-
+        return cnvsimg
     }
     abstract destroy(): void;
 

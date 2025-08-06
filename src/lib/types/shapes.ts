@@ -1,5 +1,5 @@
 import type Handle from "@lib/modifiers/Handles";
-import type { Canvas } from "canvaskit-wasm";
+import type { Canvas, Image as CanvasKitImage } from "canvaskit-wasm";
 
 export interface Transform {
     x: number;
@@ -18,10 +18,69 @@ export interface Size {
     height: number;
 }
 
+
+// export type FillType = 'solid' | 'gradient' | 'image' | 'pattern';
+
+export interface GradientStop {
+    offset: number;
+    color: string;
+}
+
+export interface LinearGradient {
+    type: 'linear';
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    stops: GradientStop[];
+}
+
+export interface RadialGradient {
+    type: 'radial';
+    cx: number;
+    cy: number;
+    radius: number;
+    stops: GradientStop[];
+}
+
+export interface ImageFill {
+    type: 'image';
+    imageData: ArrayBuffer;
+    cnvsImage?: CanvasKitImage;
+    scaleMode: 'fill' | 'fit' | 'stretch' | 'tile';
+    opacity?: number;
+}
+
+export interface PatternFill {
+    type: 'pattern';
+    imageData: ArrayBuffer;
+    cnvsImage?: CanvasKitImage;
+    repeat: 'repeat' | 'repeat-x' | 'repeat-y' | 'no-repeat';
+}
+
+export interface SolidFill {
+    type: 'solid';
+    color: string | number[];
+}
+
+export type Fill = SolidFill | LinearGradient | RadialGradient | ImageFill | PatternFill;
+export interface StrokeStyle {
+    color: Fill;
+    width: number;
+    opacity?: number;
+    lineCap?: 'butt' | 'round' | 'square';
+    lineJoin?: 'miter' | 'round' | 'bevel';
+    dashArray?: number[];
+}
+
+export interface FillStyle {
+    color: Fill;
+    opacity?: number;
+}
+
 export interface Style {
-    fill: string;
-    strokeWidth: number;
-    strokeColor: string;
+    fill: FillStyle;
+    stroke: StrokeStyle;
 }
 
 export interface BorderRadius {

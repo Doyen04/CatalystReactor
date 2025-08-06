@@ -205,28 +205,22 @@ class Rectangle extends Shape {
     override draw(canvas: Canvas): void {
         if (!this.resource) return;
 
-        this.setPaint();
-        if (this.canvasKitImage) {
-            const imageShader = this.makeImageShader(this.dimension)
-            this.resource.paint.setShader(imageShader)
-        }
+        const {stroke, fill} = this.initPaints()
         const rect = this.resource.canvasKit.LTRBRect(this.transform.x, this.transform.y, this.transform.x + this.dimension.width, this.transform.y + this.dimension.height);
         if (this.hasRadius() && this.bdradius.locked) {
             const radius = this.bdradius['top-left'];
             const rrect = this.resource.canvasKit.RRectXY(rect, radius, radius);
-            canvas.drawRRect(rrect, this.resource.paint);
-            canvas.drawRRect(rrect, this.resource.strokePaint);
+            canvas.drawRRect(rrect, fill);
+            canvas.drawRRect(rrect, stroke);
             return;
         } else if (this.hasRadius()) {
             const path = this.makeCustomRRectPath();
-            canvas.drawPath(path, this.resource.paint);
-            canvas.drawPath(path, this.resource.strokePaint);
+            canvas.drawPath(path, fill);
+            canvas.drawPath(path, stroke);
             path.delete();
         } else {
-            // Draw regular rectangle
-         // Method 1: Using RRectXY (simpler but uniform corners)
-            canvas.drawRect(rect, this.resource.paint);
-            canvas.drawRect(rect, this.resource.strokePaint);
+            canvas.drawRect(rect, fill);
+            canvas.drawRect(rect, stroke);
         }
     }
 

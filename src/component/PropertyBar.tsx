@@ -9,6 +9,7 @@ import LockButton from "@ui/LockedButton";
 import BorderRadius from "@ui/BorderRadius";
 import BorderRadiusAll from "@ui/BorderRadiusAll";
 import { AngleIcon } from "@ui/ArcSegment";
+import ColorInput from "@ui/ColorInput";
 
 
 function PropertyBar() {
@@ -129,14 +130,16 @@ function PropertyBar() {
                             value={size.height} callBack={handlePropertyChange} />
                     </Section>
                 )}
+
                 {style && (
                     <Section title="Style">
-                        <Input type="color" title="Fill" objKey="fill"
-                            value={String(style.fill)} callBack={handlePropertyChange} />
-                        <Input type="color" title="Stroke" objKey="strokeColor"
-                            value={String(style.strokeColor)} callBack={handlePropertyChange} />
+                        <ColorInput objKey="fill"
+                            fill={style.fill.color} callBack={handlePropertyChange} />
+                        <ColorInput objKey="strokeColor"
+                            fill={style.stroke.color} callBack={handlePropertyChange} />
                     </Section>
                 )}
+
                 {spikesRatio && (
                     <Section title="Spikes-Ratio">
                         <Input type="number" title="Spikes" objKey="spikes"
@@ -148,11 +151,11 @@ function PropertyBar() {
                 {arcSegment && (
                     <Section title="Arc-Segment" childClass="gap-0">
                         <Input type="number" icon={<AngleIcon startAngle={arcSegment.startAngle} endAngle={arcSegment.endAngle} ratio={arcSegment.ratio} />} objKey="startAngle"
-                            value={String(arcSegment.startAngle)} callBack={handlePropertyChange} />
+                            value={arcSegment.startAngle} callBack={handlePropertyChange} />
                         <Input type="number" title="" objKey="endAngle"
-                            value={String(arcSegment.endAngle)} callBack={handlePropertyChange} />
+                            value={arcSegment.endAngle} callBack={handlePropertyChange} />
                         <Input type="number" title="" objKey="ratio"
-                            value={String(arcSegment.ratio)} callBack={handlePropertyChange} />
+                            value={arcSegment.ratio} callBack={handlePropertyChange} />
                     </Section>
                 )}
                 {sides && (

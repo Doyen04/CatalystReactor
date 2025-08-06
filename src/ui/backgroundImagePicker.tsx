@@ -6,11 +6,12 @@ import { twMerge } from "tailwind-merge";
 interface BackgroundImagePickerProps {
     isOpen?: boolean;
     className?: string;
-    onImageChange: (imageData: ArrayBuffer | null) => void;
+    value: ArrayBuffer;
+    onChange: (imageData: ArrayBuffer | null) => void;
 }
 
 
-const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageChange, isOpen, className }) => {
+const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onChange,value, isOpen, className }) => {
     const [selectedImage, setSelectedImage] = useState<ArrayBuffer | null>(null)
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
     const { openFilePicker } = useFilePicker({
@@ -26,7 +27,7 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ onImageCh
             console.log(images, 'images');
 
             setSelectedImageUrl(urlList[0])
-            console.log(onImageChange, urlList, isOpen, files);
+            console.log(onChange, urlList, isOpen, files,value);
             setSelectedImage(images[0])
         }
     }
