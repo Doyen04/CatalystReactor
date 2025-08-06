@@ -158,7 +158,7 @@ abstract class Shape implements IShape {
         // console.log('Object keys:', Object.keys(fillShader));
         // console.log('Constructor:', fillShader.constructor?.name);
         // console.log('Prototype:', Object.getPrototypeOf(fillShader));
-        console.log(this.isColor(fillShader), this.isShader(fillShader), fillShader, this.isColor(strokeShader), this.isShader(strokeShader), strokeShader);
+        console.log(this.isColor(fillShader), this.isShader(fillShader), this.isColor(strokeShader), this.isShader(strokeShader));
 
         if (this.isColor(fillShader)) {
             this.resource.paint.setColor(fillShader as Color)
