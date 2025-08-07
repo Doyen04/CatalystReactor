@@ -1,4 +1,3 @@
-import SceneNode from '@lib/core/SceneGraph'
 import { Properties } from '@lib/types/shapes'
 import { create } from 'zustand'
 
@@ -9,7 +8,7 @@ interface SceneStore {
     clearProperties: () => void
 }
 
-export const useSceneStore = create<SceneStore>((set, get) => ({
+export const useSceneStore = create<SceneStore>((set) => ({
     currentShapeProperties: null,
 
     setCurrentShapeProperties: (properties) => set({ currentShapeProperties: properties }),

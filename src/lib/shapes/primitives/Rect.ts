@@ -94,7 +94,7 @@ class Rectangle extends Shape {
         this.dimension.width = width;
         this.dimension.height = height;
 
-        this.computeAllRadius();
+        // this.computeAllRadius();
         this.calculateBoundingRect()
     }
 

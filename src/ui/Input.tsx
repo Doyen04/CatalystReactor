@@ -1,4 +1,4 @@
-import React, { forwardRef, HTMLInputTypeAttribute, ReactNode, useState } from 'react'
+import React, { forwardRef, HTMLInputTypeAttribute, ReactNode, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -14,8 +14,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     ({ title, icon, type, objKey, callBack, className, value, ...props }, ref) => {
         const [current, setCurrentValue] = useState(value)
 
+        useEffect(()=>{
+            setCurrentValue(value)
+        },[value])
+        
         return (
-            <aside className={twMerge(`rounded-md bg-gray-200 flex h-fit w-fit
+            <aside className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-fit
             items-center gap-1 p-0.5 border border-transparent
              hover:border-gray-500 hover:focus-within:border-blue-500 
              transition-colors ${className}`)}>

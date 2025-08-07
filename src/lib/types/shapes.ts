@@ -20,7 +20,7 @@ export interface Size {
 
 
 // export type FillType = 'solid' | 'gradient' | 'image' | 'pattern';
-
+export type ScaleMode = 'fill' | 'fit' | 'tile' | 'stretch';
 export interface GradientStop {
     offset: number;
     color: string;
@@ -47,8 +47,7 @@ export interface ImageFill {
     type: 'image';
     imageData: ArrayBuffer;
     cnvsImage?: CanvasKitImage;
-    scaleMode: 'fill' | 'fit' | 'stretch' | 'tile';
-    opacity?: number;
+    scaleMode: ScaleMode;
 }
 
 export interface PatternFill {

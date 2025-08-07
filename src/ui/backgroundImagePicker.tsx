@@ -1,17 +1,31 @@
 import { loadImage } from "@/util/loadFile";
-import { useFilePicker } from "@hooks/useFileOpener";
+import { useFilePicker } from "@hooks/useFileOpener"
 import { twMerge } from "tailwind-merge";
+import ScaleModePicker from "./ScaleModePicker";
+import { ImageFill, ScaleMode } from "@lib/types/shapes";
+import { useEffect, useState } from "react";
 
 interface BackgroundImagePickerProps {
     isOpen?: boolean;
     className?: string;
-    onImageChange: (imageData: ArrayBuffer | null) => void;
+    value?: ImageFill;
+    onImageChange: (fill: ImageFill) => void;
     setImageUrl: React.Dispatch<React.SetStateAction<string>>;
     imageUrl: string;
 }
 
 
-const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ imageUrl, setImageUrl, onImageChange, isOpen, className }) => {
+const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, imageUrl, setImageUrl, onImageChange, isOpen, className }) => {
+    const [currentScaleMode, setScaleMode] = useState<ScaleMode>(value.scaleMode || 'fill');
+    const [currentImage, setCurrentImage] = useState<ArrayBuffer | null>(value.imageData || null);
+
+    useEffect(() => {
+        if (value.scaleMode) {
+            setScaleMode(value.scaleMode);
+        } if (value.imageData) {
+            setCurrentImage(value.imageData);
+        }
+    }, [value.scaleMode, value.imageData]);
 
     const handleFileSelect = async (files: FileList) => {
         if (files && files.length > 0) {
@@ -21,11 +35,29 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ imageUrl,
             const images = await loadImage(urlList)
 
             setImageUrl(urlList[0])
-            onImageChange(images[0])
+            setCurrentImage(images[0])
+            const imageFill: ImageFill = {
+                type: 'image',
+                imageData: images[0],
+                scaleMode: currentScaleMode
+            };
+            onImageChange(imageFill)
             console.log(isOpen);
-            
         }
     }
+
+    const handleScaleModeChange = (newScaleMode: ScaleMode) => {
+
+        setScaleMode(newScaleMode);
+        if (currentImage) {
+            const imageFill: ImageFill = {
+                type: 'image',
+                imageData: currentImage,
+                scaleMode: newScaleMode
+            };
+            onImageChange(imageFill);
+        }
+    };
 
     const { openFilePicker } = useFilePicker({
         accept: 'image/*',
@@ -33,24 +65,19 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ imageUrl,
         onFileSelect: (file) => handleFileSelect(file)
     })
 
-    // useEffect(() => {
-    //     if (value && !imageUrl) {
-    //         const blob = new Blob([value]);
-    //         const url = URL.createObjectURL(blob);
-    //         setImageUrl(url);
-    //     }
-    // }, [value, imageUrl, isOpen, setImageUrl]);
-
     return (
         <div className={twMerge(`w-fit h-fit p-3 ${className}`)} >
-            <div className='flex flex-row gap-1 '>
-                <div className='w-[240px] h-[240px] bg-gray-100 rounded'
-                    onClick={() => openFilePicker()}
+            <div className='flex flex-col gap-1.5'>
+                <ScaleModePicker scaleMode={currentScaleMode} onScaleChange={handleScaleModeChange} />
+                <div className='w-[240px] h-[240px] bg-gray-100 rounded flex items-center justify-center'
                     style={{
                         backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,
                         backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: 'contain',
                     }}
                 >
+                    <button className="bg-blue-800 text-white rounded p-2" onClick={() => openFilePicker()}>
+                        Click to Select Image
+                    </button>
                 </div>
             </div>
         </div>

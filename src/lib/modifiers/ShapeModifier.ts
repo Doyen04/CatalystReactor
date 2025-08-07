@@ -137,11 +137,11 @@ class ShapeModifier {
     updateText() {
         const { bottom, left } = this.shape.boundingRect
         const { width, height } = this.shape.getDim()
-        const { width: tWidth } = this.font.getDim()
+        this.font.setText(`${width} X ${height}`)
 
+        const { width: tWidth } = this.font.getDim()
         const pos = (width - tWidth) / 2
         this.font.setCoord(left + pos, bottom + 5)
-        this.font.setText(`${width} X ${height}`)
     }
     setPaint(): void {
         if (!this.resource) return

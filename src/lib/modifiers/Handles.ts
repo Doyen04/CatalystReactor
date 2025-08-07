@@ -159,37 +159,32 @@ export default class Handle {
         let deltaX = 0
         let deltaY = 0
 
-        switch (this.pos) {
-            case 'top-left':
-                if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
-                    this.anchorPoint = { x: shape.boundingRect.right, y: shape.boundingRect.bottom }
-                }
-                break;
-            case 'top-right':
-                if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
-                    this.anchorPoint = { x: shape.boundingRect.left, y: shape.boundingRect.bottom }
-                }
-                break
-            case 'bottom-left':
-                if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
-                    this.anchorPoint = { x: shape.boundingRect.right, y: shape.boundingRect.top }
-                }
-                break
-            case 'bottom-right':
-                if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
-                    this.anchorPoint = { x: shape.boundingRect.left, y: shape.boundingRect.top }
-                }
-                break;
-            default:
-                break;
+        if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
+            switch (this.pos) {
+                case 'top-left':
+                    this.anchorPoint = { x: shape.boundingRect.right, y: shape.boundingRect.bottom };
+                    break;
+                case 'top-right':
+                    this.anchorPoint = { x: shape.boundingRect.left, y: shape.boundingRect.bottom };
+                    break;
+                case 'bottom-left':
+                    this.anchorPoint = { x: shape.boundingRect.right, y: shape.boundingRect.top };
+                    break;
+                case 'bottom-right':
+                    this.anchorPoint = { x: shape.boundingRect.left, y: shape.boundingRect.top };
+                    break;
+                default:
+                    break;
+            }
         }
 
         deltaX = (e.offsetX - this.anchorPoint.x);
         deltaY = (e.offsetY - this.anchorPoint.y);
-        width = Math.abs(deltaX);
-        height = Math.abs(deltaY);
         nx = Math.min(this.anchorPoint.x, e.offsetX);
         ny = Math.min(this.anchorPoint.y, e.offsetY);
+      
+        height = Math.abs(deltaY);
+        width = Math.abs(deltaX);
 
         shape.setCoord(nx, ny);
         shape.setDim(width, height);

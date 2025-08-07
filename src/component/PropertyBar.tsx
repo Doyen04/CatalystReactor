@@ -1,6 +1,6 @@
 import React from "react";
 import { useSceneStore } from "@hooks/sceneStore";
-import { Fill, ImageFill, Properties, SolidFill } from "@lib/types/shapes";
+import { Fill, Properties} from "@lib/types/shapes";
 import Input from "@ui/Input";
 import { useCanvasManagerStore } from "@hooks/useCanvasManager";
 import { Hexagon } from "lucide-react";
@@ -85,7 +85,7 @@ function PropertyBar() {
         shapeManager?.updateProperty('borderRadius', newBorderRadius);
     };
 
-    const handleColorChange = (key: string, value: ArrayBuffer | string | number[]) => {
+    const handleColorChange = (key: string, value: Fill) => {
 
         const { style } = currentShapeProperties;
 
@@ -93,30 +93,12 @@ function PropertyBar() {
 
         let newStyle = { ...style };
 
-        let fillValue: Fill;
-
-        if (typeof value === 'string' || Array.isArray(value)) {
-            fillValue = {
-                type: 'solid',
-                color: value
-            } as SolidFill;
-        } else if (value instanceof ArrayBuffer) {
-            fillValue = {
-                type: 'image',
-                imageData: value,
-                scaleMode: 'fill'
-            } as ImageFill;
-
-        } else {
-            return; // Invalid value type
-        }
-
         if (key === 'fill') {
             newStyle = {
                 ...style,
                 fill: {
                     ...style.fill,
-                    color: fillValue
+                    color:value
                 }
             };
         } else if (key === 'strokeColor') {
@@ -124,7 +106,7 @@ function PropertyBar() {
                 ...style,
                 stroke: {
                     ...style.stroke,
-                    color: fillValue
+                    color: value
                 }
             };
         }
@@ -133,7 +115,6 @@ function PropertyBar() {
         shapeManager?.updateProperty('style', newStyle);
 
     }
-
 
     if (!currentShapeProperties) {
         return (

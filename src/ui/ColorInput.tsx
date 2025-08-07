@@ -1,5 +1,5 @@
-import { getDisplayTextFromFill, extractFillValue, imageValue, arrayBufferToDataUrl, getBackgroundStyleFromFillValue, colorValue } from '@/util/getBackgroundFill';
-import { Fill } from '@lib/types/shapes';
+import { getDisplayTextFromFill, extractFillValue, imageValue, arrayBufferToDataUrl, getBackgroundStyleFromFillValue } from '@/util/getBackgroundFill';
+import { Fill, ImageFill, SolidFill } from '@lib/types/shapes';
 import { FileImage, Paintbrush2 } from 'lucide-react';
 import React, { forwardRef, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
@@ -11,10 +11,8 @@ type TabType = 'color' | "image"
 interface ColorInputProps extends React.InputHTMLAttributes<HTMLDivElement> {
     fill: Fill;
     objKey: string;
-    callBack: (key: string, value: ArrayBuffer | string | number[]) => void
+    callBack: (key: string, value: Fill) => void
 }
-
-//vaue can eithher be arraybuffer or string |number[] or liner guys
 
 const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
     ({ objKey, callBack, className, fill, ...props }, ref) => {
@@ -30,7 +28,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
         useEffect(() => {
             if (fill.type === 'image' || fill.type === 'pattern') {
                 const url = arrayBufferToDataUrl(imageValue(fillValue.value));
-                 setImageUrl(prevUrl => {
+                setImageUrl(prevUrl => {
                     if (prevUrl && prevUrl !== url) {
                         URL.revokeObjectURL(prevUrl);
                     }
@@ -79,7 +77,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}>
                         <div onClick={(e) => e.stopPropagation()} className="absolute bottom-10 right-65 z-50 bg-white rounded-lg shadow-lg shadow-gray-500 w-fit h-fit pt-3">
 
-                            <div className='flex items-center gap-1 p-2 w-full h-9 mb-2 border-b-1 border-t-1 border-b-[#e6e6e6] border-t-[#e6e6e6]'>
+                            <div className='flex items-center gap-1 p-2 w-full h-9 border-b-1 border-t-1 border-b-[#e6e6e6] border-t-[#e6e6e6]'>
                                 <button
                                     onClick={() => setActiveTab('color')}
                                     className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'color' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
@@ -95,15 +93,17 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                                 </button>
                             </div>
                             {(activeTab == 'color') &&
-                                <ColorPicker value={colorValue(fillValue.value)} isOpen={isOpen}
+                                <ColorPicker value={fill as SolidFill} isOpen={isOpen}
                                     onColorChange={(color) => {
                                         callBack(objKey, color);
                                     }} />
                             }
                             {(activeTab == 'image') &&
-                                <BackgroundImagePicker imageUrl={imageUrl} setImageUrl={setImageUrl}
-                                    onImageChange={(ArrayBuffer) => {
-                                        callBack(objKey, ArrayBuffer);
+                                <BackgroundImagePicker value={fill as ImageFill}
+                                    imageUrl={imageUrl}
+                                    setImageUrl={setImageUrl}
+                                    onImageChange={(fill) => {
+                                        callBack(objKey, fill);
                                     }} />}
 
                         </div>

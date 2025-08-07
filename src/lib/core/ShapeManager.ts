@@ -59,7 +59,10 @@ class ShapeManager {
             this.shape.drawDefault()
             console.log('Shape removed: too small add default size');
         }
+        
         this.shapeModifier.update()
+        const props = this.shape.getProperties();
+        this.throttledUpdate(props)
     }
 
     get currentShape(): IShape {

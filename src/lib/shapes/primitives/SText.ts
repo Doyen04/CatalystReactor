@@ -90,7 +90,7 @@ class SText extends Shape {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    override getModifierHandles(size: number, fill: string | number[], strokeColor: string | number[]): Handle[] {
+    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
         return []
     }
 
@@ -116,6 +116,7 @@ class SText extends Shape {
             bottom: this.transform.y + height,
         };
     }
+    
     setTextPaint(fill: string | number[], stroke?: string | number[]) {
         if (!this.resource) return
         const cnvsKit = this.resource

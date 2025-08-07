@@ -1,15 +1,17 @@
 
 
 
+import { colorValue } from '@/util/getBackgroundFill';
 import hsvToRgb from '@/util/hsvToRgb';
 import parseColorToHSV from '@/util/parseToHSVA';
+import { SolidFill } from '@lib/types/shapes';
 import React, { useState, useRef, useEffect } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 interface ColorPickerProps {
-    value: string;
+    value: SolidFill;
     isOpen: boolean;
-    onColorChange: (color: string) => void;
+    onColorChange: (color: SolidFill) => void;
     className?: string;
 }
 
@@ -26,7 +28,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
 
     // Initialize color from prop
     useEffect(() => {
-        const initialHsv = parseColorToHSV(value);
+        const initialHsv = parseColorToHSV(colorValue(value.color));
         setHsv(initialHsv.hsv);
         setAlpha(initialHsv.alpha)
     }, [value]);
@@ -139,8 +141,12 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
         const output = alpha < 1
             ? `${hexRgb}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` // 8‑digit hex
             : hexRgb;
-
-        onColorChange(output);
+            
+        const solidFill: SolidFill = {
+            type: 'solid',
+            color: output
+        };
+        onColorChange(solidFill);
     };
 
     // Mouse event handlers

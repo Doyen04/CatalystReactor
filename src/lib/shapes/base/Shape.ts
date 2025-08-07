@@ -3,7 +3,7 @@
 
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, Fill, ImageFill, IShape, LinearGradient, Properties, ShapeType, Size, SizeRadiusModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
+import { BoundingRect, Fill, ImageFill, IShape, LinearGradient, Properties, ScaleMode, ShapeType, Size, SizeRadiusModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
 import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from "canvaskit-wasm";
 
 interface Arguments {
@@ -133,7 +133,7 @@ abstract class Shape implements IShape {
                 }
                 const size = this.getDim()
 
-                return this.makeImageShader(size, imageFill.cnvsImage)
+                return this.makeImageShader(size, imageFill.cnvsImage, imageFill.scaleMode)
             }
             case 'pattern':
                 // Similar to image but with pattern-specific handling
@@ -193,28 +193,63 @@ abstract class Shape implements IShape {
         // EventQueue.trigger(Render)
         this.isHover = bool
     }
-    makeImageShader(dim: Size, canvasKitImage: CanvasKitImage): Shader {
+    makeImageShader(dim: Size, canvasKitImage: CanvasKitImage, scaleMode: ScaleMode = 'fill'): Shader {
         if (!this.resource?.canvasKit) return null;
         const ck = this.resource.canvasKit;
 
-        const IWidth = canvasKitImage.width();
-        const IHeight = canvasKitImage.height();
-        const scaleMatrix = ck.Matrix.scaled(
-            dim.width / IWidth,
-            dim.height / IHeight
-        );
-        const translateMatrix = ck.Matrix.translated(this.transform.x, this.transform.y);
-        const finalMatrix = ck.Matrix.multiply(translateMatrix, scaleMatrix);
+        const imageWidth = canvasKitImage.width();
+        const imageHeight = canvasKitImage.height();
 
-        const imageShader = canvasKitImage.makeShaderOptions(
-            this.resource.canvasKit.TileMode.Clamp,
-            this.resource.canvasKit.TileMode.Clamp,
-            this.resource.canvasKit.FilterMode.Linear,
-            this.resource.canvasKit.MipmapMode.None,
+        let scale: number;
+        let tileMode = ck.TileMode.Clamp;
+
+        switch (scaleMode) {
+            case 'fill':
+                scale = Math.max(dim.width / imageWidth, dim.height / imageHeight);
+                break;
+            case 'fit':
+                scale = Math.min(dim.width / imageWidth, dim.height / imageHeight);
+                tileMode = ck.TileMode.Decal;
+                break;
+            case 'tile':
+                scale = 1;
+                tileMode = ck.TileMode.Repeat;
+                break;
+            case 'stretch':
+                return canvasKitImage.makeShaderOptions(
+                    ck.TileMode.Clamp,
+                    ck.TileMode.Clamp,
+                    ck.FilterMode.Linear,
+                    ck.MipmapMode.None,
+                    ck.Matrix.multiply(
+                        ck.Matrix.translated(this.transform.x, this.transform.y),
+                        ck.Matrix.scaled(dim.width / imageWidth, dim.height / imageHeight)
+                    )
+                );
+            default:
+                scale = Math.max(dim.width / imageWidth, dim.height / imageHeight);
+        }
+
+        // Calculate centering offset for fill/fit modes
+        const scaledWidth = imageWidth * scale;
+        const scaledHeight = imageHeight * scale;
+        const offsetX = (dim.width - scaledWidth) / 2;
+        const offsetY = (dim.height - scaledHeight) / 2;
+
+        const finalMatrix = ck.Matrix.multiply(
+            ck.Matrix.translated(this.transform.x + offsetX, this.transform.y + offsetY),
+            ck.Matrix.scaled(scale, scale)
+        );
+
+        return canvasKitImage.makeShaderOptions(
+            tileMode,
+            tileMode,
+            ck.FilterMode.Linear,
+            ck.MipmapMode.None,
             finalMatrix
         );
-        return imageShader;
     }
+
     createCanvasKitImage(backgroundImage: ArrayBuffer): CanvasKitImage | null {
         if (!backgroundImage || !this.resource?.canvasKit) return null;
 
