@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 import { Plus, Minus, ArrowRight, ArrowDown, ArrowDownRight, ArrowDownLeft, ArrowUp, ArrowLeft, ArrowUpLeft, ArrowUpRight } from 'lucide-react';
 
 interface LinearGradientPickerProps {
-    value?: LinearGradient;
+    value: LinearGradient;
     onGradientChange: (gradient: LinearGradient) => void;
     className?: string;
 }
@@ -42,11 +42,13 @@ const DIRECTION_PRESETS = [
 ];
 
 const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGradientChange, className }) => {
-    const [gradient, setGradient] = useState<LinearGradient>(value || DEFAULT_GRADIENT);
+    const [gradient, setGradient] = useState<LinearGradient>();
 
     useEffect(() => {
-        if (value) {
+        if (value.type == 'linear') {
             setGradient(value);
+        }else{
+            setGradient(DEFAULT_GRADIENT)
         }
     }, [value]);
 

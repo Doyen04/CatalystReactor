@@ -18,7 +18,7 @@ interface ColorPickerProps {
 const DEFAULT_COLOR = "#ffffff"
 
 const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen, className }) => {
-    const [hsv, setHsv] = useState<HSV>({ h: 0, s: 100, v: 100 });
+    const [hsv, setHsv] = useState<HSV>({ h: 0, s: 0, v: 100 });
     const [alpha, setAlpha] = useState(1);
 
     const hueCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -148,7 +148,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
         const output = alpha < 1
             ? `${hexRgb}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` // 8‑digit hex
             : hexRgb;
-
+            
+        console.log(output);
         const solidFill: SolidFill = {
             type: 'solid',
             color: output
