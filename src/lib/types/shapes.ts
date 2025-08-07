@@ -1,6 +1,19 @@
 import type Handle from "@lib/modifiers/Handles";
 import type { Canvas, Image as CanvasKitImage } from "canvaskit-wasm";
 
+
+export const DEFAULT_LINEAR_GRADIENT: LinearGradient = {
+    type: 'linear',
+    x1: 0,
+    y1: 0,
+    x2: 100,
+    y2: 0,
+    stops: [
+        { offset: 0, color: '#ff0000' },
+        { offset: 1, color: '#0000ff' }
+    ]
+};
+
 export interface Transform {
     x: number;
     y: number;

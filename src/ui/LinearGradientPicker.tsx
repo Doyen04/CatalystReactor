@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LinearGradient, GradientStop } from '@lib/types/shapes';
+import { LinearGradient, GradientStop, DEFAULT_LINEAR_GRADIENT } from '@lib/types/shapes';
 import { twMerge } from 'tailwind-merge';
 import { Plus, Minus, ArrowRight, ArrowDown, ArrowDownRight, ArrowDownLeft, ArrowUp, ArrowLeft, ArrowUpLeft, ArrowUpRight } from 'lucide-react';
 
@@ -8,18 +8,6 @@ interface LinearGradientPickerProps {
     onGradientChange: (gradient: LinearGradient) => void;
     className?: string;
 }
-
-const DEFAULT_GRADIENT: LinearGradient = {
-    type: 'linear',
-    x1: 0,
-    y1: 0,
-    x2: 100,
-    y2: 0,
-    stops: [
-        { offset: 0, color: '#ff0000' },
-        { offset: 1, color: '#0000ff' }
-    ]
-};
 
 const PRESET_GRADIENTS = [
     { name: 'Sunset', stops: [{ offset: 0, color: '#ff7e5f' }, { offset: 1, color: '#feb47b' }] },
@@ -48,13 +36,13 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
         if (value.type == 'linear') {
             setGradient(value);
         }else{
-            setGradient(DEFAULT_GRADIENT)
+            setGradient(DEFAULT_LINEAR_GRADIENT)
         }
     }, [value]);
 
     useEffect(() => {
         if (!value) {
-            onGradientChange(DEFAULT_GRADIENT);
+            onGradientChange(DEFAULT_LINEAR_GRADIENT);
         }
     }, []);
 
