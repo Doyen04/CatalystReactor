@@ -125,12 +125,14 @@ abstract class Shape implements IShape {
                 return shader
             }
             case 'image': {
+
                 const imageFill = fill as ImageFill;
                 if (!imageFill.cnvsImage) {
                     const image = this.createCanvasKitImage(imageFill.imageData)
                     imageFill.cnvsImage = image
                 }
                 const size = this.getDim()
+
                 return this.makeImageShader(size, imageFill.cnvsImage)
             }
             case 'pattern':
@@ -149,16 +151,9 @@ abstract class Shape implements IShape {
     protected isColor(fill): boolean {
         return fill instanceof Float32Array;
     }
-    initPaints(): { stroke: Paint, fill: Paint } {
+    protected initPaints(): { stroke: Paint, fill: Paint } {
         const fillShader = this.setPaint(this.style.fill.color);
         const strokeShader = this.setPaint(this.style.stroke.color)
-
-        this.resource.paint.setShader(null);
-        this.resource.strokePaint.setShader(null);
-        // console.log('Object keys:', Object.keys(fillShader));
-        // console.log('Constructor:', fillShader.constructor?.name);
-        // console.log('Prototype:', Object.getPrototypeOf(fillShader));
-        console.log(this.isColor(fillShader), this.isShader(fillShader), this.isColor(strokeShader), this.isShader(strokeShader));
 
         if (this.isColor(fillShader)) {
             this.resource.paint.setColor(fillShader as Color)
@@ -172,6 +167,10 @@ abstract class Shape implements IShape {
             this.resource.strokePaint.setShader(strokeShader as Shader)
         }
         return { stroke: this.resource.strokePaint, fill: this.resource.paint }
+    }
+    protected resetPaint() {
+        this.resource.paint.setShader(null);
+        this.resource.strokePaint.setShader(null);
     }
 
     setStrokeColor(color: string): void {
@@ -197,9 +196,12 @@ abstract class Shape implements IShape {
     makeImageShader(dim: Size, canvasKitImage: CanvasKitImage): Shader {
         if (!this.resource?.canvasKit) return null;
         const ck = this.resource.canvasKit;
+
+        const IWidth = canvasKitImage.width();
+        const IHeight = canvasKitImage.height();
         const scaleMatrix = ck.Matrix.scaled(
-            dim.width / this.IWidth,
-            dim.height / this.IHeight
+            dim.width / IWidth,
+            dim.height / IHeight
         );
         const translateMatrix = ck.Matrix.translated(this.transform.x, this.transform.y);
         const finalMatrix = ck.Matrix.multiply(translateMatrix, scaleMatrix);

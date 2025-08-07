@@ -205,7 +205,7 @@ class Rectangle extends Shape {
     override draw(canvas: Canvas): void {
         if (!this.resource) return;
 
-        const {stroke, fill} = this.initPaints()
+        const { fill, stroke } = this.initPaints()
         const rect = this.resource.canvasKit.LTRBRect(this.transform.x, this.transform.y, this.transform.x + this.dimension.width, this.transform.y + this.dimension.height);
         if (this.hasRadius() && this.bdradius.locked) {
             const radius = this.bdradius['top-left'];
@@ -222,6 +222,7 @@ class Rectangle extends Shape {
             canvas.drawRect(rect, fill);
             canvas.drawRect(rect, stroke);
         }
+        this.resetPaint()
     }
 
     protected makeCustomRRectPath(): Path {
