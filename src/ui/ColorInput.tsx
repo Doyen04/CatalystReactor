@@ -44,6 +44,21 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
             }
         }, [fill.type, fillValue.value]);
 
+        useEffect(() => {
+            switch (fill.type) {
+                case 'solid':
+                    setActiveTab('solid');
+                    break;
+                case 'linear':
+                    setActiveTab('gradient');
+                    break;
+                case 'image':
+                case 'pattern':
+                    setActiveTab('image');
+                    break;
+            }
+        }, [fill.type]);
+
         if (fill.type === 'image' || fill.type === 'pattern') {
             backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill, imageUrl);
         } else {

@@ -50,6 +50,12 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
         }
     }, [value]);
 
+    useEffect(() => {
+        if (!value) {
+            onGradientChange(DEFAULT_GRADIENT);
+        }
+    }, []);
+
     const updateGradient = (newGradient: LinearGradient) => {
         setGradient(newGradient);
         onGradientChange(newGradient);
@@ -93,8 +99,14 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
     const getGradientAngle = () => {
         const dx = gradient.x2 - gradient.x1;
         const dy = gradient.y2 - gradient.y1;
-        let angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        angle = (90 - angle + 360) % 360;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        if (length === 0) return 0;
+
+        const normalizedDx = dx / length;
+        const normalizedDy = dy / length;
+        let angle = Math.atan2(normalizedDy, normalizedDx) * (180 / Math.PI);
+
+        angle = (angle + 90 + 360) % 360;
         return angle
     };
 
