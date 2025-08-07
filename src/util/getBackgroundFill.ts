@@ -41,9 +41,9 @@ function getDisplayTextFromFill(fill: Fill): string {
             return solid.color as string;
         }
         case 'linear':
-            return 'Linear Gradient';
+            return 'Linear';
         case 'radial':
-            return 'Radial Gradient';
+            return 'Radial';
         case 'image':
             return 'Image';
         case 'pattern':

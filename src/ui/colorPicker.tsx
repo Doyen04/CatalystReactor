@@ -10,7 +10,7 @@ import { twMerge } from 'tailwind-merge';
 
 interface ColorPickerProps {
     value: SolidFill;
-    isOpen: boolean;
+    isOpen?: boolean;
     onColorChange: (color: SolidFill) => void;
     className?: string;
 }

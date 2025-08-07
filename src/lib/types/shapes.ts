@@ -19,8 +19,11 @@ export interface Size {
 }
 
 
-// export type FillType = 'solid' | 'gradient' | 'image' | 'pattern';
+export type FillType = 'solid' | 'gradient' | 'image' | 'pattern';
 export type ScaleMode = 'fill' | 'fit' | 'tile' | 'stretch';
+export type Gradient = 'linear' | 'radial';
+export type GradientFill = LinearGradient | RadialGradient
+
 export interface GradientStop {
     offset: number;
     color: string;
@@ -62,7 +65,7 @@ export interface SolidFill {
     color: string | number[];
 }
 
-export type Fill = SolidFill | LinearGradient | RadialGradient | ImageFill | PatternFill;
+export type Fill = SolidFill | GradientFill | ImageFill | PatternFill;
 export interface StrokeStyle {
     color: Fill;
     width: number;

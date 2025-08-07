@@ -1,0 +1,34 @@
+import React, { useState, useEffect } from 'react';
+import {GradientFill } from '@lib/types/shapes';
+import { twMerge } from 'tailwind-merge';
+import LinearGradientPicker from './LinearGradientPicker';
+
+interface GradientPickerProps {
+    value?: GradientFill;
+    onGradientChange: (gradient: GradientFill) => void;
+    className?: string;
+}
+
+const GradientPicker: React.FC<GradientPickerProps> = ({ value, onGradientChange, className }) => {
+    const [gradient, setGradient] = useState<GradientFill>(value || null);
+
+    useEffect(() => {
+        if (value) {
+            setGradient(value);
+        }
+    }, [value]);
+
+    const handleGradientChange =(gradient: GradientFill)=>{
+        console.log(gradient, onGradientChange);
+        onGradientChange(gradient)
+    }
+
+    return (
+        <div className={twMerge(`w-full p-3 ${className}`)}>
+           
+            <LinearGradientPicker onGradientChange={handleGradientChange}/>
+        </div>
+    );
+};
+
+export default GradientPicker;

@@ -115,14 +115,22 @@ abstract class Shape implements IShape {
             }
             case 'linear': {
                 const gradient = fill as LinearGradient;
+                const size = this.getDim();
+                const coord = this.getCoord();
+
+                const x1 = coord.x + (gradient.x1 / 100) * size.width;
+                const y1 = coord.y + (gradient.y1 / 100) * size.height;
+                const x2 = coord.x + (gradient.x2 / 100) * size.width;
+                const y2 = coord.y + (gradient.y2 / 100) * size.height;
+
                 const shader = this.resource.canvasKit.Shader.MakeLinearGradient(
-                    [gradient.x1, gradient.y1],
-                    [gradient.x2, gradient.y2],
+                    [x1, y1],
+                    [x2, y2],
                     gradient.stops.map(stop => this.resource.canvasKit.parseColorString(stop.color)),
                     gradient.stops.map(stop => stop.offset),
                     this.resource.canvasKit.TileMode.Clamp
                 );
-                return shader
+                return shader;
             }
             case 'image': {
 

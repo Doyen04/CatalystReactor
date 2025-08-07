@@ -1,12 +1,12 @@
 import { getDisplayTextFromFill, extractFillValue, imageValue, arrayBufferToDataUrl, getBackgroundStyleFromFillValue } from '@/util/getBackgroundFill';
-import { Fill, ImageFill, SolidFill } from '@lib/types/shapes';
-import { FileImage, Paintbrush2 } from 'lucide-react';
+import { Fill, FillType, GradientFill, ImageFill, SolidFill } from '@lib/types/shapes';
+import { FileImage, Paintbrush2, Zap } from 'lucide-react';
 import React, { forwardRef, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import BackgroundImagePicker from './backgroundImagePicker';
 import ColorPicker from './ColorPicker';
+import GradientPicker from './GradientPicker';
 
-type TabType = 'color' | "image"
 
 interface ColorInputProps extends React.InputHTMLAttributes<HTMLDivElement> {
     fill: Fill;
@@ -17,7 +17,7 @@ interface ColorInputProps extends React.InputHTMLAttributes<HTMLDivElement> {
 const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
     ({ objKey, callBack, className, fill, ...props }, ref) => {
         const [isOpen, setIsOpen] = useState(false);
-        const [activeTab, setActiveTab] = useState<TabType>('color');
+        const [activeTab, setActiveTab] = useState<FillType>('solid');
         const [imageUrl, setImageUrl] = useState<string | null>(null);
 
         const fillValue = extractFillValue(fill)
@@ -68,23 +68,28 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                         style={{ ...backgroundStyle }}></p>
                     <div
                         ref={ref}
-                        className="w-10 bg-transparent text-gray-900 text-sm font-mono border-none focus:outline-none"
+                        className="w-10 bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
                         {...props}
                     >{name}</div>
                 </aside>
 
                 {isOpen && (
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}>
-                        <div onClick={(e) => e.stopPropagation()} className="absolute bottom-10 right-65 z-50 bg-white rounded-lg shadow-lg shadow-gray-500 w-fit h-fit pt-3">
+                        <div onClick={(e) => e.stopPropagation()} className="absolute bottom-10 right-65 z-50 bg-white rounded-lg shadow-lg shadow-gray-500 w-fit h-fit  max-w-[280px] pt-3">
 
                             <div className='flex items-center gap-1 p-2 w-full h-9 border-b-1 border-t-1 border-b-[#e6e6e6] border-t-[#e6e6e6]'>
                                 <button
-                                    onClick={() => setActiveTab('color')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'color' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+                                    onClick={() => setActiveTab('solid')}
+                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'solid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
                                 >
                                     <Paintbrush2 className='w-4 h-4' />
                                 </button>
-
+                                <button
+                                    onClick={() => setActiveTab('gradient')}
+                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'gradient' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+                                >
+                                    <Zap className='w-4 h-4' />
+                                </button>
                                 <button
                                     onClick={() => setActiveTab('image')}
                                     className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'image' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
@@ -92,12 +97,20 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                                     <FileImage className='w-4 h-4' />
                                 </button>
                             </div>
-                            {(activeTab == 'color') &&
+                            {(activeTab == 'solid') &&
                                 <ColorPicker value={fill as SolidFill} isOpen={isOpen}
                                     onColorChange={(color) => {
                                         callBack(objKey, color);
                                     }} />
                             }
+                            {activeTab === 'gradient' && (
+                                <GradientPicker
+                                    value={fill as GradientFill}
+                                    onGradientChange={(gradient) => {
+                                        callBack(objKey, gradient);
+                                    }}
+                                />
+                            )}
                             {(activeTab == 'image') &&
                                 <BackgroundImagePicker value={fill as ImageFill}
                                     imageUrl={imageUrl}
