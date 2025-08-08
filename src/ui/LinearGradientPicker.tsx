@@ -23,21 +23,21 @@ const PRESET_GRADIENTS = [
 ];
 
 const DIRECTION_PRESETS = [
-    { name: 'Left to Right', x1: 0, y1: 0, x2: 100, y2: 0, icon: ArrowRight },
-    { name: 'Right to Left', x1: 100, y1: 0, x2: 0, y2: 0, icon: ArrowLeft },
-    { name: 'Top to Bottom', x1: 0, y1: 0, x2: 0, y2: 100, icon: ArrowDown },
-    { name: 'Bottom to Top', x1: 0, y1: 100, x2: 0, y2: 0, icon: ArrowUp },
-    { name: 'Diagonal ↘', x1: 0, y1: 0, x2: 100, y2: 100, icon: ArrowDownRight },
     { name: 'Diagonal ↖', x1: 100, y1: 100, x2: 0, y2: 0, icon: ArrowUpLeft },
-    { name: 'Diagonal ↙', x1: 100, y1: 0, x2: 0, y2: 100, icon: ArrowDownLeft },
+    { name: 'Bottom to Top', x1: 0, y1: 100, x2: 0, y2: 0, icon: ArrowUp },
     { name: 'Diagonal ↗', x1: 0, y1: 100, x2: 100, y2: 0, icon: ArrowUpRight },
+    { name: 'Right to Left', x1: 100, y1: 0, x2: 0, y2: 0, icon: ArrowLeft },
+    null,
+    { name: 'Left to Right', x1: 0, y1: 0, x2: 100, y2: 0, icon: ArrowRight },
+    { name: 'Diagonal ↙', x1: 100, y1: 0, x2: 0, y2: 100, icon: ArrowDownLeft },
+    { name: 'Top to Bottom', x1: 0, y1: 0, x2: 0, y2: 100, icon: ArrowDown },
+    { name: 'Diagonal ↘', x1: 0, y1: 0, x2: 100, y2: 100, icon: ArrowDownRight },
 ];
 
 const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGradientChange, className }) => {
     const gradient = value?.type == 'linear' ? value : DEFAULT_LINEAR_GRADIENT;
 
     const updateGradient = (newGradient: LinearGradient) => {
-        console.log('rendered 4', 9999, value);
         onGradientChange(newGradient);
     };
 
@@ -92,16 +92,17 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
 
                 {/* Direction Controls */}
                 <div className='flex gap-1 w-fit h-fit'>
-                    <div className="flex-1 flex flex-col gap-1 bg-gray-100 rounded p-1">
+                    <div className="flex flex-col items-center gap-1 bg-gray-100 rounded p-1">
                         <label className="text-xs font-bold text-gray-800 text-left rounded pl-0.5">Direction</label>
-                        <div className="grid grid-cols-4 gap-y-3 gap-x-0.5">
+                        <div className="grid grid-cols-3 gap-y-1 gap-x-0.5">
                             {DIRECTION_PRESETS.map((preset, index) => (
                                 <button
                                     key={index}
+                                    disabled={preset ? false : true}
                                     onClick={() => applyDirection(preset)}
                                     className="w-fit h-fit p-1 text-xs bg-white border border-gray-300 hover:bg-gray-200 rounded text-gray-700 transition-colors"
                                 >
-                                    {<preset.icon className='w-4 h-4' />}
+                                    {preset ? <preset.icon className='w-4 h-4' /> : <div className='w-4 h-4'></div>}
                                 </button>
                             ))}
                         </div>
@@ -143,7 +144,6 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
 
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                         {gradient.stops
-                            .sort((a, b) => a.offset - b.offset)
                             .map((stop, index) => (
                                 <div key={index} className="flex items-center gap-2 p-1 bg-gray-50 rounded">
                                     <SimpleColorInput

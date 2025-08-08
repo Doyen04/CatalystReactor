@@ -102,7 +102,7 @@ const RadialGradientPicker: React.FC<RadialGradientPickerProps> = ({ value, onGr
                                         key={index}
                                         onClick={() => applyPosition(preset)}
                                         title={preset.name}
-                                        className={`w-fit h-fit p-1.5 bg-white border border-gray-300 hover:bg-gray-200 rounded text-gray-700 transition-colors
+                                        className={`w-fit h-fit p-1 bg-white border border-gray-300 hover:bg-gray-200 rounded text-gray-700 transition-colors
                                          ${gradient.cx === preset.cx && gradient.cy === preset.cy
                                                 ? 'bg-blue-100 border-blue-400 text-blue-600'
                                                 : ''
@@ -151,6 +151,7 @@ const RadialGradientPicker: React.FC<RadialGradientPickerProps> = ({ value, onGr
                         <label className="text-xs font-semibold text-gray-700">Color Stops</label>
                         <button
                             onClick={addStop}
+                            disabled={gradient.stops.length >= 10}
                             className="p-1 rounded hover:bg-gray-100 text-blue-600"
                             title="Add color stop"
                         >
@@ -160,7 +161,6 @@ const RadialGradientPicker: React.FC<RadialGradientPickerProps> = ({ value, onGr
 
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                         {gradient.stops
-                            .sort((a, b) => a.offset - b.offset)
                             .map((stop, index) => (
                                 <div key={index} className="flex items-center gap-2 p-1 bg-gray-50 rounded">
                                     <SimpleColorInput
