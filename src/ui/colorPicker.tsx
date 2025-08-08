@@ -31,6 +31,10 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
         const initialHsv = parseColorToHSV(colorValue(value.color) || DEFAULT_COLOR);
         setHsv(initialHsv.hsv);
         setAlpha(initialHsv.alpha)
+        if (!value.color) {
+            console.log('rendered 5', hsv);
+            updateColor(hsv, alpha);
+        }
     }, [value]);
 
     // Draw hue bar
@@ -142,7 +146,6 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
             ? `${hexRgb}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` // 8‑digit hex
             : hexRgb;
             
-        console.log(output);
         const solidFill: SolidFill = {
             type: 'solid',
             color: output

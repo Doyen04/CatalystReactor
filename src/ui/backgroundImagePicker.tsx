@@ -26,6 +26,9 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, im
         } if (value.imageData) {
             setCurrentImage(value.imageData);
         }
+        if (!value.imageData) {
+            console.log('rendered 5', 9999);
+        }
     }, [value.scaleMode, value.imageData]);
 
     const handleFileSelect = async (files: FileList) => {

@@ -37,7 +37,7 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
     const gradient = value?.type == 'linear' ? value : DEFAULT_LINEAR_GRADIENT;
 
     const updateGradient = (newGradient: LinearGradient) => {
-        // setGradient(newGradient);
+        console.log('rendered 4', 9999, value);
         onGradientChange(newGradient);
     };
 

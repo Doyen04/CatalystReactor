@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DEFAULT_LINEAR_GRADIENT, DEFAULT_RADIAL_GRADIENT, Gradient, GradientFill, LinearGradient, RadialGradient } from '@lib/types/shapes';
 import { twMerge } from 'tailwind-merge';
 import LinearGradientPicker from './LinearGradientPicker';
@@ -14,13 +14,20 @@ interface GradientPickerProps {
 const GradientPicker: React.FC<GradientPickerProps> = ({ value, onGradientChange, className }) => {
     const gradient = value?.type == 'linear' || value?.type == 'radial' ? value : DEFAULT_LINEAR_GRADIENT;
 
+    useEffect(() => {
+        console.log('rendered gradient5', 9999, value);
+        if (value?.type !== 'linear' && value?.type !== 'radial') {
+            handleGradientChange(gradient);
+        }
+    }, [])
+    
     const handleGradientChange = (gradient: GradientFill) => {
         console.log(gradient, onGradientChange);
         onGradientChange(gradient)
     }
 
     const handleTypeChange = (newType: Gradient) => {
-        
+
         if (newType === gradient.type) return;
 
         // Preserve existing color stops when switching types
@@ -31,13 +38,13 @@ const GradientPicker: React.FC<GradientPickerProps> = ({ value, onGradientChange
                 ...DEFAULT_LINEAR_GRADIENT,
                 stops: currentStops
             };
-            onGradientChange(newGradient);
+            handleGradientChange(newGradient);
         } else if (newType === 'radial') {
             const newGradient: RadialGradient = {
                 ...DEFAULT_RADIAL_GRADIENT,
                 stops: currentStops
             };
-            onGradientChange(newGradient);
+            handleGradientChange(newGradient);
         }
     };
 
@@ -46,7 +53,7 @@ const GradientPicker: React.FC<GradientPickerProps> = ({ value, onGradientChange
         { value: 'radial' as const, label: 'Radial', description: 'Circular gradient' }
     ];
 
-    const selectedGradientType = 
+    const selectedGradientType =
         gradientTypeOptions.find(o => o.value === gradient.type) ?? gradientTypeOptions[0];
 
 
