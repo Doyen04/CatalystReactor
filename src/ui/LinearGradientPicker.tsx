@@ -1,8 +1,10 @@
 import React from 'react';
-import { LinearGradient, GradientStop, DEFAULT_LINEAR_GRADIENT } from '@lib/types/shapes';
+import { LinearGradient, GradientStop, DEFAULT_LINEAR_GRADIENT, SolidFill } from '@lib/types/shapes';
 import { twMerge } from 'tailwind-merge';
 import { Plus, Minus, ArrowRight, ArrowDown, ArrowDownRight, ArrowDownLeft, ArrowUp, ArrowLeft, ArrowUpLeft, ArrowUpRight } from 'lucide-react';
 import Input from './Input';
+import ColorInput from './ColorInput';
+import { colorValue, getGradientAngle, getGradientPreview } from '@/util/getBackgroundFill';
 
 interface LinearGradientPickerProps {
     value: LinearGradient;
@@ -73,29 +75,6 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
         updateGradient({ ...gradient, stops: presetStops });
     };
 
-    const getGradientAngle = () => {
-        const dx = gradient.x2 - gradient.x1;
-        const dy = gradient.y2 - gradient.y1;
-        const length = Math.sqrt(dx * dx + dy * dy);
-        if (length === 0) return 0;
-
-        const normalizedDx = dx / length;
-        const normalizedDy = dy / length;
-        let angle = Math.atan2(normalizedDy, normalizedDx) * (180 / Math.PI);
-
-        angle = (angle + 90 + 360) % 360;
-        return angle
-    };
-
-    const getGradientPreview = () => {
-        const stops = gradient.stops
-            .sort((a, b) => a.offset - b.offset)
-            .map(stop => `${stop.color} ${stop.offset * 100}%`)
-            .join(', ');
-        return `linear-gradient(${getGradientAngle()}deg, ${stops})`;
-    };
-
-
     return (
         <div className={twMerge(`w-full ${className}`)}>
             <div className="flex flex-col gap-4 w-full">
@@ -103,10 +82,10 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
                 <div className="relative w-full">
                     <div
                         className="h-16 rounded-lg border border-gray-300 shadow-sm"
-                        style={{ background: getGradientPreview() }}
+                        style={{ background: getGradientPreview(gradient) }}
                     />
                     <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                        {Math.round(getGradientAngle())}°
+                        {Math.round(getGradientAngle(gradient))}°
                     </div>
                 </div>
 
@@ -132,15 +111,15 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
                         <div className="">
                             <label className="text-xs font-bold text-gray-600">Start Point</label>
                             <div className="grid grid-cols-2 gap-1">
-                                <Input className='bg-gray-100 p-0.5 text-xs border-gray-300 focus:ring-1 focus:ring-blue-500' title={'X1'} type={'number'} value={gradient.x1} onChange={(value) => updateGradient({ ...gradient, x1: value })} />
-                                <Input className='bg-gray-100 p-0.5 text-xs border-gray-300 focus:ring-1 focus:ring-blue-500' title={'Y1'} type={'number'} value={gradient.y1} onChange={(value) => updateGradient({ ...gradient, y1: value })} />
+                                <Input min={0} className='bg-gray-100 p-0.5 text-xs border-gray-300 focus:ring-1 focus:ring-blue-500' title={'X1'} type={'number'} value={gradient.x1} onChange={(value) => updateGradient({ ...gradient, x1: value })} />
+                                <Input min={0} className='bg-gray-100 p-0.5 text-xs border-gray-300 focus:ring-1 focus:ring-blue-500' title={'Y1'} type={'number'} value={gradient.y1} onChange={(value) => updateGradient({ ...gradient, y1: value })} />
                             </div>
                         </div>
                         <div className="">
                             <label className="text-xs font-bold text-gray-600">End Point</label>
                             <div className="grid grid-cols-2 gap-1">
-                                <Input className={'bg-gray-100  border-gray-300'} title={'X2'} type={'number'} value={gradient.x2} onChange={(value) => updateGradient({ ...gradient, x2: value })} />
-                                <Input className={'bg-gray-100  border-gray-300'} title={'Y2'} type={'number'} value={gradient.y2} onChange={(value) => updateGradient({ ...gradient, y2: value })} />
+                                <Input max={100} className={'bg-gray-100  border-gray-300'} title={'X2'} type={'number'} value={gradient.x2} onChange={(value) => updateGradient({ ...gradient, x2: value })} />
+                                <Input max={100} className={'bg-gray-100  border-gray-300'} title={'Y2'} type={'number'} value={gradient.y2} onChange={(value) => updateGradient({ ...gradient, y2: value })} />
                             </div>
                         </div>
                     </div>
@@ -166,11 +145,13 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
                             .sort((a, b) => a.offset - b.offset)
                             .map((stop, index) => (
                                 <div key={index} className="flex items-center gap-2 p-1 bg-gray-50 rounded">
-                                    <input
-                                        type="color"
-                                        value={stop.color}
-                                        onChange={(e) => handleStopChange(index, 'color', e.target.value)}
-                                        className="w-5 h-5 rounded border border-gray-300 cursor-pointer"
+                                    <ColorInput
+                                        showTab={false}
+                                        fill={{ type: 'solid', color: stop.color } as SolidFill}
+                                        onChange={(fill) => {
+                                            const newColor = (fill as SolidFill).color;
+                                            handleStopChange(index, 'color', colorValue(newColor));
+                                        }}
                                     />
                                     <div className="flex-1 min-w-0">
                                         <input
@@ -187,7 +168,7 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
                                         type="number" min="0" max="100"
                                         value={Math.round(stop.offset * 100)}
                                         onChange={(value) => handleStopChange(index, 'offset', value / 100)} />
-                                    
+
                                     {gradient.stops.length > 2 && (
                                         <button
                                             onClick={() => removeStop(index)}

@@ -10,11 +10,12 @@ import GradientPicker from './GradientPicker';
 
 interface ColorInputProps extends Omit<React.InputHTMLAttributes<HTMLDivElement>, 'onChange'> {
     fill: Fill;
+    showTab?: boolean;
     onChange: (value: Fill) => void
 }
 
 const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
-    ({ onChange, className, fill, ...props }, ref) => {
+    ({ showTab = true, onChange, className, fill, ...props }, ref) => {
         const [isOpen, setIsOpen] = useState(false);
         const [activeTab, setActiveTab] = useState<FillType>('solid');
         const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -75,7 +76,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
 
         return (
             <div className={`relative ${className}`}>
-                <aside onClick={() => setIsOpen(!isOpen)} className={twMerge(`rounded-md bg-gray-200 flex h-fit w-fit
+                <aside onClick={() => setIsOpen(!isOpen)} className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-fit
             items-center gap-1 p-0.5 border border-transparent cursor-pointer
              hover:border-gray-500 hover:focus-within:border-blue-500 
              transition-colors ${className}`)}>
@@ -83,7 +84,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
                         style={{ ...backgroundStyle }}></p>
                     <div
                         ref={ref}
-                        className="w-fit bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
+                        className="w-fit pr-1 bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
                         {...props}
                     >{name}</div>
                 </aside>
@@ -92,7 +93,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}>
                         <div onClick={(e) => e.stopPropagation()} className="absolute bottom-10 right-65 z-50 bg-white rounded-lg shadow-lg shadow-gray-500 w-fit h-fit  max-w-[280px] pt-3">
 
-                            <div className='flex items-center gap-1 p-2 w-full h-9 border-b-1 border-t-1 border-b-[#e6e6e6] border-t-[#e6e6e6]'>
+                            {showTab && <div className='flex items-center gap-1 p-2 w-full h-9 border-b-1 border-t-1 border-b-[#e6e6e6] border-t-[#e6e6e6]'>
                                 <button
                                     onClick={() => setActiveTab('solid')}
                                     className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'solid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
@@ -111,14 +112,14 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
                                 >
                                     <FileImage className='w-4 h-4' />
                                 </button>
-                            </div>
+                            </div>}
                             {(activeTab == 'solid') &&
                                 <ColorPicker value={fill as SolidFill} isOpen={isOpen}
                                     onColorChange={(color) => {
                                         onChange(color);
                                     }} />
                             }
-                            {activeTab === 'gradient' && (
+                            {showTab && (activeTab === 'gradient') && (
                                 <GradientPicker
                                     value={fill as GradientFill}
                                     onGradientChange={(gradient) => {
@@ -126,7 +127,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
                                     }}
                                 />
                             )}
-                            {(activeTab == 'image') && (
+                            {showTab && (activeTab == 'image') && (
                                 <BackgroundImagePicker value={fill as ImageFill}
                                     imageUrl={imageUrl}
                                     setImageUrl={setImageUrl}

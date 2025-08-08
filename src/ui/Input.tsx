@@ -21,6 +21,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         return (
             <aside className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-fit
             items-center gap-1 p-0.5 border border-transparent
+            
              hover:border-gray-500 hover:focus-within:border-blue-500 
              transition-colors ${className}`)}>
                 <p className="px-1 font-medium text-gray-700 text-sm">{title ?? icon}</p>

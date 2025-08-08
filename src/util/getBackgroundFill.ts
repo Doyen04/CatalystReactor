@@ -1,33 +1,8 @@
-import { Fill, ImageFill, LinearGradient, RadialGradient, SolidFill } from "@lib/types/shapes";
-import React from "react";
+import { Fill, GradientFill, ImageFill, LinearGradient, RadialGradient, SolidFill } from "@lib/types/shapes";
 
 function arrayBufferToDataUrl(buffer: ArrayBuffer, mimeType: string = 'image/png'): string {
     const blob = new Blob([buffer], { type: mimeType });
     return URL.createObjectURL(blob);
-}
-
-const getGradientBackgroundStyle = (fill: Fill): React.CSSProperties => {
-    switch (fill.type) {
-        case 'linear': {
-            const gradient = fill as LinearGradient;
-            const angle = Math.atan2(gradient.y2 - gradient.y1, gradient.x2 - gradient.x1) * 180 / Math.PI;
-            const stops = gradient.stops.map(stop => `${stop.color} ${stop.offset * 100}%`).join(', ');
-            return {
-                background: `linear-gradient(${angle}deg, ${stops})`
-            };
-        }
-
-        case 'radial': {
-            const gradient = fill as RadialGradient;
-            const stops = gradient.stops.map(stop => `${stop.color} ${stop.offset * 100}%`).join(', ');
-            return {
-                background: `radial-gradient(circle, ${stops})`
-            };
-        }
-
-        default:
-            return { backgroundColor: '#000000' };
-    }
 }
 
 function getDisplayTextFromFill(fill: Fill): string {
@@ -60,6 +35,29 @@ export const colorValue = (value: string | ArrayBuffer | number[]) => {
 export const imageValue = (value: string | ArrayBuffer | number[]) => {
     return (value instanceof ArrayBuffer) ? value : null
 }
+export const getGradientAngle = (gradient: LinearGradient) => {
+    const dx = gradient.x2 - gradient.x1;
+    const dy = gradient.y2 - gradient.y1;
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    angle = (angle + 90 + 360) % 360;
+    return angle
+};
+
+export const getGradientPreview = (gradient: GradientFill) => {
+    const stops = gradient.stops
+        .sort((a, b) => a.offset - b.offset)
+        .map(stop => `${stop.color} ${stop.offset * 100}%`)
+        .join(', ');
+
+    if (gradient.type === 'linear') {
+        const angle = getGradientAngle(gradient);
+        return `linear-gradient(${angle}deg, ${stops})`;
+    } else if (gradient.type === 'radial') {
+        return `radial-gradient(circle at ${gradient.cx}% ${gradient.cy}%, ${stops})`;
+    }
+
+    return 'transparent';
+};
 export function getBackgroundStyleFromFillValue(value: string | ArrayBuffer | number[], fill: Fill, url?: string) {
     switch (fill.type) {
         case 'solid': {
@@ -106,12 +104,15 @@ export function getBackgroundStyleFromFillValue(value: string | ArrayBuffer | nu
         }
 
         case 'linear':
-        case 'radial':
+        case 'radial': {
             fill = fill as LinearGradient | RadialGradient
+            const back = getGradientPreview(fill)
             return {
-                value: '',
+                background: back,
             };
-
+        }
+        default:
+            return { backgroundColor: '#000000' };
     }
 }
 
@@ -146,4 +147,4 @@ export function extractFillValue(fill: Fill): {
     }
 }
 
-export { arrayBufferToDataUrl, getDisplayTextFromFill, getGradientBackgroundStyle }
+export { arrayBufferToDataUrl, getDisplayTextFromFill }
