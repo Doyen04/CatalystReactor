@@ -6,6 +6,7 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
     icon?: ReactNode
     value: number;
     type: HTMLInputTypeAttribute;
+    className?: string;
     onChange: (value: number) => void
 }
 
@@ -22,7 +23,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             items-center gap-1 p-0.5 border border-transparent
              hover:border-gray-500 hover:focus-within:border-blue-500 
              transition-colors ${className}`)}>
-                <p className="px-1 font-semibold text-gray-700">{title ?? icon}</p>
+                <p className="px-1 font-medium text-gray-700 text-sm">{title ?? icon}</p>
                 <input
                     ref={ref}
                     type={type}
@@ -33,7 +34,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                             onChange(current)
                         }
                     }}
-                    className="w-12 bg-transparent text-gray-900 text-sm font-mono border-none focus:outline-none"
+                    className="w-full bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
                     {...props}
                 />
             </aside>

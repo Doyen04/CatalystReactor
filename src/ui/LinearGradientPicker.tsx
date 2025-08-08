@@ -2,6 +2,7 @@ import React from 'react';
 import { LinearGradient, GradientStop, DEFAULT_LINEAR_GRADIENT } from '@lib/types/shapes';
 import { twMerge } from 'tailwind-merge';
 import { Plus, Minus, ArrowRight, ArrowDown, ArrowDownRight, ArrowDownLeft, ArrowUp, ArrowLeft, ArrowUpLeft, ArrowUpRight } from 'lucide-react';
+import Input from './Input';
 
 interface LinearGradientPickerProps {
     value: LinearGradient;
@@ -113,7 +114,7 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
                 <div className='flex gap-1 w-fit h-fit'>
                     <div className="flex-1 flex flex-col gap-1 bg-gray-100 rounded p-1">
                         <label className="text-xs font-bold text-gray-800 text-left rounded pl-0.5">Direction</label>
-                        <div className="grid grid-cols-4 gap-y-5 gap-x-0.5">
+                        <div className="grid grid-cols-4 gap-y-3 gap-x-0.5">
                             {DIRECTION_PRESETS.map((preset, index) => (
                                 <button
                                     key={index}
@@ -131,39 +132,15 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
                         <div className="">
                             <label className="text-xs font-bold text-gray-600">Start Point</label>
                             <div className="grid grid-cols-2 gap-1">
-                                <input
-                                    type="number"
-                                    placeholder="X1"
-                                    value={gradient.x1}
-                                    onChange={(e) => updateGradient({ ...gradient, x1: Number(e.target.value) })}
-                                    className="p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Y1"
-                                    value={gradient.y1}
-                                    onChange={(e) => updateGradient({ ...gradient, y1: Number(e.target.value) })}
-                                    className="p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                />
+                                <Input className='bg-gray-100 p-0.5 text-xs border-gray-300 focus:ring-1 focus:ring-blue-500' title={'X1'} type={'number'} value={gradient.x1} onChange={(value) => updateGradient({ ...gradient, x1: value })} />
+                                <Input className='bg-gray-100 p-0.5 text-xs border-gray-300 focus:ring-1 focus:ring-blue-500' title={'Y1'} type={'number'} value={gradient.y1} onChange={(value) => updateGradient({ ...gradient, y1: value })} />
                             </div>
                         </div>
                         <div className="">
                             <label className="text-xs font-bold text-gray-600">End Point</label>
                             <div className="grid grid-cols-2 gap-1">
-                                <input
-                                    type="number"
-                                    placeholder="X2"
-                                    value={gradient.x2}
-                                    onChange={(e) => updateGradient({ ...gradient, x2: Number(e.target.value) })}
-                                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Y2"
-                                    value={gradient.y2}
-                                    onChange={(e) => updateGradient({ ...gradient, y2: Number(e.target.value) })}
-                                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                />
+                                <Input className={'bg-gray-100  border-gray-300'} title={'X2'} type={'number'} value={gradient.x2} onChange={(value) => updateGradient({ ...gradient, x2: value })} />
+                                <Input className={'bg-gray-100  border-gray-300'} title={'Y2'} type={'number'} value={gradient.y2} onChange={(value) => updateGradient({ ...gradient, y2: value })} />
                             </div>
                         </div>
                     </div>
@@ -206,15 +183,11 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
                                             className="w-full"
                                         />
                                     </div>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
+                                    <Input title='%' className="w-14 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        type="number" min="0" max="100"
                                         value={Math.round(stop.offset * 100)}
-                                        onChange={(e) => handleStopChange(index, 'offset', Number(e.target.value) / 100)}
-                                        className="w-10 px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                    />
-                                    <span className="text-xs text-gray-500">%</span>
+                                        onChange={(value) => handleStopChange(index, 'offset', value / 100)} />
+                                    
                                     {gradient.stops.length > 2 && (
                                         <button
                                             onClick={() => removeStop(index)}
