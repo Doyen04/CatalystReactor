@@ -8,7 +8,7 @@ import ColorPicker from './ColorPicker';
 import GradientPicker from './GradientPicker';
 
 
-interface ColorInputProps extends Omit<React.InputHTMLAttributes<HTMLDivElement>, 'onChange'> {
+interface ColorInputProps extends Omit<React.HtmlHTMLAttributes<HTMLDivElement>, 'onChange'> {
     fill: Fill;
     showTab?: boolean;
     onChange: (value: Fill) => void

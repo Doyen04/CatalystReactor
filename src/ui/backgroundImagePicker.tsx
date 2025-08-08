@@ -1,7 +1,7 @@
 import { loadImage } from "@/util/loadFile";
 import { useFilePicker } from "@hooks/useFileOpener"
 import { twMerge } from "tailwind-merge";
-import ScaleModePicker from "./ScaleModePicker";
+import DropDownPicker from "./DropDownPicker";
 import { ImageFill, ScaleMode } from "@lib/types/shapes";
 import { useEffect, useState } from "react";
 
@@ -66,10 +66,19 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, im
         onFileSelect: (file) => handleFileSelect(file)
     })
 
+    const scaleModeOptions = [
+        { value: 'fill', label: 'Fill', description: 'Image covers entire area, may crop' },
+        { value: 'fit', label: 'Fit', description: 'Image fits within area, maintains aspect ratio' },
+        { value: 'tile', label: 'Tile', description: 'Image repeats to fill area' },
+        { value: 'stretch', label: 'Stretch', description: 'Adjust image to fill area' }
+    ];
+    const selectedScaleMode =
+        scaleModeOptions.find(o => o.value === currentScaleMode) ?? scaleModeOptions[0];
+
     return (
         <div className={twMerge(`w-fit h-fit p-3 ${className}`)} >
             <div className='flex flex-col gap-1.5'>
-                <ScaleModePicker scaleMode={currentScaleMode} onScaleChange={handleScaleModeChange} />
+                <DropDownPicker value={selectedScaleMode} onValueChange={handleScaleModeChange} values={scaleModeOptions} />
                 <div className='w-[240px] h-[240px] bg-gray-100 rounded flex items-center justify-center'
                     style={{
                         backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,

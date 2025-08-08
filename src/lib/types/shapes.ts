@@ -14,6 +14,18 @@ export const DEFAULT_LINEAR_GRADIENT: LinearGradient = {
     ]
 };
 
+export const DEFAULT_RADIAL_GRADIENT: RadialGradient = {
+    type: 'radial',
+    cx: 50,
+    cy: 50,
+    radius: 70,
+    stops: [
+        { offset: 0, color: '#ffffff' },
+        { offset: 1, color: '#000000' }
+    ]
+};
+
+
 export interface Transform {
     x: number;
     y: number;
