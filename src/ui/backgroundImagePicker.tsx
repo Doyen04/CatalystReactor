@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 interface BackgroundImagePickerProps {
     isOpen?: boolean;
     className?: string;
-    value?: ImageFill;
+    value: ImageFill;
     onImageChange: (fill: ImageFill) => void;
     setImageUrl: React.Dispatch<React.SetStateAction<string>>;
     imageUrl: string;
@@ -16,8 +16,9 @@ interface BackgroundImagePickerProps {
 
 
 const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, imageUrl, setImageUrl, onImageChange, isOpen, className }) => {
-    const [currentScaleMode, setScaleMode] = useState<ScaleMode>(value.scaleMode || 'fill');
-    const [currentImage, setCurrentImage] = useState<ArrayBuffer | null>(value.imageData || null);
+    // const img = value?.type == 'image' ? value : DEFAULT_LINEAR_GRADIENT;
+    const [currentScaleMode, setScaleMode] = useState<ScaleMode>(value.scaleMode ?? 'fill');
+    const [currentImage, setCurrentImage] = useState<ArrayBuffer | null>(value.imageData ?? null);
 
     useEffect(() => {
         if (value.scaleMode) {

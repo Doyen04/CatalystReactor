@@ -1,6 +1,4 @@
 
-
-
 import { colorValue } from '@/util/getBackgroundFill';
 import hsvToRgb from '@/util/hsvToRgb';
 import parseColorToHSV from '@/util/parseToHSVA';
@@ -35,11 +33,6 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
         setAlpha(initialHsv.alpha)
     }, [value]);
 
-    useEffect(() => {
-        if (!value) {
-            updateColor({ h: 0, s: 0, v: 100 }, 1);
-        }
-    }, []);
     // Draw hue bar
     useEffect(() => {
         const canvas = hueCanvasRef.current;

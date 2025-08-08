@@ -1,17 +1,16 @@
 import React, { forwardRef, HTMLInputTypeAttribute, ReactNode, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
     title?: string;
     icon?: ReactNode
     value: number;
-    objKey: string;
     type: HTMLInputTypeAttribute;
-    callBack: (key: string, value:number) => void
+    onChange: (value: number) => void
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ title, icon, type, objKey, callBack, className, value, ...props }, ref) => {
+    ({ title, icon, type, onChange, className, value, ...props }, ref) => {
         const [current, setCurrentValue] = useState(value)
 
         useEffect(()=>{
@@ -31,7 +30,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                     onChange={(e) => setCurrentValue(Number(e.currentTarget.value))}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                            callBack(objKey, current)
+                            onChange(current)
                         }
                     }}
                     className="w-12 bg-transparent text-gray-900 text-sm font-mono border-none focus:outline-none"

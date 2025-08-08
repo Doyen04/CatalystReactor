@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { LinearGradient, GradientStop, DEFAULT_LINEAR_GRADIENT } from '@lib/types/shapes';
 import { twMerge } from 'tailwind-merge';
 import { Plus, Minus, ArrowRight, ArrowDown, ArrowDownRight, ArrowDownLeft, ArrowUp, ArrowLeft, ArrowUpLeft, ArrowUpRight } from 'lucide-react';
@@ -30,24 +30,10 @@ const DIRECTION_PRESETS = [
 ];
 
 const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGradientChange, className }) => {
-    const [gradient, setGradient] = useState<LinearGradient>();
-
-    useEffect(() => {
-        if (value.type == 'linear') {
-            setGradient(value);
-        }else{
-            setGradient(DEFAULT_LINEAR_GRADIENT)
-        }
-    }, [value]);
-
-    useEffect(() => {
-        if (!value) {
-            onGradientChange(DEFAULT_LINEAR_GRADIENT);
-        }
-    }, []);
+    const gradient = value?.type == 'linear' ? value : DEFAULT_LINEAR_GRADIENT;
 
     const updateGradient = (newGradient: LinearGradient) => {
-        setGradient(newGradient);
+        // setGradient(newGradient);
         onGradientChange(newGradient);
     };
 

@@ -14,7 +14,7 @@ interface ColorInputProps extends React.InputHTMLAttributes<HTMLDivElement> {
     callBack: (key: string, value: Fill) => void
 }
 
-const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
+const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
     ({ objKey, callBack, className, fill, ...props }, ref) => {
         const [isOpen, setIsOpen] = useState(false);
         const [activeTab, setActiveTab] = useState<FillType>('solid');
@@ -50,6 +50,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                     setActiveTab('solid');
                     break;
                 case 'linear':
+                case 'radial':
                     setActiveTab('gradient');
                     break;
                 case 'image':
@@ -143,7 +144,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
     }
 )
 
-ColorInput.displayName = 'div'
+ColorInput.displayName = 'ColorInput'
 
 export default ColorInput
 

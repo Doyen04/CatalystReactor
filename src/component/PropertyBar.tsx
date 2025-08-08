@@ -145,18 +145,18 @@ function PropertyBar() {
             <div className="propertybar-body">
                 {transform && (
                     <Section title="Transform">
-                        <Input type="number" title="X" objKey="x"
-                            value={transform.x} callBack={handlePropertyChange} />
-                        <Input type="number" title="Y" objKey="y"
-                            value={transform.y} callBack={handlePropertyChange} />
+                        <Input type="number" title="X"
+                            value={transform.x} onChange={(value) => handlePropertyChange('x', value)} />
+                        <Input type="number" title="Y"
+                            value={transform.y} onChange={(value) => handlePropertyChange('y', value)} />
                     </Section>
                 )}
                 {size && (
                     <Section title="Dimension">
-                        <Input type="number" title="W" objKey="width"
-                            value={size.width} callBack={handlePropertyChange} />
-                        <Input type="number" title="H" objKey="height"
-                            value={size.height} callBack={handlePropertyChange} />
+                        <Input type="number" title="W"
+                            value={size.width} onChange={(value) => handlePropertyChange('width', value)} />
+                        <Input type="number" title="H"
+                            value={size.height} onChange={(value) => handlePropertyChange('height', value)} />
                     </Section>
                 )}
 
@@ -171,26 +171,26 @@ function PropertyBar() {
 
                 {spikesRatio && (
                     <Section title="Spikes-Ratio">
-                        <Input type="number" title="Spikes" objKey="spikes"
-                            value={spikesRatio.spikes} callBack={handlePropertyChange} />
-                        <Input type="nuber" title="Ratio" objKey="ratio"
-                            value={spikesRatio.ratio} callBack={handlePropertyChange} />
+                        <Input type="number" title="Spikes"
+                            value={spikesRatio.spikes} onChange={(value) => handlePropertyChange('spikes', value)} />
+                        <Input type="number" title="Ratio"
+                            value={spikesRatio.ratio} onChange={(value) => handlePropertyChange('ratio', value)} />
                     </Section>
                 )}
                 {arcSegment && (
                     <Section title="Arc-Segment" childClass="gap-0">
-                        <Input type="number" icon={<AngleIcon startAngle={arcSegment.startAngle} endAngle={arcSegment.endAngle} ratio={arcSegment.ratio} />} objKey="startAngle"
-                            value={arcSegment.startAngle} callBack={handlePropertyChange} />
-                        <Input type="number" title="" objKey="endAngle"
-                            value={arcSegment.endAngle} callBack={handlePropertyChange} />
-                        <Input type="number" title="" objKey="ratio"
-                            value={arcSegment.ratio} callBack={handlePropertyChange} />
+                        <Input type="number" icon={<AngleIcon startAngle={arcSegment.startAngle} endAngle={arcSegment.endAngle} ratio={arcSegment.ratio} />}
+                            value={arcSegment.startAngle} onChange={(value) => handlePropertyChange('startAngle', value)} />
+                        <Input type="number" title="End Angle"
+                            value={arcSegment.endAngle} onChange={(value) => handlePropertyChange('endAngle', value)} />
+                        <Input type="number" title="Ratio"
+                            value={arcSegment.ratio} onChange={(value) => handlePropertyChange('ratio', value)} />
                     </Section>
                 )}
                 {sides && (
                     <Section title="Sides">
-                        <Input type="number" icon={<Hexagon size={20} />} objKey="sides"
-                            value={sides.sides} callBack={handlePropertyChange} />
+                        <Input type="number" icon={<Hexagon size={20} />}
+                            value={sides.sides} onChange={(value) => handlePropertyChange('sides', value)} />
 
                     </Section>
                 )}
@@ -198,21 +198,21 @@ function PropertyBar() {
                     <Section title="Border Radius">
                         {borderRadius.locked ? (
                             <>
-                                <Input className="col-span-4" type="number" icon={<BorderRadius size={20} />} objKey="radii"
-                                    value={borderRadius["top-left"]} callBack={handlePropertyChange} />
+                                <Input className="col-span-4" type="number" icon={<BorderRadius size={20} />}
+                                    value={borderRadius["top-left"]} onChange={(value) => handlePropertyChange('top-left', value)} />
                                 <LockButton locked={borderRadius.locked} onClick={e => toggle(e, 'locked', !borderRadius.locked)} />
                             </>
                         ) : (
                             <div className="grid grid-cols-5 grid-rows-2 justify-items-center items-center gap-2 w-fit h-fit">
-                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="top-left" />} objKey="top-left"
-                                    value={borderRadius["top-left"]} callBack={handlePropertyChange} />
-                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="top-right" />} objKey="top-right"
-                                    value={borderRadius["top-right"]} callBack={handlePropertyChange} />
+                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="top-left" />}
+                                    value={borderRadius["top-left"]} onChange={(value) => handlePropertyChange('top-left', value)} />
+                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="top-right" />}
+                                    value={borderRadius["top-right"]} onChange={(value) => handlePropertyChange('top-right', value)} />
                                 <LockButton locked={borderRadius.locked} onClick={e => toggle(e, 'locked', !borderRadius.locked)} />
-                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="bottom-left" />} objKey="bottom-left"
-                                    value={borderRadius["bottom-left"]} callBack={handlePropertyChange} />
-                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="bottom-right" />} objKey="bottom-right"
-                                    value={borderRadius["bottom-right"]} callBack={handlePropertyChange} />
+                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="bottom-left" />} 
+                                    value={borderRadius["bottom-left"]} onChange={(value) => handlePropertyChange('bottom-left', value)} />
+                                <Input className="col-span-2" type="number" icon={<BorderRadiusAll size={20} corner="bottom-right" />}
+                                    value={borderRadius["bottom-right"]} onChange={(value) => handlePropertyChange('bottom-right', value)} />
                             </div>
                         )}
                     </Section>
