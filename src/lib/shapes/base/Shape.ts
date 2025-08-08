@@ -3,7 +3,7 @@
 
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, Fill, ImageFill, IShape, LinearGradient, Properties, ScaleMode, ShapeType, Size, SizeRadiusModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
+import { BoundingRect, Fill, ImageFill, IShape, LinearGradient, Properties, RadialGradient, ScaleMode, ShapeType, Size, SizeRadiusModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
 import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from "canvaskit-wasm";
 
 interface Arguments {
@@ -126,6 +126,28 @@ abstract class Shape implements IShape {
                 const shader = this.resource.canvasKit.Shader.MakeLinearGradient(
                     [x1, y1],
                     [x2, y2],
+                    gradient.stops.map(stop => this.resource.canvasKit.parseColorString(stop.color)),
+                    gradient.stops.map(stop => stop.offset),
+                    this.resource.canvasKit.TileMode.Clamp
+                );
+                return shader;
+            }
+            case 'radial': {
+                const gradient = fill as RadialGradient;
+                const size = this.getDim();
+                const coord = this.getCoord();
+
+                // Calculate center point
+                const centerX = coord.x + (gradient.cx / 100) * size.width;
+                const centerY = coord.y + (gradient.cy / 100) * size.height;
+
+                // Calculate radius as percentage of the larger dimension
+                const maxDimension = Math.max(size.width, size.height);
+                const radius = (gradient.radius / 100) * maxDimension;
+
+                const shader = this.resource.canvasKit.Shader.MakeRadialGradient(
+                    [centerX, centerY],
+                    radius,
                     gradient.stops.map(stop => this.resource.canvasKit.parseColorString(stop.color)),
                     gradient.stops.map(stop => stop.offset),
                     this.resource.canvasKit.TileMode.Clamp

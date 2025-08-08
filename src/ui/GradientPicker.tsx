@@ -17,12 +17,12 @@ const GradientPicker: React.FC<GradientPickerProps> = ({ value, onGradientChange
     useEffect(() => {
         console.log('rendered gradient5', 9999, value);
         if (value?.type !== 'linear' && value?.type !== 'radial') {
+            console.log('rendered gradient56', 9999, value);
             handleGradientChange(gradient);
         }
     }, [])
-    
+
     const handleGradientChange = (gradient: GradientFill) => {
-        console.log(gradient, onGradientChange);
         onGradientChange(gradient)
     }
 
