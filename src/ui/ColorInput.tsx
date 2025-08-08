@@ -8,14 +8,13 @@ import ColorPicker from './ColorPicker';
 import GradientPicker from './GradientPicker';
 
 
-interface ColorInputProps extends React.InputHTMLAttributes<HTMLDivElement> {
+interface ColorInputProps extends Omit<React.InputHTMLAttributes<HTMLDivElement>, 'onChange'> {
     fill: Fill;
-    objKey: string;
-    callBack: (key: string, value: Fill) => void
+    onChange: (value: Fill) => void
 }
 
 const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
-    ({ objKey, callBack, className, fill, ...props }, ref) => {
+    ({ onChange, className, fill, ...props }, ref) => {
         const [isOpen, setIsOpen] = useState(false);
         const [activeTab, setActiveTab] = useState<FillType>('solid');
         const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -84,7 +83,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
                         style={{ ...backgroundStyle }}></p>
                     <div
                         ref={ref}
-                        className="w-10 bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
+                        className="w-fit bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
                         {...props}
                     >{name}</div>
                 </aside>
@@ -116,24 +115,25 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
                             {(activeTab == 'solid') &&
                                 <ColorPicker value={fill as SolidFill} isOpen={isOpen}
                                     onColorChange={(color) => {
-                                        callBack(objKey, color);
+                                        onChange(color);
                                     }} />
                             }
                             {activeTab === 'gradient' && (
                                 <GradientPicker
                                     value={fill as GradientFill}
                                     onGradientChange={(gradient) => {
-                                        callBack(objKey, gradient);
+                                        onChange(gradient);
                                     }}
                                 />
                             )}
-                            {(activeTab == 'image') &&
+                            {(activeTab == 'image') && (
                                 <BackgroundImagePicker value={fill as ImageFill}
                                     imageUrl={imageUrl}
                                     setImageUrl={setImageUrl}
                                     onImageChange={(fill) => {
-                                        callBack(objKey, fill);
-                                    }} />}
+                                        onChange(fill);
+                                    }} />
+                            )}
 
                         </div>
                     </div>

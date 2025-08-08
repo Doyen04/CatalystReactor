@@ -162,10 +162,10 @@ function PropertyBar() {
 
                 {style && (
                     <Section title="Style">
-                        <ColorInput objKey="fill"
-                            fill={style.fill.color} callBack={handleColorChange} />
-                        <ColorInput objKey="strokeColor"
-                            fill={style.stroke.color} callBack={handleColorChange} />
+                        <ColorInput
+                            fill={style.fill.color} onChange={(fill) => handleColorChange('fill', fill)} />
+                        <ColorInput
+                            fill={style.stroke.color} onChange={(strokeColor) => handleColorChange('strokeColor', strokeColor)} />
                     </Section>
                 )}
 
