@@ -113,7 +113,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
                                     <FileImage className='w-4 h-4' />
                                 </button>
                             </div>}
-                            {(activeTab == 'solid') &&
+                            {showTab && (activeTab == 'solid') &&
                                 <ColorPicker value={fill as SolidFill} isOpen={isOpen}
                                     onColorChange={(color) => {
                                         onChange(color);

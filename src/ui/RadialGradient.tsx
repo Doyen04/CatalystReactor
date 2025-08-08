@@ -1,10 +1,10 @@
 import React from 'react';
-import { RadialGradient, GradientStop, DEFAULT_RADIAL_GRADIENT, SolidFill } from '@lib/types/shapes';
+import { RadialGradient, GradientStop, DEFAULT_RADIAL_GRADIENT } from '@lib/types/shapes';
 import { twMerge } from 'tailwind-merge';
 import { Plus, Minus, ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, ArrowUpLeft, ArrowUpRight, Circle } from 'lucide-react';
 import Input from './Input';
-import ColorInput from './ColorInput';
-import { colorValue, getGradientPreview } from '@/util/getBackgroundFill';
+import { getGradientPreview } from '@/util/getBackgroundFill';
+import SimpleColorInput from './SimpleColorPicker';
 
 interface RadialGradientPickerProps {
     value: RadialGradient;
@@ -163,12 +163,10 @@ const RadialGradientPicker: React.FC<RadialGradientPickerProps> = ({ value, onGr
                             .sort((a, b) => a.offset - b.offset)
                             .map((stop, index) => (
                                 <div key={index} className="flex items-center gap-2 p-1 bg-gray-50 rounded">
-                                    <ColorInput
-                                        showTab={false}
-                                        fill={{ type: 'solid', color: stop.color } as SolidFill}
+                                    <SimpleColorInput
+                                        fill={stop.color}
                                         onChange={(fill) => {
-                                            const newColor = (fill as SolidFill).color;
-                                            handleStopChange(index, 'color', colorValue(newColor));
+                                            handleStopChange(index, 'color', fill);
                                         }}
                                     />
                                     <div className="flex-1 min-w-0">

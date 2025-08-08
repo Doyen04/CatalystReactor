@@ -1,10 +1,11 @@
 import React from 'react';
-import { LinearGradient, GradientStop, DEFAULT_LINEAR_GRADIENT, SolidFill } from '@lib/types/shapes';
+import { LinearGradient, GradientStop, DEFAULT_LINEAR_GRADIENT } from '@lib/types/shapes';
 import { twMerge } from 'tailwind-merge';
 import { Plus, Minus, ArrowRight, ArrowDown, ArrowDownRight, ArrowDownLeft, ArrowUp, ArrowLeft, ArrowUpLeft, ArrowUpRight } from 'lucide-react';
 import Input from './Input';
-import ColorInput from './ColorInput';
-import { colorValue, getGradientAngle, getGradientPreview } from '@/util/getBackgroundFill';
+// import ColorInput from './ColorInput';
+import { getGradientAngle, getGradientPreview } from '@/util/getBackgroundFill';
+import SimpleColorInput from './SimpleColorPicker';
 
 interface LinearGradientPickerProps {
     value: LinearGradient;
@@ -145,12 +146,10 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
                             .sort((a, b) => a.offset - b.offset)
                             .map((stop, index) => (
                                 <div key={index} className="flex items-center gap-2 p-1 bg-gray-50 rounded">
-                                    <ColorInput
-                                        showTab={false}
-                                        fill={{ type: 'solid', color: stop.color } as SolidFill}
+                                    <SimpleColorInput
+                                        fill={stop.color}
                                         onChange={(fill) => {
-                                            const newColor = (fill as SolidFill).color;
-                                            handleStopChange(index, 'color', colorValue(newColor));
+                                            handleStopChange(index, 'color', fill);
                                         }}
                                     />
                                     <div className="flex-1 min-w-0">
