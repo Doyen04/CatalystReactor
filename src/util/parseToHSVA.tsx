@@ -1,6 +1,6 @@
 import rgbToHsv from "./rgbToHsv";
 
-const parseColorToHSV = (color: string): { hsv: HSV, alpha: number } => {
+const parseColorToHSVA = (color: string): { hsv: HSV, alpha: number } => {
     if (color.startsWith('#')) {
         let hex = color.slice(1).toLowerCase();
         if (hex.length === 3 || hex.length === 4) {
@@ -18,4 +18,4 @@ const parseColorToHSV = (color: string): { hsv: HSV, alpha: number } => {
 }
 
 
-export default parseColorToHSV
+export default parseColorToHSVA

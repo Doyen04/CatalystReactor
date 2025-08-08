@@ -18,7 +18,7 @@ const GradientPicker: React.FC<GradientPickerProps> = ({ value, onGradientChange
         if (value?.type !== 'linear' && value?.type !== 'radial') {
             handleGradientChange(gradient);
         }
-    }, [])
+    })
 
     const handleGradientChange = (gradient: GradientFill) => {
         onGradientChange(gradient)
