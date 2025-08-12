@@ -1,3 +1,4 @@
+import clamp from '@lib/helper/clamp';
 import React, { forwardRef, HTMLInputTypeAttribute, ReactNode, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 
@@ -14,10 +15,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     ({ title, icon, type, onChange, className, value, ...props }, ref) => {
         const [current, setCurrentValue] = useState(value)
 
-        useEffect(()=>{
+        const handleChange = (num: number) => {
+            const vl = (props.min != undefined && props.max != undefined) ? clamp(num, props.min as number, props.max as number) : num;
+            console.log((props.min != undefined && props.max != undefined),props.min,num, props.max,vl);
+            setCurrentValue(vl)
+        }
+
+        useEffect(() => {
             setCurrentValue(value)
-        },[value])
-        
+        }, [value])
+
         return (
             <aside className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-fit
             items-center gap-1 p-0.5 border border-transparent
@@ -29,7 +36,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                     ref={ref}
                     type={type}
                     value={current}
-                    onChange={(e) => setCurrentValue(Number(e.currentTarget.value))}
+                    onChange={(e) => handleChange(Number(e.currentTarget.value))}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                             onChange(current)

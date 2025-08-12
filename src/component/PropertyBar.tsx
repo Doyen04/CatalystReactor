@@ -88,7 +88,6 @@ function PropertyBar() {
     const handleColorChange = (key: string, value: Fill) => {
 
         const { style } = currentShapeProperties;
-        console.log(value)
         if (!style) return;
 
         let newStyle = { ...style };

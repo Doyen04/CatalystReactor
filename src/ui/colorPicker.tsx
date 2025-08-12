@@ -1,9 +1,9 @@
 
 import { colorValue } from '@/util/getBackgroundFill';
 import hsvToRgb from '@/util/hsvToRgb';
-import parseColorToHSV from '@/util/parseToHSVA';
+import parseColorToHSVA from '@/util/parseToHSVA';
 import { SolidFill } from '@lib/types/shapes';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 interface ColorPickerProps {
@@ -16,8 +16,9 @@ interface ColorPickerProps {
 const DEFAULT_COLOR = "#ffffff"
 
 const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen, className }) => {
-    const [hsv, setHsv] = useState<HSV>({ h: 0, s: 0, v: 100 });
-    const [alpha, setAlpha] = useState(1);
+    const initialHsv = parseColorToHSVA(colorValue(value.color) || DEFAULT_COLOR);
+    const [hsv, setHsv] = useState<HSV>(initialHsv.hsv);
+    const [alpha, setAlpha] = useState(initialHsv.alpha);
 
     const hueCanvasRef = useRef<HTMLCanvasElement>(null);
     const satValCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -28,14 +29,11 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
 
     // Initialize color from prop
     useEffect(() => {
-        const initialHsv = parseColorToHSV(colorValue(value.color) || DEFAULT_COLOR);
-        setHsv(initialHsv.hsv);
-        setAlpha(initialHsv.alpha)
-        if (!value.color) {
-            console.log('rendered 5', hsv);
+        if (value.type !== 'solid') {
+            console.log('rendered 5', hsv, value);
             updateColor(hsv, alpha);
         }
-    }, [value]);
+    });
 
     // Draw hue bar
     useEffect(() => {
@@ -81,7 +79,21 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
         blackGradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
         ctx.fillStyle = blackGradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }, [hsv.h, isOpen]);
+    }, [hsv, isOpen]);
+
+    const updateColor = useCallback((hsv: HSV, alpha: number) => {
+        const [r, g, b] = hsvToRgb(hsv.h, hsv.s, hsv.v);
+        const hexRgb = `#${[r, g, b].map(n => n.toString(16).padStart(2, '0')).join('')}`;
+        const output = alpha < 1
+            ? `${hexRgb}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` // 8‑digit hex
+            : hexRgb;
+
+        const solidFill: SolidFill = {
+            type: 'solid',
+            color: output
+        };
+        onColorChange(solidFill);
+    },[onColorChange])
 
     // Handle hue changes
     const handleHueMouseDown = (e: React.MouseEvent) => {
@@ -89,17 +101,18 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
         updateHue(e);
     };
 
-    const updateHue = (e: React.MouseEvent | MouseEvent) => {
+    const updateHue = useCallback((e: React.MouseEvent | MouseEvent) => {
         const canvas = hueCanvasRef.current;
         if (!canvas) return;
 
         const rect = canvas.getBoundingClientRect();
         const x = Math.max(0, Math.min(e.clientX - rect.left, canvas.width));
         const newHue = (x / canvas.width) * 360;
+        const newHsv = { ...hsv, h: newHue };
 
-        setHsv(prev => ({ ...prev, h: newHue }));
-        updateColor({ ...hsv, h: newHue }, alpha);
-    };
+        setHsv(newHsv);
+        updateColor(newHsv, alpha);
+    },[alpha, hsv, updateColor]);
 
     // Handle saturation/value changes
     const handleSatValMouseDown = (e: React.MouseEvent) => {
@@ -107,7 +120,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
         updateSatVal(e);
     };
 
-    const updateSatVal = (e: React.MouseEvent | MouseEvent) => {
+    const updateSatVal = useCallback((e: React.MouseEvent | MouseEvent) => {
         const canvas = satValCanvasRef.current;
         if (!canvas) return;
 
@@ -118,16 +131,18 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
         const newSat = (x / canvas.width) * 100;
         const newVal = 100 - (y / canvas.height) * 100;
 
-        setHsv(prev => ({ ...prev, s: newSat, v: newVal }));
-        updateColor({ ...hsv, s: newSat, v: newVal }, alpha);
-    };
+        const newHsv = { ...hsv, s: newSat, v: newVal };
+
+        setHsv(newHsv);
+        updateColor(newHsv, alpha);
+    },[alpha, hsv, updateColor]);
 
     const handleAlphaMouseDown = (e: React.MouseEvent) => {
         isDraggingAlpha.current = true;
         updateAlphaVal(e);
     }
 
-    const updateAlphaVal = (e: MouseEvent | React.MouseEvent) => {
+    const updateAlphaVal = useCallback((e: MouseEvent | React.MouseEvent) => {
         const canvas = alphaCnvsRef.current;
         if (!canvas) return;
 
@@ -137,21 +152,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
 
         setAlpha(newAlpha);
         updateColor(hsv, newAlpha)
-    }
+    }, [hsv, updateColor])
 
-    const updateColor = (hsv: HSV, alpha: number) => {
-        const [r, g, b] = hsvToRgb(hsv.h, hsv.s, hsv.v);
-        const hexRgb = `#${[r, g, b].map(n => n.toString(16).padStart(2, '0')).join('')}`;
-        const output = alpha < 1
-            ? `${hexRgb}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` // 8‑digit hex
-            : hexRgb;
-            
-        const solidFill: SolidFill = {
-            type: 'solid',
-            color: output
-        };
-        onColorChange(solidFill);
-    };
 
     // Mouse event handlers
     useEffect(() => {
@@ -178,7 +180,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [hsv, alpha]);
+    }, [hsv, alpha, updateHue, updateSatVal, updateAlphaVal]);
 
     const currentColor = (() => {
         const [r, g, b] = hsvToRgb(hsv.h, hsv.s, hsv.v);

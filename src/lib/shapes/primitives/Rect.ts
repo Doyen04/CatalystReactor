@@ -1,5 +1,5 @@
 import Handle from '@lib/modifiers/Handles'
-import type { Canvas, Path } from "canvaskit-wasm";
+import type { Canvas } from "canvaskit-wasm";
 import { BorderRadius, HandlePos, Properties, Size, SizeRadiusModifierPos } from '@lib/types/shapes';
 import Shape from '../base/Shape';
 
@@ -206,18 +206,20 @@ class Rectangle extends Shape {
         if (!this.resource) return;
 
         const { fill, stroke } = this.initPaints()
-        const rect = this.resource.canvasKit.LTRBRect(this.transform.x, this.transform.y, this.transform.x + this.dimension.width, this.transform.y + this.dimension.height);
+        const rect = this.resource.canvasKit.LTRBRect(this.transform.x, this.transform.y,
+            this.transform.x + this.dimension.width,
+            this.transform.y + this.dimension.height);
+
         if (this.hasRadius() && this.bdradius.locked) {
             const radius = this.bdradius['top-left'];
             const rrect = this.resource.canvasKit.RRectXY(rect, radius, radius);
             canvas.drawRRect(rrect, fill);
             canvas.drawRRect(rrect, stroke);
-            return;
         } else if (this.hasRadius()) {
             const path = this.makeCustomRRectPath();
             canvas.drawPath(path, fill);
             canvas.drawPath(path, stroke);
-            path.delete();
+            path.reset()
         } else {
             canvas.drawRect(rect, fill);
             canvas.drawRect(rect, stroke);
@@ -225,7 +227,7 @@ class Rectangle extends Shape {
         this.resetPaint()
     }
 
-    protected makeCustomRRectPath(): Path {
+    protected makeCustomRRectPath() {
         const radii = {
             tl: this.bdradius['top-left'],
             tr: this.bdradius['top-right'],
@@ -235,7 +237,7 @@ class Rectangle extends Shape {
         const [x, y, w, h] = [this.transform.x, this.transform.y, this.dimension.width, this.dimension.height];
         const CanvasKit = this.resource?.canvasKit;
 
-        const p = new CanvasKit.Path();
+        const p = this.resource.path
         const { tl, tr, br, bl } = radii;
 
         p.moveTo(x + tl, y);
@@ -272,7 +274,7 @@ class Rectangle extends Shape {
         }
 
         p.close();
-        return p;
+        return p
     }
 
     updateBorderRadius(newRadius: number, pos: HandlePos) {

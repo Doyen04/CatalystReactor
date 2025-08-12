@@ -1,6 +1,6 @@
 // CanvasKitResources.ts
 
-import type { CanvasKit, Paint, ParagraphStyle, TextStyle, FontMgr } from "canvaskit-wasm";
+import type { CanvasKit, Paint, ParagraphStyle, TextStyle, FontMgr, Path } from "canvaskit-wasm";
 
 export class CanvasKitResources {
     private static instance: CanvasKitResources;
@@ -12,10 +12,11 @@ export class CanvasKitResources {
     private cnvsParagraphStyle: ParagraphStyle;
     private cnvsFontMgr: FontMgr | null;
     private cnvsCanvasKit: CanvasKit;
+    private cnvsPath: Path;
 
     private constructor(canvasKit: CanvasKit) {
         this.cnvsCanvasKit = canvasKit
-
+        this.cnvsPath = new canvasKit.Path();
         this.setUpPaints()
     }
 
@@ -34,6 +35,9 @@ export class CanvasKitResources {
         this.cnvsStrokePaint.setStyle(this.cnvsCanvasKit.PaintStyle.Stroke);
         this.cnvsStrokePaint.setStrokeWidth(2);
         this.cnvsStrokePaint.setAntiAlias(true);
+    }
+    get path() {
+        return this.cnvsPath
     }
     get paint() {
         return this.cnvsPaint

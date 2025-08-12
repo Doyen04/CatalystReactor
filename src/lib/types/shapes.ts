@@ -1,5 +1,48 @@
 import type Handle from "@lib/modifiers/Handles";
 import type { Canvas, Image as CanvasKitImage } from "canvaskit-wasm";
+import { ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, ArrowUpLeft, ArrowUpRight, Circle } from "lucide-react";
+
+export const PRESET_LINEAR_GRADIENTS = [
+    { name: 'Sunset', type: 'linear', x1: 0, y1: 0, x2: 100, y2: 0, stops: [{ offset: 0, color: '#ff7e5f' }, { offset: 1, color: '#feb47b' }] },
+    { name: 'Ocean', type: 'linear', x1: 0, y1: 0, x2: 100, y2: 0, stops: [{ offset: 0, color: '#667eea' }, { offset: 1, color: '#764ba2' }] },
+    { name: 'Forest', type: 'linear', x1: 0, y1: 0, x2: 100, y2: 0, stops: [{ offset: 0, color: '#11998e' }, { offset: 1, color: '#38ef7d' }] },
+    { name: 'Fire', type: 'linear', x1: 0, y1: 0, x2: 100, y2: 0, stops: [{ offset: 0, color: '#ff9a9e' }, { offset: 1, color: '#fecfef' }] },
+    { name: 'Sky', type: 'linear', x1: 0, y1: 0, x2: 100, y2: 0, stops: [{ offset: 0, color: '#a8edea' }, { offset: 1, color: '#fed6e3' }] },
+    { name: 'Purple', type: 'linear', x1: 0, y1: 0, x2: 100, y2: 0, stops: [{ offset: 0, color: '#667eea' }, { offset: 1, color: '#764ba2' }] },
+];
+
+export const LINEAR_PRESET_DIRECTIONS = [
+    { name: 'Diagonal ↖', x1: 100, y1: 100, x2: 0, y2: 0, icon: ArrowUpLeft },
+    { name: 'Bottom to Top', x1: 0, y1: 100, x2: 0, y2: 0, icon: ArrowUp },
+    { name: 'Diagonal ↗', x1: 0, y1: 100, x2: 100, y2: 0, icon: ArrowUpRight },
+    { name: 'Right to Left', x1: 100, y1: 0, x2: 0, y2: 0, icon: ArrowLeft },
+    null,
+    { name: 'Left to Right', x1: 0, y1: 0, x2: 100, y2: 0, icon: ArrowRight },
+    { name: 'Diagonal ↙', x1: 100, y1: 0, x2: 0, y2: 100, icon: ArrowDownLeft },
+    { name: 'Top to Bottom', x1: 0, y1: 0, x2: 0, y2: 100, icon: ArrowDown },
+    { name: 'Diagonal ↘', x1: 0, y1: 0, x2: 100, y2: 100, icon: ArrowDownRight },
+];
+
+export const PRESET_RADIAL_GRADIENTS = [
+    { name: 'Sunset', type: 'radial', cx: 50, cy: 50, radius: 70, stops: [{ offset: 0, color: '#ff7e5f' }, { offset: 1, color: '#feb47b' }] },
+    { name: 'Ocean', type: 'radial', cx: 50, cy: 50, radius: 70, stops: [{ offset: 0, color: '#667eea' }, { offset: 1, color: '#764ba2' }] },
+    { name: 'Forest', type: 'radial', cx: 50, cy: 50, radius: 70, stops: [{ offset: 0, color: '#11998e' }, { offset: 1, color: '#38ef7d' }] },
+    { name: 'Fire', type: 'radial', cx: 50, cy: 50, radius: 70, stops: [{ offset: 0, color: '#ff9a9e' }, { offset: 1, color: '#fecfef' }] },
+    { name: 'Sky', type: 'radial', cx: 50, cy: 50, radius: 70, stops: [{ offset: 0, color: '#a8edea' }, { offset: 1, color: '#fed6e3' }] },
+    { name: 'Purple', type: 'radial', cx: 50, cy: 50, radius: 70, stops: [{ offset: 0, color: '#667eea' }, { offset: 1, color: '#764ba2' }] },
+];
+
+export const RADIAL_PRESET_DIRECTIONS = [
+    { name: 'Top Left', cx: 0, cy: 0, icon: ArrowUpLeft },
+    { name: 'Top', cx: 50, cy: 0, icon: ArrowUp },
+    { name: 'Top Right', cx: 100, cy: 0, icon: ArrowUpRight },
+    { name: 'Left', cx: 0, cy: 50, icon: ArrowLeft },
+    { name: 'Center', cx: 50, cy: 50, icon: Circle },
+    { name: 'Right', cx: 100, cy: 50, icon: ArrowRight },
+    { name: 'Bottom Left', cx: 0, cy: 100, icon: ArrowDownLeft },
+    { name: 'Bottom', cx: 50, cy: 100, icon: ArrowDown },
+    { name: 'Bottom Right', cx: 100, cy: 100, icon: ArrowDownRight },
+];
 
 
 export const DEFAULT_LINEAR_GRADIENT: LinearGradient = {
