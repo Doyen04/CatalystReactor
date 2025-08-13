@@ -292,14 +292,6 @@ class Rectangle extends Shape {
         this.bdradius[pos] = newRad
     }
 
-    // checkRadiusLock(): void {
-    //     if (this.bdradius.locked) {
-    //         const radius = Math.max(this.bdradius['top-left'], this.bdradius['top-right'],
-    //             this.bdradius['bottom-left'], this.bdradius['bottom-right']);
-    //         this.setBorderRadius(radius);
-    //     }
-    // }
-
     override pointInShape(x: number, y: number): boolean {
         return x >= this.transform.x &&
             x <= this.transform.x + this.dimension.width &&
