@@ -137,7 +137,7 @@ export type Fill = SolidFill | GradientFill | ImageFill | PatternFill;
 export interface StrokeStyle {
     color: Fill;
     width: number;
-    opacity?: number;
+    opacity: number;
     lineCap?: 'butt' | 'round' | 'square';
     lineJoin?: 'miter' | 'round' | 'bevel';
     dashArray?: number[];
@@ -145,7 +145,7 @@ export interface StrokeStyle {
 
 export interface FillStyle {
     color: Fill;
-    opacity?: number;
+    opacity: number;
 }
 
 export interface Style {

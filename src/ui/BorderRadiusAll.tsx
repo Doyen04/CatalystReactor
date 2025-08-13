@@ -12,7 +12,7 @@ const BorderRadiusAll = React.forwardRef<SVGSVGElement, LucideProps>(
             ref={ref}
             width={width ?? size}
             height={height ?? size}
-            viewBox="0 0 24 24"
+            // viewBox="0 0 24 24"
 
             {...props}
         >

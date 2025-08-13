@@ -10,139 +10,147 @@ import GradientPicker from './GradientPicker';
 
 interface ColorInputProps extends Omit<React.HtmlHTMLAttributes<HTMLDivElement>, 'onChange'> {
     fill: Fill;
+    opacity: number;
     showTab?: boolean;
     onChange: (value: Fill) => void
 }
 
-const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(
-    ({ showTab = true, onChange, className, fill, ...props }, ref) => {
-        const [isOpen, setIsOpen] = useState(false);
-        const [activeTab, setActiveTab] = useState<FillType>('solid');
-        const [imageUrl, setImageUrl] = useState<string | null>(null);
+const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true, opacity, onChange, className, fill, ...props }, ref) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<FillType>('solid');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-        const fillValue = extractFillValue(fill)
-        const name = getDisplayTextFromFill(fill)
+    const fillValue = extractFillValue(fill)
+    const name = getDisplayTextFromFill(fill)
 
-        let backgroundStyle;
+    let backgroundStyle;
 
-        useEffect(() => {
-            if (fill.type === 'image' || fill.type === 'pattern') {
-                const url = arrayBufferToDataUrl(imageValue(fillValue.value));
-                setImageUrl(prevUrl => {
-                    if (prevUrl && prevUrl !== url) {
-                        URL.revokeObjectURL(prevUrl);
-                    }
-                    return url;
-                });
-            } else {
-                setImageUrl(prevUrl => {
-                    if (prevUrl) {
-                        URL.revokeObjectURL(prevUrl);
-                    }
-                    return null;
-                });
-            }
-        }, [fill.type, fillValue.value]);
-
-        useEffect(() => {
-            switch (fill.type) {
-                case 'solid':
-                    setActiveTab('solid');
-                    break;
-                case 'linear':
-                case 'radial':
-                    setActiveTab('gradient');
-                    break;
-                case 'image':
-                case 'pattern':
-                    setActiveTab('image');
-                    break;
-            }
-        }, [fill.type]);
-
+    useEffect(() => {
         if (fill.type === 'image' || fill.type === 'pattern') {
-            backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill, imageUrl);
-        } else {
-            backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill)
-        }
-
-        useEffect(() => {
-            return () => {
-                if (imageUrl) {
-                    URL.revokeObjectURL(imageUrl);
+            const url = arrayBufferToDataUrl(imageValue(fillValue.value));
+            setImageUrl(prevUrl => {
+                if (prevUrl && prevUrl !== url) {
+                    URL.revokeObjectURL(prevUrl);
                 }
-            };
-        }, [imageUrl])
+                return url;
+            });
+        } else {
+            setImageUrl(prevUrl => {
+                if (prevUrl) {
+                    URL.revokeObjectURL(prevUrl);
+                }
+                return null;
+            });
+        }
+    }, [fill.type, fillValue.value]);
 
-        return (
-            <div className={`relative ${className}`}>
-                <aside onClick={() => setIsOpen(!isOpen)} className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-fit
+    useEffect(() => {
+        switch (fill.type) {
+            case 'solid':
+                setActiveTab('solid');
+                break;
+            case 'linear':
+            case 'radial':
+                setActiveTab('gradient');
+                break;
+            case 'image':
+            case 'pattern':
+                setActiveTab('image');
+                break;
+        }
+    }, [fill.type]);
+
+    if (fill.type === 'image' || fill.type === 'pattern') {
+        backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill, imageUrl);
+    } else {
+        backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill)
+    }
+
+    useEffect(() => {
+        return () => {
+            if (imageUrl) {
+                URL.revokeObjectURL(imageUrl);
+            }
+        };
+    }, [imageUrl])
+
+    return (
+        <div className={`relative ${className}`}>
+            <aside className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-fit
             items-center gap-1 p-0.5 border border-transparent cursor-pointer
              hover:border-gray-500 hover:focus-within:border-blue-500 
              transition-colors ${className}`)}>
-                    <p className="font-semibold text-gray-700 h-4 w-4 rounded-sm"
-                        style={{ ...backgroundStyle }}></p>
-                    <div
-                        ref={ref}
-                        className="w-fit pr-1 bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
-                        {...props}
-                    >{name}</div>
-                </aside>
+                <p onClick={() => setIsOpen(!isOpen)} className="font-semibold text-gray-700 h-4 w-4 rounded-sm"
+                    style={{ ...backgroundStyle }}>
+                </p>
+                <div
+                    ref={ref}
+                    className="w-fit pr-0.5 bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
+                    {...props}
+                >
+                    {name}
+                </div>
+                <input
+                    className='w-8 bg-transparent border-l-1 border-l-gray-300 pl-1 text-gray-900 text-xs font-mono focus:outline-none'
+                    type="number"
+                    value={opacity * 100}
+                    onChange={(e) => (e.target.value)} />
+            </aside>
 
-                {isOpen && (
-                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}>
-                        <div onClick={(e) => e.stopPropagation()} className="absolute bottom-10 right-65 z-50 bg-white rounded-lg shadow-lg shadow-gray-500 w-fit h-fit  max-w-[280px] pt-3">
+            {isOpen && (
+                <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}>
+                    <div onClick={(e) => e.stopPropagation()} className="absolute bottom-10 right-65 z-50 bg-white rounded-lg shadow-lg shadow-gray-500 w-fit h-fit  max-w-[280px] pt-3">
 
-                            {showTab && <div className='flex items-center gap-1 p-2 w-full h-9 border-b-1 border-t-1 border-b-[#e6e6e6] border-t-[#e6e6e6]'>
-                                <button
-                                    onClick={() => setActiveTab('solid')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'solid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
-                                >
-                                    <Paintbrush2 className='w-4 h-4' />
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('gradient')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'gradient' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
-                                >
-                                    <Zap className='w-4 h-4' />
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('image')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'image' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
-                                >
-                                    <FileImage className='w-4 h-4' />
-                                </button>
-                            </div>}
-                            {showTab && (activeTab == 'solid') &&
-                                <ColorPicker value={fill as SolidFill} isOpen={isOpen}
-                                    onColorChange={(color) => {
-                                        onChange(color);
-                                    }} />
-                            }
-                            {showTab && (activeTab === 'gradient') && (
-                                <GradientPicker
-                                    value={fill as GradientFill}
-                                    onGradientChange={(gradient) => {
-                                        onChange(gradient);
-                                    }}
-                                />
-                            )}
-                            {showTab && (activeTab == 'image') && (
-                                <BackgroundImagePicker value={fill as ImageFill}
-                                    imageUrl={imageUrl}
-                                    setImageUrl={setImageUrl}
-                                    onImageChange={(fill) => {
-                                        onChange(fill);
-                                    }} />
-                            )}
+                        {showTab && <div className='flex items-center gap-1 p-2 w-full h-9 border-b-1 border-t-1 border-b-[#e6e6e6] border-t-[#e6e6e6]'>
+                            <button
+                                onClick={() => setActiveTab('solid')}
+                                className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'solid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+                            >
+                                <Paintbrush2 className='w-4 h-4' />
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('gradient')}
+                                className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'gradient' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+                            >
+                                <Zap className='w-4 h-4' />
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('image')}
+                                className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'image' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+                            >
+                                <FileImage className='w-4 h-4' />
+                            </button>
+                        </div>}
+                        {showTab && (activeTab == 'solid') &&
+                            <ColorPicker value={fill as SolidFill} isOpen={isOpen}
+                                onColorChange={(color) => {
+                                    onChange(color);
+                                }} />
+                        }
+                        {showTab && (activeTab === 'gradient') && (
+                            <GradientPicker
+                                value={fill as GradientFill}
+                                onGradientChange={(gradient) => {
+                                    onChange(gradient);
+                                }}
+                            />
+                        )}
+                        {showTab && (activeTab == 'image') && (
+                            <BackgroundImagePicker value={fill as ImageFill}
+                                imageUrl={imageUrl}
+                                setImageUrl={setImageUrl}
+                                onImageChange={(fill) => {
+                                    onChange(fill);
+                                }} />
+                        )}
 
-                        </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
+        </div>
 
-        )
-    }
+    )
+}
 )
 
 ColorInput.displayName = 'ColorInput'

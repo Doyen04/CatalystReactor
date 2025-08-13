@@ -34,7 +34,7 @@ abstract class Shape implements IShape {
 
         const fill: SolidFill = { type: 'solid', color: _fill }
         const stroke: SolidFill = { type: 'solid', color: strokeColor }
-        this.style = { fill: { color: fill }, stroke: { color: stroke, width: strokeWidth } };
+        this.style = { fill: { color: fill, opacity:1 }, stroke: { color: stroke, width: strokeWidth ,opacity:1} };
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
         this.isHover = false;
         this.shapeType = type;

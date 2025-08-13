@@ -162,9 +162,9 @@ function PropertyBar() {
                 {style && (
                     <Section title="Style">
                         <ColorInput
-                            fill={style.fill.color} onChange={(fill) => handleColorChange('fill', fill)} />
+                            fill={style.fill.color} opacity={style.fill.opacity} onChange={(fill) => handleColorChange('fill', fill)} />
                         <ColorInput
-                            fill={style.stroke.color} onChange={(strokeColor) => handleColorChange('strokeColor', strokeColor)} />
+                            fill={style.stroke.color} opacity={style.stroke.opacity} onChange={(strokeColor) => handleColorChange('strokeColor', strokeColor)} />
                     </Section>
                 )}
 
