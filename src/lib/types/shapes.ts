@@ -231,6 +231,7 @@ export interface IShape {
     setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     draw(canvas: Canvas): void;
     setDim(width: number, height: number): void;
+    updateDim(width: number, height: number): void;
     getDim(): { width: number, height: number };
     getCoord?(): { x: number, y: number };
     setCoord(x: number, y: number): void;

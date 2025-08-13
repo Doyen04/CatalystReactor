@@ -49,6 +49,7 @@ abstract class Shape implements IShape {
     abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     abstract draw(canvas: Canvas): void;
     abstract setDim(width: number, height: number): void;
+    abstract updateDim(width: number, height: number): void;
     abstract getDim(): { width: number, height: number };
     abstract setCoord(x: number, y: number): void;
     abstract getProperties(): Properties;

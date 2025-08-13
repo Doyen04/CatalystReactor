@@ -74,8 +74,12 @@ class Rectangle extends Shape {
         this.dimension.width = width;
         this.dimension.height = height;
 
-        // this.computeAllRadius();
         this.calculateBoundingRect()
+    }
+
+    override updateDim(width: number, height: number): void {
+        this.setDim(width, height);
+        this.calculateBoundingRect();
     }
 
     handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
@@ -210,7 +214,7 @@ class Rectangle extends Shape {
         if (!this.resource) return;
 
         const { fill, stroke } = this.initPaints()
-        
+
         const rect = this.resource.canvasKit.LTRBRect(0, 0,
             this.dimension.width,
             this.dimension.height);

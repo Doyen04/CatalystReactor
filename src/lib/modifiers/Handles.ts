@@ -191,7 +191,7 @@ export default class Handle {
 
         scene.setFlip(deltaX < 0, deltaY < 0);
         scene.setPosition(nx, ny);
-        shape.setDim(width, height);
+        shape.updateDim(width, height);
     }
 
     clampAngleToArc(t: number, start: number, end: number, prev: number): number {
