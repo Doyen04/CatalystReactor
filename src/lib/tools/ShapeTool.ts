@@ -16,10 +16,9 @@ class ShapeTool extends Tool {
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
         const shape = ShapeFactory.createShape(this.shapeType, { x: e.offsetX, y: e.offsetY });
         if (shape) {
-            const scene: SceneNode = new SceneNode();
-            scene.shape = shape
+            const scene: SceneNode = new SceneNode(shape); 
             this.sceneManager.addNode(scene);
-            this.shapeManager.attachShape(shape)
+            this.shapeManager.attachNode(scene)
         }
     }
     override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
@@ -27,6 +26,17 @@ class ShapeTool extends Tool {
         super.handlePointerUp?.(dragStart, e);
     }
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
+        const deltaX = (e.offsetX - dragStart.x);
+        const deltaY = (e.offsetY - dragStart.y);
+
+        // Handle flipping at the node level
+        const isFlippedX = deltaX < 0;
+        const isFlippedY = deltaY < 0;
+        
+        const currentNode = this.shapeManager.currentScene; // You'll need to expose this
+        if (currentNode) {
+            currentNode.setFlip(isFlippedX, isFlippedY);
+        }
         this.shapeManager.drawShape(dragStart, e)
     };
 

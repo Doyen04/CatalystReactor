@@ -1,8 +1,6 @@
+import { Canvas } from "canvaskit-wasm";
 import SceneNode from "./SceneGraph";
-import EventQueue, { EventTypes } from './EventQueue'
 
-const {
-    FinaliseSelection, DeleteScene } = EventTypes
 
 class SceneManager {
     private scene: SceneNode
@@ -11,7 +9,7 @@ class SceneManager {
     modifierSelected: boolean;
 
     constructor() {
-        this.scene = new SceneNode()
+        this.scene = new SceneNode(null)
         this.selected = null
         this.hoveredScene = null
         this.modifierSelected = false
@@ -75,6 +73,10 @@ class SceneManager {
 
         this.scene.children.forEach(child => traverse(child));
         return flattened
+    }
+
+    draw(skCnvs: Canvas) {
+        this.scene.draw(skCnvs);
     }
 
     destroy() {

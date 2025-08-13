@@ -6,7 +6,7 @@ import Shape from '../base/Shape';
 
 class Rectangle extends Shape {
     dimension: Size;
-    bdradius: BorderRadius
+    bdradius: BorderRadius;
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, type: "rect", ...shapeProps });
@@ -18,10 +18,6 @@ class Rectangle extends Shape {
             'bottom-right': 0,
             locked: false,
         };
-        this.transform.originalX = x;
-        this.transform.originalY = y;
-        this.transform.isFlippedX = false;
-        this.transform.isFlippedY = false;
         this.calculateBoundingRect()
     }
 
@@ -50,33 +46,28 @@ class Rectangle extends Shape {
         const deltaX = (mx - dragStart.x);
         const deltaY = (my - dragStart.y);
 
-        this.transform.isFlippedX = deltaX < 0;
-        this.transform.isFlippedY = deltaY < 0;
-
-        this.transform.originalX = dragStart.x;
-        this.transform.originalY = dragStart.y;
+        this.transform.x = Math.min(dragStart.x, mx);
+        this.transform.y = Math.min(dragStart.y, my);
 
         if (shiftKey) {
             const size = Math.max(Math.abs(deltaX), Math.abs(deltaY));
             this.dimension.width = size;
             this.dimension.height = size;
 
-            if (deltaX >= 0) {
-                this.transform.x = this.transform.originalX;
-            } else {
-                this.transform.x = this.transform.originalX - size;
-            }
+            // if (deltaX >= 0) {
+            //     this.transform.x = this.transform.originalX;
+            // } else {
+            //     this.transform.x = this.transform.originalX - size;
+            // }
 
-            if (deltaY >= 0) {
-                this.transform.y = this.transform.originalY;
-            } else {
-                this.transform.y = this.transform.originalY - size;
-            }
+            // if (deltaY >= 0) {
+            //     this.transform.y = this.transform.originalY;
+            // } else {
+            //     this.transform.y = this.transform.originalY - size;
+            // }
         } else {
             this.dimension.width = Math.abs(deltaX);
             this.dimension.height = Math.abs(deltaY);
-            this.transform.x = Math.min(dragStart.x, mx);
-            this.transform.y = Math.min(dragStart.y, my);
         }
 
         this.calculateBoundingRect();
@@ -98,26 +89,45 @@ class Rectangle extends Shape {
         this.calculateBoundingRect()
     }
 
-    computeAllRadius() {
-        const max = Math.max(
-            this.bdradius['top-left'],
-            this.bdradius['top-right'],
-            this.bdradius['bottom-left'],
-            this.bdradius['bottom-right']
-        )
-        const nMax = Math.min(this.dimension.width, this.dimension.height) / 2;
-        const ratio = nMax / max;
-        //80 / 40 = 2
-        // if ratio is greater than 1 retain old radius
-        //write function to get max radius out of corner
+    protected getFlippedRadii = () => {
+        const original = {
+            tl: this.bdradius['top-left'],
+            tr: this.bdradius['top-right'],
+            br: this.bdradius['bottom-right'],
+            bl: this.bdradius['bottom-left']
+        };
 
-        this.bdradius['top-left'] = this.bdradius['top-left'] * ratio;
-        this.bdradius['top-right'] = this.bdradius['top-right'] * ratio;
-        this.bdradius['bottom-left'] = this.bdradius['bottom-left'] * ratio;
-        this.bdradius['bottom-right'] = this.bdradius['bottom-right'] * ratio;
+        let radii = { ...original };
 
+        if (this.transform.isFlippedX && this.transform.isFlippedY) {
+            // Both X and Y flipped: opposite corners
+            radii = {
+                tl: original.br,
+                tr: original.bl,
+                br: original.tl,
+                bl: original.tr
+            };
+        } else if (this.transform.isFlippedX) {
+            // Only X flipped: swap left/right
+            radii = {
+                tl: original.tr,
+                tr: original.tl,
+                br: original.bl,
+                bl: original.br
+            };
+        } else if (this.transform.isFlippedY) {
+            // Only Y flipped: swap top/bottom
+            radii = {
+                tl: original.bl,
+                tr: original.br,
+                br: original.tr,
+                bl: original.tl
+            };
+        }
 
-    }
+        return radii;
+    };
+
     override setProperties(prop: Properties): void {
         this.transform = prop.transform
         this.dimension = prop.size
@@ -228,12 +238,7 @@ class Rectangle extends Shape {
     }
 
     protected makeCustomRRectPath() {
-        const radii = {
-            tl: this.bdradius['top-left'],
-            tr: this.bdradius['top-right'],
-            br: this.bdradius['bottom-right'],
-            bl: this.bdradius['bottom-left']
-        };
+        const radii = this.getFlippedRadii()
         const [x, y, w, h] = [this.transform.x, this.transform.y, this.dimension.width, this.dimension.height];
         const CanvasKit = this.resource?.canvasKit;
 

@@ -176,31 +176,14 @@ class Renderer {
         skCnvs!.save();
         skCnvs.scale(this.dpr, this.dpr);
 
-        const scene = this.sceneManager.getScene()
-
-        scene.updateWorldMatrix();
-
         const rect = this.resource.canvasKit.LTRBRect(10, 10, 250, 100);
         skCnvs!.drawRect(rect, this.resource.paint!);
         skCnvs!.drawRect(rect, this.resource.strokePaint!);
 
-        this.renderNode(skCnvs, scene);
-        this.shapeModifier.draw(skCnvs);
+        this.sceneManager.draw(skCnvs);
 
         skCnvs!.restore();
         this.surf.flush();
-    }
-
-    renderNode(skCnvs: Canvas, node: SceneNode) {
-        // Draw the shape if it exists
-        if (node.shape && typeof node.shape.draw === 'function') {
-            node.shape.draw(skCnvs!);
-        }
-
-        // Render children
-        for (const child of node.children) {
-            this.renderNode(skCnvs, child);
-        }
     }
 
     destroy() {

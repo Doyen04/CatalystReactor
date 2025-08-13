@@ -72,8 +72,9 @@ export const DEFAULT_RADIAL_GRADIENT: RadialGradient = {
 export interface Transform {
     x: number;
     y: number;
-    rotation?: number;
-    scale?: number;
+    rotation: number;
+    scaleX: number;
+    scaleY: number;
     anchorPoint?: number;
     isFlippedX?: boolean;
     isFlippedY?: boolean;

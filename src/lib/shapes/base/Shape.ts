@@ -30,7 +30,7 @@ abstract class Shape implements IShape {
 
     constructor({ x, y, type, rotation = 0, scale = 1, _fill = "#fff", strokeWidth = 1, strokeColor = '#000' }: Arguments) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
-        this.transform = { x, y, rotation, scale, anchorPoint: null };
+        this.transform = { x, y, rotation, scaleX:scale, scaleY:scale, anchorPoint: null };
 
         const fill: SolidFill = { type: 'solid', color: _fill }
         const stroke: SolidFill = { type: 'solid', color: strokeColor }
