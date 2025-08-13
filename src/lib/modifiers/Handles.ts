@@ -1,8 +1,9 @@
 // Handle.ts
 import type { Canvas } from "canvaskit-wasm";
-import { HandlePos, HandleType, IShape } from "@lib/types/shapes";
+import { HandlePos, HandleType } from "@lib/types/shapes";
 import CanvasKitResources from "@lib/core/CanvasKitResource";
 import clamp from "@lib/helper/clamp";
+import SceneNode from "@lib/core/SceneNode";
 
 export default class Handle {
     x: number;
@@ -94,9 +95,9 @@ export default class Handle {
 
         return ratio;
     }
-    updateShapeRadii(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateShapeRadii(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
 
-        const { left, right, top, bottom } = shape.boundingRect;
+        const { left, right, top, bottom } = scene.getShape().boundingRect;
 
         let cornerX: number, cornerY: number, distX: number, distY: number, newRadius = 0;
 
@@ -149,15 +150,17 @@ export default class Handle {
 
                 break
         }
-        shape.updateBorderRadius(newRadius, this.pos);
+        scene.getShape().updateBorderRadius(newRadius, this.pos);
     }
 
-    updateShapeDim(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateShapeDim(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
         let [width, height] = [0, 0]
         let nx = 0
         let ny = 0
         let deltaX = 0
         let deltaY = 0
+
+        const shape = scene.getShape();
 
         if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
             switch (this.pos) {
@@ -200,8 +203,9 @@ export default class Handle {
         return t0;
     }
 
-    updateOvalRatio(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateOvalRatio(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
 
+        const shape = scene.getShape();
         const { x, y } = shape.getCenterCoord()
         const { width, height } = shape.getDim()
 
@@ -227,7 +231,8 @@ export default class Handle {
         shape.setRatio(ratio)
     }
 
-    updateStarRatio(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateStarRatio(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+        const shape = scene.getShape();
         const { x, y } = shape.getCenterCoord()
         const { width, height } = shape.getDim()
 
@@ -236,15 +241,16 @@ export default class Handle {
         shape.setRatio(ratio);
     }
 
-    updateShapeArc(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateShapeArc(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
         if (this.pos == 'arc-end') {
-            this.updateShapeArcEnd(dx, dy, e, shape)
+            this.updateShapeArcEnd(dx, dy, e, scene)
         } else {
-            this.updateShapeArcStart(dx, dy, e, shape)
+            this.updateShapeArcStart(dx, dy, e, scene)
         }
     }
 
-    updateShapeArcStart(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateShapeArcStart(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+        const shape = scene.getShape();
         const { x, y } = shape.getCenterCoord();
         const { width, height } = shape.getDim()
         const deltaX = e.offsetX - x;
@@ -263,7 +269,8 @@ export default class Handle {
         shape.setArc(start + delta, end + delta);
     }
 
-    updateShapeArcEnd(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateShapeArcEnd(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+        const shape = scene.getShape();
         const { x, y } = shape.getCenterCoord();
         const { width, height } = shape.getDim()
         const deltaX = e.offsetX - x;
@@ -283,7 +290,8 @@ export default class Handle {
         shape.setArc(start, start + sweep);
     }
 
-    updateShapeVertices(dx: number, dy: number, e: MouseEvent, shape: IShape) {
+    updateShapeVertices(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+        const shape = scene.getShape();
         const GAP = 10; // defined distance for both x and y
         const count = shape.getVertexCount();
 

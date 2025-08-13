@@ -216,6 +216,7 @@ class Rectangle extends Shape {
         if (!this.resource) return;
 
         const { fill, stroke } = this.initPaints()
+        
         const rect = this.resource.canvasKit.LTRBRect(this.transform.x, this.transform.y,
             this.transform.x + this.dimension.width,
             this.transform.y + this.dimension.height);

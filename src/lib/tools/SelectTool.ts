@@ -58,10 +58,10 @@ class SelectTool extends Tool {
             this.shapeManager.detachShape()
             return
         }
-        const clickedShape = scene.getShape()
-        this.shapeManager.attachShape(clickedShape)
-        if (this.canEdit(clickedShape) && clickedShape.pointInShape(e.offsetX, e.offsetY)) {
-            clickedShape.setCursorPosFromCoord(e.offsetX, e.offsetY)
+
+        this.shapeManager.attachNode(scene)
+        if (this.canEdit(scene.getShape()) && scene.getShape().pointInShape(e.offsetX, e.offsetY)) {
+            scene.getShape().setCursorPosFromCoord(e.offsetX, e.offsetY)
         }
 
     }
@@ -125,7 +125,7 @@ class SelectTool extends Tool {
         const handle = this.shapeManager.modifierMgr.collideHandle(e.offsetX, e.offsetY)
         this.setCursorForHandle(handle)
 
-        const isCollide = this.shapeManager.modifierMgr.collide(e.offsetX, e.offsetY)
+        const isCollide = this.shapeManager.modifierMgr.collideRect(e.offsetX, e.offsetY)
         if (isCollide) {
             this.shapeManager.modifierMgr.setIsHovered(true)
             return

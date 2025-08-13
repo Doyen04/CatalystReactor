@@ -1,7 +1,6 @@
 import { Canvas, Surface } from "canvaskit-wasm";
 import EventQueue, { EventTypes, } from './EventQueue'
 import SceneManager from "./SceneManager";
-import type SceneNode from "./SceneGraph";
 import CanvasKitResources from "./CanvasKitResource";
 import ShapeModifier from "@lib/modifiers/ShapeModifier";
 
@@ -181,7 +180,8 @@ class Renderer {
         skCnvs!.drawRect(rect, this.resource.strokePaint!);
 
         this.sceneManager.draw(skCnvs);
-
+        this.shapeModifier.draw(skCnvs)
+        
         skCnvs!.restore();
         this.surf.flush();
     }

@@ -3,7 +3,7 @@ import Tool from "./Tool";
 import { useImageStore } from "@hooks/imageStore";
 import SceneManager from "@lib/core/SceneManager";
 import ShapeManager from "@lib/core/ShapeManager";
-import SceneNode from "@lib/core/SceneGraph";
+import SceneNode from "@lib/core/SceneNode";
 import ShapeFactory from "@lib/shapes/base/ShapeFactory";
 
 class ImageTool extends Tool {

@@ -4,11 +4,12 @@ import Handle from "./Handles";
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import SText from "@lib/shapes/primitives/SText";
+import SceneNode from "@lib/core/SceneNode";
 
 const { UpdateModifierHandlesPos } = EventTypes
 
 class ShapeModifier {
-    private shape: IShape | null;
+    private scene: SceneNode | null;
     private hoveredShape: IShape | null;
     private strokeColor: string | number[];
     private strokeWidth: number;
@@ -19,7 +20,7 @@ class ShapeModifier {
     private font: SText;
 
     constructor() {
-        this.shape = null;
+        this.scene = null;
         this.hoveredShape = null
         this.strokeColor = '#00f';
         this.strokeWidth = 1;
@@ -41,15 +42,15 @@ class ShapeModifier {
         EventQueue.unSubscribeAll(UpdateModifierHandlesPos)
     }
 
-    attachShape(shape: IShape) {
+    attachShape(scene: SceneNode) {
         this.handles = []
-        this.shape = shape;
-        if (!this.shape) {
+        this.scene = scene;
+        if (!this.scene) {
             console.log('no shape for shape modifier');
             return
         }
 
-        this.handles = this.shape.getModifierHandles(this.fill, this.strokeColor);
+        this.handles = this.scene.getShape().getModifierHandles(this.fill, this.strokeColor);
         this.updateResizerPositions();
     }
 
@@ -90,22 +91,22 @@ class ShapeModifier {
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    this.selectedModifierHandle.updateShapeRadii(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateShapeRadii(x, y, e, this.scene)
                     break;
                 case 'size':
-                    this.selectedModifierHandle.updateShapeDim(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateShapeDim(x, y, e, this.scene)
                     break;
                 case 'c-ratio':
-                    this.selectedModifierHandle.updateOvalRatio(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateOvalRatio(x, y, e, this.scene)
                     break;
                 case 's-ratio':
-                    this.selectedModifierHandle.updateStarRatio(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateStarRatio(x, y, e, this.scene)
                     break;
                 case 'arc':
-                    this.selectedModifierHandle.updateShapeArc(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateShapeArc(x, y, e, this.scene)
                     break;
                 case 'vertices':
-                    this.selectedModifierHandle.updateShapeVertices(x, y, e, this.shape)
+                    this.selectedModifierHandle.updateShapeVertices(x, y, e, this.scene)
                     break;
                 default:
                     break;
@@ -122,21 +123,21 @@ class ShapeModifier {
         this.handleModifierDrag(x, y, e)
     }
     updateResizerPositions() {
-        if (!this.shape) {
+        if (!this.scene) {
             console.log(' no shape for updateresizer');
 
             return;
         }
 
         for (const resizer of this.handles) {
-            const { x, y } = this.shape.getModifierHandlesPos(resizer);
+            const { x, y } = this.scene.getShape().getModifierHandlesPos(resizer);
             resizer.updatePosition(x, y);
         }
         this.updateText()
     }
     updateText() {
-        const { bottom, left } = this.shape.boundingRect
-        const { width, height } = this.shape.getDim()
+        const { bottom, left } = this.scene.getShape().boundingRect
+        const { width, height } = this.scene.getShape().getDim()
         this.font.setText(`${width} X ${height}`)
 
         const { width: tWidth } = this.font.getDim()
@@ -156,16 +157,16 @@ class ShapeModifier {
         this.resource.paint.setColor(fillColor);
     }
     hasShape() {
-        return this.shape !== null;
+        return this.scene.getShape() !== null;
     }
     hasSelectedHandle() {
         return this.selectedModifierHandle !== null
     }
     getShape() {
-        return this.shape
+        return this.scene.getShape()
     }
     detachShape() {
-        this.shape = null
+        this.scene = null
     }
     setIsHovered(bool: boolean) {
         // EventQueue.trigger(Render)
@@ -175,8 +176,8 @@ class ShapeModifier {
         return this.isHovered
     }
     CanDraw(): boolean {
-        if (!this.shape) return false;
-        const { left, top, right, bottom } = this.shape.boundingRect;
+        if (!this.scene.getShape()) return false;
+        const { left, top, right, bottom } = this.scene.getShape().boundingRect;
         const width = right - left;
         const height = bottom - top;
         const minSize = 5;
@@ -188,11 +189,11 @@ class ShapeModifier {
         if (this.hoveredShape) {
             this.hoveredShape.setHovered(false)
         }
-        if (this.shape) {
+        if (this.scene) {
             this.isHovered = false
         }
 
-        if (this.shape && this.shape == shape) {
+        if (this.scene.getShape() && this.scene.getShape() == shape) {
             this.isHovered = true
             return
         }
@@ -204,15 +205,15 @@ class ShapeModifier {
         if (this.hoveredShape) {
             this.hoveredShape.setHovered(false)
         }
-        if (this.shape) {
+        if (this.scene.getShape()) {
             this.isHovered = false
         }
         this.hoveredShape = null
     }
 
-    collide(x: number, y: number): boolean {
-        if (!this.shape) return false;
-        const { left, top, right, bottom } = this.shape.boundingRect;
+    collideRect(x: number, y: number): boolean {
+        if (!this.scene.getShape()) return false;
+        const { left, top, right, bottom } = this.scene.getShape().boundingRect;
          return (
                 x >= left &&
                 x <= right &&
@@ -222,7 +223,7 @@ class ShapeModifier {
     }
 
     collideHandle(x: number, y: number): Handle | null {
-        if (!this.shape) return null;
+        if (!this.scene.getShape()) return null;
         const handle = this.selectModifier(x, y)
         return handle
     }
@@ -230,11 +231,11 @@ class ShapeModifier {
 
     draw(canvas: Canvas): void {
 
-        if (!this.shape || this.CanDraw() || !this.resource) {
+        if (!this.scene.getShape() || this.CanDraw() || !this.resource) {
             return;
         }
         this.setPaint();
-        const dimen = this.shape.boundingRect;
+        const dimen = this.scene.getShape().boundingRect;
 
         const rect = this.resource.canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);
 
@@ -252,9 +253,9 @@ class ShapeModifier {
     }
 
     destroy() {
-        if (this.shape) {
-            this.shape.destroy()
-            this.shape = null
+        if (this.scene.getShape()) {
+            this.scene.getShape().destroy()
+            this.scene = null
         }
         this.strokeColor = ''
         this.strokeWidth = 0

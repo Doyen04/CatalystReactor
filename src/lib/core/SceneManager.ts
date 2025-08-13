@@ -1,5 +1,5 @@
 import { Canvas } from "canvaskit-wasm";
-import SceneNode from "./SceneGraph";
+import SceneNode from "./SceneNode";
 
 
 class SceneManager {
@@ -31,9 +31,6 @@ class SceneManager {
     getScene(): SceneNode {
         return this.scene
     }
-    // getTransientScene(): SceneNode {
-    //     return this.transientScene
-    // }
 
     removeNode(node: SceneNode) {
         if (node.parent) {
