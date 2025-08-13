@@ -15,6 +15,7 @@ class SceneNode {
         this.children = []
         this.parent = null
 
+        this.setUpMatrix()
         if (!shape) return
 
         const { x, y } = shape.getCoord()
@@ -38,11 +39,18 @@ class SceneNode {
             return null
         }
     }
+
+    setUpMatrix() {
+        this.localMatrix = this.resource.canvasKit.Matrix.identity();
+        this.worldMatrix = this.resource.canvasKit.Matrix.identity();
+    }
+
     drawOnDrag(dragStart: Coord, e: MouseEvent) {
         this.shape.setSize(dragStart, e.offsetX, e.offsetY, e.shiftKey)
 
         this.updateWorldMatrix();
     }
+
     setFlip(isFlippedX: boolean, isFlippedY: boolean): void {
         this.transform.isFlippedX = isFlippedX;
         this.transform.isFlippedY = isFlippedY;
@@ -101,7 +109,6 @@ class SceneNode {
     // Note: shapes already draw in absolute coords (x,y). We rotate/scale around the visual center.
     private recomputeLocalMatrix(): void {
         if (!this.shape) {
-            this.localMatrix = this.resource.canvasKit.Matrix.identity();
             return;
         }
         const Matrix = this.resource.canvasKit.Matrix
@@ -114,16 +121,14 @@ class SceneNode {
         const sx = (this.transform.isFlippedX ? -1 : 1) * (this.transform.scaleX ?? 1);
         const sy = (this.transform.isFlippedY ? -1 : 1) * (this.transform.scaleY ?? 1);
 
-        const Tpivot = Matrix.translated(pivotX, pivotY);
-        const R = Matrix.rotated(this.transform.rotation || 0);
-        const S = Matrix.scaled(sx, sy);
-        const TnegPivot = Matrix.translated(-pivotX, -pivotY);
+        const T = Matrix.translated(x, y);
+        const R = Matrix.rotated(this.transform.rotation || 0, pivotX, pivotY);
+        const S = Matrix.scaled(sx, sy, pivotX, pivotY);
 
         let result = Matrix.identity();
-        result = Matrix.multiply(result, Tpivot);
+        result = Matrix.multiply(result, T);
         result = Matrix.multiply(result, R);
         result = Matrix.multiply(result, S);
-        result = Matrix.multiply(result, TnegPivot);
 
         this.localMatrix = result;
     }
@@ -145,12 +150,13 @@ class SceneNode {
 
     draw(canvas: Canvas): void {
         canvas.save();
-        // canvas.concat(this.localMatrix);
+        canvas.concat(this.localMatrix);
 
         if (this.shape) this.shape.draw(canvas);
         this.children.forEach(node => node.draw(canvas))
         canvas.restore();
     }
+
     destroy() {
         if (this.shape) {
             this.parent?.removeChildNode(this)

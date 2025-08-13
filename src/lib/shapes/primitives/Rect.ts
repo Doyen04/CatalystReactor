@@ -54,17 +54,6 @@ class Rectangle extends Shape {
             this.dimension.width = size;
             this.dimension.height = size;
 
-            // if (deltaX >= 0) {
-            //     this.transform.x = this.transform.originalX;
-            // } else {
-            //     this.transform.x = this.transform.originalX - size;
-            // }
-
-            // if (deltaY >= 0) {
-            //     this.transform.y = this.transform.originalY;
-            // } else {
-            //     this.transform.y = this.transform.originalY - size;
-            // }
         } else {
             this.dimension.width = Math.abs(deltaX);
             this.dimension.height = Math.abs(deltaY);
@@ -222,9 +211,9 @@ class Rectangle extends Shape {
 
         const { fill, stroke } = this.initPaints()
         
-        const rect = this.resource.canvasKit.LTRBRect(this.transform.x, this.transform.y,
-            this.transform.x + this.dimension.width,
-            this.transform.y + this.dimension.height);
+        const rect = this.resource.canvasKit.LTRBRect(0, 0,
+            this.dimension.width,
+            this.dimension.height);
 
         if (this.hasRadius() && this.bdradius.locked) {
             const radius = this.bdradius['top-left'];
@@ -245,7 +234,7 @@ class Rectangle extends Shape {
 
     protected makeCustomRRectPath() {
         const radii = this.getFlippedRadii()
-        const [x, y, w, h] = [this.transform.x, this.transform.y, this.dimension.width, this.dimension.height];
+        const [x, y, w, h] = [0, 0, this.dimension.width, this.dimension.height];
         const CanvasKit = this.resource?.canvasKit;
 
         const p = this.resource.path
