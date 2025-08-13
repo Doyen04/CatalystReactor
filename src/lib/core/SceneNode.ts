@@ -46,7 +46,7 @@ class SceneNode {
     setFlip(isFlippedX: boolean, isFlippedY: boolean): void {
         this.transform.isFlippedX = isFlippedX;
         this.transform.isFlippedY = isFlippedY;
-
+        this.shape.handleFlip(isFlippedX, isFlippedY);
         this.updateWorldMatrix();
     }
 

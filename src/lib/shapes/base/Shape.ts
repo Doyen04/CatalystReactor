@@ -40,6 +40,7 @@ abstract class Shape implements IShape {
         this.shapeType = type;
     }
 
+    abstract handleFlip(isFlippedX: boolean, isFlippedY: boolean): void;
     abstract getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[];
     abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; };
     abstract pointInShape(x: number, y: number): boolean;

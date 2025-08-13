@@ -1,5 +1,4 @@
 import type { Canvas } from "canvaskit-wasm";
-import { IShape } from "@lib/types/shapes"
 import Handle from "./Handles";
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import EventQueue, { EventTypes } from "@lib/core/EventQueue";
@@ -10,7 +9,7 @@ const { UpdateModifierHandlesPos } = EventTypes
 
 class ShapeModifier {
     private scene: SceneNode | null;
-    private hoveredShape: IShape | null;
+    private hoveredScene: SceneNode | null;
     private strokeColor: string | number[];
     private strokeWidth: number;
     private fill: string = '#fff'
@@ -21,7 +20,7 @@ class ShapeModifier {
 
     constructor() {
         this.scene = null;
-        this.hoveredShape = null
+        this.hoveredScene = null
         this.strokeColor = '#00f';
         this.strokeWidth = 1;
         this.handles = [];
@@ -176,7 +175,7 @@ class ShapeModifier {
         return this.isHovered
     }
     CanDraw(): boolean {
-        if (!this.scene.getShape()) return false;
+        if (!this.scene && !this.scene.getShape()) return false;
         const { left, top, right, bottom } = this.scene.getShape().boundingRect;
         const width = right - left;
         const height = bottom - top;
@@ -185,34 +184,34 @@ class ShapeModifier {
         return (width < minSize || height < minSize)
     }
 
-    setHoveredShape(shape: IShape) {
-        if (this.hoveredShape) {
-            this.hoveredShape.setHovered(false)
+    setHoveredShape(scene: SceneNode) {
+        if (this.hoveredScene) {
+            this.hoveredScene.getShape().setHovered(false)
         }
         if (this.scene) {
             this.isHovered = false
         }
 
-        if (this.scene.getShape() && this.scene.getShape() == shape) {
+        if (this.scene && this.scene == scene) {
             this.isHovered = true
             return
         }
-        this.hoveredShape = shape
-        this.hoveredShape.setHovered(true)
+        this.hoveredScene = scene
+        this.hoveredScene.getShape().setHovered(true)
     }
 
     resetHovered() {
-        if (this.hoveredShape) {
-            this.hoveredShape.setHovered(false)
+        if (this.hoveredScene) {
+            this.hoveredScene.getShape().setHovered(false)
         }
-        if (this.scene.getShape()) {
+        if (this.scene) {
             this.isHovered = false
         }
-        this.hoveredShape = null
+        this.hoveredScene = null
     }
 
     collideRect(x: number, y: number): boolean {
-        if (!this.scene.getShape()) return false;
+        if (!this.scene ) return false;
         const { left, top, right, bottom } = this.scene.getShape().boundingRect;
          return (
                 x >= left &&
@@ -223,7 +222,7 @@ class ShapeModifier {
     }
 
     collideHandle(x: number, y: number): Handle | null {
-        if (!this.scene.getShape()) return null;
+        if (!this.scene ) return null;
         const handle = this.selectModifier(x, y)
         return handle
     }
@@ -231,7 +230,7 @@ class ShapeModifier {
 
     draw(canvas: Canvas): void {
 
-        if (!this.scene.getShape() || this.CanDraw() || !this.resource) {
+        if (!this.scene || this.CanDraw() || !this.resource) {
             return;
         }
         this.setPaint();

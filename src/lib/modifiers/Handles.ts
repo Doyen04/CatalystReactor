@@ -188,8 +188,10 @@ export default class Handle {
       
         height = Math.abs(deltaY);
         width = Math.abs(deltaX);
+        console.log(deltaX < 0, deltaY < 0);
 
-        shape.setCoord(nx, ny);
+        scene.setFlip(deltaX < 0, deltaY < 0);
+        scene.setPosition(nx, ny);
         shape.setDim(width, height);
     }
 

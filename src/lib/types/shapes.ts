@@ -216,6 +216,7 @@ export interface IShape {
 
     getShapeType(): ShapeType;
     createCanvasKitImage(image: ArrayBuffer | null): void;
+    handleFlip(isFlippedX: boolean, isFlippedY: boolean): void;
     // Methods that all shapes should implement
     getModifierHandles(fill: string, strokeColor: string | number[]): Handle[];
     getSizeModifierHandlesPos(handle: Handle): Coord;

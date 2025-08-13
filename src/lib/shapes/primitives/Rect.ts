@@ -89,6 +89,11 @@ class Rectangle extends Shape {
         this.calculateBoundingRect()
     }
 
+    handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
+        this.transform.isFlippedX = isFlippedX;
+        this.transform.isFlippedY = isFlippedY;
+    }
+
     protected getFlippedRadii = () => {
         const original = {
             tl: this.bdradius['top-left'],
