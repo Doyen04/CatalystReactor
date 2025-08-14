@@ -75,7 +75,7 @@ export interface Transform {
     rotation: number;
     scaleX: number;
     scaleY: number;
-    anchorPoint?: number;
+    anchorPoint: Coord;
     isFlippedX?: boolean;
     isFlippedY?: boolean;
     originalX?: number;
@@ -231,7 +231,6 @@ export interface IShape {
     setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     draw(canvas: Canvas): void;
     setDim(width: number, height: number): void;
-    updateDim(width: number, height: number): void;
     getDim(): { width: number, height: number };
     getCoord?(): { x: number, y: number };
     setCoord(x: number, y: number): void;
@@ -242,7 +241,7 @@ export interface IShape {
     getArcAngles?(): { start: number, end: number }
     setRatio?(r: number): void;
     getCenterCoord?(): { x: number, y: number };
-    updateBorderRadius?(r: number, pos: HandlePos): void;
+    setBorderRadius?(r: number, pos: HandlePos): void;
     diableEditing?(): void;
     startEditing?(): void;
     setArc?(startAngle: number, endAngle: number): void;

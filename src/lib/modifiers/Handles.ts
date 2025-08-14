@@ -150,7 +150,7 @@ export default class Handle {
 
                 break
         }
-        scene.getShape().updateBorderRadius(newRadius, this.pos);
+        scene.getShape().setBorderRadius(newRadius, this.pos);
     }
 
     updateShapeDim(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
@@ -191,7 +191,7 @@ export default class Handle {
 
         scene.setFlip(deltaX < 0, deltaY < 0);
         scene.setPosition(nx, ny);
-        shape.updateDim(width, height);
+        shape.setDim(width, height);
     }
 
     clampAngleToArc(t: number, start: number, end: number, prev: number): number {

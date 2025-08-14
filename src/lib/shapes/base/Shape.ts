@@ -30,11 +30,11 @@ abstract class Shape implements IShape {
 
     constructor({ x, y, type, rotation = 0, scale = 1, _fill = "#fff", strokeWidth = 1, strokeColor = '#000' }: Arguments) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
-        this.transform = { x, y, rotation, scaleX:scale, scaleY:scale, anchorPoint: null };
+        this.transform = { x, y, rotation, scaleX: scale, scaleY: scale, anchorPoint: { x: x, y: y } };
 
         const fill: SolidFill = { type: 'solid', color: _fill }
         const stroke: SolidFill = { type: 'solid', color: strokeColor }
-        this.style = { fill: { color: fill, opacity:1 }, stroke: { color: stroke, width: strokeWidth ,opacity:1} };
+        this.style = { fill: { color: fill, opacity: 1 }, stroke: { color: stroke, width: strokeWidth, opacity: 1 } };
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
         this.isHover = false;
         this.shapeType = type;
@@ -49,7 +49,6 @@ abstract class Shape implements IShape {
     abstract setSize(dragStart: { x: number, y: number }, mx: number, my: number, shiftKey: boolean): void;
     abstract draw(canvas: Canvas): void;
     abstract setDim(width: number, height: number): void;
-    abstract updateDim(width: number, height: number): void;
     abstract getDim(): { width: number, height: number };
     abstract setCoord(x: number, y: number): void;
     abstract getProperties(): Properties;

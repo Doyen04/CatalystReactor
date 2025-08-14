@@ -30,13 +30,24 @@ class Rectangle extends Shape {
         this.calculateBoundingRect();
     }
 
-    private setBorderRadius(radius: number): void {
+    setBorderRadius(newRadius: number, pos: HandlePos) {
+        const max = Math.min(this.dimension.width, this.dimension.height) / 2;
+        const newRad = Math.max(0, Math.min(newRadius, max));
+        if (this.bdradius.locked) {
+            this.setAllBorderRadius(newRad)
+            return
+        }
+
+        this.bdradius[pos] = newRad
+    }
+
+    private setAllBorderRadius(radius: number): void {
         this.bdradius = {
             'top-left': radius,
             'top-right': radius,
             'bottom-left': radius,
             'bottom-right': radius,
-            locked: true
+            locked: true,
         };
 
     }
@@ -77,53 +88,74 @@ class Rectangle extends Shape {
         this.calculateBoundingRect()
     }
 
-    override updateDim(width: number, height: number): void {
-        this.setDim(width, height);
-        this.calculateBoundingRect();
-    }
-
     handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
+        if (this.transform.isFlippedX === isFlippedX && this.transform.isFlippedY === isFlippedY) return;
         this.transform.isFlippedX = isFlippedX;
         this.transform.isFlippedY = isFlippedY;
+
+        this.flippedRadii()
     }
 
-    protected getFlippedRadii = () => {
-        const original = {
-            tl: this.bdradius['top-left'],
-            tr: this.bdradius['top-right'],
-            br: this.bdradius['bottom-right'],
-            bl: this.bdradius['bottom-left']
-        };
+    getBorderRadius() {
+        const max = Math.min(this.dimension.width, this.dimension.height)
+        const radii = { ...this.bdradius };
 
-        let radii = { ...original };
+        radii['top-left'] = Math.min(this.bdradius['top-left'], max);
+        radii['top-right'] = Math.min(this.bdradius['top-right'], max);
+        radii['bottom-left'] = Math.min(this.bdradius['bottom-left'], max);
+        radii['bottom-right'] = Math.min(this.bdradius['bottom-right'], max);
+
+        const sum =
+            (radii['top-left'] +
+                radii['top-right'] +
+                radii['bottom-left'] +
+                radii['bottom-right']) / 2;
+
+        // If sum exceeds max, scale down proportionally
+        if (sum > max && sum > 0) {
+            const scale = max / sum;
+            radii['top-left'] *= scale;
+            radii['top-right'] *= scale;
+            radii['bottom-left'] *= scale;
+            radii['bottom-right'] *= scale;
+        }
+        return radii;
+    }
+
+    protected flippedRadii = () => {
+
+        let radii = { ...this.bdradius };
 
         if (this.transform.isFlippedX && this.transform.isFlippedY) {
             // Both X and Y flipped: opposite corners
             radii = {
-                tl: original.br,
-                tr: original.bl,
-                br: original.tl,
-                bl: original.tr
+                'top-left': this.bdradius['bottom-right'],
+                'top-right': this.bdradius['bottom-left'],
+                'bottom-right': this.bdradius['top-left'],
+                'bottom-left': this.bdradius['top-right'],
+                locked: this.bdradius.locked
             };
         } else if (this.transform.isFlippedX) {
             // Only X flipped: swap left/right
             radii = {
-                tl: original.tr,
-                tr: original.tl,
-                br: original.bl,
-                bl: original.br
+                'top-left': this.bdradius['top-right'],
+                'top-right': this.bdradius['top-left'],
+                'bottom-right': this.bdradius['bottom-left'],
+                'bottom-left': this.bdradius['bottom-right'],
+                locked: this.bdradius.locked
             };
         } else if (this.transform.isFlippedY) {
             // Only Y flipped: swap top/bottom
             radii = {
-                tl: original.bl,
-                tr: original.br,
-                br: original.tr,
-                bl: original.tl
+                'top-left': this.bdradius['bottom-left'],
+                'top-right': this.bdradius['bottom-right'],
+                'bottom-right': this.bdradius['top-right'],
+                'bottom-left': this.bdradius['top-left'],
+                locked: this.bdradius.locked
             };
         }
 
-        return radii;
+        this.bdradius = { ...radii };
     };
 
     override setProperties(prop: Properties): void {
@@ -156,7 +188,9 @@ class Rectangle extends Shape {
     }
 
     getRadiusModiferHandlesPos(handle: Handle): { x: number; y: number; } {
-        const r = this.bdradius[handle.pos];
+        let r = this.bdradius[handle.pos];
+        const max = Math.min(this.dimension.width, this.dimension.height) / 2;
+        r = Math.min(r, max);
         const padding = 15;
         const size = handle.size
 
@@ -237,12 +271,12 @@ class Rectangle extends Shape {
     }
 
     protected makeCustomRRectPath() {
-        const radii = this.getFlippedRadii()
+        const radii = this.getBorderRadius()
         const [x, y, w, h] = [0, 0, this.dimension.width, this.dimension.height];
         const CanvasKit = this.resource?.canvasKit;
 
         const p = this.resource.path
-        const { tl, tr, br, bl } = radii;
+        const { 'top-left': tl, 'top-right': tr, 'bottom-right': br, 'bottom-left': bl } = radii;
 
         p.moveTo(x + tl, y);
         p.lineTo(x + w - tr, y);
@@ -279,17 +313,6 @@ class Rectangle extends Shape {
 
         p.close();
         return p
-    }
-
-    updateBorderRadius(newRadius: number, pos: HandlePos) {
-        const max = Math.min(this.dimension.width, this.dimension.height) / 2;
-        const newRad = Math.max(0, Math.min(newRadius, max));
-        if (this.bdradius.locked) {
-            this.setBorderRadius(newRad)
-            return
-        }
-
-        this.bdradius[pos] = newRad
     }
 
     override pointInShape(x: number, y: number): boolean {

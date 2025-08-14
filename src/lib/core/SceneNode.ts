@@ -1,10 +1,10 @@
 import { Canvas } from 'canvaskit-wasm';
-import { Coord, IShape, Transform } from '@lib/types/shapes';
+import { Coord, IShape } from '@lib/types/shapes';
 import CanvasKitResources from './CanvasKitResource';
 
 class SceneNode {
     private shape: IShape | null;
-    transform: Transform;
+    // transform: Transform;
     children: SceneNode[];
     parent: SceneNode | null;
     localMatrix: number[] | null;
@@ -18,16 +18,17 @@ class SceneNode {
         this.setUpMatrix()
         if (!shape) return
 
-        const { x, y } = shape.getCoord()
-        this.transform = {
-            x: x,
-            y: y,
-            isFlippedX: false,
-            isFlippedY: false,
-            rotation: 0,
-            scaleX: 1,
-            scaleY: 1
-        };
+        // const { x, y } = shape.getCoord()
+        // this.transform = {
+        //     x: x,
+        //     y: y,
+        //     anchorPoint: { x: x, y: y },
+        //     isFlippedX: false,
+        //     isFlippedY: false,
+        //     rotation: 0,
+        //     scaleX: 1,
+        //     scaleY: 1
+        // };
     }
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
@@ -52,26 +53,26 @@ class SceneNode {
     }
 
     setFlip(isFlippedX: boolean, isFlippedY: boolean): void {
-        this.transform.isFlippedX = isFlippedX;
-        this.transform.isFlippedY = isFlippedY;
+        // this.transform.isFlippedX = isFlippedX;
+        // this.transform.isFlippedY = isFlippedY;
         this.shape.handleFlip(isFlippedX, isFlippedY);
         this.updateWorldMatrix();
     }
 
     setPosition(x: number, y: number): void {
-        this.transform.x = x;
-        this.transform.y = y;
+        // this.transform.x = x;
+        // this.transform.y = y;
         this.shape.setCoord(x, y);
 
         this.updateWorldMatrix();
     }
 
     move(dx: number, dy: number): void {
-        this.transform.x += dx;
-        this.transform.y += dy;
-        this.transform.originalX += dx;
-        this.transform.originalY += dy;
-        this.shape.setCoord(this.transform.x, this.transform.y);
+        // this.transform.x += dx;
+        // this.transform.y += dy;
+        // this.transform.originalX += dx;
+        // this.transform.originalY += dy;
+        this.shape.moveShape(dx, dy);
 
         this.updateWorldMatrix();
     }
@@ -112,25 +113,16 @@ class SceneNode {
             return;
         }
         const Matrix = this.resource.canvasKit.Matrix
-        const { x, y } = this.transform;
-        const { width, height } = this.shape.getDim();
+        const { transform } = this.shape.getProperties();
 
-        const pivotX = x + width / 2;
-        const pivotY = y + height / 2;
+        const sx = (transform.scaleX ?? 1);
+        const sy = (transform.scaleY ?? 1);
+        
+        const T = Matrix.translated(transform.x, transform.y);
+        const R = Matrix.rotated(transform.rotation || 0, transform.anchorPoint.x, transform.anchorPoint.y);
+        const S = Matrix.scaled(sx, sy, transform.anchorPoint.x, transform.anchorPoint.y);
 
-        const sx = (this.transform.isFlippedX ? -1 : 1) * (this.transform.scaleX ?? 1);
-        const sy = (this.transform.isFlippedY ? -1 : 1) * (this.transform.scaleY ?? 1);
-
-        const T = Matrix.translated(x, y);
-        const R = Matrix.rotated(this.transform.rotation || 0, pivotX, pivotY);
-        const S = Matrix.scaled(sx, sy, pivotX, pivotY);
-
-        let result = Matrix.identity();
-        result = Matrix.multiply(result, T);
-        result = Matrix.multiply(result, R);
-        result = Matrix.multiply(result, S);
-
-        this.localMatrix = result;
+        this.localMatrix = Matrix.multiply(T, R, S);
     }
 
     updateWorldMatrix(parentWorld?: number[]) {
