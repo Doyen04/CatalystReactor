@@ -105,18 +105,38 @@ class Rectangle extends Shape {
         radii['bottom-left'] = Math.min(this.bdradius['bottom-left'], max);
         radii['bottom-right'] = Math.min(this.bdradius['bottom-right'], max);
 
-        const sum =
-            (radii['top-left'] +
-                radii['top-right'] +
-                radii['bottom-left'] +
-                radii['bottom-right']) / 2;
+        const sumTop = (
+            radii['top-left'] +
+            radii['top-right']) / 2;
+        const sumRight = (
+            radii['top-right'] +
+            radii['bottom-right']) / 2;
+        const sumLeft = (
+            radii['top-left'] +
+            radii['bottom-left']) / 2;
+        const sumBottom = (
+            radii['bottom-left'] +
+            radii['bottom-right']) / 2;
 
         // If sum exceeds max, scale down proportionally
-        if (sum > max && sum > 0) {
-            const scale = max / sum;
+        if (sumTop > max && sumTop > 0) {
+            const scale = max / sumTop;
             radii['top-left'] *= scale;
             radii['top-right'] *= scale;
+        }
+        if (sumLeft > max && sumLeft > 0) {
+            const scale = max / sumLeft;
+            radii['top-left'] *= scale;
             radii['bottom-left'] *= scale;
+        }
+        if (sumBottom > max && sumBottom > 0) {
+            const scale = max / sumBottom;
+            radii['bottom-left'] *= scale;
+            radii['bottom-right'] *= scale;
+        }
+        if (sumRight > max && sumRight > 0) {
+            const scale = max / sumRight;
+            radii['top-right'] *= scale;
             radii['bottom-right'] *= scale;
         }
         return radii;

@@ -53,7 +53,7 @@ class ShapeManager {
         const minSize = 5;
 
         if (width < minSize || height < minSize) {
-            this.scene.getShape().drawDefault()
+            this.scene.drawDefault()
             console.log('Shape removed: too small add default size');
         }
 
@@ -109,14 +109,14 @@ class ShapeManager {
     }
 
     finishDrag() {
-        if (!this.scene.getShape()) return;
+        if (!this.scene) return;
         this.selected = false;
         this.shapeModifier.handleRemoveModiferHandle()
         this.shapeModifier.update()
     }
 
     collide(x: number, y: number): boolean {
-        if (!this.scene.getShape()) {
+        if (!this.scene) {
             this.selected = false;
             return false;
         }
