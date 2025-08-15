@@ -25,8 +25,8 @@ abstract class Shape implements IShape {
     protected shapeType: ShapeType;
     protected transform: Transform;
     protected style: Style;
-    boundingRect: BoundingRect;
-    private isHover: boolean;
+    protected boundingRect: BoundingRect;
+    protected isHover: boolean;
 
     constructor({ x, y, type, rotation = 0, scale = 1, _fill = "#fff", strokeWidth = 1, strokeColor = '#000' }: Arguments) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
@@ -40,6 +40,7 @@ abstract class Shape implements IShape {
         this.shapeType = type;
     }
 
+    abstract getBoundingRect(): BoundingRect;
     abstract handleFlip(isFlippedX: boolean, isFlippedY: boolean): void;
     abstract getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[];
     abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; };
@@ -197,6 +198,7 @@ abstract class Shape implements IShape {
         } else if (this.isShader(strokeShader)) {
             this.resource.strokePaint.setShader(strokeShader as Shader)
         }
+        this.resource.strokePaint.setStrokeWidth(this.style.stroke.width);
         return { stroke: this.resource.strokePaint, fill: this.resource.paint }
     }
     protected resetPaint() {

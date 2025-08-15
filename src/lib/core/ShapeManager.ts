@@ -4,6 +4,7 @@ import { Coord, IShape, Properties } from '@lib/types/shapes';
 import ShapeModifier from '@lib/modifiers/ShapeModifier';
 import throttle from '@lib/helper/throttle';
 import SceneNode from './SceneNode';
+import Handle from '@lib/modifiers/Handles';
 
 class ShapeManager {
     private scene: SceneNode | null = null;
@@ -47,7 +48,7 @@ class ShapeManager {
     handleTinyShapes(): void {
         if (!this.scene) return;
 
-        const { left, top, right, bottom } = this.scene.getShape().boundingRect;
+        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect();
         const width = right - left;
         const height = bottom - top;
         const minSize = 5;
@@ -65,11 +66,9 @@ class ShapeManager {
     get currentShape(): IShape {
         return this.scene.getShape()
     }
+
     get currentScene(): SceneNode {
         return this.scene
-    }
-    get modifierMgr(): ShapeModifier {
-        return this.shapeModifier
     }
 
     hasShape(): boolean {
@@ -106,6 +105,25 @@ class ShapeManager {
         this.shapeModifier.update()
         const props = this.scene.getShape().getProperties();
         this.throttledUpdate(props)
+    }
+
+    handleHover(x: number, y: number): Handle | null {
+        if (!this.shapeModifier) return null;
+
+        const isCollide = this.shapeModifier.collideRect(x, y)
+        if (isCollide) {
+            this.shapeModifier.setHover(true)
+        } else {
+            this.shapeModifier.setHover(false)
+        }
+
+        return this.shapeModifier.selectModifier(x, y);
+    }
+
+    resetHover(scene: SceneNode | null) {
+        if (this.scene !== scene) {
+            this.shapeModifier.setHover(false)
+        }
     }
 
     finishDrag() {

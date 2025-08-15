@@ -212,9 +212,9 @@ export type HandleType = 'size' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's
 export interface IShape {
     id?: string;
     type?: ShapeType;
-    boundingRect: BoundingRect;
 
     getShapeType(): ShapeType;
+    getBoundingRect(): BoundingRect;
     createCanvasKitImage(image: ArrayBuffer | null): void;
     handleFlip(isFlippedX: boolean, isFlippedY: boolean): void;
     // Methods that all shapes should implement

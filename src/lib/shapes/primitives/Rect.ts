@@ -1,6 +1,6 @@
 import Handle from '@lib/modifiers/Handles'
-import type { Canvas } from "canvaskit-wasm";
-import { BorderRadius, HandlePos, Properties, Size, SizeRadiusModifierPos } from '@lib/types/shapes';
+import type { Canvas, Rect } from "canvaskit-wasm";
+import { BorderRadius, BoundingRect, HandlePos, Properties, Size, SizeRadiusModifierPos } from '@lib/types/shapes';
 import Shape from '../base/Shape';
 
 
@@ -19,6 +19,10 @@ class Rectangle extends Shape {
             locked: false,
         };
         this.calculateBoundingRect()
+    }
+
+    override getBoundingRect(): BoundingRect {
+        return structuredClone(this.boundingRect);
     }
 
     override moveShape(dx: number, dy: number): void {
@@ -92,62 +96,53 @@ class Rectangle extends Shape {
         if (this.transform.isFlippedX === isFlippedX && this.transform.isFlippedY === isFlippedY) return;
         this.transform.isFlippedX = isFlippedX;
         this.transform.isFlippedY = isFlippedY;
-
         this.flippedRadii()
+
     }
 
     getBorderRadius() {
-        const max = Math.min(this.dimension.width, this.dimension.height)
-        const radii = { ...this.bdradius };
+        const { width, height } = this.dimension;
+        const max = Math.min(width, height);
 
-        radii['top-left'] = Math.min(this.bdradius['top-left'], max);
-        radii['top-right'] = Math.min(this.bdradius['top-right'], max);
-        radii['bottom-left'] = Math.min(this.bdradius['bottom-left'], max);
-        radii['bottom-right'] = Math.min(this.bdradius['bottom-right'], max);
+        const temp = this.flippedRadii();
 
-        const sumTop = (
-            radii['top-left'] +
-            radii['top-right']) / 2;
-        const sumRight = (
-            radii['top-right'] +
-            radii['bottom-right']) / 2;
-        const sumLeft = (
-            radii['top-left'] +
-            radii['bottom-left']) / 2;
-        const sumBottom = (
-            radii['bottom-left'] +
-            radii['bottom-right']) / 2;
+        if (!this.hasRadius()) {
+            return { ...temp };
+        }
 
-        // If sum exceeds max, scale down proportionally
-        if (sumTop > max && sumTop > 0) {
-            const scale = max / sumTop;
-            radii['top-left'] *= scale;
-            radii['top-right'] *= scale;
-        }
-        if (sumLeft > max && sumLeft > 0) {
-            const scale = max / sumLeft;
-            radii['top-left'] *= scale;
-            radii['bottom-left'] *= scale;
-        }
-        if (sumBottom > max && sumBottom > 0) {
-            const scale = max / sumBottom;
-            radii['bottom-left'] *= scale;
-            radii['bottom-right'] *= scale;
-        }
-        if (sumRight > max && sumRight > 0) {
-            const scale = max / sumRight;
-            radii['top-right'] *= scale;
-            radii['bottom-right'] *= scale;
-        }
-        return radii;
+        const radii = {
+            'top-left': Math.min(temp['top-left'], max),
+            'top-right': Math.min(temp['top-right'], max),
+            'bottom-left': Math.min(temp['bottom-left'], max),
+            'bottom-right': Math.min(temp['bottom-right'], max),
+        };
+
+        const sums = {
+            top: radii['top-left'] + radii['top-right'],
+            right: radii['top-right'] + radii['bottom-right'],
+            bottom: radii['bottom-left'] + radii['bottom-right'],
+            left: radii['top-left'] + radii['bottom-left']
+        };
+
+        const scaleRadii = (sum: number, ...corners: (keyof typeof radii)[]) => {
+            if (sum > max && sum > 0) {
+                const scale = max / sum;
+                corners.forEach(corner => radii[corner] *= scale);
+            }
+        };
+
+        scaleRadii(sums.top, 'top-left', 'top-right');
+        scaleRadii(sums.left, 'top-left', 'bottom-left');
+        scaleRadii(sums.bottom, 'bottom-left', 'bottom-right');
+        scaleRadii(sums.right, 'top-right', 'bottom-right');
+
+        return { ...radii, locked: this.bdradius.locked };
     }
 
     protected flippedRadii = () => {
+        let radii = structuredClone(this.bdradius);
 
-        let radii = { ...this.bdradius };
-
-        if (this.transform.isFlippedX && this.transform.isFlippedY) {
-            // Both X and Y flipped: opposite corners
+        if (this.transform.isFlippedX && this.transform.isFlippedY) {// opposite corners
             radii = {
                 'top-left': this.bdradius['bottom-right'],
                 'top-right': this.bdradius['bottom-left'],
@@ -155,8 +150,7 @@ class Rectangle extends Shape {
                 'bottom-left': this.bdradius['top-right'],
                 locked: this.bdradius.locked
             };
-        } else if (this.transform.isFlippedX) {
-            // Only X flipped: swap left/right
+        } else if (this.transform.isFlippedX) {// swap left/right
             radii = {
                 'top-left': this.bdradius['top-right'],
                 'top-right': this.bdradius['top-left'],
@@ -164,8 +158,7 @@ class Rectangle extends Shape {
                 'bottom-left': this.bdradius['bottom-right'],
                 locked: this.bdradius.locked
             };
-        } else if (this.transform.isFlippedY) {
-            // Only Y flipped: swap top/bottom
+        } else if (this.transform.isFlippedY) {// swap top/bottom
             radii = {
                 'top-left': this.bdradius['bottom-left'],
                 'top-right': this.bdradius['bottom-right'],
@@ -175,7 +168,7 @@ class Rectangle extends Shape {
             };
         }
 
-        this.bdradius = { ...radii };
+        return radii;
     };
 
     override setProperties(prop: Properties): void {
@@ -195,7 +188,7 @@ class Rectangle extends Shape {
             transform: { ...this.transform },
             size: { ...this.dimension },
             style: { ...this.style },
-            borderRadius: { ...this.bdradius }
+            borderRadius: { ...this.flippedRadii() }
         }
     }
 
@@ -287,7 +280,34 @@ class Rectangle extends Shape {
             canvas.drawRect(rect, fill);
             canvas.drawRect(rect, stroke);
         }
+
         this.resetPaint()
+        if (this.isHover) {
+            this.drawHoverEffect(canvas, rect);
+        }
+    }
+
+    private drawHoverEffect(canvas: Canvas, rect: Rect): void {
+        if (!this.resource) return;
+
+        const hoverPaint = this.resource.strokePaint;
+        hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1)); // Blue with transparency
+        hoverPaint.setStrokeWidth(2);
+
+        // // Add dash effect for hover
+        // const dashEffect = this.resource.canvasKit.PathEffect.MakeDash([5, 5], 0);
+        // hoverPaint.setPathEffect(dashEffect);
+
+        if (this.hasRadius() && this.bdradius.locked) {
+            const radius = this.bdradius['top-left'];
+            const rrect = this.resource.canvasKit.RRectXY(rect, radius, radius);
+            canvas.drawRRect(rrect, hoverPaint);
+        } else if (this.hasRadius()) {
+            const path = this.makeCustomRRectPath();
+            canvas.drawPath(path, hoverPaint);
+        } else {
+            canvas.drawRect(rect, hoverPaint);
+        }
     }
 
     protected makeCustomRRectPath() {

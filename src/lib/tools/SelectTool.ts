@@ -3,8 +3,10 @@ import Tool from "./Tool";
 import SceneManager from "@lib/core/SceneManager";
 import ShapeManager from "@lib/core/ShapeManager";
 import Handle from "@lib/modifiers/Handles";
+import SceneNode from "@lib/core/SceneNode";
 
 class SelectTool extends Tool {
+    private hoveredScene: SceneNode | null = null;
     private lastMouseCoord: Coord | null = null
     private clickTimer: NodeJS.Timeout | null = null
     private clickCount: number = 0
@@ -122,23 +124,23 @@ class SelectTool extends Tool {
     }
 
     override handlePointerMove(dragStart: Coord, e: MouseEvent): void {
-        const handle = this.shapeManager.modifierMgr.collideHandle(e.offsetX, e.offsetY)
+        const handle = this.shapeManager.handleHover(e.offsetX, e.offsetY)
         this.setCursorForHandle(handle)
 
-        const isCollide = this.shapeManager.modifierMgr.collideRect(e.offsetX, e.offsetY)
-        if (isCollide) {
-            this.shapeManager.modifierMgr.setIsHovered(true)
-            return
-        } else {
-            this.shapeManager.modifierMgr.setIsHovered(false)
-        }
-
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
-        if (scene) {
-            this.shapeManager.modifierMgr.setHoveredShape(scene)
-        } else {
-            this.shapeManager.modifierMgr.resetHovered()
+        this.setHoveredShape(scene)
+
+    }
+
+    setHoveredShape(scene: SceneNode) {
+        if (this.hoveredScene) {
+            this.hoveredScene.getShape().setHovered(false)
         }
+        this.hoveredScene = scene
+
+        if (!scene) return
+        this.shapeManager.resetHover(scene)
+        this.hoveredScene.getShape().setHovered(true)
     }
 
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {

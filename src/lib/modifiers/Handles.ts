@@ -16,7 +16,7 @@ export default class Handle {
     isDragging: boolean = false;
     handleArcAngle: number | null = null;
     handleRatioAngle: number | null = null;
-    private anchorPoint: { x: number, y: number } = { x: 0, y: 0 }
+    private anchorPoint: { x: number, y: number } = { x: 0, y: 0 };
 
     constructor(x: number, y: number, pos: HandlePos, type: HandleType, fill: string | number[], stroke: string | number[]) {
         this.x = x;
@@ -50,7 +50,7 @@ export default class Handle {
     }
 
     resetAnchorPoint() {
-        this.anchorPoint = { x: 0, y: 0 }
+        this.anchorPoint = { x: 0, y: 0 };
     }
 
     updatePosition(x: number, y: number) {
@@ -97,7 +97,7 @@ export default class Handle {
     }
     updateShapeRadii(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
 
-        const { left, right, top, bottom } = scene.getShape().boundingRect;
+        const { left, right, top, bottom } = scene.getShape().getBoundingRect();
 
         let cornerX: number, cornerY: number, distX: number, distY: number, newRadius = 0;
 
@@ -161,35 +161,48 @@ export default class Handle {
         let deltaY = 0
 
         const shape = scene.getShape();
+        const boundingRect = shape.getBoundingRect();
 
         if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
-            switch (this.pos) {
-                case 'top-left':
-                    this.anchorPoint = { x: shape.boundingRect.right, y: shape.boundingRect.bottom };
-                    break;
-                case 'top-right':
-                    this.anchorPoint = { x: shape.boundingRect.left, y: shape.boundingRect.bottom };
-                    break;
-                case 'bottom-left':
-                    this.anchorPoint = { x: shape.boundingRect.right, y: shape.boundingRect.top };
-                    break;
-                case 'bottom-right':
-                    this.anchorPoint = { x: shape.boundingRect.left, y: shape.boundingRect.top };
-                    break;
-                default:
-                    break;
-            }
+            const anchorMap = {
+                'top-left': { x: boundingRect.right, y: boundingRect.bottom },
+                'top-right': { x: boundingRect.left, y: boundingRect.bottom },
+                'bottom-left': { x: boundingRect.right, y: boundingRect.top },
+                'bottom-right': { x: boundingRect.left, y: boundingRect.top }
+            };
+            this.anchorPoint = anchorMap[this.pos]
         }
+
+        const flipMap = {
+            'top-left': {
+                isFlippedX: e.offsetX > this.anchorPoint.x,
+                isFlippedY: e.offsetY > this.anchorPoint.y
+            },
+            'top-right': {
+                isFlippedX: e.offsetX < this.anchorPoint.x,
+                isFlippedY: e.offsetY > this.anchorPoint.y
+            },
+            'bottom-left': {
+                isFlippedX: e.offsetX > this.anchorPoint.x,
+                isFlippedY: e.offsetY < this.anchorPoint.y
+            },
+            'bottom-right': {
+                isFlippedX: e.offsetX < this.anchorPoint.x,
+                isFlippedY: e.offsetY < this.anchorPoint.y
+            }
+        };
+
+        const { isFlippedX, isFlippedY } = flipMap[this.pos] || { isFlippedX: false, isFlippedY: false };
 
         deltaX = (e.offsetX - this.anchorPoint.x);
         deltaY = (e.offsetY - this.anchorPoint.y);
         nx = Math.min(this.anchorPoint.x, e.offsetX);
         ny = Math.min(this.anchorPoint.y, e.offsetY);
-      
+
         height = Math.abs(deltaY);
         width = Math.abs(deltaX);
 
-        scene.setFlip(deltaX < 0, deltaY < 0);
+        scene.setFlip(isFlippedX, isFlippedY);
         scene.setPosition(nx, ny);
         shape.setDim(width, height);
     }

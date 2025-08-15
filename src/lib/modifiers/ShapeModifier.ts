@@ -9,7 +9,6 @@ const { UpdateModifierHandlesPos } = EventTypes
 
 class ShapeModifier {
     private scene: SceneNode | null;
-    private hoveredScene: SceneNode | null;
     private strokeColor: string | number[];
     private strokeWidth: number;
     private fill: string = '#fff'
@@ -20,7 +19,6 @@ class ShapeModifier {
 
     constructor() {
         this.scene = null;
-        this.hoveredScene = null
         this.strokeColor = '#00f';
         this.strokeWidth = 1;
         this.handles = [];
@@ -65,7 +63,7 @@ class ShapeModifier {
     }
 
     handleRemoveModiferHandle() {
-        console.log('finished');
+        console.log('finished draging handle');
         if (!this.selectedModifierHandle) return
         this.selectedModifierHandle.isDragging = false
         this.selectedModifierHandle.resetAnchorPoint()
@@ -73,7 +71,7 @@ class ShapeModifier {
     }
 
     selectModifier(x: number, y: number) {
-        if (this.handles.length == 0) return
+        if (this.handles.length == 0) return null
         let selected: Handle = null
 
         for (const node of this.handles) {
@@ -135,7 +133,7 @@ class ShapeModifier {
         this.updateText()
     }
     updateText() {
-        const { bottom, left } = this.scene.getShape().boundingRect
+        const { bottom, left } = this.scene.getShape().getBoundingRect()
         const { width, height } = this.scene.getShape().getDim()
         this.font.setText(`${width} X ${height}`)
 
@@ -158,6 +156,7 @@ class ShapeModifier {
     hasShape() {
         return this.scene.getShape() !== null;
     }
+
     hasSelectedHandle() {
         return this.selectedModifierHandle !== null
     }
@@ -167,7 +166,7 @@ class ShapeModifier {
     detachShape() {
         this.scene = null
     }
-    setIsHovered(bool: boolean) {
+    setHover(bool: boolean) {
         // EventQueue.trigger(Render)
         this.isHovered = bool
     }
@@ -176,7 +175,7 @@ class ShapeModifier {
     }
     CanDraw(): boolean {
         if (!this.scene && !this.scene.getShape()) return false;
-        const { left, top, right, bottom } = this.scene.getShape().boundingRect;
+        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect();
         const width = right - left;
         const height = bottom - top;
         const minSize = 5;
@@ -184,35 +183,9 @@ class ShapeModifier {
         return (width < minSize || height < minSize)
     }
 
-    setHoveredShape(scene: SceneNode) {
-        if (this.hoveredScene) {
-            this.hoveredScene.getShape().setHovered(false)
-        }
-        if (this.scene) {
-            this.isHovered = false
-        }
-
-        if (this.scene && this.scene == scene) {
-            this.isHovered = true
-            return
-        }
-        this.hoveredScene = scene
-        this.hoveredScene.getShape().setHovered(true)
-    }
-
-    resetHovered() {
-        if (this.hoveredScene) {
-            this.hoveredScene.getShape().setHovered(false)
-        }
-        if (this.scene) {
-            this.isHovered = false
-        }
-        this.hoveredScene = null
-    }
-
     collideRect(x: number, y: number): boolean {
         if (!this.scene ) return false;
-        const { left, top, right, bottom } = this.scene.getShape().boundingRect;
+        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect();
          return (
                 x >= left &&
                 x <= right &&
@@ -221,20 +194,13 @@ class ShapeModifier {
             );
     }
 
-    collideHandle(x: number, y: number): Handle | null {
-        if (!this.scene ) return null;
-        const handle = this.selectModifier(x, y)
-        return handle
-    }
-
-
     draw(canvas: Canvas): void {
 
         if (!this.scene || this.CanDraw() || !this.resource) {
             return;
         }
         this.setPaint();
-        const dimen = this.scene.getShape().boundingRect;
+        const dimen = this.scene.getShape().getBoundingRect();
 
         const rect = this.resource.canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);
 
