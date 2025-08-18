@@ -63,7 +63,7 @@ class ShapeModifier {
     }
 
     handleRemoveModiferHandle() {
-        console.log('finished draging handle');
+        console.log('finished draging handle', this.selectedModifierHandle.pos);
         if (!this.selectedModifierHandle) return
         this.selectedModifierHandle.isDragging = false
         this.selectedModifierHandle.resetAnchorPoint()
@@ -71,7 +71,7 @@ class ShapeModifier {
     }
 
     selectModifier(x: number, y: number) {
-        if (this.handles.length == 0) return null
+        if (this.handles.length == 0 || !this.scene) return null
         let selected: Handle = null
 
         for (const node of this.handles) {
@@ -79,6 +79,21 @@ class ShapeModifier {
                 selected = node;
                 break
             }
+        }
+        if (!selected) {
+            const bRect = this.scene.getShape().getBoundingRect();
+            const tolerance = 5
+            const nearTop = Math.abs(y - bRect.top) <= tolerance && x >= bRect.left - tolerance && x <= bRect.right + tolerance;
+            const nearBottom = Math.abs(y - bRect.bottom) <= tolerance && x >= bRect.left - tolerance && x <= bRect.right + tolerance;
+            const nearLeft = Math.abs(x - bRect.left) <= tolerance && y >= bRect.top - tolerance && y <= bRect.bottom + tolerance;
+            const nearRight = Math.abs(x - bRect.right) <= tolerance && y >= bRect.top - tolerance && y <= bRect.bottom + tolerance;
+
+            //work on this
+            if (nearTop) selected = new Handle(0, 0, 'top', 'size');
+            if (nearBottom) selected = new Handle(0, 0, 'bottom', 'size');
+            if (nearLeft) selected = new Handle(0, 0, 'left', 'size');
+            if (nearRight) selected = new Handle(0, 0, 'right', 'size');
+
         }
         this.selectedModifierHandle = selected
         return selected
@@ -117,7 +132,7 @@ class ShapeModifier {
 
     drag(x: number, y: number, e: MouseEvent) {
         this.selectedModifierHandle.isDragging = true
-        this.isHovered = false
+        if (this.selectedModifierHandle.type === 'size') this.isHovered = false
         this.handleModifierDrag(x, y, e)
     }
 
@@ -186,14 +201,14 @@ class ShapeModifier {
     }
 
     collideRect(x: number, y: number): boolean {
-        if (!this.scene ) return false;
+        if (!this.scene) return false;
         const { left, top, right, bottom } = this.scene.getShape().getBoundingRect();
-         return (
-                x >= left &&
-                x <= right &&
-                y >= top &&
-                y <= bottom
-            );
+        return (
+            x >= left &&
+            x <= right &&
+            y >= top &&
+            y <= bottom
+        );
     }
 
     draw(canvas: Canvas): void {

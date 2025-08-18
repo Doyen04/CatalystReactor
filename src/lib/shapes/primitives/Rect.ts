@@ -275,7 +275,7 @@ class Rectangle extends Shape {
             const path = this.makeCustomRRectPath();
             canvas.drawPath(path, fill);
             canvas.drawPath(path, stroke);
-            path.reset()
+            path.delete()
         } else {
             canvas.drawRect(rect, fill);
             canvas.drawRect(rect, stroke);
@@ -315,7 +315,7 @@ class Rectangle extends Shape {
         const [x, y, w, h] = [0, 0, this.dimension.width, this.dimension.height];
         const CanvasKit = this.resource?.canvasKit;
 
-        const p = this.resource.path
+        const p = new this.resource.canvasKit.Path()
         const { 'top-left': tl, 'top-right': tr, 'bottom-right': br, 'bottom-left': bl } = radii;
 
         p.moveTo(x + tl, y);

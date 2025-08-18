@@ -85,9 +85,7 @@ abstract class Shape implements IShape {
     getSizeModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const bRect = this.boundingRect
         const size = handle.size / 2
-        const centerX = (bRect.left + bRect.right) / 2;
-        const centerY = (bRect.top + bRect.bottom) / 2;
-        
+
         switch (handle.pos) {
             case 'top-left':
                 return { x: bRect.left - size, y: bRect.top - size };
@@ -97,14 +95,6 @@ abstract class Shape implements IShape {
                 return { x: bRect.left - size, y: bRect.bottom - size };
             case 'bottom-right':
                 return { x: bRect.right - size, y: bRect.bottom - size };
-            case 'top':
-                return { x: centerX - size, y: bRect.top - size };
-            case 'bottom':
-                return { x: centerX - size, y: bRect.bottom - size };
-            case 'left':
-                return { x: bRect.left - size, y: centerY - size };
-            case 'right':
-                return { x: bRect.right - size, y: centerY - size };
             default:
                 return { x: 0, y: 0 };
         }

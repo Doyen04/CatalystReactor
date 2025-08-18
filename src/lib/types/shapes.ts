@@ -203,10 +203,6 @@ export const SizeModifierPos: HandlePos[] = [
     'top-right',
     'bottom-left',
     'bottom-right',
-    'top',
-    'bottom',
-    'left',
-    'right'
 ];
 export const RadiusModifierPos: HandlePos[] = [
     'top-left',

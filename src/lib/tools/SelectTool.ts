@@ -116,7 +116,18 @@ class SelectTool extends Tool {
                 case 'bottom-right':
                     cursor = 'nwse-resize'
                     break;
-
+                case 'top':
+                    cursor = 'ns-resize'
+                    break;
+                case 'bottom':
+                    cursor = 'ns-resize'
+                    break;
+                case 'left':
+                    cursor = 'ew-resize'
+                    break;
+                case 'right':
+                    cursor = 'ew-resize'
+                    break;
                 default:
                     break;
             }
