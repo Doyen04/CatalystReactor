@@ -117,8 +117,10 @@ class ShapeModifier {
 
     drag(x: number, y: number, e: MouseEvent) {
         this.selectedModifierHandle.isDragging = true
+        this.isHovered = false
         this.handleModifierDrag(x, y, e)
     }
+    
     updateResizerPositions() {
         if (!this.scene) {
             console.log(' no shape for updateresizer');
