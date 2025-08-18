@@ -47,7 +47,7 @@ class ShapeModifier {
             return
         }
 
-        this.handles = this.scene.getShape().getModifierHandles(this.fill, this.strokeColor);
+        this.handles = this.scene.getShape().getModifierHandles();
         this.updateResizerPositions();
     }
 
@@ -120,7 +120,7 @@ class ShapeModifier {
         this.isHovered = false
         this.handleModifierDrag(x, y, e)
     }
-    
+
     updateResizerPositions() {
         if (!this.scene) {
             console.log(' no shape for updateresizer');

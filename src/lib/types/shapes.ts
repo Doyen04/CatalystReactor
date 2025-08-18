@@ -198,7 +198,17 @@ export interface Coord {
     y: number;
 }
 
-export const SizeRadiusModifierPos: HandlePos[] = [
+export const SizeModifierPos: HandlePos[] = [
+    'top-left',
+    'top-right',
+    'bottom-left',
+    'bottom-right',
+    'top',
+    'bottom',
+    'left',
+    'right'
+];
+export const RadiusModifierPos: HandlePos[] = [
     'top-left',
     'top-right',
     'bottom-left',
@@ -206,7 +216,7 @@ export const SizeRadiusModifierPos: HandlePos[] = [
 ];
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img';
-export type HandlePos = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end' | 'top' | 'right' | 'between';
+export type HandlePos = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end' | 'top' | 'right' | 'between' | 'bottom' | 'left';
 export type HandleType = 'size' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio';
 
 export interface IShape {
@@ -218,7 +228,7 @@ export interface IShape {
     createCanvasKitImage(image: ArrayBuffer | null): void;
     handleFlip(isFlippedX: boolean, isFlippedY: boolean): void;
     // Methods that all shapes should implement
-    getModifierHandles(fill: string, strokeColor: string | number[]): Handle[];
+    getModifierHandles(): Handle[];
     getSizeModifierHandlesPos(handle: Handle): Coord;
     getModifierHandlesPos(handle: Handle): Coord;
 

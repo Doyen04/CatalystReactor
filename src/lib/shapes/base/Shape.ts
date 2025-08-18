@@ -3,7 +3,7 @@
 
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, FillStyle, ImageFill, IShape, LinearGradient, Properties, RadialGradient, ScaleMode, ShapeType, Size, SizeRadiusModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
+import { BoundingRect, FillStyle, ImageFill, IShape, LinearGradient, Properties, RadialGradient, ScaleMode, ShapeType, Size, SizeModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
 import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from "canvaskit-wasm";
 
 interface Arguments {
@@ -45,7 +45,7 @@ abstract class Shape implements IShape {
 
     abstract getBoundingRect(): BoundingRect;
     abstract handleFlip(isFlippedX: boolean, isFlippedY: boolean): void;
-    abstract getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[];
+    abstract getModifierHandles(): Handle[];
     abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; };
     abstract pointInShape(x: number, y: number): boolean;
     abstract moveShape(mx: number, my: number): void;
@@ -74,10 +74,10 @@ abstract class Shape implements IShape {
         }
     }
 
-    getSizeModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
+    getSizeModifierHandles(): Handle[] {
         const handles: Handle[] = [];
-        SizeRadiusModifierPos.forEach(pos => {
-            handles.push(new Handle(0, 0, pos, 'size', fill, strokeColor));
+        SizeModifierPos.forEach(pos => {
+            handles.push(new Handle(0, 0, pos, 'size'));
         });
         return handles;
     }
@@ -85,6 +85,9 @@ abstract class Shape implements IShape {
     getSizeModifierHandlesPos(handle: Handle): { x: number; y: number; } {
         const bRect = this.boundingRect
         const size = handle.size / 2
+        const centerX = (bRect.left + bRect.right) / 2;
+        const centerY = (bRect.top + bRect.bottom) / 2;
+        
         switch (handle.pos) {
             case 'top-left':
                 return { x: bRect.left - size, y: bRect.top - size };
@@ -94,6 +97,14 @@ abstract class Shape implements IShape {
                 return { x: bRect.left - size, y: bRect.bottom - size };
             case 'bottom-right':
                 return { x: bRect.right - size, y: bRect.bottom - size };
+            case 'top':
+                return { x: centerX - size, y: bRect.top - size };
+            case 'bottom':
+                return { x: centerX - size, y: bRect.bottom - size };
+            case 'left':
+                return { x: bRect.left - size, y: centerY - size };
+            case 'right':
+                return { x: bRect.right - size, y: centerY - size };
             default:
                 return { x: 0, y: 0 };
         }

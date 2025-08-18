@@ -18,13 +18,13 @@ export default class Handle {
     handleRatioAngle: number | null = null;
     private anchorPoint: { x: number, y: number } = { x: 0, y: 0 };
 
-    constructor(x: number, y: number, pos: HandlePos, type: HandleType, fill: string | number[], stroke: string | number[]) {
+    constructor(x: number, y: number, pos: HandlePos, type: HandleType) {
         this.x = x;
         this.y = y;
         this.pos = pos;
         this.type = type;
-        this.stroke = stroke;
-        this.fill = fill
+        this.stroke = '#00f';
+        this.fill = '#fff'
 
         // By default, use Oval for radius, Rect for size
         if (type !== "size") {
