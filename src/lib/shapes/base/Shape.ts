@@ -3,7 +3,7 @@
 
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, Fill, ImageFill, IShape, LinearGradient, Properties, RadialGradient, ScaleMode, ShapeType, Size, SizeRadiusModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
+import { BoundingRect, FillStyle, ImageFill, IShape, LinearGradient, Properties, RadialGradient, ScaleMode, ShapeType, Size, SizeRadiusModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
 import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from "canvaskit-wasm";
 
 interface Arguments {
@@ -34,7 +34,10 @@ abstract class Shape implements IShape {
 
         const fill: SolidFill = { type: 'solid', color: _fill }
         const stroke: SolidFill = { type: 'solid', color: strokeColor }
-        this.style = { fill: { color: fill, opacity: 1 }, stroke: { color: stroke, width: strokeWidth, opacity: 1 } };
+        this.style = {
+            fill: { color: fill, opacity: 1 },
+            stroke: { fill: { color: stroke, opacity: 1 }, width: strokeWidth }
+        };
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 };
         this.isHover = false;
         this.shapeType = type;
@@ -107,7 +110,7 @@ abstract class Shape implements IShape {
     }
 
     //better management for canvaskit resources
-    private setPaint(fill: Fill): Color | Shader | null {
+    private setPaint(fill: FillStyle): Color | Shader | null {
         if (!this.resource) return
         switch (fill.type) {
             case 'solid': {
@@ -185,25 +188,31 @@ abstract class Shape implements IShape {
     }
     protected initPaints(): { stroke: Paint, fill: Paint } {
         const fillShader = this.setPaint(this.style.fill.color);
-        const strokeShader = this.setPaint(this.style.stroke.color)
+        const strokeShader = this.setPaint(this.style.stroke.fill.color)
 
         if (this.isColor(fillShader)) {
             this.resource.paint.setColor(fillShader as Color)
         } else if (this.isShader(fillShader)) {
             this.resource.paint.setShader(fillShader as Shader)
         }
+        this.resource.paint.setAlphaf(this.style.fill.opacity)
 
         if (this.isColor(strokeShader)) {
             this.resource.strokePaint.setColor(strokeShader as Color)
         } else if (this.isShader(strokeShader)) {
             this.resource.strokePaint.setShader(strokeShader as Shader)
         }
+
+        this.resource.strokePaint.setAlphaf(this.style.stroke.fill.opacity)
         this.resource.strokePaint.setStrokeWidth(this.style.stroke.width);
         return { stroke: this.resource.strokePaint, fill: this.resource.paint }
     }
     protected resetPaint() {
         this.resource.paint.setShader(null);
         this.resource.strokePaint.setShader(null);
+
+        this.resource.paint.setAlphaf(1.0);
+        this.resource.strokePaint.setAlphaf(1.0);
     }
 
     setStrokeColor(color: string): void {

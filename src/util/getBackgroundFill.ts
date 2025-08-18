@@ -1,11 +1,11 @@
-import { Fill, GradientFill, ImageFill, LinearGradient, RadialGradient, SolidFill } from "@lib/types/shapes";
+import { FillStyle, GradientFill, ImageFill, LinearGradient, RadialGradient, SolidFill } from "@lib/types/shapes";
 
 function arrayBufferToDataUrl(buffer: ArrayBuffer, mimeType: string = 'image/png'): string {
     const blob = new Blob([buffer], { type: mimeType });
     return URL.createObjectURL(blob);
 }
 
-function getDisplayTextFromFill(fill: Fill): string {
+function getDisplayTextFromFill(fill: FillStyle): string {
     switch (fill.type) {
         case 'solid': {
             const solid = fill as SolidFill;
@@ -58,7 +58,7 @@ export const getGradientPreview = (gradient: GradientFill) => {
 
     return 'transparent';
 };
-export function getBackgroundStyleFromFillValue(value: string | ArrayBuffer | number[], fill: Fill, url?: string) {
+export function getBackgroundStyleFromFillValue(value: string | ArrayBuffer | number[], fill: FillStyle, url?: string) {
     switch (fill.type) {
         case 'solid': {
             const color = colorValue(value)
@@ -116,7 +116,7 @@ export function getBackgroundStyleFromFillValue(value: string | ArrayBuffer | nu
     }
 }
 
-export function extractFillValue(fill: Fill): {
+export function extractFillValue(fill: FillStyle): {
     value: string | ArrayBuffer | number[];
     metadata?: unknown;
 } {

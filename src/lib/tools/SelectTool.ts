@@ -52,10 +52,14 @@ class SelectTool extends Tool {
     private handleSingleClick(e: MouseEvent) {
         console.log('Single click - normal selection')
         const selected = this.shapeManager.collide(e.offsetX, e.offsetY);
+        console.log(selected, 'selected already');
+
         if (selected) {
             return
         }
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
+        console.log(scene,'scene selected');
+        
         if (!scene) {
             this.shapeManager.detachShape()
             return

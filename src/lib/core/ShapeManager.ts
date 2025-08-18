@@ -82,6 +82,7 @@ class ShapeManager {
     attachNode(scene: SceneNode) {
         this.scene = scene;
         this.shapeModifier.attachShape(scene);
+        this.selected = true
         // Optionally sync initial props:
         const props = this.scene.getShape().getProperties();
         this.throttledUpdate(props)

@@ -95,17 +95,14 @@ function PropertyBar() {
         if (key === 'fill') {
             newStyle = {
                 ...style,
-                fill: {
-                    ...style.fill,
-                    color:value
-                }
+                fill: value
             };
         } else if (key === 'strokeColor') {
             newStyle = {
                 ...style,
                 stroke: {
                     ...style.stroke,
-                    color: value
+                    fill: value
                 }
             };
         }
@@ -150,6 +147,7 @@ function PropertyBar() {
                             value={transform.y} onChange={(value) => handlePropertyChange('y', value)} />
                     </Section>
                 )}
+
                 {size && (
                     <Section title="Dimension">
                         <Input type="number" title="W"
@@ -162,9 +160,9 @@ function PropertyBar() {
                 {style && (
                     <Section title="Style">
                         <ColorInput
-                            fill={style.fill.color} opacity={style.fill.opacity} onChange={(fill) => handleColorChange('fill', fill)} />
+                            fill={style.fill} onChange={(fill) => handleColorChange('fill', fill)} />
                         <ColorInput
-                            fill={style.stroke.color} opacity={style.stroke.opacity} onChange={(strokeColor) => handleColorChange('strokeColor', strokeColor)} />
+                            fill={style.stroke.fill} onChange={(strokeColor) => handleColorChange('strokeColor', strokeColor)} />
                     </Section>
                 )}
 
@@ -176,6 +174,7 @@ function PropertyBar() {
                             value={spikesRatio.ratio} onChange={(value) => handlePropertyChange('ratio', value)} />
                     </Section>
                 )}
+
                 {arcSegment && (
                     <Section title="Arc-Segment" childClass="gap-0">
                         <Input type="number" icon={<AngleIcon startAngle={arcSegment.startAngle} endAngle={arcSegment.endAngle} ratio={arcSegment.ratio} />}
@@ -186,6 +185,7 @@ function PropertyBar() {
                             value={arcSegment.ratio} onChange={(value) => handlePropertyChange('ratio', value)} />
                     </Section>
                 )}
+
                 {sides && (
                     <Section title="Sides">
                         <Input type="number" icon={<Hexagon size={20} />}
@@ -193,6 +193,7 @@ function PropertyBar() {
 
                     </Section>
                 )}
+
                 {borderRadius && (
                     <Section title="Border Radius">
                         {borderRadius.locked ? (

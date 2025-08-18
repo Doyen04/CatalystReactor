@@ -134,24 +134,24 @@ export interface SolidFill {
     color: string | number[];
 }
 
-export type Fill = SolidFill | GradientFill | ImageFill | PatternFill;
-export interface StrokeStyle {
-    color: Fill;
+export interface Stroke{
+    fill: Fill;
     width: number;
-    opacity: number;
     lineCap?: 'butt' | 'round' | 'square';
     lineJoin?: 'miter' | 'round' | 'bevel';
     dashArray?: number[];
 }
 
-export interface FillStyle {
-    color: Fill;
+export type FillStyle = SolidFill | GradientFill | ImageFill | PatternFill;
+
+export interface Fill {
+    color: FillStyle;
     opacity: number;
 }
 
 export interface Style {
-    fill: FillStyle;
-    stroke: StrokeStyle;
+    fill: Fill;
+    stroke: Stroke;
 }
 
 export interface BorderRadius {

@@ -6,27 +6,27 @@ import { twMerge } from 'tailwind-merge'
 import BackgroundImagePicker from './backgroundImagePicker';
 import ColorPicker from './ColorPicker';
 import GradientPicker from './GradientPicker';
+import Input from './Input';
 
 
 interface ColorInputProps extends Omit<React.HtmlHTMLAttributes<HTMLDivElement>, 'onChange'> {
     fill: Fill;
-    opacity: number;
     showTab?: boolean;
     onChange: (value: Fill) => void
 }
 
-const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true, opacity, onChange, className, fill, ...props }, ref) => {
+const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true, onChange, className, fill, ...props }, ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<FillType>('solid');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-    const fillValue = extractFillValue(fill)
-    const name = getDisplayTextFromFill(fill)
+    const fillValue = extractFillValue(fill.color)
+    const name = getDisplayTextFromFill(fill.color)
 
     let backgroundStyle;
 
     useEffect(() => {
-        if (fill.type === 'image' || fill.type === 'pattern') {
+        if (fill.color.type === 'image' || fill.color.type === 'pattern') {
             const url = arrayBufferToDataUrl(imageValue(fillValue.value));
             setImageUrl(prevUrl => {
                 if (prevUrl && prevUrl !== url) {
@@ -42,10 +42,10 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
                 return null;
             });
         }
-    }, [fill.type, fillValue.value]);
+    }, [fill.color.type, fillValue.value]);
 
     useEffect(() => {
-        switch (fill.type) {
+        switch (fill.color.type) {
             case 'solid':
                 setActiveTab('solid');
                 break;
@@ -58,12 +58,12 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
                 setActiveTab('image');
                 break;
         }
-    }, [fill.type]);
+    }, [fill.color.type]);
 
-    if (fill.type === 'image' || fill.type === 'pattern') {
-        backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill, imageUrl);
+    if (fill.color.type === 'image' || fill.color.type === 'pattern') {
+        backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill.color, imageUrl);
     } else {
-        backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill)
+        backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill.color);
     }
 
     useEffect(() => {
@@ -76,25 +76,24 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
 
     return (
         <div className={`relative ${className}`}>
-            <aside className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-fit
-            items-center gap-1 p-0.5 border border-transparent cursor-pointer
-             hover:border-gray-500 hover:focus-within:border-blue-500 
+            <aside className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-28
+            items-center gap-1 pl-1 border border-transparent cursor-pointer
+             hover:border-gray-500 
              transition-colors ${className}`)}>
-                <p onClick={() => setIsOpen(!isOpen)} className="font-semibold text-gray-700 h-4 w-4 rounded-sm"
+                <p onClick={() => setIsOpen(!isOpen)} className="font-semibold text-gray-700 h-4 w-4 rounded-xs"
                     style={{ ...backgroundStyle }}>
                 </p>
                 <div
                     ref={ref}
-                    className="w-fit pr-0.5 bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
+                    className="px-0.5 py-1 w-14 h-full bg-transparent text-gray-900 text-xs text-left font-mono border-r-2 border-r-gray-300 focus:outline-none"
                     {...props}
                 >
                     {name}
                 </div>
-                <input
-                    className='w-8 bg-transparent border-l-1 border-l-gray-300 pl-1 text-gray-900 text-xs font-mono focus:outline-none'
-                    type="number"
-                    value={opacity * 100}
-                    onChange={(e) => (e.target.value)} />
+                <Input className='flex-1 min-w-0 rounded-none border-none hover:border-none hover:focus-within:border-none' value={fill.opacity * 100} type={'number'}
+                    onChange={(num) => {
+                        onChange({ color: fill.color, opacity: num / 100 });
+                    }} />
             </aside>
 
             {isOpen && (
@@ -122,25 +121,25 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
                             </button>
                         </div>}
                         {showTab && (activeTab == 'solid') &&
-                            <ColorPicker value={fill as SolidFill} isOpen={isOpen}
+                            <ColorPicker value={fill.color as SolidFill} isOpen={isOpen}
                                 onColorChange={(color) => {
-                                    onChange(color);
+                                    onChange({ color: color, opacity: fill.opacity });
                                 }} />
                         }
                         {showTab && (activeTab === 'gradient') && (
                             <GradientPicker
-                                value={fill as GradientFill}
+                                value={fill.color as GradientFill}
                                 onGradientChange={(gradient) => {
-                                    onChange(gradient);
+                                    onChange({ color: gradient, opacity: fill.opacity });
                                 }}
                             />
                         )}
                         {showTab && (activeTab == 'image') && (
-                            <BackgroundImagePicker value={fill as ImageFill}
+                            <BackgroundImagePicker value={fill.color as ImageFill}
                                 imageUrl={imageUrl}
                                 setImageUrl={setImageUrl}
-                                onImageChange={(fill) => {
-                                    onChange(fill);
+                                onImageChange={(image) => {
+                                    onChange({ color: image, opacity: fill.opacity });
                                 }} />
                         )}
 

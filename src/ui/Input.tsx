@@ -17,7 +17,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
         const handleChange = (num: number) => {
             const vl = (props.min != undefined && props.max != undefined) ? clamp(num, props.min as number, props.max as number) : num;
-            console.log((props.min != undefined && props.max != undefined),props.min,num, props.max,vl);
+            console.log((props.min != undefined && props.max != undefined), props.min, num, props.max, vl);
             setCurrentValue(vl)
         }
 
@@ -26,12 +26,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         }, [value])
 
         return (
-            <aside className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-fit
-            items-center gap-1 p-0.5 border border-transparent
-            
-             hover:border-gray-500 hover:focus-within:border-blue-500 
+            <aside className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-20
+         items-center gap-1 p-0.5 border border-transparent 
+         hover:border-gray-500 hover:focus-within:border-blue-500 focus-within:border-blue-500
              transition-colors ${className}`)}>
-                <p className="px-1 font-medium text-gray-700 text-sm">{title ?? icon}</p>
+                {(title ?? icon) && <p className="px-1 font-medium text-gray-700 text-sm">{title ?? icon}</p>}
                 <input
                     ref={ref}
                     type={type}
@@ -42,7 +41,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                             onChange(current)
                         }
                     }}
-                    className="w-full bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
+                    className="flex-1 min-w-0 bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
                     {...props}
                 />
             </aside>
