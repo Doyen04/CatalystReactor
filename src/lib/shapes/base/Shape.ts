@@ -245,13 +245,27 @@ abstract class Shape implements IShape {
 
         let scale: number;
         let tileMode = ck.TileMode.Clamp;
+        let offsetX = 0;
+        let offsetY = 0;
+        let scaledWidth = 0;
+        let scaledHeight = 0;
 
         switch (scaleMode) {
             case 'fill':
                 scale = Math.max(dim.width / imageWidth, dim.height / imageHeight);
+                scaledWidth = imageWidth * scale;
+                scaledHeight = imageHeight * scale;
+
+                offsetX = (dim.width - scaledWidth) / 2;
+                offsetY = (dim.height - scaledHeight) / 2;
                 break;
             case 'fit':
                 scale = Math.min(dim.width / imageWidth, dim.height / imageHeight);
+                scaledWidth = imageWidth * scale;
+                scaledHeight = imageHeight * scale;
+
+                offsetX = (dim.width - scaledWidth) / 2;
+                offsetY = (dim.height - scaledHeight) / 2;
                 tileMode = ck.TileMode.Decal;
                 break;
             case 'tile':
@@ -264,23 +278,18 @@ abstract class Shape implements IShape {
                     ck.TileMode.Clamp,
                     ck.FilterMode.Linear,
                     ck.MipmapMode.None,
-                    ck.Matrix.multiply(
-                        ck.Matrix.translated(this.transform.x, this.transform.y),
-                        ck.Matrix.scaled(dim.width / imageWidth, dim.height / imageHeight)
-                    )
+                    ck.Matrix.scaled(dim.width / imageWidth, dim.height / imageHeight)
                 );
             default:
                 scale = Math.max(dim.width / imageWidth, dim.height / imageHeight);
         }
 
         // Calculate centering offset for fill/fit modes
-        const scaledWidth = imageWidth * scale;
-        const scaledHeight = imageHeight * scale;
-        const offsetX = (dim.width - scaledWidth) / 2;
-        const offsetY = (dim.height - scaledHeight) / 2;
+
+
 
         const finalMatrix = ck.Matrix.multiply(
-            ck.Matrix.translated(this.transform.x + offsetX, this.transform.y + offsetY),
+            ck.Matrix.translated(offsetX, offsetY),
             ck.Matrix.scaled(scale, scale)
         );
 

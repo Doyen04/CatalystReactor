@@ -2,7 +2,7 @@ import React from 'react';
 import { LinearGradient, GradientStop, DEFAULT_LINEAR_GRADIENT, LINEAR_PRESET_DIRECTIONS, PRESET_LINEAR_GRADIENTS } from '@lib/types/shapes';
 import { twMerge } from 'tailwind-merge';
 import Input from './Input';
-import GradientPreview from './gradientPreview';
+import GradientPreview from './GradientPreview';
 import DirectionControls from './DirectionControls';
 import ColorStops from './ColorStops';
 import PresetGradients from './PresetGradients';

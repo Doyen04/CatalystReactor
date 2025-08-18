@@ -183,12 +183,25 @@ export default class Handle {
             case 'top-right':
             case 'bottom-left':
             case 'bottom-right': {
-                isFlippedX = (this.pos === 'top-left' || this.pos === 'bottom-left')
-                    ? (e.offsetX > this.anchorPoint.x)
-                    : (e.offsetX < this.anchorPoint.x);
-                isFlippedY = (this.pos === 'top-left' || this.pos === 'top-right')
-                    ? (e.offsetY > this.anchorPoint.y)
-                    : (e.offsetY < this.anchorPoint.y);
+                const flipMap = {
+                    'top-left': {
+                        isFlippedX: e.offsetX > this.anchorPoint.x,
+                        isFlippedY: e.offsetY > this.anchorPoint.y
+                    },
+                    'top-right': {
+                        isFlippedX: e.offsetX < this.anchorPoint.x,
+                        isFlippedY: e.offsetY > this.anchorPoint.y
+                    },
+                    'bottom-left': {
+                        isFlippedX: e.offsetX > this.anchorPoint.x,
+                        isFlippedY: e.offsetY < this.anchorPoint.y
+                    },
+                    'bottom-right': {
+                        isFlippedX: e.offsetX < this.anchorPoint.x,
+                        isFlippedY: e.offsetY < this.anchorPoint.y
+                    }
+                };
+                ({ isFlippedX, isFlippedY } = flipMap[this.pos]);
 
                 width = Math.abs(e.offsetX - this.anchorPoint.x);
                 height = Math.abs(e.offsetY - this.anchorPoint.y);
