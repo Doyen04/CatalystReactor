@@ -8,17 +8,18 @@ import { twMerge } from 'tailwind-merge';
 
 interface ColorPickerProps {
     value: SolidFill;
+    opacity: number;
     isOpen?: boolean;
-    onColorChange: (color: SolidFill) => void;
+    onColorChange: (color: SolidFill, opacity: number) => void;
     className?: string;
 }
 
 const DEFAULT_COLOR = "#ffffff"
 
-const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen, className }) => {
+const ColorPicker: React.FC<ColorPickerProps> = ({ value, opacity, onColorChange, isOpen, className }) => {
     const initialHsv = parseColorToHSVA(colorValue(value.color) || DEFAULT_COLOR);
     const [hsv, setHsv] = useState<HSV>(initialHsv.hsv);
-    const [alpha, setAlpha] = useState(initialHsv.alpha);
+    const [alpha, setAlpha] = useState(opacity);
 
     const hueCanvasRef = useRef<HTMLCanvasElement>(null);
     const satValCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,15 +85,15 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onColorChange, isOpen,
     const updateColor = useCallback((hsv: HSV, alpha: number) => {
         const [r, g, b] = hsvToRgb(hsv.h, hsv.s, hsv.v);
         const hexRgb = `#${[r, g, b].map(n => n.toString(16).padStart(2, '0')).join('')}`;
-        const output = alpha < 1
-            ? `${hexRgb}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` // 8‑digit hex
-            : hexRgb;
+        // const output = alpha < 1
+        //     ? `${hexRgb}${Math.round(alpha * 255).toString(16).padStart(2, '0')}` // 8‑digit hex
+        //     : hexRgb;
 
         const solidFill: SolidFill = {
             type: 'solid',
-            color: output
+            color: hexRgb
         };
-        onColorChange(solidFill);
+        onColorChange(solidFill, alpha);
     },[onColorChange])
 
     // Handle hue changes

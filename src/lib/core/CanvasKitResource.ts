@@ -26,12 +26,12 @@ export class CanvasKitResources {
             return
         }
         this.cnvsPaint = new this.cnvsCanvasKit.Paint();
-        this.cnvsPaint.setColor(this.cnvsCanvasKit.Color(60, 0, 0, 255));
+        this.cnvsPaint.setColor(this.cnvsCanvasKit.Color(60, 0, 0, 0.3));
         this.cnvsPaint.setStyle(this.cnvsCanvasKit.PaintStyle.Fill);
         this.cnvsPaint.setAntiAlias(true);
 
         this.cnvsStrokePaint = new this.cnvsCanvasKit.Paint();
-        this.cnvsStrokePaint.setColor(this.cnvsCanvasKit.Color(0, 255, 0, 255));
+        this.cnvsStrokePaint.setColor(this.cnvsCanvasKit.Color(0, 255, 0, 1));
         this.cnvsStrokePaint.setStyle(this.cnvsCanvasKit.PaintStyle.Stroke);
         this.cnvsStrokePaint.setStrokeWidth(2);
         this.cnvsStrokePaint.setAntiAlias(true);

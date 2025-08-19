@@ -116,8 +116,11 @@ abstract class Shape implements IShape {
         switch (fill.type) {
             case 'solid': {
                 const solid = fill as SolidFill;
-                return (Array.isArray(solid.color)) ? new Float32Array(solid.color) :
+                const value = (Array.isArray(solid.color)) ? new Float32Array(solid.color) :
                     this.resource.canvasKit.parseColorString(solid.color);
+                // console.log(value);
+                
+                return value;
             }
             case 'linear': {
                 const gradient = fill as LinearGradient;
@@ -140,7 +143,7 @@ abstract class Shape implements IShape {
             case 'radial': {
                 const gradient = fill as RadialGradient;
                 const size = this.getDim();
-                
+
                 // Calculate center point
                 const centerX = (gradient.cx / 100) * size.width;
                 const centerY = (gradient.cy / 100) * size.height;
@@ -194,15 +197,15 @@ abstract class Shape implements IShape {
         } else if (this.isShader(fillShader)) {
             this.resource.paint.setShader(fillShader as Shader)
         }
-        this.resource.paint.setAlphaf(this.style.fill.opacity)
+        this.resource.paint.setAlphaf(this.style.fill.opacity);
 
         if (this.isColor(strokeShader)) {
             this.resource.strokePaint.setColor(strokeShader as Color)
         } else if (this.isShader(strokeShader)) {
             this.resource.strokePaint.setShader(strokeShader as Shader)
         }
+        this.resource.strokePaint.setAlphaf(this.style.stroke.fill.opacity);
 
-        this.resource.strokePaint.setAlphaf(this.style.stroke.fill.opacity)
         this.resource.strokePaint.setStrokeWidth(this.style.stroke.width);
         return { stroke: this.resource.strokePaint, fill: this.resource.paint }
     }

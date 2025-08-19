@@ -75,6 +75,7 @@ export default class Handle {
         const r = this.size * 2;
         return dx * dx + dy * dy <= r * r;
     }
+    
     private calculateRatioFromMousePosition(e: MouseEvent, centerX: number, centerY: number, width: number, height: number): number {
         const deltaX = e.offsetX - centerX;
         const deltaY = e.offsetY - centerY;

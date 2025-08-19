@@ -121,9 +121,9 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
                             </button>
                         </div>}
                         {showTab && (activeTab == 'solid') &&
-                            <ColorPicker value={fill.color as SolidFill} isOpen={isOpen}
-                                onColorChange={(color) => {
-                                    onChange({ color: color, opacity: fill.opacity });
+                            <ColorPicker value={fill.color as SolidFill} opacity={fill.opacity} isOpen={isOpen}
+                                onColorChange={(color, opacity) => {
+                                    onChange({ color: color, opacity: opacity });
                                 }} />
                         }
                         {showTab && (activeTab === 'gradient') && (
