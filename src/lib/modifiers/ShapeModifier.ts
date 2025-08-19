@@ -4,6 +4,7 @@ import CanvasKitResources from '@lib/core/CanvasKitResource'
 // import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import SText from "@lib/shapes/primitives/SText";
 import SceneNode from "@lib/core/SceneNode";
+import transformWorldToLocal from "@lib/helper/worldToLocal";
 
 // const { UpdateModifierHandlesPos } = EventTypes
 
@@ -53,6 +54,7 @@ class ShapeModifier {
 
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance();
+
         if (resources) {
             return resources
         } else {
@@ -70,25 +72,14 @@ class ShapeModifier {
         this.selectedModifierHandle = null
     }
 
-    transformWorldToLocal(point: { x: number; y: number }): { x: number; y: number } {
-        if (!this.scene) return point;
 
-        const Matrix = this.resource.canvasKit.Matrix;
-        // Transform the point through the local matrix to get world coordinates
-        const transformedPoint = Matrix.mapPoints(this.scene.getWorldMatrix(), [point.x, point.y]);
-        console.log(transformedPoint);
-
-        return {
-            x: transformedPoint[0],
-            y: transformedPoint[1]
-        };
-    }
 
     selectModifier(x: number, y: number) {
         if (this.handles.length == 0 || !this.scene) return null
         let selected: Handle = null;
+        const Matrix = this.resource.canvasKit.Matrix;
 
-        ({ x, y } = this.transformWorldToLocal({ x, y }))
+        ({ x, y } = transformWorldToLocal(Matrix, Matrix.invert(this.scene.getWorldMatrix()), { x, y }));
 
         for (const node of this.handles) {
             if (node && node.isCollide(x, y)) {
@@ -97,7 +88,8 @@ class ShapeModifier {
             }
         }
         if (!selected) {
-            const bRect = this.scene.getShape().getBoundingRect();
+            const dimen = this.scene.getShape().getDim();
+            const bRect = { left: 0, top: 0, right: dimen.width, bottom: dimen.height };
             const tolerance = 5
             const nearTop = Math.abs(y - bRect.top) <= tolerance && x >= bRect.left - tolerance && x <= bRect.right + tolerance;
             const nearBottom = Math.abs(y - bRect.bottom) <= tolerance && x >= bRect.left - tolerance && x <= bRect.right + tolerance;
