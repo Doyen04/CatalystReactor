@@ -122,12 +122,11 @@ abstract class Shape implements IShape {
             case 'linear': {
                 const gradient = fill as LinearGradient;
                 const size = this.getDim();
-                const coord = this.getCoord();
 
-                const x1 = coord.x + (gradient.x1 / 100) * size.width;
-                const y1 = coord.y + (gradient.y1 / 100) * size.height;
-                const x2 = coord.x + (gradient.x2 / 100) * size.width;
-                const y2 = coord.y + (gradient.y2 / 100) * size.height;
+                const x1 = (gradient.x1 / 100) * size.width;
+                const y1 = (gradient.y1 / 100) * size.height;
+                const x2 = (gradient.x2 / 100) * size.width;
+                const y2 = (gradient.y2 / 100) * size.height;
 
                 const shader = this.resource.canvasKit.Shader.MakeLinearGradient(
                     [x1, y1],
@@ -141,11 +140,10 @@ abstract class Shape implements IShape {
             case 'radial': {
                 const gradient = fill as RadialGradient;
                 const size = this.getDim();
-                const coord = this.getCoord();
-
+                
                 // Calculate center point
-                const centerX = coord.x + (gradient.cx / 100) * size.width;
-                const centerY = coord.y + (gradient.cy / 100) * size.height;
+                const centerX = (gradient.cx / 100) * size.width;
+                const centerY = (gradient.cy / 100) * size.height;
 
                 // Calculate radius as percentage of the larger dimension
                 const maxDimension = Math.max(size.width, size.height);
