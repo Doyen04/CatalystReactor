@@ -3,7 +3,7 @@
 
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, CornerPos, FillStyle, ImageFill, IShape, LinearGradient, Properties, RadialGradient, ScaleMode, ShapeType, Size, SolidFill, Style, Transform } from "@lib/types/shapes";
+import { BoundingRect, Coord, CornerPos, FillStyle, ImageFill, IShape, LinearGradient, Properties, RadialGradient, ScaleMode, ShapeType, Size, SolidFill, Style, Transform } from "@lib/types/shapes";
 import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from "canvaskit-wasm";
 
 interface Arguments {
@@ -30,7 +30,7 @@ abstract class Shape implements IShape {
 
     constructor({ x, y, type, rotation = 0, scale = 1, _fill = "#fff", strokeWidth = 1, strokeColor = '#000' }: Arguments) {
         if (new.target === Shape) throw new Error("Shape is abstract; extend it!");
-        this.transform = { x, y, rotation, scaleX: scale, scaleY: scale, anchorPoint: { x: x, y: y } };
+        this.transform = { x, y, rotation, scaleX: scale, scaleY: scale, anchorPoint: null};
 
         const fill: SolidFill = { type: 'solid', color: _fill }
         const stroke: SolidFill = { type: 'solid', color: strokeColor }
@@ -44,6 +44,7 @@ abstract class Shape implements IShape {
     }
 
     abstract getBoundingRect(): BoundingRect;
+    abstract getCenterCoord(): Coord;
     abstract handleFlip(isFlippedX: boolean, isFlippedY: boolean): void;
     abstract getModifierHandles(): Handle[];
     abstract getModifierHandlesPos(handle: Handle): { x: number; y: number; };
@@ -244,10 +245,18 @@ abstract class Shape implements IShape {
         this.resource.strokePaint.setAlphaf(1.0);
     }
 
-    setStrokeColor(color: string): void {
-        console.log(color);
-
+    setAngle(angle: number): void {
+       this.transform.rotation = angle;
         // this.style.strokeColor = color;
+    }
+
+    setAnchorPoint(anchor: Coord): void {
+        this.transform.anchorPoint = anchor;
+    }
+
+    setStrokeColor(stroke: string | number[]): void {
+        console.log(stroke);
+        
     }
     setStrokeWidth(width: number): void {
         console.log(width);

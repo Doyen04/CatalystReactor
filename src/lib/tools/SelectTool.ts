@@ -129,6 +129,17 @@ class SelectTool extends Tool {
                 default:
                     break;
             }
+        }else if(handle.type === 'angle'){
+            switch (handle.pos) {
+                case 'top-left':
+                case 'bottom-left':
+                case 'bottom-right':
+                case 'top-right':
+                    cursor = 'move'
+                    break;
+                default:
+                    break;
+            }
         }
         // Set the cursor on the canvas element
         if (this.cnvsElm) {

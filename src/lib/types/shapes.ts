@@ -75,7 +75,7 @@ export interface Transform {
     rotation: number;
     scaleX: number;
     scaleY: number;
-    anchorPoint: Coord;
+    anchorPoint: Coord | null;
     isFlippedX?: boolean;
     isFlippedY?: boolean;
     originalX?: number;
@@ -231,8 +231,10 @@ export interface IShape {
     draw(canvas: Canvas): void;
     setDim(width: number, height: number): void;
     getDim(): { width: number, height: number };
-    getCoord?(): { x: number, y: number };
+    getCoord(): { x: number, y: number };
+    setAngle(angle: number): void;
     setCoord(x: number, y: number): void;
+    setAnchorPoint(anchor: Coord): void;
     setHovered?(B: boolean): void;
     setRadius?(r: number): void;
     destroy?(): void;

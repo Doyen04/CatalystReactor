@@ -120,6 +120,9 @@ class ShapeModifier {
                 case 'vertices':
                     this.selectedModifierHandle.updateShapeVertices(x, y, e, this.scene)
                     break;
+                case 'angle':
+                    this.selectedModifierHandle.updateShapeAngle(x, y, e, this.scene)
+                    break;
                 default:
                     break;
             }
@@ -228,7 +231,7 @@ class ShapeModifier {
         this.handles.forEach(handle => {
             if (handle.type === 'size') {
                 handle.draw(canvas);
-            } else if (this.isHovered) {
+            } else if (this.isHovered && handle.type !== 'angle') {
                 handle.draw(canvas);
             }
         });

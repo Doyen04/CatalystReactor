@@ -60,7 +60,7 @@ export default class Handle {
 
     isCollide(px: number, py: number): boolean {
         // Rectangle handle
-        const hpad = 3
+        const hpad = 2
         if (this.type === "size") {
             return (
                 px >= this.x - hpad &&
@@ -96,6 +96,7 @@ export default class Handle {
 
         return ratio;
     }
+
     updateShapeRadii(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
 
         const { left, right, top, bottom } = scene.getShape().getBoundingRect();
@@ -250,7 +251,7 @@ export default class Handle {
 
         scene.setFlip(isFlippedX, isFlippedY);
         scene.setPosition(nx, ny);
-        shape.setDim(width, height);
+        scene.setDimension(width, height);
     }
 
     clampAngleToArc(t: number, start: number, end: number, prev: number): number {
@@ -373,6 +374,28 @@ export default class Handle {
         ) {
             shape.setVertexCount(prev);
         }
+    }
+
+    updateShapeAngle(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+        const shape = scene.getShape();
+        if (!shape) return;
+
+        //work on this
+        const { x, y } = shape.getCenterCoord();
+        let { transform } = shape.getProperties()
+        if (!transform.anchorPoint) {
+            shape.setAnchorPoint({ x, y });
+        }
+
+        ({ transform } = shape.getProperties())
+
+        const cx = transform.anchorPoint.x;
+        const cy = transform.anchorPoint.y;
+
+        // Angle in radians
+        const angle = Math.atan2(e.offsetY - cy, e.offsetX - cx);
+
+        scene.setAngle(angle);
     }
 
     createPaint() {

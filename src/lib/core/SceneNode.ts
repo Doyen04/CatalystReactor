@@ -52,32 +52,34 @@ class SceneNode {
         this.updateWorldMatrix();
     }
 
-    drawDefault(){
+    drawDefault() {
         this.shape.drawDefault();
 
         this.updateWorldMatrix();
     }
 
+    setDimension(width: number, height: number): void {
+        this.shape.setDim(width, height);
+        this.updateWorldMatrix();
+    }
+
+    setAngle(angle: number): void {
+        this.shape.setAngle(angle);
+        this.updateWorldMatrix();
+    }
+
     setFlip(isFlippedX: boolean, isFlippedY: boolean): void {
-        // this.transform.isFlippedX = isFlippedX;
-        // this.transform.isFlippedY = isFlippedY;
         this.shape.handleFlip(isFlippedX, isFlippedY);
         this.updateWorldMatrix();
     }
 
     setPosition(x: number, y: number): void {
-        // this.transform.x = x;
-        // this.transform.y = y;
         this.shape.setCoord(x, y);
 
         this.updateWorldMatrix();
     }
 
     move(dx: number, dy: number): void {
-        // this.transform.x += dx;
-        // this.transform.y += dy;
-        // this.transform.originalX += dx;
-        // this.transform.originalY += dy;
         this.shape.moveShape(dx, dy);
 
         this.updateWorldMatrix();
@@ -123,10 +125,15 @@ class SceneNode {
 
         const sx = (transform.scaleX ?? 1);
         const sy = (transform.scaleY ?? 1);
-        
+
+        const { x: ax, y: ay } = (!transform.anchorPoint) ? { x: 0, y: 0 } : {
+            x: transform.anchorPoint.x - transform.x,
+            y: transform.anchorPoint.y - transform.y
+        };
+
         const T = Matrix.translated(transform.x, transform.y);
-        const R = Matrix.rotated(transform.rotation || 0, transform.anchorPoint.x, transform.anchorPoint.y);
-        const S = Matrix.scaled(sx, sy, transform.anchorPoint.x, transform.anchorPoint.y);
+        const R = Matrix.rotated(transform.rotation || 0, ax, ay);
+        const S = Matrix.scaled(sx, sy, ax, ay);
 
         this.localMatrix = Matrix.multiply(T, R, S);
     }

@@ -1,6 +1,6 @@
 import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Rect } from "canvaskit-wasm";
-import { BorderRadius, BoundingRect, CornerPos, HandlePos, Properties, Size } from '@lib/types/shapes';
+import { BorderRadius, BoundingRect, Coord, CornerPos, HandlePos, Properties, Size } from '@lib/types/shapes';
 import Shape from '../base/Shape';
 
 
@@ -19,10 +19,6 @@ class Rectangle extends Shape {
             locked: false,
         };
         this.calculateBoundingRect()
-    }
-
-    override getBoundingRect(): BoundingRect {
-        return structuredClone(this.boundingRect);
     }
 
     override moveShape(dx: number, dy: number): void {
@@ -100,45 +96,6 @@ class Rectangle extends Shape {
 
     }
 
-    getBorderRadius() {
-        const { width, height } = this.dimension;
-        const max = Math.min(width, height);
-
-        const temp = this.flippedRadii();
-
-        if (!this.hasRadius()) {
-            return { ...temp };
-        }
-
-        const radii = {
-            'top-left': Math.min(temp['top-left'], max),
-            'top-right': Math.min(temp['top-right'], max),
-            'bottom-left': Math.min(temp['bottom-left'], max),
-            'bottom-right': Math.min(temp['bottom-right'], max),
-        };
-
-        const sums = {
-            top: radii['top-left'] + radii['top-right'],
-            right: radii['top-right'] + radii['bottom-right'],
-            bottom: radii['bottom-left'] + radii['bottom-right'],
-            left: radii['top-left'] + radii['bottom-left']
-        };
-
-        const scaleRadii = (sum: number, ...corners: (keyof typeof radii)[]) => {
-            if (sum > max && sum > 0) {
-                const scale = max / sum;
-                corners.forEach(corner => radii[corner] *= scale);
-            }
-        };
-
-        scaleRadii(sums.top, 'top-left', 'top-right');
-        scaleRadii(sums.left, 'top-left', 'bottom-left');
-        scaleRadii(sums.bottom, 'bottom-left', 'bottom-right');
-        scaleRadii(sums.right, 'top-right', 'bottom-right');
-
-        return { ...radii, locked: this.bdradius.locked };
-    }
-
     protected flippedRadii = () => {
         let radii = structuredClone(this.bdradius);
 
@@ -177,6 +134,55 @@ class Rectangle extends Shape {
         this.style = prop.style
         this.bdradius = prop.borderRadius
         this.calculateBoundingRect()
+    }
+
+    override getCenterCoord(): Coord {
+        const { x, y } = this.transform;
+        const { width, height } = this.dimension;
+        return { x: x + width / 2, y: y + height / 2 };
+    }
+
+    override getBoundingRect(): BoundingRect {
+        return structuredClone(this.boundingRect);
+    }
+
+    getBorderRadius() {
+        const { width, height } = this.dimension;
+        const max = Math.min(width, height);
+
+        const temp = this.flippedRadii();
+
+        if (!this.hasRadius()) {
+            return { ...temp };
+        }
+
+        const radii = {
+            'top-left': Math.min(temp['top-left'], max),
+            'top-right': Math.min(temp['top-right'], max),
+            'bottom-left': Math.min(temp['bottom-left'], max),
+            'bottom-right': Math.min(temp['bottom-right'], max),
+        };
+
+        const sums = {
+            top: radii['top-left'] + radii['top-right'],
+            right: radii['top-right'] + radii['bottom-right'],
+            bottom: radii['bottom-left'] + radii['bottom-right'],
+            left: radii['top-left'] + radii['bottom-left']
+        };
+
+        const scaleRadii = (sum: number, ...corners: (keyof typeof radii)[]) => {
+            if (sum > max && sum > 0) {
+                const scale = max / sum;
+                corners.forEach(corner => radii[corner] *= scale);
+            }
+        };
+
+        scaleRadii(sums.top, 'top-left', 'top-right');
+        scaleRadii(sums.left, 'top-left', 'bottom-left');
+        scaleRadii(sums.bottom, 'bottom-left', 'bottom-right');
+        scaleRadii(sums.right, 'top-right', 'bottom-right');
+
+        return { ...radii, locked: this.bdradius.locked };
     }
 
     override getDim(): { width: number, height: number } {
@@ -242,7 +248,7 @@ class Rectangle extends Shape {
             return this.getRadiusModiferHandlesPos(handle);
         } else if (handle.type === 'size') {
             return super.getSizeModifierHandlesPos(handle);
-        }else if (handle.type == 'angle') {
+        } else if (handle.type == 'angle') {
             return super.getAngleModifierHandlesPos(handle);
         }
         return { x: 0, y: 0 };
