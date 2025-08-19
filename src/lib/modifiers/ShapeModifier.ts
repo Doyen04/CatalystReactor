@@ -1,11 +1,11 @@
 import type { Canvas } from "canvaskit-wasm";
 import Handle from "./Handles";
 import CanvasKitResources from '@lib/core/CanvasKitResource'
-import EventQueue, { EventTypes } from "@lib/core/EventQueue";
+// import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import SText from "@lib/shapes/primitives/SText";
 import SceneNode from "@lib/core/SceneNode";
 
-const { UpdateModifierHandlesPos } = EventTypes
+// const { UpdateModifierHandlesPos } = EventTypes
 
 class ShapeModifier {
     private scene: SceneNode | null;
@@ -26,18 +26,18 @@ class ShapeModifier {
         this.selectedModifierHandle = null
         this.font = new SText(200, 0)
 
-        this.setUpEvent()
+        // this.setUpEvent()
     }
-    setUpEvent() {
-        this.removeEvent()
-        this.addEvent()
-    }
-    addEvent() {
-        EventQueue.subscribe(UpdateModifierHandlesPos, this.updateResizerPositions.bind(this))
-    }
-    removeEvent() {
-        EventQueue.unSubscribeAll(UpdateModifierHandlesPos)
-    }
+    // setUpEvent() {
+    //     this.removeEvent()
+    //     this.addEvent()
+    // }
+    // addEvent() {
+    //     EventQueue.subscribe(UpdateModifierHandlesPos, this.updateResizerPositions.bind(this))
+    // }
+    // removeEvent() {
+    //     EventQueue.unSubscribeAll(UpdateModifierHandlesPos)
+    // }
 
     attachShape(scene: SceneNode) {
         this.handles = []
@@ -63,7 +63,7 @@ class ShapeModifier {
     }
 
     handleRemoveModiferHandle() {
-        console.log('finished draging handle', this.selectedModifierHandle.pos);
+        console.log('finished dragging handle');
         if (!this.selectedModifierHandle) return
         this.selectedModifierHandle.isDragging = false
         this.selectedModifierHandle.resetAnchorPoint()
@@ -190,7 +190,8 @@ class ShapeModifier {
     hovered(): boolean {
         return this.isHovered
     }
-    CanDraw(): boolean {
+
+    canDraw(): boolean {
         if (!this.scene && !this.scene.getShape()) return false;
         const { left, top, right, bottom } = this.scene.getShape().getBoundingRect();
         const width = right - left;
@@ -213,7 +214,7 @@ class ShapeModifier {
 
     draw(canvas: Canvas): void {
 
-        if (!this.scene || this.CanDraw() || !this.resource) {
+        if (!this.scene || this.canDraw() || !this.resource) {
             return;
         }
         this.setPaint();
@@ -225,10 +226,9 @@ class ShapeModifier {
         this.font.draw(canvas)
 
         this.handles.forEach(handle => {
-            if (handle.type !== 'size' && this.isHovered) {
+            if (handle.type === 'size') {
                 handle.draw(canvas);
-            }
-            else if (handle.type === 'size') {
+            } else if (this.isHovered) {
                 handle.draw(canvas);
             }
         });

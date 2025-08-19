@@ -3,7 +3,7 @@
 
 import Handle from "@lib/modifiers/Handles"
 import { CanvasKitResources } from "@lib/core/CanvasKitResource";
-import { BoundingRect, FillStyle, ImageFill, IShape, LinearGradient, Properties, RadialGradient, ScaleMode, ShapeType, Size, SizeModifierPos, SolidFill, Style, Transform } from "@lib/types/shapes";
+import { BoundingRect, CornerPos, FillStyle, ImageFill, IShape, LinearGradient, Properties, RadialGradient, ScaleMode, ShapeType, Size, SolidFill, Style, Transform } from "@lib/types/shapes";
 import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from "canvaskit-wasm";
 
 interface Arguments {
@@ -74,9 +74,36 @@ abstract class Shape implements IShape {
         }
     }
 
+    getAngleModifierHandles(): Handle[] {
+        const handles: Handle[] = [];
+        CornerPos.forEach(pos => {
+            handles.push(new Handle(0, 0, pos, 'angle'));
+        });
+        return handles;
+    }
+
+    getAngleModifierHandlesPos(handle: Handle): { x: number; y: number; } {
+        const bRect = this.boundingRect
+        const size = handle.size / 2
+        const padding = handle.size
+
+        switch (handle.pos) {
+            case 'top-left':
+                return { x: bRect.left - size - padding, y: bRect.top - size - padding };
+            case 'top-right':
+                return { x: bRect.right - size + padding, y: bRect.top - size - padding };
+            case 'bottom-left':
+                return { x: bRect.left - size - padding, y: bRect.bottom - size + padding };
+            case 'bottom-right':
+                return { x: bRect.right - size + padding, y: bRect.bottom - size + padding };
+            default:
+                return { x: 0, y: 0 };
+        }
+    }
+
     getSizeModifierHandles(): Handle[] {
         const handles: Handle[] = [];
-        SizeModifierPos.forEach(pos => {
+        CornerPos.forEach(pos => {
             handles.push(new Handle(0, 0, pos, 'size'));
         });
         return handles;

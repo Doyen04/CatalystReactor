@@ -27,7 +27,7 @@ export default class Handle {
         this.fill = '#fff'
 
         // By default, use Oval for radius, Rect for size
-        if (type !== "size") {
+        if (type !== "size" && type !== 'angle') {
             this.size = 4
             if (type === 'arc' || type === 'c-ratio') {
                 this.handleArcAngle = 0
@@ -75,7 +75,7 @@ export default class Handle {
         const r = this.size * 2;
         return dx * dx + dy * dy <= r * r;
     }
-    
+
     private calculateRatioFromMousePosition(e: MouseEvent, centerX: number, centerY: number, width: number, height: number): number {
         const deltaX = e.offsetX - centerX;
         const deltaY = e.offsetY - centerY;
@@ -414,7 +414,7 @@ export default class Handle {
     }
 
     draw(canvas: Canvas) {
-        if (this.type !== "size") {
+        if (this.type !== "size" && this.type !== "angle") {
             this.drawOval(canvas);
         } else {
             this.drawRect(canvas);

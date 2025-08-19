@@ -1,6 +1,6 @@
 import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Rect } from "canvaskit-wasm";
-import { BorderRadius, BoundingRect, HandlePos, Properties, RadiusModifierPos, Size } from '@lib/types/shapes';
+import { BorderRadius, BoundingRect, CornerPos, HandlePos, Properties, Size } from '@lib/types/shapes';
 import Shape from '../base/Shape';
 
 
@@ -194,7 +194,12 @@ class Rectangle extends Shape {
 
     override getModifierHandles(): Handle[] {
         const handles = super.getSizeModifierHandles();
-        RadiusModifierPos.forEach(pos => {
+
+        super.getAngleModifierHandles().forEach(handle => {
+            handles.push(handle);
+        });
+
+        CornerPos.forEach(pos => {
             handles.push(new Handle(0, 0, pos, 'radius'))
         })
         return handles;
@@ -237,6 +242,8 @@ class Rectangle extends Shape {
             return this.getRadiusModiferHandlesPos(handle);
         } else if (handle.type === 'size') {
             return super.getSizeModifierHandlesPos(handle);
+        }else if (handle.type == 'angle') {
+            return super.getAngleModifierHandlesPos(handle);
         }
         return { x: 0, y: 0 };
     }

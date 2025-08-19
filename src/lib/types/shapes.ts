@@ -197,23 +197,16 @@ export interface Coord {
     x: number;
     y: number;
 }
-
-export const SizeModifierPos: HandlePos[] = [
+export const CornerPos: HandlePos[] = [
     'top-left',
     'top-right',
     'bottom-left',
     'bottom-right',
 ];
-export const RadiusModifierPos: HandlePos[] = [
-    'top-left',
-    'top-right',
-    'bottom-left',
-    'bottom-right'
-];
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img';
 export type HandlePos = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end' | 'top' | 'right' | 'between' | 'bottom' | 'left';
-export type HandleType = 'size' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio';
+export type HandleType = 'size'| 'angle' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio';
 
 export interface IShape {
     id?: string;
