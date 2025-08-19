@@ -70,9 +70,25 @@ class ShapeModifier {
         this.selectedModifierHandle = null
     }
 
+    transformWorldToLocal(point: { x: number; y: number }): { x: number; y: number } {
+        if (!this.scene) return point;
+
+        const Matrix = this.resource.canvasKit.Matrix;
+        // Transform the point through the local matrix to get world coordinates
+        const transformedPoint = Matrix.mapPoints(this.scene.getWorldMatrix(), [point.x, point.y]);
+        console.log(transformedPoint);
+
+        return {
+            x: transformedPoint[0],
+            y: transformedPoint[1]
+        };
+    }
+
     selectModifier(x: number, y: number) {
         if (this.handles.length == 0 || !this.scene) return null
-        let selected: Handle = null
+        let selected: Handle = null;
+
+        ({ x, y } = this.transformWorldToLocal({ x, y }))
 
         for (const node of this.handles) {
             if (node && node.isCollide(x, y)) {
@@ -152,14 +168,16 @@ class ShapeModifier {
         }
         this.updateText()
     }
+
+    //local coord
     updateText() {
-        const { bottom, left } = this.scene.getShape().getBoundingRect()
         const { width, height } = this.scene.getShape().getDim()
+
         this.font.setText(`${width} X ${height}`)
 
         const { width: tWidth } = this.font.getDim()
         const pos = (width - tWidth) / 2
-        this.font.setCoord(left + pos, bottom + 5)
+        this.font.setCoord(pos, height + 5)
     }
     setPaint(): void {
         if (!this.resource) return
@@ -221,9 +239,11 @@ class ShapeModifier {
             return;
         }
         this.setPaint();
-        const dimen = this.scene.getShape().getBoundingRect();
+        canvas.concat(this.scene.getLocalMatrix())
 
-        const rect = this.resource.canvasKit.LTRBRect(dimen.left, dimen.top, dimen.right, dimen.bottom);
+        const dimen = this.scene.getShape().getDim();
+
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, dimen.width, dimen.height);
 
         canvas.drawRect(rect, this.resource.strokePaint);
         this.font.draw(canvas)

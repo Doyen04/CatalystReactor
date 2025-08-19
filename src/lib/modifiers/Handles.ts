@@ -416,9 +416,9 @@ export default class Handle {
 
     drawRect(canvas: Canvas) {
         const { fill, stroke } = this.createPaint();
-        const rect = this.resource.canvasKit.LTRBRect(
+        const rect = this.resource.canvasKit.XYWHRect(
             this.x, this.y,
-            this.x + this.size, this.y + this.size
+            this.size, this.size
         );
         canvas.drawRect(rect, fill);
         canvas.drawRect(rect, stroke);

@@ -2,13 +2,11 @@ import { Canvas, Surface } from "canvaskit-wasm";
 import EventQueue, { EventTypes, } from './EventQueue'
 import SceneManager from "./SceneManager";
 import CanvasKitResources from "./CanvasKitResource";
-import ShapeModifier from "@lib/modifiers/ShapeModifier";
 
 const { CreateSurface, Render } = EventTypes
 
 class Renderer {
     sceneManager: SceneManager
-    shapeModifier: ShapeModifier
     surf: Surface | null;
     canvasEl: HTMLCanvasElement
 
@@ -22,10 +20,9 @@ class Renderer {
     private canrender: boolean = false;
 
 
-    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager, shapeModifier: ShapeModifier) {
+    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager) {
         this.canvasEl = canvasEl;
         this.sceneManager = sceneManager;
-        this.shapeModifier = shapeModifier
         this.surf = null;
         this.animationId = null
 
@@ -179,8 +176,7 @@ class Renderer {
         skCnvs!.drawRect(rect, this.resource.paint!);
         skCnvs!.drawRect(rect, this.resource.strokePaint!);
 
-        this.sceneManager.draw(skCnvs);
-        this.shapeModifier.draw(skCnvs)
+        this.sceneManager.draw(skCnvs)
         
         skCnvs!.restore();
         this.surf.flush();

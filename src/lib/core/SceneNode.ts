@@ -106,6 +106,14 @@ class SceneNode {
         return this.shape
     }
 
+    getLocalMatrix(): number[] | null {
+        return this.localMatrix;
+    }
+
+    getWorldMatrix(): number[] | null {
+        return this.worldMatrix;
+    }
+
     hasShape(): boolean {
         return this.shape != null
     }

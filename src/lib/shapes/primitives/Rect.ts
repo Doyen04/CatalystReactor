@@ -211,6 +211,7 @@ class Rectangle extends Shape {
         return handles;
     }
 
+    //local coord
     getRadiusModiferHandlesPos(handle: Handle): { x: number; y: number; } {
         let r = this.bdradius[handle.pos];
         const max = Math.min(this.dimension.width, this.dimension.height) / 2;
@@ -222,20 +223,20 @@ class Rectangle extends Shape {
 
         switch (handle.pos) {
             case 'top-left':
-                x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.transform.y + (handle.isDragging || r >= padding ? r : padding) - size;
+                x = (handle.isDragging || r >= padding ? r : padding) - size;
+                y = (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'top-right':
-                x = this.transform.x + this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.transform.y + (handle.isDragging || r >= padding ? r : padding) - size;
+                x = this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
+                y = (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'bottom-left':
-                x = this.transform.x + (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.transform.y + this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
+                x = (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
             case 'bottom-right':
-                x = this.transform.x + this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
-                y = this.transform.y + this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
+                x = this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size;
+                y = this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size;
                 break;
         }
 
@@ -275,7 +276,7 @@ class Rectangle extends Shape {
 
         const { fill, stroke } = this.initPaints()
 
-        const rect = this.resource.canvasKit.LTRBRect(0, 0,
+        const rect = this.resource.canvasKit.XYWHRect(0, 0,
             this.dimension.width,
             this.dimension.height);
 

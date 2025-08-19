@@ -83,9 +83,12 @@ abstract class Shape implements IShape {
         return handles;
     }
 
+    //local coord
     getAngleModifierHandlesPos(handle: Handle): { x: number; y: number; } {
-        const bRect = this.boundingRect
+        const dimen = this.getDim();
+        const bRect = { left: 0, top: 0, right: dimen.width, bottom: dimen.height };
         const size = handle.size / 2
+
         const padding = handle.size
 
         switch (handle.pos) {
@@ -110,8 +113,10 @@ abstract class Shape implements IShape {
         return handles;
     }
 
+    //local coord
     getSizeModifierHandlesPos(handle: Handle): { x: number; y: number; } {
-        const bRect = this.boundingRect
+        const dimen = this.getDim();
+        const bRect = { left: 0, top: 0, right: dimen.width, bottom: dimen.height };
         const size = handle.size / 2
 
         switch (handle.pos) {

@@ -1,32 +1,16 @@
 import { Canvas } from "canvaskit-wasm";
 import SceneNode from "./SceneNode";
+import ShapeModifier from "@lib/modifiers/ShapeModifier";
 
 
 class SceneManager {
     private scene: SceneNode
-    selected: SceneNode | null;
-    hoveredScene: SceneNode | null;
-    modifierSelected: boolean;
+    private shapeModifier: ShapeModifier
 
-    constructor() {
+    constructor(shapeModifier:ShapeModifier) {
         this.scene = new SceneNode(null)
-        this.selected = null
-        this.hoveredScene = null
-        this.modifierSelected = false
+        this.shapeModifier = shapeModifier
         //remember to add a shape created event
-
-        this.setUpEvent()
-    }
-    setUpEvent() {
-        this.removeEvent()
-        this.addEvent()
-    }
-    addEvent() {
-        // EventQueue.subscribe(DeleteScene, this.handleDeleteScene.bind(this))
-
-    }
-    removeEvent() {
-        // EventQueue.unSubscribeAll(FinaliseSelection)
     }
     getScene(): SceneNode {
         return this.scene
@@ -74,22 +58,13 @@ class SceneManager {
 
     draw(skCnvs: Canvas) {
         this.scene.draw(skCnvs);
+        this.shapeModifier.draw(skCnvs);
     }
 
     destroy() {
         if (this.scene) {
             this.scene.destroy()
             this.scene = null
-        } if (this.selected) {
-            this.selected.destroy()
-            this.selected = null
-        }
-        if (this.hoveredScene) {
-            this.hoveredScene.destroy()
-            this.hoveredScene = null
-        }
-        if (this.modifierSelected) {
-            this.modifierSelected = false
         }
     }
 }

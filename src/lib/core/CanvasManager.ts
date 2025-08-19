@@ -27,8 +27,8 @@ class CanvasManager {
         // this.skCnvs = null
         this.shapeModifier = new ShapeModifier()
         this.shapeManager = new ShapeManager(this.shapeModifier)
-        this.sceneManager = new SceneManager();
-        this.renderer = new Renderer(canvas, this.sceneManager, this.shapeModifier)
+        this.sceneManager = new SceneManager(this.shapeModifier);
+        this.renderer = new Renderer(canvas, this.sceneManager)
         this.inputManager = new InputManager(canvas)
         this.toolManager = new ToolManager(this.sceneManager, this.shapeManager, canvas)
 
