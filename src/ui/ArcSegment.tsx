@@ -1,21 +1,18 @@
-import * as React from "react";
+import * as React from 'react'
 
 type IconProps = React.SVGProps<SVGSVGElement> & {
-    centerX?: number;  // defaults to 0 (viewBox-centered)
-    centerY?: number;
-    radiusX?: number;
-    radiusY?: number;
-    ratio: number;       // 0–1
-    startAngle: number;  // in radians
-    endAngle: number;    // in radians
-    color?: string;
-    strokeWidth?:number;
-};
+    centerX?: number // defaults to 0 (viewBox-centered)
+    centerY?: number
+    radiusX?: number
+    radiusY?: number
+    ratio: number // 0–1
+    startAngle: number // in radians
+    endAngle: number // in radians
+    color?: string
+    strokeWidth?: number
+}
 
-export const AngleIcon = React.forwardRef<
-    SVGSVGElement,
-    IconProps
->(
+export const AngleIcon = React.forwardRef<SVGSVGElement, IconProps>(
     (
         {
             centerX = 0,
@@ -25,7 +22,7 @@ export const AngleIcon = React.forwardRef<
             ratio,
             startAngle,
             endAngle,
-            color = "currentColor",
+            color = 'currentColor',
             strokeWidth = 2,
             width,
             height,
@@ -33,46 +30,47 @@ export const AngleIcon = React.forwardRef<
         },
         ref
     ) => {
-        const safeRatio = Math.max(0, Math.min(1, ratio));
-        const sweepAngle = (endAngle - startAngle) * safeRatio;
-        const startDegrees = (startAngle * 180) / Math.PI;
-        const sweepDegrees = (sweepAngle * 180) / Math.PI;
+        const safeRatio = Math.max(0, Math.min(1, ratio))
+        const sweepAngle = (endAngle - startAngle) * safeRatio
+        const startDegrees = (startAngle * 180) / Math.PI
+        const sweepDegrees = (sweepAngle * 180) / Math.PI
 
-        const sin = Math.sin;
-        const cos = Math.cos;
+        const sin = Math.sin
+        const cos = Math.cos
 
         const innerStart = {
             x: centerX + radiusX * safeRatio * cos(startAngle),
             y: centerY + radiusY * safeRatio * sin(startAngle),
-        };
+        }
 
         const outerEnd = {
             x: centerX + radiusX * cos(startAngle + sweepAngle),
             y: centerY + radiusY * sin(startAngle + sweepAngle),
-        };
+        }
 
         // Build path equivalent to your drawComplexTorusArc
         const d = [
             `M ${innerStart.x},${innerStart.y}`,
-            `A ${radiusX * safeRatio},${radiusY * safeRatio} 0 ${Math.abs(
-                sweepAngle
-            ) > Math.PI ? 1 : 0} ${sweepAngle >= 0 ? 1 : 0
-            } ${innerStart.x +
-            (outerEnd.x - innerStart.x)},${innerStart.y +
-            (outerEnd.y - innerStart.y)}`,
+            `A ${radiusX * safeRatio},${radiusY * safeRatio} 0 ${
+                Math.abs(sweepAngle) > Math.PI ? 1 : 0
+            } ${sweepAngle >= 0 ? 1 : 0} ${
+                innerStart.x + (outerEnd.x - innerStart.x)
+            },${innerStart.y + (outerEnd.y - innerStart.y)}`,
             `L ${outerEnd.x},${outerEnd.y}`,
-            `A ${radiusX},${radiusY} 0 ${Math.abs(sweepAngle) > Math.PI ? 1 : 0
-            } ${sweepAngle >= 0 ? 1 : 0} ${centerX + radiusX * cos(startAngle)
+            `A ${radiusX},${radiusY} 0 ${
+                Math.abs(sweepAngle) > Math.PI ? 1 : 0
+            } ${sweepAngle >= 0 ? 1 : 0} ${
+                centerX + radiusX * cos(startAngle)
             },${centerY + radiusY * sin(startAngle)}`,
-            "Z",
-        ].join(" ");
+            'Z',
+        ].join(' ')
 
         const vb = [
             centerX - radiusX - strokeWidth,
             centerY - radiusY - strokeWidth,
             2 * (radiusX + strokeWidth),
             2 * (radiusY + strokeWidth),
-        ].join(" ");
+        ].join(' ')
 
         return (
             <svg
@@ -86,8 +84,8 @@ export const AngleIcon = React.forwardRef<
             >
                 <path d={d} fillRule="evenodd" />
             </svg>
-        );
+        )
     }
-);
+)
 
-AngleIcon.displayName = "angleIcon";
+AngleIcon.displayName = 'angleIcon'

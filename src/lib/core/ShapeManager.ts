@@ -1,28 +1,30 @@
 // ShapeManager.ts
-import { useSceneStore } from '@hooks/sceneStore';
-import { Coord, IShape, Properties } from '@lib/types/shapes';
-import ShapeModifier from '@lib/modifiers/ShapeModifier';
-import throttle from '@lib/helper/throttle';
-import SceneNode from './SceneNode';
-import Handle from '@lib/modifiers/Handles';
+import { useSceneStore } from '@hooks/sceneStore'
+import { Coord, IShape, Properties } from '@lib/types/shapes'
+import ShapeModifier from '@lib/modifiers/ShapeModifier'
+import throttle from '@lib/helper/throttle'
+import SceneNode from './SceneNode'
+import Handle from '@lib/modifiers/Handles'
 
 class ShapeManager {
-    private scene: SceneNode | null = null;
+    private scene: SceneNode | null = null
     private shapeModifier: ShapeModifier | null
-    private throttledUpdate: (properties: Properties) => void;
-    private selected: boolean = false;
+    private throttledUpdate: (properties: Properties) => void
+    private selected: boolean = false
 
     constructor(shapeModifier: ShapeModifier) {
         this.scene = null
         this.shapeModifier = shapeModifier
-        this.throttledUpdate = throttle(useSceneStore.getState().setCurrentShapeProperties)
+        this.throttledUpdate = throttle(
+            useSceneStore.getState().setCurrentShapeProperties
+        )
     }
 
     drawShape(dragStart: Coord, e: MouseEvent) {
         this.scene.drawOnDrag(dragStart, e)
         this.shapeModifier.update()
 
-        const props = this.scene.getShape().getProperties();
+        const props = this.scene.getShape().getProperties()
         this.throttledUpdate(props)
     }
 
@@ -33,7 +35,7 @@ class ShapeManager {
             this.scene.move(x, y)
         }
         this.shapeModifier.update()
-        const props = this.scene.getShape().getProperties();
+        const props = this.scene.getShape().getProperties()
         this.throttledUpdate(props)
     }
 
@@ -41,25 +43,27 @@ class ShapeManager {
         this.scene.move(x, y)
         this.shapeModifier.update()
 
-        const props = this.scene.getShape().getProperties();
+        const props = this.scene.getShape().getProperties()
         this.throttledUpdate(props)
     }
 
     handleTinyShapes(): void {
-        if (!this.scene) return;
+        if (!this.scene) return
 
-        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect();
-        const width = right - left;
-        const height = bottom - top;
-        const minSize = 5;
+        const { left, top, right, bottom } = this.scene
+            .getShape()
+            .getBoundingRect()
+        const width = right - left
+        const height = bottom - top
+        const minSize = 5
 
         if (width < minSize || height < minSize) {
             this.scene.drawDefault()
-            console.log('Shape removed: too small add default size');
+            console.log('Shape removed: too small add default size')
         }
 
         this.shapeModifier.update()
-        const props = this.scene.getShape().getProperties();
+        const props = this.scene.getShape().getProperties()
         this.throttledUpdate(props)
     }
 
@@ -80,11 +84,11 @@ class ShapeManager {
     }
 
     attachNode(scene: SceneNode) {
-        this.scene = scene;
-        this.shapeModifier.attachShape(scene);
+        this.scene = scene
+        this.shapeModifier.attachShape(scene)
         this.selected = true
         // Optionally sync initial props:
-        const props = this.scene.getShape().getProperties();
+        const props = this.scene.getShape().getProperties()
         this.throttledUpdate(props)
     }
 
@@ -95,21 +99,19 @@ class ShapeManager {
     }
 
     updateProperty<K extends keyof Properties>(key: K, value: Properties[K]) {
-        if (!this.scene.getShape()) throw new Error("No shape attached");
-        const prop = this.scene.getShape().getProperties();
-        this.scene.getShape().setProperties(
-            {
-                ...prop,
-                [key]: value
-            }
-        );
+        if (!this.scene.getShape()) throw new Error('No shape attached')
+        const prop = this.scene.getShape().getProperties()
+        this.scene.getShape().setProperties({
+            ...prop,
+            [key]: value,
+        })
         this.shapeModifier.update()
-        const props = this.scene.getShape().getProperties();
+        const props = this.scene.getShape().getProperties()
         this.throttledUpdate(props)
     }
 
     handleHover(x: number, y: number): Handle | null {
-        if (!this.shapeModifier) return null;
+        if (!this.shapeModifier) return null
 
         const isCollide = this.shapeModifier.collideRect(x, y)
         if (isCollide) {
@@ -118,7 +120,7 @@ class ShapeManager {
             this.shapeModifier.setHover(false)
         }
 
-        return this.shapeModifier.selectModifier(x, y);
+        return this.shapeModifier.selectModifier(x, y)
     }
 
     resetHover(scene: SceneNode | null) {
@@ -128,16 +130,16 @@ class ShapeManager {
     }
 
     finishDrag() {
-        if (!this.scene) return;
-        this.selected = false;
+        if (!this.scene) return
+        this.selected = false
         this.shapeModifier.handleRemoveModiferHandle()
         this.shapeModifier.update()
     }
 
     collide(x: number, y: number): boolean {
         if (!this.scene) {
-            this.selected = false;
-            return false;
+            this.selected = false
+            return false
         }
 
         const handle = this.shapeModifier.selectModifier(x, y)
@@ -152,4 +154,4 @@ class ShapeManager {
     // Additional methods: move, resize, updateBorderRadius, etc.
 }
 
-export default ShapeManager;
+export default ShapeManager

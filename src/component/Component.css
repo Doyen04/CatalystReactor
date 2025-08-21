@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
     --c: #58c;
@@ -16,20 +16,52 @@
     @apply focus:outline-0;
     background-color: rgb(193, 192, 192);
     background-image:
-        linear-gradient(0deg,
-            var(--n) 0%, var(--n) 9px,
-            var(--b) 9px, var(--b) 10px, var(--n) 10px, var(--n) 19px,
-            var(--t) 19px, var(--t) 20px, var(--n) 20px, var(--n) 29px,
-            var(--t) 29px, var(--t) 30px, var(--n) 30px, var(--n) 39px,
-            var(--t) 39px, var(--t) 40px, var(--n) 40px, var(--n) 49px,
-            var(--t) 49px, var(--t) 50px),
-        linear-gradient(-90deg,
-            var(--n) 0%, var(--n) 9px,
-            var(--b) 9px, var(--b) 10px, var(--n) 10px, var(--n) 19px,
-            var(--t) 19px, var(--t) 20px, var(--n) 20px, var(--n) 29px,
-            var(--t) 29px, var(--t) 30px, var(--n) 30px, var(--n) 39px,
-            var(--t) 39px, var(--t) 40px, var(--n) 40px, var(--n) 49px,
-            var(--t) 49px, var(--t) 50px);
+        linear-gradient(
+            0deg,
+            var(--n) 0%,
+            var(--n) 9px,
+            var(--b) 9px,
+            var(--b) 10px,
+            var(--n) 10px,
+            var(--n) 19px,
+            var(--t) 19px,
+            var(--t) 20px,
+            var(--n) 20px,
+            var(--n) 29px,
+            var(--t) 29px,
+            var(--t) 30px,
+            var(--n) 30px,
+            var(--n) 39px,
+            var(--t) 39px,
+            var(--t) 40px,
+            var(--n) 40px,
+            var(--n) 49px,
+            var(--t) 49px,
+            var(--t) 50px
+        ),
+        linear-gradient(
+            -90deg,
+            var(--n) 0%,
+            var(--n) 9px,
+            var(--b) 9px,
+            var(--b) 10px,
+            var(--n) 10px,
+            var(--n) 19px,
+            var(--t) 19px,
+            var(--t) 20px,
+            var(--n) 20px,
+            var(--n) 29px,
+            var(--t) 29px,
+            var(--t) 30px,
+            var(--n) 30px,
+            var(--n) 39px,
+            var(--t) 39px,
+            var(--t) 40px,
+            var(--n) 40px,
+            var(--n) 49px,
+            var(--t) 49px,
+            var(--t) 50px
+        );
     background-size: 50px 50px;
 }
 
@@ -58,11 +90,11 @@
 }
 
 .propertybar-header {
-    @apply w-full h-9 bg-gray-400 p-1
+    @apply w-full h-9 bg-gray-400 p-1;
 }
 
 .propertybar-body {
-    @apply text-gray-500 text-center p-2.5
+    @apply text-gray-500 text-center p-2.5;
 }
 
 input::-webkit-outer-spin-button,
@@ -71,7 +103,7 @@ input::-webkit-inner-spin-button {
     margin: 0;
 }
 
-input[type=number] {
+input[type='number'] {
     appearance: none;
     -moz-appearance: textfield;
 }

@@ -6,21 +6,24 @@ interface UseFilePickerOptions {
     onFileSelect: (files: FileList | null) => void
 }
 
-export const useFilePicker = ({ accept = 'image/*', multiple = false, onFileSelect }: UseFilePickerOptions) => {
+export const useFilePicker = ({
+    accept = 'image/*',
+    multiple = false,
+    onFileSelect,
+}: UseFilePickerOptions) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null)
 
     const openFilePicker = useCallback(() => {
         if (!fileInputRef.current) {
-            
             const input = document.createElement('input')
             input.type = 'file'
             input.accept = accept
             input.multiple = multiple
             input.style.display = 'none'
 
-            input.onchange = (event) => {
+            input.onchange = event => {
                 const target = event.target as HTMLInputElement
-                
+
                 onFileSelect(target.files)
 
                 document.body.removeChild(input)
@@ -37,7 +40,7 @@ export const useFilePicker = ({ accept = 'image/*', multiple = false, onFileSele
             fileInputRef.current = input
         }
 
-        fileInputRef.current.click()// opens file picker
+        fileInputRef.current.click() // opens file picker
     }, [accept, multiple, onFileSelect])
 
     return { openFilePicker }

@@ -8,21 +8,23 @@ interface SceneStore {
     clearProperties: () => void
 }
 
-export const useSceneStore = create<SceneStore>((set) => ({
+export const useSceneStore = create<SceneStore>(set => ({
     currentShapeProperties: null,
 
-    setCurrentShapeProperties: (properties) => set({ currentShapeProperties: properties }),
+    setCurrentShapeProperties: properties =>
+        set({ currentShapeProperties: properties }),
 
-    updateProperty: (key, value) => set((state) => {
-        if (!state.currentShapeProperties) return state
+    updateProperty: (key, value) =>
+        set(state => {
+            if (!state.currentShapeProperties) return state
 
-        return {
-            currentShapeProperties: {
-                ...state.currentShapeProperties,
-                [key]: value
+            return {
+                currentShapeProperties: {
+                    ...state.currentShapeProperties,
+                    [key]: value,
+                },
             }
-        }
-    }),
+        }),
 
-    clearProperties: () => set({ currentShapeProperties: null })
+    clearProperties: () => set({ currentShapeProperties: null }),
 }))

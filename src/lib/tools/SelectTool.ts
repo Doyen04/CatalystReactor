@@ -1,19 +1,23 @@
-import { Coord, IShape } from "@lib/types/shapes";
-import Tool from "./Tool";
-import SceneManager from "@lib/core/SceneManager";
-import ShapeManager from "@lib/core/ShapeManager";
-import Handle from "@lib/modifiers/Handles";
-import SceneNode from "@lib/core/SceneNode";
+import { Coord, IShape } from '@lib/types/shapes'
+import Tool from './Tool'
+import SceneManager from '@lib/core/SceneManager'
+import ShapeManager from '@lib/core/ShapeManager'
+import Handle from '@lib/modifiers/Handles'
+import SceneNode from '@lib/core/SceneNode'
 
 class SelectTool extends Tool {
-    private hoveredScene: SceneNode | null = null;
+    private hoveredScene: SceneNode | null = null
     private lastMouseCoord: Coord | null = null
     private clickTimer: NodeJS.Timeout | null = null
     private clickCount: number = 0
     private lastClickTime: number = 0
     private doubleClickDelay: number = 300 // milliseconds
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
+    constructor(
+        sceneManager: SceneManager,
+        shapeManager: ShapeManager,
+        cnvs: HTMLCanvasElement
+    ) {
         super(sceneManager, shapeManager, cnvs)
     }
 
@@ -50,24 +54,26 @@ class SelectTool extends Tool {
     }
 
     private handleSingleClick(e: MouseEvent) {
-        const selected = this.shapeManager.collide(e.offsetX, e.offsetY);
+        const selected = this.shapeManager.collide(e.offsetX, e.offsetY)
 
         if (selected) {
             return
         }
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
-        console.log(scene,'scene selected');
-        
+        console.log(scene, 'scene selected')
+
         if (!scene) {
             this.shapeManager.detachShape()
             return
         }
 
         this.shapeManager.attachNode(scene)
-        if (this.canEdit(scene.getShape()) && scene.getShape().pointInShape(e.offsetX, e.offsetY)) {
+        if (
+            this.canEdit(scene.getShape()) &&
+            scene.getShape().pointInShape(e.offsetX, e.offsetY)
+        ) {
             scene.getShape().setCursorPosFromCoord(e.offsetX, e.offsetY)
         }
-
     }
 
     private handleDoubleClick(e: MouseEvent) {
@@ -92,58 +98,58 @@ class SelectTool extends Tool {
 
     setCursorForHandle(handle: Handle) {
         if (!handle) {
-            const cursor = "default"
+            const cursor = 'default'
             if (this.cnvsElm) {
-                this.cnvsElm.style.cursor = cursor;
+                this.cnvsElm.style.cursor = cursor
             }
             return
-        };
+        }
 
-        let cursor = "default";
+        let cursor = 'default'
         if (handle.type == 'size') {
             switch (handle.pos) {
                 case 'top-left':
                     cursor = 'nwse-resize'
-                    break;
+                    break
                 case 'top-right':
                     cursor = 'nesw-resize'
-                    break;
+                    break
                 case 'bottom-left':
                     cursor = 'nesw-resize'
-                    break;
+                    break
                 case 'bottom-right':
                     cursor = 'nwse-resize'
-                    break;
+                    break
                 case 'top':
                     cursor = 'ns-resize'
-                    break;
+                    break
                 case 'bottom':
                     cursor = 'ns-resize'
-                    break;
+                    break
                 case 'left':
                     cursor = 'ew-resize'
-                    break;
+                    break
                 case 'right':
                     cursor = 'ew-resize'
-                    break;
+                    break
                 default:
-                    break;
+                    break
             }
-        }else if(handle.type === 'angle'){
+        } else if (handle.type === 'angle') {
             switch (handle.pos) {
                 case 'top-left':
                 case 'bottom-left':
                 case 'bottom-right':
                 case 'top-right':
                     cursor = 'move'
-                    break;
+                    break
                 default:
-                    break;
+                    break
             }
         }
         // Set the cursor on the canvas element
         if (this.cnvsElm) {
-            this.cnvsElm.style.cursor = cursor;
+            this.cnvsElm.style.cursor = cursor
         }
     }
 
@@ -153,7 +159,6 @@ class SelectTool extends Tool {
 
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
         this.setHoveredShape(scene)
-
     }
 
     setHoveredShape(scene: SceneNode) {
@@ -168,9 +173,8 @@ class SelectTool extends Tool {
     }
 
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-
         if (!this.lastMouseCoord) {
-            console.log('mousecoord is null');
+            console.log('mousecoord is null')
             return
         }
 
@@ -183,7 +187,7 @@ class SelectTool extends Tool {
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
     }
     canEdit(shape: IShape) {
-        return shape && typeof (shape).canEdit === 'function' && (shape).canEdit()
+        return shape && typeof shape.canEdit === 'function' && shape.canEdit()
     }
 
     override toolChange(): void {
@@ -195,4 +199,4 @@ class SelectTool extends Tool {
     }
 }
 
-export default SelectTool;
+export default SelectTool

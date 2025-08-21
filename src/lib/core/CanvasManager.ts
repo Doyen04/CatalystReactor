@@ -1,47 +1,48 @@
-import EventQueue from './EventQueue';
+import EventQueue from './EventQueue'
 
-import InputManager from "./InputManager";
-import SceneManager from "./SceneManager";
-import Renderer from "./Renderer";
-import ToolManager from "./ToolManager";
+import InputManager from './InputManager'
+import SceneManager from './SceneManager'
+import Renderer from './Renderer'
+import ToolManager from './ToolManager'
 
-import { ToolType } from '@lib/types/shapeTypes';
-import ShapeManager from './ShapeManager';
-import ShapeModifier from '@lib/modifiers/ShapeModifier';
+import { ToolType } from '@lib/types/shapeTypes'
+import ShapeManager from './ShapeManager'
+import ShapeModifier from '@lib/modifiers/ShapeModifier'
 // import ModifierManager from './ModifierManager';
 
-
 class CanvasManager {
-    inputManager: InputManager;
-    sceneManager: SceneManager;
-    renderer: Renderer;
-    toolManager: ToolManager;
-    shapeManager: ShapeManager;
-    shapeModifier: ShapeModifier;
+    inputManager: InputManager
+    sceneManager: SceneManager
+    renderer: Renderer
+    toolManager: ToolManager
+    shapeManager: ShapeManager
+    shapeModifier: ShapeModifier
 
-    undoStack: never[];
-    redoStack: never[];
+    undoStack: never[]
+    redoStack: never[]
 
     constructor(canvas: HTMLCanvasElement) {
-
         // this.skCnvs = null
         this.shapeModifier = new ShapeModifier()
         this.shapeManager = new ShapeManager(this.shapeModifier)
-        this.sceneManager = new SceneManager(this.shapeModifier);
+        this.sceneManager = new SceneManager(this.shapeModifier)
         this.renderer = new Renderer(canvas, this.sceneManager)
         this.inputManager = new InputManager(canvas)
-        this.toolManager = new ToolManager(this.sceneManager, this.shapeManager, canvas)
-
+        this.toolManager = new ToolManager(
+            this.sceneManager,
+            this.shapeManager,
+            canvas
+        )
 
         // Input handling state
-        this.undoStack = [];
-        this.redoStack = [];
+        this.undoStack = []
+        this.redoStack = []
 
         EventQueue.getEventNames()
     }
 
     setTool(tool: string): void {
-        this.toolManager.setCurrentTool(tool as ToolType);
+        this.toolManager.setCurrentTool(tool as ToolType)
     }
 
     pushHistory() {
@@ -85,7 +86,7 @@ class CanvasManager {
         // return skMatrix;
     }
     destroy() {
-        console.log('removing all event and doing clean up');
+        console.log('removing all event and doing clean up')
 
         if (this.inputManager) {
             this.inputManager.destroy()
@@ -106,10 +107,7 @@ class CanvasManager {
         EventQueue.removeAllEvent()
     }
 
-    render() {
-
-    }
+    render() {}
 }
 
-
-export default CanvasManager;
+export default CanvasManager

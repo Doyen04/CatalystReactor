@@ -1,15 +1,15 @@
-import { useEffect, useRef } from "react"
-import "./Component.css"
-import ToolBar from "./ToolBar"
+import { useEffect, useRef } from 'react'
+import './Component.css'
+import ToolBar from './ToolBar'
 
-import CanvasKitInit from "canvaskit-wasm";
-import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url';
+import CanvasKitInit from 'canvaskit-wasm'
+import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url'
 
-import { CanvasKitResources } from "@/lib/core/CanvasKitResource";
-import CanvasManager from "@lib/core/CanvasManager";
+import { CanvasKitResources } from '@/lib/core/CanvasKitResource'
+import CanvasManager from '@lib/core/CanvasManager'
 
-import { useToolStore } from "@hooks/useTool";
-import { useCanvasManagerStore } from "@hooks/useCanvasManager";
+import { useToolStore } from '@hooks/useTool'
+import { useCanvasManagerStore } from '@hooks/useCanvasManager'
 
 function Canvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -19,54 +19,57 @@ function Canvas() {
     const { tool } = useToolStore()
 
     useEffect(() => {
-
         const cleanupExisting = () => {
-            console.log('doing clean up');
+            console.log('doing clean up')
 
             if (canvasManagerRef.current) {
-                canvasManagerRef.current.destroy();
+                canvasManagerRef.current.destroy()
                 canvasManagerRef.current = null
-                setCanvasManager(null);
+                setCanvasManager(null)
             }
             if (canvasResourcesRef.current) {
-                canvasResourcesRef.current.dispose();
-                canvasResourcesRef.current = null;
+                canvasResourcesRef.current.dispose()
+                canvasResourcesRef.current = null
             }
-        };
+        }
 
         const load = async () => {
             if (!canvasRef.current) return
             try {
-                console.log('starting to load refs');
+                console.log('starting to load refs')
                 cleanupExisting()
 
-                const canvasKit = await CanvasKitInit({ locateFile: () => canvasKitWasmUrl })
+                const canvasKit = await CanvasKitInit({
+                    locateFile: () => canvasKitWasmUrl,
+                })
 
                 await CanvasKitResources.loadInterFont()
                 // is there a better way
                 //why do this line downward run twice withut running cleanupexisting first fixed
-                if (canvasResourcesRef.current || canvasManagerRef.current) return
+                if (canvasResourcesRef.current || canvasManagerRef.current)
+                    return
 
-                canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
-                canvasManagerRef.current = new CanvasManager(canvasRef.current);
+                canvasResourcesRef.current =
+                    CanvasKitResources.initialize(canvasKit)
+                canvasManagerRef.current = new CanvasManager(canvasRef.current)
                 setCanvasManager(canvasManagerRef.current)
-                console.log('Initializing Canvasmanager with CanvasKit');
+                console.log('Initializing Canvasmanager with CanvasKit')
             } catch (error) {
-                console.log(error, 'error loading canvaskit');
+                console.log(error, 'error loading canvaskit')
             }
         }
 
         load()
         return () => {
-            console.log('clean up');
+            console.log('clean up')
             cleanupExisting()
         }
-    }, [canvasRef, setCanvasManager]);
+    }, [canvasRef, setCanvasManager])
 
     useEffect(() => {
-        if (!canvasManager) return;
-        canvasManager.setTool(tool.toolName);
-    }, [canvasManager, tool]);
+        if (!canvasManager) return
+        canvasManager.setTool(tool.toolName)
+    }, [canvasManager, tool])
 
     return (
         <div className={'canvasContainer'}>
@@ -79,6 +82,5 @@ function Canvas() {
         </div>
     )
 }
-
 
 export default Canvas

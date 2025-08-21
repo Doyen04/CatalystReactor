@@ -1,10 +1,10 @@
-import js from '@eslint/js';
-import globals from 'globals';
-import reactHooks from 'eslint-plugin-react-hooks';
-import reactRefresh from 'eslint-plugin-react-refresh';
-import tseslint from 'typescript-eslint';
-import importPlugin from 'eslint-plugin-import';
-import { globalIgnores } from 'eslint/config';
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import importPlugin from 'eslint-plugin-import'
+import { globalIgnores } from 'eslint/config'
 
 export default tseslint.config([
     globalIgnores(['dist']),
@@ -34,7 +34,10 @@ export default tseslint.config([
             globals: globals.browser,
         },
         rules: {
-            'import/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: true }],
+            'import/no-cycle': [
+                'error',
+                { maxDepth: Infinity, ignoreExternal: true },
+            ],
         },
     },
-]);
+])

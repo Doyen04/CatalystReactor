@@ -30,8 +30,8 @@ export const useImageStore = create<ImageState>((set, get) => ({
         const [file, ...rest] = selectedImageFiles
 
         // Move to next image for next call
-        set({ selectedImageFiles: rest})
-    
+        set({ selectedImageFiles: rest })
+
         return file
     },
     clearSelectedImage: () => {
@@ -45,7 +45,7 @@ export const useImageStore = create<ImageState>((set, get) => ({
     },
     hasNoImages: () => {
         const { selectedImageFiles } = get()
-        console.log('selectedImageFiles', selectedImageFiles);
+        console.log('selectedImageFiles', selectedImageFiles)
         return !selectedImageFiles || selectedImageFiles.length === 0
     },
 }))

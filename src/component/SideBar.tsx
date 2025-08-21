@@ -1,12 +1,7 @@
-import "./Component.css"
+import './Component.css'
 
 function SideBar() {
-
-    return (
-        <div className={'sidebar'}>
-            
-        </div>
-    )
+    return <div className={'sidebar'}></div>
 }
 
 export default SideBar

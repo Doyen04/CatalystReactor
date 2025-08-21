@@ -1,9 +1,9 @@
-import { IShape } from "@lib/types/shapes";
-import { isPrintableCharUnicode } from "@/util/textUtil";
-import ShapeManager from "@lib/core/ShapeManager";
+import { IShape } from '@lib/types/shapes'
+import { isPrintableCharUnicode } from '@/util/textUtil'
+import ShapeManager from '@lib/core/ShapeManager'
 
 class KeyboardTool {
-    private shapeManager: ShapeManager | null = null;
+    private shapeManager: ShapeManager | null = null
 
     constructor(shapeManager: ShapeManager) {
         this.shapeManager = shapeManager
@@ -11,43 +11,40 @@ class KeyboardTool {
     setCurrentTool(shapeManager: ShapeManager) {
         this.shapeManager = shapeManager
     }
-    handleKeyDown(e: KeyboardEvent) {console.log(e.type, 'inside keyboard');
-    
+    handleKeyDown(e: KeyboardEvent) {
+        console.log(e.type, 'inside keyboard')
+
         switch (e.key) {
             case 'Delete':
             case 'Backspace':
-                this.deleteSelected(e);
-                break;
+                this.deleteSelected(e)
+                break
             case 'Escape':
-                this.handleEscape();
-                break;
+                this.handleEscape()
+                break
             case 'Tab':
-                this.handleTab(e);
-                break;
+                this.handleTab(e)
+                break
             case 'Enter':
-                this.handleEnter(e);
-                break;
+                this.handleEnter(e)
+                break
             case 'ArrowLeft':
             case 'ArrowRight':
             case 'ArrowUp':
             case 'ArrowDown':
-                this.handleArrowKeys(e);
-                break;
+                this.handleArrowKeys(e)
+                break
             default:
                 // Handle alphanumeric and other printable characters
                 if (isPrintableCharUnicode(e.key)) {
                     this.handleTextKey(e)
                 }
-                break;
+                break
         }
-
     }
-    handleKeyUp(e: KeyboardEvent) {
-
-    }
+    handleKeyUp(e: KeyboardEvent) {}
 
     private handleTextKey(e: KeyboardEvent) {
-
         if (this.shapeManager.hasShape()) {
             const shape = this.shapeManager.currentShape
 
@@ -62,28 +59,24 @@ class KeyboardTool {
 
             if (this.canEdit(shape)) {
                 switch (e.key) {
-                    case "Delete":
+                    case 'Delete':
                         shape.deleteText('forward')
-                        break;
-                    case "Backspace":
+                        break
+                    case 'Backspace':
                         shape.deleteText('backward')
-                        break;
+                        break
                     default:
-                        console.log('delete direction not implemented');
-                        break;
+                        console.log('delete direction not implemented')
+                        break
                 }
             } else {
-                console.log('rrrrr', 'deleting');
+                console.log('rrrrr', 'deleting')
             }
         }
     }
-    private handleEscape() {
+    private handleEscape() {}
 
-    }
-    
-    private handleTab(e: KeyboardEvent) {
-
-    }
+    private handleTab(e: KeyboardEvent) {}
     private handleEnter(e: KeyboardEvent) {
         if (this.shapeManager.hasShape()) {
             const shape = this.shapeManager.currentShape
@@ -100,7 +93,7 @@ class KeyboardTool {
             if (this.canEdit(shape)) {
                 this.moveTextCursor(e, shape)
             } else {
-                this.moveCurrentShape(e,)
+                this.moveCurrentShape(e)
             }
         }
     }
@@ -110,48 +103,51 @@ class KeyboardTool {
             switch (e.key) {
                 case 'ArrowUp':
                     shape.moveCursor('up', e.shiftKey)
-                    break;
+                    break
                 case 'ArrowDown':
                     shape.moveCursor('down', e.shiftKey)
-                    break;
+                    break
                 case 'ArrowLeft':
                     shape.moveCursor('left', e.shiftKey)
-                    break;
+                    break
                 case 'ArrowRight':
                     shape.moveCursor('right', e.shiftKey)
-                    break;
+                    break
                 default:
-                    console.log('direction not implemented');
-                    break;
+                    console.log('direction not implemented')
+                    break
             }
         }
     }
 
     moveCurrentShape(e: KeyboardEvent): void {
-        console.log(e.key);
+        console.log(e.key)
         switch (e.key) {
             case 'ArrowUp':
                 this.shapeManager.move(0, -2)
-                break;
+                break
             case 'ArrowDown':
                 this.shapeManager.move(0, 2)
-                break;
+                break
             case 'ArrowLeft':
                 this.shapeManager.move(-2, 0)
-                break;
+                break
             case 'ArrowRight':
                 this.shapeManager.move(2, 0)
-                break;
+                break
             default:
-                console.log('direction not implemented');
-                break;
+                console.log('direction not implemented')
+                break
         }
     }
 
     canEdit(shape: IShape) {
-        return shape && typeof (shape as IShape).canEdit === 'function' && (shape as IShape).canEdit()
+        return (
+            shape &&
+            typeof (shape as IShape).canEdit === 'function' &&
+            (shape as IShape).canEdit()
+        )
     }
-
 }
 
-export default KeyboardTool;
+export default KeyboardTool
