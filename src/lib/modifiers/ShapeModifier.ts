@@ -25,19 +25,7 @@ class ShapeModifier {
         this.isHovered = false
         this.selectedModifierHandle = null
         this.font = new SText(200, 0)
-
-        // this.setUpEvent()
     }
-    // setUpEvent() {
-    //     this.removeEvent()
-    //     this.addEvent()
-    // }
-    // addEvent() {
-    //     EventQueue.subscribe(UpdateModifierHandlesPos, this.updateResizerPositions.bind(this))
-    // }
-    // removeEvent() {
-    //     EventQueue.unSubscribeAll(UpdateModifierHandlesPos)
-    // }
 
     attachShape(scene: SceneNode) {
         this.handles = []
@@ -111,8 +99,7 @@ class ShapeModifier {
 
     handleModifierDrag(x: number, y: number, e: MouseEvent) {
         const Matrix = this.resource.canvasKit.Matrix
-
-        const { mx, my } = transformWorldToLocal(Matrix, Matrix.invert(this.scene.getWorldMatrix()), { x, y })
+        const { x: mx, y: my } = transformWorldToLocal(Matrix, Matrix.invert(this.scene.parent.getWorldMatrix()), { x: e.offsetX, y: e.offsetY })
 
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
@@ -135,7 +122,7 @@ class ShapeModifier {
                     this.selectedModifierHandle.updateShapeVertices(x, y, e, this.scene)
                     break
                 case 'angle':
-                    this.selectedModifierHandle.updateShapeAngle(x, y, e, this.scene)
+                    this.selectedModifierHandle.updateShapeAngle(mx, my, this.scene)
                     break
                 default:
                     break

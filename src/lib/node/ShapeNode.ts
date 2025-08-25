@@ -57,11 +57,12 @@ class ShapeNode implements SceneNode {
 
     setAngle(angle: number): void {
         this.shape.setAngle(angle)
+
+        this.updateWorldMatrix()
     }
 
     setFlip(isFlippedX: boolean, isFlippedY: boolean): void {
         this.shape.handleFlip(isFlippedX, isFlippedY)
-
         this.updateWorldMatrix()
     }
 
@@ -84,8 +85,8 @@ class ShapeNode implements SceneNode {
     }
 
     isCollide(x: number, y: number): boolean {
-         const Matrix = this.resource.canvasKit.Matrix
-         const { x: tx, y: ty } = transformWorldToLocal(Matrix, Matrix.invert(this.parent.worldMatrix), { x, y })
+        const Matrix = this.resource.canvasKit.Matrix
+        const { x: tx, y: ty } = transformWorldToLocal(Matrix, Matrix.invert(this.parent.worldMatrix), { x, y })
 
         return this.shape.pointInShape(tx, ty)
     }
@@ -122,12 +123,7 @@ class ShapeNode implements SceneNode {
         const sx = transform.scaleX ?? 1
         const sy = transform.scaleY ?? 1
 
-        const { x: ax, y: ay } = !transform.anchorPoint
-            ? { x: 0, y: 0 }
-            : {
-                  x: transform.anchorPoint.x - transform.x,
-                  y: transform.anchorPoint.y - transform.y,
-              }
+        const { x: ax, y: ay } = transform.anchorPoint == null ? { x: 0, y: 0 } : transform.anchorPoint
 
         const T = Matrix.translated(transform.x, transform.y)
         const R = Matrix.rotated(transform.rotation || 0, ax, ay)
@@ -144,7 +140,6 @@ class ShapeNode implements SceneNode {
         this.recomputeLocalMatrix()
 
         this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
-        
     }
 
     draw(canvas: Canvas): void {

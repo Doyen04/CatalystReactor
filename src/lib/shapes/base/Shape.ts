@@ -367,8 +367,9 @@ abstract class Shape implements IShape {
         }
 
         // Calculate centering offset for fill/fit modes
-
-        const finalMatrix = ck.Matrix.multiply(ck.Matrix.translated(offsetX, offsetY), ck.Matrix.scaled(scale, scale))
+        const scaleX = scale * (this.transform.isFlippedX ? -1 : 1)
+        const scaleY = scale * (this.transform.isFlippedY ? -1 : 1)
+        const finalMatrix = ck.Matrix.multiply(ck.Matrix.translated(offsetX, offsetY), ck.Matrix.scaled(scaleX, scaleY))
 
         return canvasKitImage.makeShaderOptions(tileMode, tileMode, ck.FilterMode.Linear, ck.MipmapMode.None, finalMatrix)
     }

@@ -3,7 +3,7 @@ import type { Canvas } from 'canvaskit-wasm'
 import { HandlePos, HandleType } from '@lib/types/shapes'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import clamp from '@lib/helper/clamp'
-import SceneNode from '@lib/node/ContainerNode'
+import SceneNode from '@lib/node/Scene'
 
 export default class Handle {
     x: number
@@ -91,8 +91,10 @@ export default class Handle {
         return ratio
     }
 
-    updateShapeRadii(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+    updateShapeRadii(x: number, y: number, scene: SceneNode) {
         const { left, right, top, bottom } = scene.getShape().getBoundingRect()
+
+        console.log(left, right, top, bottom, x, y)
 
         let cornerX: number,
             cornerY: number,
@@ -104,8 +106,8 @@ export default class Handle {
             case 'top-left':
                 cornerX = left
                 cornerY = top
-                distX = e.offsetX - cornerX
-                distY = e.offsetY - cornerY
+                distX = x - cornerX
+                distY = y - cornerY
                 if (distX >= 0 && distY >= 0) {
                     newRadius = Math.min(distX, distY)
                 }
@@ -113,8 +115,8 @@ export default class Handle {
             case 'top-right':
                 cornerX = right
                 cornerY = top
-                distX = e.offsetX - cornerX
-                distY = e.offsetY - cornerY
+                distX = x - cornerX
+                distY = y - cornerY
                 if (distX <= 0 && distY >= 0) {
                     newRadius = Math.min(Math.abs(distX), distY)
                 }
@@ -122,8 +124,8 @@ export default class Handle {
             case 'bottom-left':
                 cornerX = left
                 cornerY = bottom
-                distX = e.offsetX - cornerX
-                distY = e.offsetY - cornerY
+                distX = x - cornerX
+                distY = y - cornerY
                 if (distX >= 0 && distY <= 0) {
                     newRadius = Math.min(distX, Math.abs(distY))
                 }
@@ -131,15 +133,15 @@ export default class Handle {
             case 'bottom-right':
                 cornerX = right
                 cornerY = bottom
-                distX = e.offsetX - cornerX
-                distY = e.offsetY - cornerY
+                distX = x - cornerX
+                distY = y - cornerY
                 if (distX <= 0 && distY <= 0) {
                     newRadius = Math.min(Math.abs(distX), Math.abs(distY))
                 }
                 break
             case 'top':
                 cornerY = top
-                distY = e.offsetY - cornerY
+                distY = y - cornerY
                 if (distY >= 0) {
                     newRadius = Math.abs(distY)
                 }
@@ -152,24 +154,24 @@ export default class Handle {
         scene.getShape().setBorderRadius(newRadius, this.pos)
     }
 
-    updateShapeDim(mx: number, my: number, scene: SceneNode) {
+    updateShapeDim(x: number, y: number, scene: SceneNode) {
         let [width, height] = [0, 0]
-        let localx = 0
-        let localy = 0
+        let nx = 0
+        let ny = 0
 
         const shape = scene.getShape()
-        const { width: currentWidth, height: currentHeight } = shape.getDim()
+        const boundingRect = shape.getBoundingRect()
 
         if (this.anchorPoint === null) {
             const anchorMap = {
-                'top-left': { x: currentWidth, y: currentHeight },
-                'top-right': { x: 0, y: currentHeight },
-                'bottom-left': { x: currentWidth, y: 0 },
-                'bottom-right': { x: 0, y: 0 },
-                top: { x: 0, y: currentHeight },
-                bottom: { x: 0, y: 0 },
-                left: { x: currentWidth, y: 0 },
-                right: { x: 0, y: 0 },
+                'top-left': { x: boundingRect.right, y: boundingRect.bottom },
+                'top-right': { x: boundingRect.left, y: boundingRect.bottom },
+                'bottom-left': { x: boundingRect.right, y: boundingRect.top },
+                'bottom-right': { x: boundingRect.left, y: boundingRect.top },
+                top: { x: boundingRect.left, y: boundingRect.bottom },
+                bottom: { x: boundingRect.left, y: boundingRect.top },
+                left: { x: boundingRect.right, y: boundingRect.top },
+                right: { x: boundingRect.left, y: boundingRect.top },
             }
             this.anchorPoint = anchorMap[this.pos]
         }
@@ -185,67 +187,69 @@ export default class Handle {
             case 'bottom-right': {
                 const flipMap = {
                     'top-left': {
-                        isFlippedX: mx > this.anchorPoint.x,
-                        isFlippedY: my > this.anchorPoint.y,
+                        isFlippedX: x > this.anchorPoint.x,
+                        isFlippedY: y > this.anchorPoint.y,
                     },
                     'top-right': {
-                        isFlippedX: mx < this.anchorPoint.x,
-                        isFlippedY: my > this.anchorPoint.y,
+                        isFlippedX: x < this.anchorPoint.x,
+                        isFlippedY: y > this.anchorPoint.y,
                     },
                     'bottom-left': {
-                        isFlippedX: mx > this.anchorPoint.x,
-                        isFlippedY: my < this.anchorPoint.y,
+                        isFlippedX: x > this.anchorPoint.x,
+                        isFlippedY: y < this.anchorPoint.y,
                     },
                     'bottom-right': {
-                        isFlippedX: mx < this.anchorPoint.x,
-                        isFlippedY: my < this.anchorPoint.y,
+                        isFlippedX: x < this.anchorPoint.x,
+                        isFlippedY: y < this.anchorPoint.y,
                     },
                 }
                 ;({ isFlippedX, isFlippedY } = flipMap[this.pos])
 
-                width = Math.abs(mx - this.anchorPoint.x)
-                height = Math.abs(my - this.anchorPoint.y)
-                localx = Math.min(this.anchorPoint.x, mx)
-                localy = Math.min(this.anchorPoint.y, my)
+                width = Math.abs(x - this.anchorPoint.x)
+                height = Math.abs(y - this.anchorPoint.y)
+                nx = Math.min(this.anchorPoint.x, x)
+                ny = Math.min(this.anchorPoint.y, y)
                 break
             }
 
             // Sides: change only one dimension
             case 'top': {
-                isFlippedY = my > this.anchorPoint.y
+                isFlippedY = y > this.anchorPoint.y
                 // keep width and x fixed
-                localx = 0
-                localy = Math.min(this.anchorPoint.y, my)
-                width = currentWidth
-                height = Math.abs(my - this.anchorPoint.y)
+                nx = boundingRect.left
+                ny = Math.min(this.anchorPoint.y, y)
+                width = boundingRect.right - boundingRect.left
+                height = Math.abs(y - this.anchorPoint.y)
                 break
             }
             case 'bottom': {
-                isFlippedY = my < this.anchorPoint.y
-                localx = 0
-                localy = Math.min(this.anchorPoint.y, my)
-                width = currentWidth
-                height = Math.abs(my - this.anchorPoint.y)
+                isFlippedY = y < this.anchorPoint.y
+                nx = boundingRect.left
+                ny = Math.min(this.anchorPoint.y, y)
+                width = boundingRect.right - boundingRect.left
+                height = Math.abs(y - this.anchorPoint.y)
                 break
             }
             case 'left': {
-                isFlippedX = mx > this.anchorPoint.x
+                isFlippedX = x > this.anchorPoint.x
                 // keep height and y fixed
-                localy = 0
-                localx = Math.min(this.anchorPoint.x, mx)
-                height = currentHeight
-                width = Math.abs(mx - this.anchorPoint.x)
+                ny = boundingRect.top
+                nx = Math.min(this.anchorPoint.x, x)
+                height = boundingRect.bottom - boundingRect.top
+                width = Math.abs(x - this.anchorPoint.x)
                 break
             }
             case 'right': {
-                isFlippedX = mx < this.anchorPoint.x
-                localy = 0
-                localx = Math.min(this.anchorPoint.x, mx)
-                height = currentHeight
-                width = Math.abs(mx - this.anchorPoint.x)
+                isFlippedX = x < this.anchorPoint.x
+                ny = boundingRect.top
+                nx = Math.min(this.anchorPoint.x, x)
+                height = boundingRect.bottom - boundingRect.top
+                width = Math.abs(x - this.anchorPoint.x)
                 break
             }
         }
+
+        console.log(isFlippedX, isFlippedY)
 
         scene.setFlip(isFlippedX, isFlippedY)
         scene.setPosition(nx, ny)
@@ -366,24 +370,24 @@ export default class Handle {
         }
     }
 
-    updateShapeAngle(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+    updateShapeAngle(x: number, y: number, scene: SceneNode) {
         const shape = scene.getShape()
         if (!shape) return
 
         //work on this
-        const { x, y } = shape.getCenterCoord()
+        const { width, height } = shape.getDim()
         let { transform } = shape.getProperties()
         if (!transform.anchorPoint) {
-            shape.setAnchorPoint({ x, y })
+            shape.setAnchorPoint({ x: width / 2, y: height / 2 })
         }
 
         ;({ transform } = shape.getProperties())
 
-        const cx = transform.anchorPoint.x
-        const cy = transform.anchorPoint.y
+        const ax = transform.anchorPoint.x + transform.x
+        const ay = transform.anchorPoint.y + transform.y
 
         // Angle in radians
-        const angle = Math.atan2(e.offsetY - cy, e.offsetX - cx)
+        const angle = Math.atan2(y - ay, x - ax)
 
         scene.setAngle(angle)
     }

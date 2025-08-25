@@ -12,13 +12,16 @@ interface SceneNode {
     updateWorldMatrix(matrix: number[]): void
     removeChildNode?(child: SceneNode): void
     addChildNode?(child: SceneNode): void
+    setPosition(x: number, y: number): void
+    setDimension(width: number, height: number): void
+    setAngle(angle: number): void
     drawOnDrag(dragStart: Coord, e: MouseEvent): void
     getShape(): IShape
     move(x: number, y: number): void
     getWorldMatrix(): number[]
     getLocalMatrix(): number[]
     drawDefault(): void
-    setFlip(x:boolean, y:boolean): void
+    setFlip(x: boolean, y: boolean): void
     destroy(): void
 }
 
