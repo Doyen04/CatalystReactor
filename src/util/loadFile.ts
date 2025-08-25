@@ -5,9 +5,7 @@ export const loadImage = async (urls: string[]): Promise<ArrayBuffer[]> => {
     const promises = urls.map(url =>
         fetch(url, { signal, mode: 'cors' }).then(response => {
             if (!response.ok) {
-                throw new Error(
-                    `Failed to fetch ${url} (${response.status} ${response.statusText})`
-                )
+                throw new Error(`Failed to fetch ${url} (${response.status} ${response.statusText})`)
             }
             return response.arrayBuffer()
         })

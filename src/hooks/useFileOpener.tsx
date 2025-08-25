@@ -6,11 +6,7 @@ interface UseFilePickerOptions {
     onFileSelect: (files: FileList | null) => void
 }
 
-export const useFilePicker = ({
-    accept = 'image/*',
-    multiple = false,
-    onFileSelect,
-}: UseFilePickerOptions) => {
+export const useFilePicker = ({ accept = 'image/*', multiple = false, onFileSelect }: UseFilePickerOptions) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null)
 
     const openFilePicker = useCallback(() => {

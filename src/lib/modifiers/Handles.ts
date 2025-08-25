@@ -18,13 +18,7 @@ export default class Handle {
     handleRatioAngle: number | null = null
     private anchorPoint: { x: number; y: number } | null = null
 
-    constructor(
-        x: number,
-        y: number,
-        pos: HandlePos,
-        type: HandleType,
-        size = 6
-    ) {
+    constructor(x: number, y: number, pos: HandlePos, type: HandleType, size = 6) {
         this.x = x
         this.y = y
         this.pos = pos
@@ -68,12 +62,7 @@ export default class Handle {
         // Rectangle handle
         const hpad = 2
         if (this.type === 'size') {
-            return (
-                px >= this.x - hpad &&
-                px <= this.x + this.size + hpad &&
-                py >= this.y - hpad &&
-                py <= this.y + this.size + hpad
-            )
+            return px >= this.x - hpad && px <= this.x + this.size + hpad && py >= this.y - hpad && py <= this.y + this.size + hpad
         }
         // Oval handle (circle collision)
         const dx = px - this.x
@@ -82,13 +71,7 @@ export default class Handle {
         return dx * dx + dy * dy <= r * r
     }
 
-    private calculateRatioFromMousePosition(
-        e: MouseEvent,
-        centerX: number,
-        centerY: number,
-        width: number,
-        height: number
-    ): number {
+    private calculateRatioFromMousePosition(e: MouseEvent, centerX: number, centerY: number, width: number, height: number): number {
         const deltaX = e.offsetX - centerX
         const deltaY = e.offsetY - centerY
         const radiusX = width / 2
@@ -99,8 +82,7 @@ export default class Handle {
         const sin = Math.sin(deg)
 
         const ellipseRadiusAtAngle = Math.sqrt(
-            (radiusX * radiusX * radiusY * radiusY) /
-                (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin)
+            (radiusX * radiusX * radiusY * radiusY) / (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin)
         )
 
         const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
@@ -270,12 +252,7 @@ export default class Handle {
         scene.setDimension(width, height)
     }
 
-    clampAngleToArc(
-        t: number,
-        start: number,
-        end: number,
-        prev: number
-    ): number {
+    clampAngleToArc(t: number, start: number, end: number, prev: number): number {
         const TWO_PI = 2 * Math.PI
 
         const t0 = t < 0 ? t + TWO_PI : t
@@ -301,24 +278,13 @@ export default class Handle {
         const { start, end } = shape.getArcAngles()
         if (shape.isArc()) {
             console.log('inside ')
-            const Angle = this.clampAngleToArc(
-                handleAngle,
-                start,
-                end,
-                this.handleRatioAngle
-            )
+            const Angle = this.clampAngleToArc(handleAngle, start, end, this.handleRatioAngle)
             this.handleRatioAngle = Angle
         } else {
             this.handleRatioAngle = handleAngle
         }
 
-        const ratio = this.calculateRatioFromMousePosition(
-            e,
-            x,
-            y,
-            width,
-            height
-        )
+        const ratio = this.calculateRatioFromMousePosition(e, x, y, width, height)
         shape.setRatio(ratio)
     }
 
@@ -327,13 +293,7 @@ export default class Handle {
         const { x, y } = shape.getCenterCoord()
         const { width, height } = shape.getDim()
 
-        const ratio = this.calculateRatioFromMousePosition(
-            e,
-            x,
-            y,
-            width,
-            height
-        )
+        const ratio = this.calculateRatioFromMousePosition(e, x, y, width, height)
 
         shape.setRatio(ratio)
     }
@@ -346,12 +306,7 @@ export default class Handle {
         }
     }
 
-    updateShapeArcStart(
-        dx: number,
-        dy: number,
-        e: MouseEvent,
-        scene: SceneNode
-    ) {
+    updateShapeArcStart(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
         const shape = scene.getShape()
         const { x, y } = shape.getCenterCoord()
         const { width, height } = shape.getDim()
@@ -392,12 +347,7 @@ export default class Handle {
         shape.setArc(start, start + sweep)
     }
 
-    updateShapeVertices(
-        dx: number,
-        dy: number,
-        e: MouseEvent,
-        scene: SceneNode
-    ) {
+    updateShapeVertices(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
         const shape = scene.getShape()
         const GAP = 10 // defined distance for both x and y
         const count = shape.getVertexCount()
@@ -409,15 +359,9 @@ export default class Handle {
 
         const { x: px, y: py } = shape.getVertex(prev, vertex)
         const { x: nx, y: ny } = shape.getVertex(next, vertex)
-        if (
-            e.offsetY < ny &&
-            (Math.abs(e.offsetX - nx) < GAP || Math.abs(e.offsetY - ny) < GAP)
-        ) {
+        if (e.offsetY < ny && (Math.abs(e.offsetX - nx) < GAP || Math.abs(e.offsetY - ny) < GAP)) {
             shape.setVertexCount(next)
-        } else if (
-            e.offsetY > py &&
-            (Math.abs(e.offsetX - px) < GAP || Math.abs(e.offsetY - py) < GAP)
-        ) {
+        } else if (e.offsetY > py && (Math.abs(e.offsetX - px) < GAP || Math.abs(e.offsetY - py) < GAP)) {
             shape.setVertexCount(prev)
         }
     }
@@ -448,12 +392,8 @@ export default class Handle {
         if (!this.resource) return
         const cnvsKit = this.resource
 
-        const fill = Array.isArray(this.fill)
-            ? this.fill
-            : cnvsKit.canvasKit.parseColorString(this.fill)
-        const strokeColor = Array.isArray(this.stroke)
-            ? this.stroke
-            : cnvsKit.canvasKit.parseColorString(this.stroke)
+        const fill = Array.isArray(this.fill) ? this.fill : cnvsKit.canvasKit.parseColorString(this.fill)
+        const strokeColor = Array.isArray(this.stroke) ? this.stroke : cnvsKit.canvasKit.parseColorString(this.stroke)
 
         cnvsKit.paint.setColor(fill)
 
@@ -465,12 +405,7 @@ export default class Handle {
 
     drawRect(canvas: Canvas) {
         const { fill, stroke } = this.createPaint()
-        const rect = this.resource.canvasKit.XYWHRect(
-            this.x,
-            this.y,
-            this.size,
-            this.size
-        )
+        const rect = this.resource.canvasKit.XYWHRect(this.x, this.y, this.size, this.size)
         canvas.drawRect(rect, fill)
         canvas.drawRect(rect, stroke)
     }
@@ -478,12 +413,7 @@ export default class Handle {
     // Draw a small oval at (x, y)
     drawOval(canvas: Canvas) {
         const { fill, stroke } = this.createPaint()
-        const ovalRect = this.resource.canvasKit.LTRBRect(
-            this.x,
-            this.y,
-            this.x + this.size * 2,
-            this.y + this.size * 2
-        )
+        const ovalRect = this.resource.canvasKit.LTRBRect(this.x, this.y, this.x + this.size * 2, this.y + this.size * 2)
         canvas.drawOval(ovalRect, fill)
         canvas.drawOval(ovalRect, stroke)
     }

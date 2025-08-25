@@ -14,7 +14,9 @@
             "@ui/*": ["src/ui/*"],
             "@/*": ["src/*"],
             "@util/*": ["src/util/*"],
-            "@helper/*": ["src/lib/helper/*"]
+            "@helper/*": ["src/lib/helper/*"],
+            "@data/*": ["src/data/*"],
+            "@utils/*": ["src/utils/*"]
         }
     }
 }

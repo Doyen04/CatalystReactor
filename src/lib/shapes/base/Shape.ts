@@ -20,13 +20,7 @@ import {
     Style,
     Transform,
 } from '@lib/types/shapes'
-import type {
-    Canvas,
-    Image as CanvasKitImage,
-    Color,
-    Paint,
-    Shader,
-} from 'canvaskit-wasm'
+import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from 'canvaskit-wasm'
 
 interface Arguments {
     x: number
@@ -50,18 +44,8 @@ abstract class Shape implements IShape {
     protected boundingRect: BoundingRect
     protected isHover: boolean
 
-    constructor({
-        x,
-        y,
-        type,
-        rotation = 0,
-        scale = 1,
-        _fill = '#fff',
-        strokeWidth = 1,
-        strokeColor = '#000',
-    }: Arguments) {
-        if (new.target === Shape)
-            throw new Error('Shape is abstract; extend it!')
+    constructor({ x, y, type, rotation = 0, scale = 1, _fill = '#fff', strokeWidth = 1, strokeColor = '#000' }: Arguments) {
+        if (new.target === Shape) throw new Error('Shape is abstract; extend it!')
         this.transform = {
             x,
             y,
@@ -90,12 +74,7 @@ abstract class Shape implements IShape {
     abstract pointInShape(x: number, y: number): boolean
     abstract moveShape(mx: number, my: number): void
     abstract calculateBoundingRect(): void
-    abstract setSize(
-        dragStart: { x: number; y: number },
-        mx: number,
-        my: number,
-        shiftKey: boolean
-    ): void
+    abstract setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void
     abstract draw(canvas: Canvas): void
     abstract setDim(width: number, height: number): void
     abstract getDim(): { width: number; height: number }
@@ -206,10 +185,7 @@ abstract class Shape implements IShape {
     drawDefault() {
         const defSize = 100
         this.setDim(defSize, defSize)
-        this.setCoord(
-            this.transform.x - defSize / 2,
-            this.transform.y - defSize / 2
-        )
+        this.setCoord(this.transform.x - defSize / 2, this.transform.y - defSize / 2)
     }
 
     //better management for canvaskit resources
@@ -218,9 +194,7 @@ abstract class Shape implements IShape {
         switch (fill.type) {
             case 'solid': {
                 const solid = fill as SolidFill
-                const value = Array.isArray(solid.color)
-                    ? new Float32Array(solid.color)
-                    : this.resource.canvasKit.parseColorString(solid.color)
+                const value = Array.isArray(solid.color) ? new Float32Array(solid.color) : this.resource.canvasKit.parseColorString(solid.color)
                 // console.log(value);
 
                 return value
@@ -234,16 +208,13 @@ abstract class Shape implements IShape {
                 const x2 = (gradient.x2 / 100) * size.width
                 const y2 = (gradient.y2 / 100) * size.height
 
-                const shader =
-                    this.resource.canvasKit.Shader.MakeLinearGradient(
-                        [x1, y1],
-                        [x2, y2],
-                        gradient.stops.map(stop =>
-                            this.resource.canvasKit.parseColorString(stop.color)
-                        ),
-                        gradient.stops.map(stop => stop.offset),
-                        this.resource.canvasKit.TileMode.Clamp
-                    )
+                const shader = this.resource.canvasKit.Shader.MakeLinearGradient(
+                    [x1, y1],
+                    [x2, y2],
+                    gradient.stops.map(stop => this.resource.canvasKit.parseColorString(stop.color)),
+                    gradient.stops.map(stop => stop.offset),
+                    this.resource.canvasKit.TileMode.Clamp
+                )
                 return shader
             }
             case 'radial': {
@@ -258,16 +229,13 @@ abstract class Shape implements IShape {
                 const maxDimension = Math.max(size.width, size.height)
                 const radius = (gradient.radius / 100) * maxDimension
 
-                const shader =
-                    this.resource.canvasKit.Shader.MakeRadialGradient(
-                        [centerX, centerY],
-                        radius,
-                        gradient.stops.map(stop =>
-                            this.resource.canvasKit.parseColorString(stop.color)
-                        ),
-                        gradient.stops.map(stop => stop.offset),
-                        this.resource.canvasKit.TileMode.Clamp
-                    )
+                const shader = this.resource.canvasKit.Shader.MakeRadialGradient(
+                    [centerX, centerY],
+                    radius,
+                    gradient.stops.map(stop => this.resource.canvasKit.parseColorString(stop.color)),
+                    gradient.stops.map(stop => stop.offset),
+                    this.resource.canvasKit.TileMode.Clamp
+                )
                 return shader
             }
             case 'image': {
@@ -278,11 +246,7 @@ abstract class Shape implements IShape {
                 }
                 const size = this.getDim()
 
-                return this.makeImageShader(
-                    size,
-                    imageFill.cnvsImage,
-                    imageFill.scaleMode
-                )
+                return this.makeImageShader(size, imageFill.cnvsImage, imageFill.scaleMode)
             }
             case 'pattern':
                 // Similar to image but with pattern-specific handling
@@ -291,11 +255,7 @@ abstract class Shape implements IShape {
     }
 
     protected isShader(obj): boolean {
-        return (
-            obj != null &&
-            typeof obj === 'object' &&
-            obj.constructor?.name === 'Shader'
-        )
+        return obj != null && typeof obj === 'object' && obj.constructor?.name === 'Shader'
     }
     protected isColor(fill): boolean {
         return fill instanceof Float32Array
@@ -356,11 +316,7 @@ abstract class Shape implements IShape {
         // EventQueue.trigger(Render)
         this.isHover = bool
     }
-    makeImageShader(
-        dim: Size,
-        canvasKitImage: CanvasKitImage,
-        scaleMode: ScaleMode = 'fill'
-    ): Shader {
+    makeImageShader(dim: Size, canvasKitImage: CanvasKitImage, scaleMode: ScaleMode = 'fill'): Shader {
         if (!this.resource?.canvasKit) return null
         const ck = this.resource.canvasKit
 
@@ -376,10 +332,7 @@ abstract class Shape implements IShape {
 
         switch (scaleMode) {
             case 'fill':
-                scale = Math.max(
-                    dim.width / imageWidth,
-                    dim.height / imageHeight
-                )
+                scale = Math.max(dim.width / imageWidth, dim.height / imageHeight)
                 scaledWidth = imageWidth * scale
                 scaledHeight = imageHeight * scale
 
@@ -387,10 +340,7 @@ abstract class Shape implements IShape {
                 offsetY = (dim.height - scaledHeight) / 2
                 break
             case 'fit':
-                scale = Math.min(
-                    dim.width / imageWidth,
-                    dim.height / imageHeight
-                )
+                scale = Math.min(dim.width / imageWidth, dim.height / imageHeight)
                 scaledWidth = imageWidth * scale
                 scaledHeight = imageHeight * scale
 
@@ -408,39 +358,23 @@ abstract class Shape implements IShape {
                     ck.TileMode.Clamp,
                     ck.FilterMode.Linear,
                     ck.MipmapMode.None,
-                    ck.Matrix.scaled(
-                        dim.width / imageWidth,
-                        dim.height / imageHeight
-                    )
+                    ck.Matrix.scaled(dim.width / imageWidth, dim.height / imageHeight)
                 )
             default:
-                scale = Math.max(
-                    dim.width / imageWidth,
-                    dim.height / imageHeight
-                )
+                scale = Math.max(dim.width / imageWidth, dim.height / imageHeight)
         }
 
         // Calculate centering offset for fill/fit modes
 
-        const finalMatrix = ck.Matrix.multiply(
-            ck.Matrix.translated(offsetX, offsetY),
-            ck.Matrix.scaled(scale, scale)
-        )
+        const finalMatrix = ck.Matrix.multiply(ck.Matrix.translated(offsetX, offsetY), ck.Matrix.scaled(scale, scale))
 
-        return canvasKitImage.makeShaderOptions(
-            tileMode,
-            tileMode,
-            ck.FilterMode.Linear,
-            ck.MipmapMode.None,
-            finalMatrix
-        )
+        return canvasKitImage.makeShaderOptions(tileMode, tileMode, ck.FilterMode.Linear, ck.MipmapMode.None, finalMatrix)
     }
 
     createCanvasKitImage(backgroundImage: ArrayBuffer): CanvasKitImage | null {
         if (!backgroundImage || !this.resource?.canvasKit) return null
 
-        const cnvsimg =
-            this.resource.canvasKit.MakeImageFromEncoded(backgroundImage)
+        const cnvsimg = this.resource.canvasKit.MakeImageFromEncoded(backgroundImage)
         if (!cnvsimg) {
             console.error('Failed to create CanvasKit image from encoded data')
             return

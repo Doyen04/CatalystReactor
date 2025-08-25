@@ -13,11 +13,7 @@ class SelectTool extends Tool {
     private lastClickTime: number = 0
     private doubleClickDelay: number = 300 // milliseconds
 
-    constructor(
-        sceneManager: SceneManager,
-        shapeManager: ShapeManager,
-        cnvs: HTMLCanvasElement
-    ) {
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
         super(sceneManager, shapeManager, cnvs)
     }
 
@@ -68,10 +64,7 @@ class SelectTool extends Tool {
         }
 
         this.shapeManager.attachNode(scene)
-        if (
-            this.canEdit(scene.getShape()) &&
-            scene.getShape().pointInShape(e.offsetX, e.offsetY)
-        ) {
+        if (this.canEdit(scene.getShape()) && scene.getShape().pointInShape(e.offsetX, e.offsetY)) {
             scene.getShape().setCursorPosFromCoord(e.offsetX, e.offsetY)
         }
     }

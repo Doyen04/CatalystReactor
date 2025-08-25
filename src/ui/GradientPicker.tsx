@@ -1,12 +1,5 @@
 import React, { useEffect } from 'react'
-import {
-    DEFAULT_LINEAR_GRADIENT,
-    DEFAULT_RADIAL_GRADIENT,
-    Gradient,
-    GradientFill,
-    LinearGradient,
-    RadialGradient,
-} from '@lib/types/shapes'
+import { DEFAULT_LINEAR_GRADIENT, DEFAULT_RADIAL_GRADIENT, Gradient, GradientFill, LinearGradient, RadialGradient } from '@lib/types/shapes'
 import { twMerge } from 'tailwind-merge'
 import LinearGradientPicker from './LinearGradientPicker'
 import RadialGradientPicker from './RadialGradient'
@@ -18,15 +11,8 @@ interface GradientPickerProps {
     className?: string
 }
 
-const GradientPicker: React.FC<GradientPickerProps> = ({
-    value,
-    onGradientChange,
-    className,
-}) => {
-    const gradient =
-        value?.type == 'linear' || value?.type == 'radial'
-            ? value
-            : DEFAULT_LINEAR_GRADIENT
+const GradientPicker: React.FC<GradientPickerProps> = ({ value, onGradientChange, className }) => {
+    const gradient = value?.type == 'linear' || value?.type == 'radial' ? value : DEFAULT_LINEAR_GRADIENT
 
     useEffect(() => {
         if (value?.type !== 'linear' && value?.type !== 'radial') {
@@ -72,28 +58,16 @@ const GradientPicker: React.FC<GradientPickerProps> = ({
         },
     ]
 
-    const selectedGradientType =
-        gradientTypeOptions.find(o => o.value === gradient.type) ??
-        gradientTypeOptions[0]
+    const selectedGradientType = gradientTypeOptions.find(o => o.value === gradient.type) ?? gradientTypeOptions[0]
 
     return (
         <div className={twMerge(`w-full p-3 flex flex-col gap-2 ${className}`)}>
-            <DropDownPicker
-                value={selectedGradientType}
-                onValueChange={handleTypeChange}
-                values={gradientTypeOptions}
-            />
+            <DropDownPicker value={selectedGradientType} onValueChange={handleTypeChange} values={gradientTypeOptions} />
             {gradient && gradient.type == 'linear' && (
-                <LinearGradientPicker
-                    value={gradient as LinearGradient}
-                    onGradientChange={handleGradientChange}
-                />
+                <LinearGradientPicker value={gradient as LinearGradient} onGradientChange={handleGradientChange} />
             )}
             {gradient && gradient.type == 'radial' && (
-                <RadialGradientPicker
-                    value={gradient as RadialGradient}
-                    onGradientChange={handleGradientChange}
-                />
+                <RadialGradientPicker value={gradient as RadialGradient} onGradientChange={handleGradientChange} />
             )}
         </div>
     )

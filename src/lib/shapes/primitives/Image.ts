@@ -11,12 +11,7 @@ class PImage extends Rectangle {
         }
         this.calculateBoundingRect()
     }
-    override setSize(
-        dragStart: { x: number; y: number },
-        mx: number,
-        my: number,
-        shiftKey: boolean
-    ): void {
+    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
         // Calculate dimensions
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
@@ -61,15 +56,13 @@ class PImage extends Rectangle {
             if (deltaX >= 0) {
                 this.transform.x = this.transform.originalX
             } else {
-                this.transform.x =
-                    this.transform.originalX - this.dimension.width
+                this.transform.x = this.transform.originalX - this.dimension.width
             }
 
             if (deltaY >= 0) {
                 this.transform.y = this.transform.originalY
             } else {
-                this.transform.y =
-                    this.transform.originalY - this.dimension.height
+                this.transform.y = this.transform.originalY - this.dimension.height
             }
         } else {
             // Free resizing without aspect ratio constraint
@@ -88,12 +81,7 @@ class PImage extends Rectangle {
         const ck = this.resource.canvasKit
         this.setPaint()
 
-        const rect = ck.XYWHRect(
-            this.transform.x,
-            this.transform.y,
-            this.dimension.width,
-            this.dimension.height
-        )
+        const rect = ck.XYWHRect(this.transform.x, this.transform.y, this.dimension.width, this.dimension.height)
 
         const imageShader = this.makeImageShader(this.dimension)
 

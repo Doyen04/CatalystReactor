@@ -142,11 +142,7 @@ class KeyboardTool {
     }
 
     canEdit(shape: IShape) {
-        return (
-            shape &&
-            typeof (shape as IShape).canEdit === 'function' &&
-            (shape as IShape).canEdit()
-        )
+        return shape && typeof (shape as IShape).canEdit === 'function' && (shape as IShape).canEdit()
     }
 }
 

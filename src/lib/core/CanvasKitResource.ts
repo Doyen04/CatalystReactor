@@ -1,13 +1,6 @@
 // CanvasKitResources.ts
 
-import type {
-    CanvasKit,
-    Paint,
-    ParagraphStyle,
-    TextStyle,
-    FontMgr,
-    Path,
-} from 'canvaskit-wasm'
+import type { CanvasKit, Paint, ParagraphStyle, TextStyle, FontMgr, Path } from 'canvaskit-wasm'
 
 export class CanvasKitResources {
     private static instance: CanvasKitResources
@@ -89,9 +82,7 @@ export class CanvasKitResources {
         })
 
         if (CanvasKitResources.cnvsFontData.length > 0) {
-            this.cnvsFontMgr = this.cnvsCanvasKit.FontMgr.FromData(
-                ...CanvasKitResources.cnvsFontData
-            )
+            this.cnvsFontMgr = this.cnvsCanvasKit.FontMgr.FromData(...CanvasKitResources.cnvsFontData)
         } else {
             console.log('no fonts')
         }
@@ -105,10 +96,7 @@ export class CanvasKitResources {
             fetch('/fonts/Inter-Italic-VariableFont_opsz,wght.ttf'),
         ])
 
-        const [normalData, italicData] = await Promise.all([
-            loadFont[0].arrayBuffer(),
-            loadFont[1].arrayBuffer(),
-        ])
+        const [normalData, italicData] = await Promise.all([loadFont[0].arrayBuffer(), loadFont[1].arrayBuffer()])
 
         CanvasKitResources.cnvsFontData = [normalData, italicData]
         // Create a new FontMgr instance
@@ -125,9 +113,7 @@ export class CanvasKitResources {
 
     public static getInstance(): CanvasKitResources {
         if (!this.instance) {
-            throw new Error(
-                'CanvasKitResources not initialized. Call CanvasKitResources.initialize(CanvasKit) first.'
-            )
+            throw new Error('CanvasKitResources not initialized. Call CanvasKitResources.initialize(CanvasKit) first.')
         }
         return this.instance
     }

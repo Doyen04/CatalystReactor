@@ -15,9 +15,7 @@ class ShapeManager {
     constructor(shapeModifier: ShapeModifier) {
         this.scene = null
         this.shapeModifier = shapeModifier
-        this.throttledUpdate = throttle(
-            useSceneStore.getState().setCurrentShapeProperties
-        )
+        this.throttledUpdate = throttle(useSceneStore.getState().setCurrentShapeProperties)
     }
 
     drawShape(dragStart: Coord, e: MouseEvent) {
@@ -50,9 +48,7 @@ class ShapeManager {
     handleTinyShapes(): void {
         if (!this.scene) return
 
-        const { left, top, right, bottom } = this.scene
-            .getShape()
-            .getBoundingRect()
+        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect()
         const width = right - left
         const height = bottom - top
         const minSize = 5

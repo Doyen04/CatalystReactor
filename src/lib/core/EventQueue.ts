@@ -39,12 +39,7 @@ type Handlers = {
     [EventTypes.KeyUp]: (e: KeyboardEvent) => void
     [EventTypes.CreateScene]: (type: ShapeType, x: number, y: number) => void
     // [EventTypes.SceneCreated]: (Scene: SceneNode) => void;
-    [EventTypes.DrawScene]: (
-        dragStart: Coord,
-        x: number,
-        y: number,
-        shiftKey: boolean
-    ) => void
+    [EventTypes.DrawScene]: (dragStart: Coord, x: number, y: number, shiftKey: boolean) => void
     [EventTypes.FinalizeShape]: () => void
     [EventTypes.DeleteScene]: () => void
     [EventTypes.CreateSurface]: () => void
@@ -75,10 +70,7 @@ class EventBus {
         this.handlers.get(event)!.add(handler)
     }
 
-    trigger<T extends EventTypes>(
-        event: T,
-        ...args: Parameters<Handlers[T]>
-    ): ReturnType<Handlers[T]> {
+    trigger<T extends EventTypes>(event: T, ...args: Parameters<Handlers[T]>): ReturnType<Handlers[T]> {
         // console.log(event, 'triggered');
         let result: ReturnType<Handlers[T]>
 

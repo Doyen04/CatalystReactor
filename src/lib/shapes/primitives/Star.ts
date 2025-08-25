@@ -81,12 +81,7 @@ class Star extends Shape {
         this.calculateBoundingRect()
     }
 
-    override setSize(
-        dragStart: { x: number; y: number },
-        mx: number,
-        my: number,
-        shiftKey: boolean
-    ): void {
+    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
 
@@ -141,18 +136,12 @@ class Star extends Shape {
         this.setRatio(prop.spikesRatio.ratio)
     }
 
-    getVertex(
-        sides: number,
-        index: number,
-        startAngle = -Math.PI / 2
-    ): { x: number; y: number } {
+    getVertex(sides: number, index: number, startAngle = -Math.PI / 2): { x: number; y: number } {
         const angleStep = (Math.PI * 2) / sides
         const angle = index * (angleStep / 2) + startAngle
 
-        const radiusX =
-            index % 2 === 0 ? this.radiusX : this.radiusX * this.ratio
-        const radiusY =
-            index % 2 === 0 ? this.radiusY : this.radiusY * this.ratio
+        const radiusX = index % 2 === 0 ? this.radiusX : this.radiusX * this.ratio
+        const radiusY = index % 2 === 0 ? this.radiusY : this.radiusY * this.ratio
 
         const x = this.centerX + Math.cos(angle) * radiusX
         const y = this.centerY + Math.sin(angle) * radiusY
@@ -196,11 +185,7 @@ class Star extends Shape {
             const [x, y] = this.points[0]
             return {
                 x: x - size,
-                y:
-                    y +
-                    (handle.isDragging || this.bRadius >= padding
-                        ? this.bRadius
-                        : padding),
+                y: y + (handle.isDragging || this.bRadius >= padding ? this.bRadius : padding),
             }
         }
         return { x: this.centerX, y: this.centerY }
@@ -216,13 +201,7 @@ class Star extends Shape {
                 const i = 1
                 const array = this.calculateRoundedCornerData() //work better with rounded corners
                 const center = { x: array[i].center[0], y: array[i].center[1] }
-                const { x: tangentX, y: tangentY } = computeArcPoint(
-                    center,
-                    array[i].radius,
-                    array[i].startAngle,
-                    array[i].sweepAngle,
-                    0.5
-                )
+                const { x: tangentX, y: tangentY } = computeArcPoint(center, array[i].radius, array[i].startAngle, array[i].sweepAngle, 0.5)
                 return { x: tangentX - size, y: tangentY - size }
             } else {
                 const [x, y] = this.points[1]
@@ -242,13 +221,7 @@ class Star extends Shape {
                 const i = 2
                 const array = this.calculateRoundedCornerData() //work better with rounded corners
                 const center = { x: array[i].center[0], y: array[i].center[1] }
-                const { x: tangentX, y: tangentY } = computeArcPoint(
-                    center,
-                    array[i].radius,
-                    array[i].startAngle,
-                    array[i].sweepAngle,
-                    0.5
-                )
+                const { x: tangentX, y: tangentY } = computeArcPoint(center, array[i].radius, array[i].startAngle, array[i].sweepAngle, 0.5)
                 return { x: tangentX - size, y: tangentY - size }
             } else {
                 const [x, y] = this.points[2]
@@ -258,10 +231,7 @@ class Star extends Shape {
         return { x: this.centerX, y: this.centerY }
     }
 
-    override getModifierHandles(
-        fill: string | number[],
-        strokeColor: string | number[]
-    ): Handle[] {
+    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles = super.getSizeModifierHandles(fill, strokeColor)
         handles.push(new Handle(0, 0, 'top', 'radius', fill, strokeColor))
         handles.push(new Handle(0, 0, 'right', 'vertices', fill, strokeColor))
@@ -399,12 +369,7 @@ class Star extends Shape {
         }> = []
 
         let p1: [number, number], p2: [number, number], p3: [number, number]
-        let sinA: number,
-            sinA90: number,
-            radDirection: number,
-            drawDirection: boolean,
-            angle: number,
-            halfAngle: number
+        let sinA: number, sinA90: number, radDirection: number, drawDirection: boolean, angle: number, halfAngle: number
         let cRadius: number, lenOut: number, x: number, y: number
 
         p1 = this.points[len - 1]
@@ -444,21 +409,16 @@ class Star extends Shape {
             const angle2 = Math.acos(Math.max(-1, Math.min(1, dot)))
 
             //The maximum radius is proportional to the shorter edge length, scaled by how 'sharp' the angle is.
-            const maxAllowedRadius =
-                (Math.min(v1.len, v2.len) * Math.sin(angle2)) / 2
+            const maxAllowedRadius = (Math.min(v1.len, v2.len) * Math.sin(angle2)) / 2
             cRadius = Math.min(this.bRadius, maxAllowedRadius)
 
             // Calculate distances and positions
             halfAngle = angle2 / 2
-            lenOut = Math.abs(
-                (Math.cos(halfAngle) * cRadius) / Math.sin(halfAngle)
-            )
+            lenOut = Math.abs((Math.cos(halfAngle) * cRadius) / Math.sin(halfAngle))
 
             if (lenOut > Math.min(v1.len, v2.len) / 2) {
                 lenOut = Math.min(v1.len, v2.len) / 2
-                cRadius = Math.abs(
-                    (lenOut * Math.sin(halfAngle)) / Math.cos(halfAngle)
-                )
+                cRadius = Math.abs((lenOut * Math.sin(halfAngle)) / Math.cos(halfAngle))
             }
             // Calculate arc center
             x = p2[0] + v2.nx * lenOut
@@ -508,14 +468,7 @@ class Star extends Shape {
             const isCCW = corner.sweepAngle < 0
 
             // Draw the arc - this will automatically connect to current path position
-            path.arc(
-                corner.center[0],
-                corner.center[1],
-                corner.radius,
-                corner.startAngle,
-                endAngleRad,
-                isCCW
-            )
+            path.arc(corner.center[0], corner.center[1], corner.radius, corner.startAngle, endAngleRad, isCCW)
             path.lineTo(nextCorner.startPoint[0], nextCorner.startPoint[1])
         }
 
@@ -539,18 +492,11 @@ class Star extends Shape {
 
         let inside = false
 
-        for (
-            let i = 0, j = this.points.length - 1;
-            i < this.points.length;
-            j = i++
-        ) {
+        for (let i = 0, j = this.points.length - 1; i < this.points.length; j = i++) {
             const [xi, yi] = this.points[i]
             const [xj, yj] = this.points[j]
 
-            if (
-                yi > y !== yj > y &&
-                x < ((xj - xi) * (y - yi)) / (yj - yi) + xi
-            ) {
+            if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
                 inside = !inside
             }
         }

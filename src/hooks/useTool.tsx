@@ -13,11 +13,7 @@ interface ToolState {
         icon: React.ReactNode
         tip: string
     } | null
-    setTool: (tool: {
-        toolName: string
-        icon: React.ReactNode
-        tip: string
-    }) => void
+    setTool: (tool: { toolName: string; icon: React.ReactNode; tip: string }) => void
     setDefaultTool: () => void
 }
 
@@ -29,8 +25,7 @@ export const useToolStore = create<ToolState>((set, get) => ({
         tip: 'Select',
     },
 
-    setTool: (tool: { toolName: string; icon: React.ReactNode; tip: string }) =>
-        set({ tool }),
+    setTool: (tool: { toolName: string; icon: React.ReactNode; tip: string }) => set({ tool }),
 
     setDefaultTool: () => set({ tool: get().defaultTool }),
 }))

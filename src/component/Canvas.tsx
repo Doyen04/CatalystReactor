@@ -46,11 +46,9 @@ function Canvas() {
                 await CanvasKitResources.loadInterFont()
                 // is there a better way
                 //why do this line downward run twice withut running cleanupexisting first fixed
-                if (canvasResourcesRef.current || canvasManagerRef.current)
-                    return
+                if (canvasResourcesRef.current || canvasManagerRef.current) return
 
-                canvasResourcesRef.current =
-                    CanvasKitResources.initialize(canvasKit)
+                canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
                 canvasManagerRef.current = new CanvasManager(canvasRef.current)
                 setCanvasManager(canvasManagerRef.current)
                 console.log('Initializing Canvasmanager with CanvasKit')

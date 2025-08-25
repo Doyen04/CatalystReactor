@@ -9,16 +9,8 @@ interface SectionProps {
 
 const Section: React.FC<SectionProps> = ({ title, children, childClass }) => (
     <section className="object-transform">
-        <div className="text-left p-0.5 text-black font-medium text-xs">
-            {title}
-        </div>
-        <div
-            className={twMerge(
-                `flex h-fit w-fit gap-3 text-black text-sm font-mono ${childClass}`
-            )}
-        >
-            {children}
-        </div>
+        <div className="text-left p-0.5 text-black font-medium text-xs">{title}</div>
+        <div className={twMerge(`flex h-fit w-fit gap-3 text-black text-sm font-mono ${childClass}`)}>{children}</div>
     </section>
 )
 

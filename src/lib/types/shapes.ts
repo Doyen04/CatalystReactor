@@ -1,16 +1,6 @@
 import type Handle from '@lib/modifiers/Handles'
 import type { Canvas, Image as CanvasKitImage } from 'canvaskit-wasm'
-import {
-    ArrowDown,
-    ArrowDownLeft,
-    ArrowDownRight,
-    ArrowLeft,
-    ArrowRight,
-    ArrowUp,
-    ArrowUpLeft,
-    ArrowUpRight,
-    Circle,
-} from 'lucide-react'
+import { ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, ArrowUpLeft, ArrowUpRight, Circle } from 'lucide-react'
 
 export const PRESET_LINEAR_GRADIENTS = [
     {
@@ -344,12 +334,7 @@ export interface Coord {
     x: number
     y: number
 }
-export const CornerPos: HandlePos[] = [
-    'top-left',
-    'top-right',
-    'bottom-left',
-    'bottom-right',
-]
+export const CornerPos: HandlePos[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img'
 export type HandlePos =
@@ -365,14 +350,7 @@ export type HandlePos =
     | 'between'
     | 'bottom'
     | 'left'
-export type HandleType =
-    | 'size'
-    | 'angle'
-    | 'radius'
-    | 'arc'
-    | 'c-ratio'
-    | 'vertices'
-    | 's-ratio'
+export type HandleType = 'size' | 'angle' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio'
 
 export interface IShape {
     id?: string
@@ -393,12 +371,7 @@ export interface IShape {
     pointInShape(x: number, y: number): boolean
     moveShape(mx: number, my: number): void
     calculateBoundingRect(): void
-    setSize(
-        dragStart: { x: number; y: number },
-        mx: number,
-        my: number,
-        shiftKey: boolean
-    ): void
+    setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void
     draw(canvas: Canvas): void
     setDim(width: number, height: number): void
     getDim(): { width: number; height: number }
@@ -422,17 +395,10 @@ export interface IShape {
     insertText?(char: string, shiftKey: boolean): void
     setCursorPosFromCoord?(x: number, y: number): void
     deleteText?(direction: 'forward' | 'backward'): void
-    moveCursor?(
-        direction: 'left' | 'right' | 'up' | 'down',
-        shiftKey: boolean
-    ): void
+    moveCursor?(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean): void
     setVertexCount?(num: number): void
     getVertexCount?(): number
-    getVertex?(
-        sides: number,
-        index: number,
-        startAngle?: number
-    ): { x: number; y: number }
+    getVertex?(sides: number, index: number, startAngle?: number): { x: number; y: number }
     setStrokeColor(stroke: string | number[]): void
     setFill(stroke: string | number[]): void
     cleanUp(): void

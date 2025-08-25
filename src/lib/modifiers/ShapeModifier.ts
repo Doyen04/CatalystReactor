@@ -77,11 +77,7 @@ class ShapeModifier {
         let selected: Handle = null
         const Matrix = this.resource.canvasKit.Matrix
 
-        ;({ x, y } = transformWorldToLocal(
-            Matrix,
-            Matrix.invert(this.scene.getWorldMatrix()),
-            { x, y }
-        ))
+        ;({ x, y } = transformWorldToLocal(Matrix, Matrix.invert(this.scene.getWorldMatrix()), { x, y }))
 
         for (const node of this.handles) {
             if (node && node.isCollide(x, y)) {
@@ -98,22 +94,10 @@ class ShapeModifier {
                 bottom: dimen.height,
             }
             const tolerance = 5
-            const nearTop =
-                Math.abs(y - bRect.top) <= tolerance &&
-                x >= bRect.left - tolerance &&
-                x <= bRect.right + tolerance
-            const nearBottom =
-                Math.abs(y - bRect.bottom) <= tolerance &&
-                x >= bRect.left - tolerance &&
-                x <= bRect.right + tolerance
-            const nearLeft =
-                Math.abs(x - bRect.left) <= tolerance &&
-                y >= bRect.top - tolerance &&
-                y <= bRect.bottom + tolerance
-            const nearRight =
-                Math.abs(x - bRect.right) <= tolerance &&
-                y >= bRect.top - tolerance &&
-                y <= bRect.bottom + tolerance
+            const nearTop = Math.abs(y - bRect.top) <= tolerance && x >= bRect.left - tolerance && x <= bRect.right + tolerance
+            const nearBottom = Math.abs(y - bRect.bottom) <= tolerance && x >= bRect.left - tolerance && x <= bRect.right + tolerance
+            const nearLeft = Math.abs(x - bRect.left) <= tolerance && y >= bRect.top - tolerance && y <= bRect.bottom + tolerance
+            const nearRight = Math.abs(x - bRect.right) <= tolerance && y >= bRect.top - tolerance && y <= bRect.bottom + tolerance
 
             //work on this
             if (nearTop) selected = new Handle(0, 0, 'top', 'size')
@@ -129,60 +113,25 @@ class ShapeModifier {
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    this.selectedModifierHandle.updateShapeRadii(
-                        x,
-                        y,
-                        e,
-                        this.scene
-                    )
+                    this.selectedModifierHandle.updateShapeRadii(x, y, e, this.scene)
                     break
                 case 'size':
-                    this.selectedModifierHandle.updateShapeDim(
-                        x,
-                        y,
-                        e,
-                        this.scene
-                    )
+                    this.selectedModifierHandle.updateShapeDim(x, y, e, this.scene)
                     break
                 case 'c-ratio':
-                    this.selectedModifierHandle.updateOvalRatio(
-                        x,
-                        y,
-                        e,
-                        this.scene
-                    )
+                    this.selectedModifierHandle.updateOvalRatio(x, y, e, this.scene)
                     break
                 case 's-ratio':
-                    this.selectedModifierHandle.updateStarRatio(
-                        x,
-                        y,
-                        e,
-                        this.scene
-                    )
+                    this.selectedModifierHandle.updateStarRatio(x, y, e, this.scene)
                     break
                 case 'arc':
-                    this.selectedModifierHandle.updateShapeArc(
-                        x,
-                        y,
-                        e,
-                        this.scene
-                    )
+                    this.selectedModifierHandle.updateShapeArc(x, y, e, this.scene)
                     break
                 case 'vertices':
-                    this.selectedModifierHandle.updateShapeVertices(
-                        x,
-                        y,
-                        e,
-                        this.scene
-                    )
+                    this.selectedModifierHandle.updateShapeVertices(x, y, e, this.scene)
                     break
                 case 'angle':
-                    this.selectedModifierHandle.updateShapeAngle(
-                        x,
-                        y,
-                        e,
-                        this.scene
-                    )
+                    this.selectedModifierHandle.updateShapeAngle(x, y, e, this.scene)
                     break
                 default:
                     break
@@ -208,9 +157,7 @@ class ShapeModifier {
         }
 
         for (const resizer of this.handles) {
-            const { x, y } = this.scene
-                .getShape()
-                .getModifierHandlesPos(resizer)
+            const { x, y } = this.scene.getShape().getModifierHandlesPos(resizer)
             resizer.updatePosition(x, y)
         }
         this.updateText()
@@ -229,13 +176,9 @@ class ShapeModifier {
     setPaint(): void {
         if (!this.resource) return
 
-        const fillColor = Array.isArray(this.fill)
-            ? this.fill
-            : this.resource.canvasKit.parseColorString(this.fill)
+        const fillColor = Array.isArray(this.fill) ? this.fill : this.resource.canvasKit.parseColorString(this.fill)
 
-        const strokeColor = Array.isArray(this.strokeColor)
-            ? this.strokeColor
-            : this.resource.canvasKit.parseColorString(this.strokeColor)
+        const strokeColor = Array.isArray(this.strokeColor) ? this.strokeColor : this.resource.canvasKit.parseColorString(this.strokeColor)
 
         this.resource.strokePaint.setColor(strokeColor)
         this.resource.strokePaint.setStrokeWidth(this.strokeWidth)
@@ -265,9 +208,7 @@ class ShapeModifier {
 
     canDraw(): boolean {
         if (!this.scene && !this.scene.getShape()) return false
-        const { left, top, right, bottom } = this.scene
-            .getShape()
-            .getBoundingRect()
+        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect()
         const width = right - left
         const height = bottom - top
         const minSize = 5
@@ -277,9 +218,7 @@ class ShapeModifier {
 
     collideRect(x: number, y: number): boolean {
         if (!this.scene) return false
-        const { left, top, right, bottom } = this.scene
-            .getShape()
-            .getBoundingRect()
+        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect()
         return x >= left && x <= right && y >= top && y <= bottom
     }
 
@@ -292,12 +231,7 @@ class ShapeModifier {
 
         const dimen = this.scene.getShape().getDim()
 
-        const rect = this.resource.canvasKit.XYWHRect(
-            0,
-            0,
-            dimen.width,
-            dimen.height
-        )
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, dimen.width, dimen.height)
 
         canvas.drawRect(rect, this.resource.strokePaint)
         this.font.draw(canvas)

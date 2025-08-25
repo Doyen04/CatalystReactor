@@ -27,16 +27,10 @@ class SText extends Shape {
             fontSize: 10,
             fontFamily: ['Inter', 'sans-serif'],
         }
-        const typeface =
-            this.resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(
-                this.resource.fontData[0]
-            )
+        const typeface = this.resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(this.resource.fontData[0])
         console.log(typeface, 'inside text')
 
-        this.font = new this.resource.canvasKit.Font(
-            typeface,
-            this.textStyle.fontSize
-        )
+        this.font = new this.resource.canvasKit.Font(typeface, this.textStyle.fontSize)
 
         this.calculateBoundingRect()
     }
@@ -62,12 +56,7 @@ class SText extends Shape {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    override setSize(
-        dragStart: { x: number; y: number },
-        mx: number,
-        my: number,
-        shiftKey: boolean
-    ): void {}
+    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {}
 
     setFontSize(size: number): void {
         this.textStyle.fontSize = size
@@ -105,10 +94,7 @@ class SText extends Shape {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    override getModifierHandles(
-        fill: string | number[],
-        strokeColor: string | number[]
-    ): Handle[] {
+    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
         return []
     }
 
@@ -139,15 +125,11 @@ class SText extends Shape {
         if (!this.resource) return
         const cnvsKit = this.resource
 
-        const fillcolor = Array.isArray(fill)
-            ? fill
-            : cnvsKit.canvasKit.parseColorString(fill)
+        const fillcolor = Array.isArray(fill) ? fill : cnvsKit.canvasKit.parseColorString(fill)
         cnvsKit.paint.setColor(fillcolor)
 
         if (stroke) {
-            const strokeColor = Array.isArray(stroke)
-                ? stroke
-                : cnvsKit.canvasKit.parseColorString(stroke)
+            const strokeColor = Array.isArray(stroke) ? stroke : cnvsKit.canvasKit.parseColorString(stroke)
             cnvsKit.strokePaint.setColor(strokeColor)
             cnvsKit.strokePaint.setStrokeWidth(1)
         }
@@ -160,10 +142,7 @@ class SText extends Shape {
             console.log('No CanvasKit resources')
             return
         }
-        const { fill: fillShape, stroke } = this.setTextPaint(
-            this.style.fill,
-            this.style.strokeColor
-        )
+        const { fill: fillShape, stroke } = this.setTextPaint(this.style.fill, this.style.strokeColor)
         const rect = this.resource.canvasKit.LTRBRect(
             this.transform.x - this.padding,
             this.transform.y - this.padding,

@@ -8,11 +8,7 @@ abstract class Tool {
     shapeManager: ShapeManager | null = null
     cnvsElm: HTMLCanvasElement
 
-    constructor(
-        sceneManager: SceneManager,
-        shapeManager: ShapeManager,
-        cnvs: HTMLCanvasElement
-    ) {
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
         this.sceneManager = sceneManager
         this.shapeManager = shapeManager
         this.cnvsElm = cnvs

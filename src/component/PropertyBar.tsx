@@ -16,8 +16,7 @@ function PropertyBar() {
     const { shapeManager } = useCanvasManagerStore()
 
     const handlePropertyChange = (key: string, value: number) => {
-        const { transform, size, style, borderRadius, sides, spikesRatio } =
-            currentShapeProperties
+        const { transform, size, style, borderRadius, sides, spikesRatio } = currentShapeProperties
 
         const propertyMap = [
             { prop: transform, name: 'transform' },
@@ -32,12 +31,7 @@ function PropertyBar() {
         for (const { prop, name } of propertyMap) {
             if (!prop) continue
 
-            if (
-                key == 'radii' &&
-                borderRadius &&
-                borderRadius.locked &&
-                typeof value == 'number'
-            ) {
+            if (key == 'radii' && borderRadius && borderRadius.locked && typeof value == 'number') {
                 updateProperty('borderRadius', {
                     'top-left': value,
                     'top-right': value,
@@ -71,12 +65,7 @@ function PropertyBar() {
 
         let newBorderRadius
         if (value) {
-            const maxRadius = Math.max(
-                borderRadius['top-left'],
-                borderRadius['top-right'],
-                borderRadius['bottom-left'],
-                borderRadius['bottom-right']
-            )
+            const maxRadius = Math.max(borderRadius['top-left'], borderRadius['top-right'], borderRadius['bottom-left'], borderRadius['bottom-right'])
             newBorderRadius = {
                 'top-left': maxRadius,
                 'top-right': maxRadius,
@@ -140,75 +129,29 @@ function PropertyBar() {
             <div className="propertybar-body">
                 {transform && (
                     <Section title="Transform">
-                        <Input
-                            type="number"
-                            title="X"
-                            value={transform.x}
-                            onChange={value => handlePropertyChange('x', value)}
-                        />
-                        <Input
-                            type="number"
-                            title="Y"
-                            value={transform.y}
-                            onChange={value => handlePropertyChange('y', value)}
-                        />
+                        <Input type="number" title="X" value={transform.x} onChange={value => handlePropertyChange('x', value)} />
+                        <Input type="number" title="Y" value={transform.y} onChange={value => handlePropertyChange('y', value)} />
                     </Section>
                 )}
 
                 {size && (
                     <Section title="Dimension">
-                        <Input
-                            type="number"
-                            title="W"
-                            value={size.width}
-                            onChange={value =>
-                                handlePropertyChange('width', value)
-                            }
-                        />
-                        <Input
-                            type="number"
-                            title="H"
-                            value={size.height}
-                            onChange={value =>
-                                handlePropertyChange('height', value)
-                            }
-                        />
+                        <Input type="number" title="W" value={size.width} onChange={value => handlePropertyChange('width', value)} />
+                        <Input type="number" title="H" value={size.height} onChange={value => handlePropertyChange('height', value)} />
                     </Section>
                 )}
 
                 {style && (
                     <Section title="Style">
-                        <ColorInput
-                            fill={style.fill}
-                            onChange={fill => handleColorChange('fill', fill)}
-                        />
-                        <ColorInput
-                            fill={style.stroke.fill}
-                            onChange={strokeColor =>
-                                handleColorChange('strokeColor', strokeColor)
-                            }
-                        />
+                        <ColorInput fill={style.fill} onChange={fill => handleColorChange('fill', fill)} />
+                        <ColorInput fill={style.stroke.fill} onChange={strokeColor => handleColorChange('strokeColor', strokeColor)} />
                     </Section>
                 )}
 
                 {spikesRatio && (
                     <Section title="Spikes-Ratio">
-                        <Input
-                            type="number"
-                            title="Spikes"
-                            value={spikesRatio.spikes}
-                            onChange={value =>
-                                handlePropertyChange('spikes', value)
-                            }
-                        />
-                        <Input
-                            type="number"
-                            title="Ratio"
-                            value={spikesRatio.ratio}
-                            onChange={value =>
-                                handlePropertyChange('ratio', value)
-                            }
-                        />
+                        <Input type="number" title="Spikes" value={spikesRatio.spikes} onChange={value => handlePropertyChange('spikes', value)} />
+                        <Input type="number" title="Ratio" value={spikesRatio.ratio} onChange={value => handlePropertyChange('ratio', value)} />
                     </Section>
                 )}
 
@@ -216,34 +159,17 @@ function PropertyBar() {
                     <Section title="Arc-Segment" childClass="gap-0">
                         <Input
                             type="number"
-                            icon={
-                                <AngleIcon
-                                    startAngle={arcSegment.startAngle}
-                                    endAngle={arcSegment.endAngle}
-                                    ratio={arcSegment.ratio}
-                                />
-                            }
+                            icon={<AngleIcon startAngle={arcSegment.startAngle} endAngle={arcSegment.endAngle} ratio={arcSegment.ratio} />}
                             value={arcSegment.startAngle}
-                            onChange={value =>
-                                handlePropertyChange('startAngle', value)
-                            }
+                            onChange={value => handlePropertyChange('startAngle', value)}
                         />
                         <Input
                             type="number"
                             title="End Angle"
                             value={arcSegment.endAngle}
-                            onChange={value =>
-                                handlePropertyChange('endAngle', value)
-                            }
+                            onChange={value => handlePropertyChange('endAngle', value)}
                         />
-                        <Input
-                            type="number"
-                            title="Ratio"
-                            value={arcSegment.ratio}
-                            onChange={value =>
-                                handlePropertyChange('ratio', value)
-                            }
-                        />
+                        <Input type="number" title="Ratio" value={arcSegment.ratio} onChange={value => handlePropertyChange('ratio', value)} />
                     </Section>
                 )}
 
@@ -253,9 +179,7 @@ function PropertyBar() {
                             type="number"
                             icon={<Hexagon size={20} />}
                             value={sides.sides}
-                            onChange={value =>
-                                handlePropertyChange('sides', value)
-                            }
+                            onChange={value => handlePropertyChange('sides', value)}
                         />
                     </Section>
                 )}
@@ -269,94 +193,40 @@ function PropertyBar() {
                                     type="number"
                                     icon={<BorderRadius size={20} />}
                                     value={borderRadius['top-left']}
-                                    onChange={value =>
-                                        handlePropertyChange('top-left', value)
-                                    }
+                                    onChange={value => handlePropertyChange('top-left', value)}
                                 />
-                                <LockButton
-                                    locked={borderRadius.locked}
-                                    onClick={e =>
-                                        toggle(
-                                            e,
-                                            'locked',
-                                            !borderRadius.locked
-                                        )
-                                    }
-                                />
+                                <LockButton locked={borderRadius.locked} onClick={e => toggle(e, 'locked', !borderRadius.locked)} />
                             </>
                         ) : (
                             <div className="grid grid-cols-5 grid-rows-2 justify-items-center items-center gap-2 w-fit h-fit">
                                 <Input
                                     className="col-span-2"
                                     type="number"
-                                    icon={
-                                        <BorderRadiusAll
-                                            size={20}
-                                            corner="top-left"
-                                        />
-                                    }
+                                    icon={<BorderRadiusAll size={20} corner="top-left" />}
                                     value={borderRadius['top-left']}
-                                    onChange={value =>
-                                        handlePropertyChange('top-left', value)
-                                    }
+                                    onChange={value => handlePropertyChange('top-left', value)}
                                 />
                                 <Input
                                     className="col-span-2"
                                     type="number"
-                                    icon={
-                                        <BorderRadiusAll
-                                            size={20}
-                                            corner="top-right"
-                                        />
-                                    }
+                                    icon={<BorderRadiusAll size={20} corner="top-right" />}
                                     value={borderRadius['top-right']}
-                                    onChange={value =>
-                                        handlePropertyChange('top-right', value)
-                                    }
+                                    onChange={value => handlePropertyChange('top-right', value)}
                                 />
-                                <LockButton
-                                    locked={borderRadius.locked}
-                                    onClick={e =>
-                                        toggle(
-                                            e,
-                                            'locked',
-                                            !borderRadius.locked
-                                        )
-                                    }
-                                />
+                                <LockButton locked={borderRadius.locked} onClick={e => toggle(e, 'locked', !borderRadius.locked)} />
                                 <Input
                                     className="col-span-2"
                                     type="number"
-                                    icon={
-                                        <BorderRadiusAll
-                                            size={20}
-                                            corner="bottom-left"
-                                        />
-                                    }
+                                    icon={<BorderRadiusAll size={20} corner="bottom-left" />}
                                     value={borderRadius['bottom-left']}
-                                    onChange={value =>
-                                        handlePropertyChange(
-                                            'bottom-left',
-                                            value
-                                        )
-                                    }
+                                    onChange={value => handlePropertyChange('bottom-left', value)}
                                 />
                                 <Input
                                     className="col-span-2"
                                     type="number"
-                                    icon={
-                                        <BorderRadiusAll
-                                            size={20}
-                                            corner="bottom-right"
-                                        />
-                                    }
+                                    icon={<BorderRadiusAll size={20} corner="bottom-right" />}
                                     value={borderRadius['bottom-right']}
-                                    onChange={value =>
-                                        handlePropertyChange(
-                                            'bottom-right',
-                                            value
-                                        )
-                                    }
+                                    onChange={value => handlePropertyChange('bottom-right', value)}
                                 />
                             </div>
                         )}

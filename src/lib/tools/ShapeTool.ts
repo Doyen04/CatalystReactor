@@ -8,12 +8,7 @@ import ShapeManager from '@lib/core/ShapeManager'
 
 class ShapeTool extends Tool {
     shapeType: ShapeType
-    constructor(
-        shape: ShapeType,
-        sceneManager: SceneManager,
-        shapeManager: ShapeManager,
-        cnvs: HTMLCanvasElement
-    ) {
+    constructor(shape: ShapeType, sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
         super(sceneManager, shapeManager, cnvs)
         this.shapeType = shape
     }

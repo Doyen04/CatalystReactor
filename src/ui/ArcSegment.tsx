@@ -51,26 +51,19 @@ export const AngleIcon = React.forwardRef<SVGSVGElement, IconProps>(
         // Build path equivalent to your drawComplexTorusArc
         const d = [
             `M ${innerStart.x},${innerStart.y}`,
-            `A ${radiusX * safeRatio},${radiusY * safeRatio} 0 ${
-                Math.abs(sweepAngle) > Math.PI ? 1 : 0
-            } ${sweepAngle >= 0 ? 1 : 0} ${
+            `A ${radiusX * safeRatio},${radiusY * safeRatio} 0 ${Math.abs(sweepAngle) > Math.PI ? 1 : 0} ${sweepAngle >= 0 ? 1 : 0} ${
                 innerStart.x + (outerEnd.x - innerStart.x)
             },${innerStart.y + (outerEnd.y - innerStart.y)}`,
             `L ${outerEnd.x},${outerEnd.y}`,
-            `A ${radiusX},${radiusY} 0 ${
-                Math.abs(sweepAngle) > Math.PI ? 1 : 0
-            } ${sweepAngle >= 0 ? 1 : 0} ${
+            `A ${radiusX},${radiusY} 0 ${Math.abs(sweepAngle) > Math.PI ? 1 : 0} ${sweepAngle >= 0 ? 1 : 0} ${
                 centerX + radiusX * cos(startAngle)
             },${centerY + radiusY * sin(startAngle)}`,
             'Z',
         ].join(' ')
 
-        const vb = [
-            centerX - radiusX - strokeWidth,
-            centerY - radiusY - strokeWidth,
-            2 * (radiusX + strokeWidth),
-            2 * (radiusY + strokeWidth),
-        ].join(' ')
+        const vb = [centerX - radiusX - strokeWidth, centerY - radiusY - strokeWidth, 2 * (radiusX + strokeWidth), 2 * (radiusY + strokeWidth)].join(
+            ' '
+        )
 
         return (
             <svg

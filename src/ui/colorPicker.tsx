@@ -15,16 +15,8 @@ interface ColorPickerProps {
 
 const DEFAULT_COLOR = '#ffffff'
 
-const ColorPicker: React.FC<ColorPickerProps> = ({
-    value,
-    opacity,
-    onColorChange,
-    isOpen,
-    className,
-}) => {
-    const initialHsv = parseColorToHSVA(
-        colorValue(value.color) || DEFAULT_COLOR
-    )
+const ColorPicker: React.FC<ColorPickerProps> = ({ value, opacity, onColorChange, isOpen, className }) => {
+    const initialHsv = parseColorToHSVA(colorValue(value.color) || DEFAULT_COLOR)
     const [hsv, setHsv] = useState<HSV>(initialHsv.hsv)
     const [alpha, setAlpha] = useState(opacity)
 
@@ -232,13 +224,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
 
                     {/* Hue Bar */}
                     <div className="relative mb-3 rounded border-gray-200 border-2 w-fit h-fit">
-                        <canvas
-                            ref={hueCanvasRef}
-                            width={240}
-                            height={20}
-                            className="cursor-pointer rounded"
-                            onMouseDown={handleHueMouseDown}
-                        />
+                        <canvas ref={hueCanvasRef} width={240} height={20} className="cursor-pointer rounded" onMouseDown={handleHueMouseDown} />
                         {/* Hue Indicator */}
                         <div
                             className="absolute w-1 h-6 bg-white border border-gray-400 pointer-events-none transform -translate-x-1/2"
@@ -267,13 +253,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
 
             {/* Color Preview and Close */}
             <div className="flex items-center justify-between">
-                <div
-                    className="w-4 h-4 border border-gray-300 rounded"
-                    style={{ backgroundColor: currentColor }}
-                />
-                <div className="text-xs font-mono text-gray-600">
-                    {currentColor.toUpperCase()}
-                </div>
+                <div className="w-4 h-4 border border-gray-300 rounded" style={{ backgroundColor: currentColor }} />
+                <div className="text-xs font-mono text-gray-600">{currentColor.toUpperCase()}</div>
             </div>
         </div>
     )

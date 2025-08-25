@@ -1,11 +1,5 @@
 import React from 'react'
-import {
-    LinearGradient,
-    GradientStop,
-    DEFAULT_LINEAR_GRADIENT,
-    LINEAR_PRESET_DIRECTIONS,
-    PRESET_LINEAR_GRADIENTS,
-} from '@lib/types/shapes'
+import { LinearGradient, GradientStop, DEFAULT_LINEAR_GRADIENT, LINEAR_PRESET_DIRECTIONS, PRESET_LINEAR_GRADIENTS } from '@lib/types/shapes'
 import { twMerge } from 'tailwind-merge'
 import Input from './Input'
 import GradientPreview from './GradientPreview'
@@ -19,11 +13,7 @@ interface LinearGradientPickerProps {
     className?: string
 }
 
-const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({
-    value,
-    onGradientChange,
-    className,
-}) => {
+const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGradientChange, className }) => {
     const gradient = value?.type == 'linear' ? value : DEFAULT_LINEAR_GRADIENT
 
     //move
@@ -35,11 +25,7 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({
         updateGradient({ ...gradient, stops: presetStops })
     }
 
-    const handleStopChange = (
-        index: number,
-        field: keyof GradientStop,
-        value: string | number
-    ) => {
+    const handleStopChange = (index: number, field: keyof GradientStop, value: string | number) => {
         const newStops = [...gradient.stops]
         newStops[index] = { ...newStops[index], [field]: value }
         updateGradient({ ...gradient, stops: newStops })
@@ -53,21 +39,14 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({
     }
     //move
     const addStop = () => {
-        const sortedStops = [...gradient.stops].sort(
-            (a, b) => a.offset - b.offset
-        )
+        const sortedStops = [...gradient.stops].sort((a, b) => a.offset - b.offset)
         const lastOffset = sortedStops[sortedStops.length - 1]?.offset || 0
         const newOffset = Math.min(lastOffset + 0.2, 1)
-        const newStops = [
-            ...gradient.stops,
-            { offset: newOffset, color: '#ffffff' },
-        ]
+        const newStops = [...gradient.stops, { offset: newOffset, color: '#ffffff' }]
         updateGradient({ ...gradient, stops: newStops })
     }
 
-    const applyDirection = (
-        direction: (typeof LINEAR_PRESET_DIRECTIONS)[0]
-    ) => {
+    const applyDirection = (direction: (typeof LINEAR_PRESET_DIRECTIONS)[0]) => {
         updateGradient({
             ...gradient,
             x1: direction.x1,
@@ -82,16 +61,11 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({
             <div className="flex flex-col gap-4 w-full">
                 <GradientPreview gradient={gradient} />
                 <div className="flex gap-1 w-fit h-fit">
-                    <DirectionControls
-                        directions={LINEAR_PRESET_DIRECTIONS}
-                        applyPosition={applyDirection}
-                    />
+                    <DirectionControls directions={LINEAR_PRESET_DIRECTIONS} applyPosition={applyDirection} />
                     {/* Custom Direction  */}
                     <div className="flex-1 grid grid-cols-1">
                         <div className="">
-                            <label className="text-xs font-bold text-gray-600">
-                                Start Point
-                            </label>
+                            <label className="text-xs font-bold text-gray-600">Start Point</label>
                             <div className="grid grid-cols-2 gap-1">
                                 <Input
                                     min={0}
@@ -124,9 +98,7 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({
                             </div>
                         </div>
                         <div className="">
-                            <label className="text-xs font-bold text-gray-600">
-                                End Point
-                            </label>
+                            <label className="text-xs font-bold text-gray-600">End Point</label>
                             <div className="grid grid-cols-2 gap-1">
                                 <Input
                                     min={0}
@@ -160,16 +132,8 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({
                         </div>
                     </div>
                 </div>
-                <ColorStops
-                    gradient={gradient}
-                    addStop={addStop}
-                    removeStop={removeStop}
-                    handleStopChange={handleStopChange}
-                />
-                <PresetGradients
-                    gradients={PRESET_LINEAR_GRADIENTS}
-                    applyPreset={applyPreset}
-                />
+                <ColorStops gradient={gradient} addStop={addStop} removeStop={removeStop} handleStopChange={handleStopChange} />
+                <PresetGradients gradients={PRESET_LINEAR_GRADIENTS} applyPreset={applyPreset} />
             </div>
         </div>
     )

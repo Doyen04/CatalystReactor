@@ -7,11 +7,7 @@ import SceneNode from '@lib/core/SceneNode'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 
 class ImageTool extends Tool {
-    constructor(
-        sceneManager: SceneManager,
-        shapeManager: ShapeManager,
-        cnvs: HTMLCanvasElement
-    ) {
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
         super(sceneManager, shapeManager, cnvs)
     }
 

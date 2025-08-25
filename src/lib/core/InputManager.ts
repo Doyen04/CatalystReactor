@@ -1,15 +1,7 @@
 import { Coord } from '@lib/types/shapes'
 import EventQueue, { EventTypes } from './EventQueue'
 
-const {
-    PointerDown,
-    PointerMove,
-    PointerUp,
-    PointerDrag,
-    CreateSurface,
-    KeyDown,
-    KeyUp,
-} = EventTypes
+const { PointerDown, PointerMove, PointerUp, PointerDrag, CreateSurface, KeyDown, KeyUp } = EventTypes
 
 class InputManager {
     private canvasEl: HTMLCanvasElement
@@ -32,14 +24,8 @@ class InputManager {
         this.addEventListeners()
     }
     addEventListeners() {
-        this.canvasEl.addEventListener(
-            'mousedown',
-            this.onPointerDown.bind(this)
-        )
-        this.canvasEl.addEventListener(
-            'mousemove',
-            this.onPointerMove.bind(this)
-        )
+        this.canvasEl.addEventListener('mousedown', this.onPointerDown.bind(this))
+        this.canvasEl.addEventListener('mousemove', this.onPointerMove.bind(this))
         this.canvasEl.addEventListener('mouseup', this.onPointerUp.bind(this))
         this.canvasEl.addEventListener('keydown', this.onKeyDown.bind(this))
         this.canvasEl.addEventListener('keyup', this.onKeyUp.bind(this))
@@ -89,18 +75,9 @@ class InputManager {
     }
 
     removeEventListeners() {
-        this.canvasEl.removeEventListener(
-            'mousedown',
-            this.onPointerDown.bind(this)
-        )
-        this.canvasEl.removeEventListener(
-            'mousemove',
-            this.onPointerMove.bind(this)
-        )
-        this.canvasEl.removeEventListener(
-            'mouseup',
-            this.onPointerUp.bind(this)
-        )
+        this.canvasEl.removeEventListener('mousedown', this.onPointerDown.bind(this))
+        this.canvasEl.removeEventListener('mousemove', this.onPointerMove.bind(this))
+        this.canvasEl.removeEventListener('mouseup', this.onPointerUp.bind(this))
         window.removeEventListener('keydown', this.onPointerUp.bind(this))
         window.removeEventListener('keyup', this.onKeyUp.bind(this))
         window.removeEventListener('resize', this.resize.bind(this))

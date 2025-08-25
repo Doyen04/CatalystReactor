@@ -28,11 +28,7 @@ class CanvasManager {
         this.sceneManager = new SceneManager(this.shapeModifier)
         this.renderer = new Renderer(canvas, this.sceneManager)
         this.inputManager = new InputManager(canvas)
-        this.toolManager = new ToolManager(
-            this.sceneManager,
-            this.shapeManager,
-            canvas
-        )
+        this.toolManager = new ToolManager(this.sceneManager, this.shapeManager, canvas)
 
         // Input handling state
         this.undoStack = []

@@ -14,21 +14,10 @@ interface BackgroundImagePickerProps {
     imageUrl: string
 }
 
-const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({
-    value,
-    imageUrl,
-    setImageUrl,
-    onImageChange,
-    isOpen,
-    className,
-}) => {
+const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, imageUrl, setImageUrl, onImageChange, isOpen, className }) => {
     // const img = value?.type == 'image' ? value : DEFAULT_LINEAR_GRADIENT;
-    const [currentScaleMode, setScaleMode] = useState<ScaleMode>(
-        value.scaleMode ?? 'fill'
-    )
-    const [currentImage, setCurrentImage] = useState<ArrayBuffer | null>(
-        value.imageData ?? null
-    )
+    const [currentScaleMode, setScaleMode] = useState<ScaleMode>(value.scaleMode ?? 'fill')
+    const [currentImage, setCurrentImage] = useState<ArrayBuffer | null>(value.imageData ?? null)
 
     useEffect(() => {
         if (value.scaleMode) {
@@ -45,9 +34,7 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({
     const handleFileSelect = async (files: FileList) => {
         if (files && files.length > 0) {
             if (imageUrl) URL.revokeObjectURL(imageUrl)
-            const urlList = Array.from(files).map(file =>
-                URL.createObjectURL(file)
-            )
+            const urlList = Array.from(files).map(file => URL.createObjectURL(file))
             const images = await loadImage(urlList)
 
             setImageUrl(urlList[0])
@@ -102,33 +89,22 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({
             description: 'Adjust image to fill area',
         },
     ]
-    const selectedScaleMode =
-        scaleModeOptions.find(o => o.value === currentScaleMode) ??
-        scaleModeOptions[0]
+    const selectedScaleMode = scaleModeOptions.find(o => o.value === currentScaleMode) ?? scaleModeOptions[0]
 
     return (
         <div className={twMerge(`w-fit h-fit p-3 ${className}`)}>
             <div className="flex flex-col gap-1.5">
-                <DropDownPicker
-                    value={selectedScaleMode}
-                    onValueChange={handleScaleModeChange}
-                    values={scaleModeOptions}
-                />
+                <DropDownPicker value={selectedScaleMode} onValueChange={handleScaleModeChange} values={scaleModeOptions} />
                 <div
                     className="w-[240px] h-[240px] bg-gray-100 rounded flex items-center justify-center"
                     style={{
-                        backgroundImage: imageUrl
-                            ? `url(${imageUrl})`
-                            : undefined,
+                        backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'center',
                         backgroundSize: 'contain',
                     }}
                 >
-                    <button
-                        className="bg-blue-800 text-white rounded p-2"
-                        onClick={() => openFilePicker()}
-                    >
+                    <button className="bg-blue-800 text-white rounded p-2" onClick={() => openFilePicker()}>
                         Click to Select Image
                     </button>
                 </div>

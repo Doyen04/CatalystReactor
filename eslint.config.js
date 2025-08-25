@@ -13,12 +13,7 @@ export default tseslint.config([
         plugins: {
             import: importPlugin,
         },
-        extends: [
-            js.configs.recommended,
-            tseslint.configs.recommended,
-            reactHooks.configs['recommended-latest'],
-            reactRefresh.configs.vite,
-        ],
+        extends: [js.configs.recommended, tseslint.configs.recommended, reactHooks.configs['recommended-latest'], reactRefresh.configs.vite],
         settings: {
             'import/parsers': {
                 '@typescript-eslint/parser': ['.ts', '.tsx'],
@@ -34,10 +29,7 @@ export default tseslint.config([
             globals: globals.browser,
         },
         rules: {
-            'import/no-cycle': [
-                'error',
-                { maxDepth: Infinity, ignoreExternal: true },
-            ],
+            'import/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: true }],
         },
     },
 ])

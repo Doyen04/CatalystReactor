@@ -1,14 +1,4 @@
-import {
-    Triangle,
-    Lasso,
-    Maximize2,
-    MousePointer2,
-    Square,
-    Star,
-    Type,
-    Circle,
-    Image,
-} from 'lucide-react'
+import { Triangle, Lasso, Maximize2, MousePointer2, Square, Star, Type, Circle, Image } from 'lucide-react'
 import './Component.css'
 import Button from '../ui/Button'
 import MoreButton from '@ui/MoreButton'
@@ -28,9 +18,7 @@ function ToolBar() {
 
     const handleFileSelect = async (files: FileList) => {
         if (files && files.length > 0) {
-            const urlList = Array.from(files).map(file =>
-                URL.createObjectURL(file)
-            )
+            const urlList = Array.from(files).map(file => URL.createObjectURL(file))
             const images = await loadImage(urlList)
             console.log(images, 'images')
 

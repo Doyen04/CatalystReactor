@@ -1,14 +1,6 @@
 import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Rect } from 'canvaskit-wasm'
-import {
-    BorderRadius,
-    BoundingRect,
-    Coord,
-    CornerPos,
-    HandlePos,
-    Properties,
-    Size,
-} from '@lib/types/shapes'
+import { BorderRadius, BoundingRect, Coord, CornerPos, HandlePos, Properties, Size } from '@lib/types/shapes'
 import Shape from '../base/Shape'
 
 class Rectangle extends Shape {
@@ -58,12 +50,7 @@ class Rectangle extends Shape {
         }
     }
 
-    override setSize(
-        dragStart: { x: number; y: number },
-        mx: number,
-        my: number,
-        shiftKey: boolean
-    ): void {
+    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
         // Calculate dimensions
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
@@ -99,11 +86,7 @@ class Rectangle extends Shape {
     }
 
     handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
-        if (
-            this.transform.isFlippedX === isFlippedX &&
-            this.transform.isFlippedY === isFlippedY
-        )
-            return
+        if (this.transform.isFlippedX === isFlippedX && this.transform.isFlippedY === isFlippedY) return
         this.transform.isFlippedX = isFlippedX
         this.transform.isFlippedY = isFlippedY
         this.flippedRadii()
@@ -186,10 +169,7 @@ class Rectangle extends Shape {
             left: radii['top-left'] + radii['bottom-left'],
         }
 
-        const scaleRadii = (
-            sum: number,
-            ...corners: (keyof typeof radii)[]
-        ) => {
+        const scaleRadii = (sum: number, ...corners: (keyof typeof radii)[]) => {
             if (sum > max && sum > 0) {
                 const scale = max / sum
                 corners.forEach(corner => (radii[corner] *= scale))
@@ -249,28 +229,16 @@ class Rectangle extends Shape {
                 y = (handle.isDragging || r >= padding ? r : padding) - size
                 break
             case 'top-right':
-                x =
-                    this.dimension.width -
-                    (handle.isDragging || r >= padding ? r : padding) -
-                    size
+                x = this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size
                 y = (handle.isDragging || r >= padding ? r : padding) - size
                 break
             case 'bottom-left':
                 x = (handle.isDragging || r >= padding ? r : padding) - size
-                y =
-                    this.dimension.height -
-                    (handle.isDragging || r >= padding ? r : padding) -
-                    size
+                y = this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size
                 break
             case 'bottom-right':
-                x =
-                    this.dimension.width -
-                    (handle.isDragging || r >= padding ? r : padding) -
-                    size
-                y =
-                    this.dimension.height -
-                    (handle.isDragging || r >= padding ? r : padding) -
-                    size
+                x = this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size
+                y = this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size
                 break
         }
 
@@ -299,10 +267,7 @@ class Rectangle extends Shape {
 
     hasRadius(): boolean {
         return (
-            this.bdradius['top-left'] > 0 ||
-            this.bdradius['top-right'] > 0 ||
-            this.bdradius['bottom-left'] > 0 ||
-            this.bdradius['bottom-right'] > 0
+            this.bdradius['top-left'] > 0 || this.bdradius['top-right'] > 0 || this.bdradius['bottom-left'] > 0 || this.bdradius['bottom-right'] > 0
         )
     }
 
@@ -311,12 +276,7 @@ class Rectangle extends Shape {
 
         const { fill, stroke } = this.initPaints()
 
-        const rect = this.resource.canvasKit.XYWHRect(
-            0,
-            0,
-            this.dimension.width,
-            this.dimension.height
-        )
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, this.dimension.width, this.dimension.height)
 
         if (this.hasRadius() && this.bdradius.locked) {
             const radius = this.bdradius['top-left']
@@ -368,57 +328,27 @@ class Rectangle extends Shape {
         const CanvasKit = this.resource?.canvasKit
 
         const p = new this.resource.canvasKit.Path()
-        const {
-            'top-left': tl,
-            'top-right': tr,
-            'bottom-right': br,
-            'bottom-left': bl,
-        } = radii
+        const { 'top-left': tl, 'top-right': tr, 'bottom-right': br, 'bottom-left': bl } = radii
 
         p.moveTo(x + tl, y)
         p.lineTo(x + w - tr, y)
         if (tr > 0) {
-            p.arcToOval(
-                CanvasKit.LTRBRect(x + w - 2 * tr, y, x + w, y + 2 * tr),
-                -90,
-                90,
-                false
-            )
+            p.arcToOval(CanvasKit.LTRBRect(x + w - 2 * tr, y, x + w, y + 2 * tr), -90, 90, false)
         }
 
         p.lineTo(x + w, y + h - br)
         if (br > 0) {
-            p.arcToOval(
-                CanvasKit.LTRBRect(
-                    x + w - 2 * br,
-                    y + h - 2 * br,
-                    x + w,
-                    y + h
-                ),
-                0,
-                90,
-                false
-            )
+            p.arcToOval(CanvasKit.LTRBRect(x + w - 2 * br, y + h - 2 * br, x + w, y + h), 0, 90, false)
         }
 
         p.lineTo(x + bl, y + h)
         if (bl > 0) {
-            p.arcToOval(
-                CanvasKit.LTRBRect(x, y + h - 2 * bl, x + 2 * bl, y + h),
-                90,
-                90,
-                false
-            )
+            p.arcToOval(CanvasKit.LTRBRect(x, y + h - 2 * bl, x + 2 * bl, y + h), 90, 90, false)
         }
 
         p.lineTo(x, y + tl)
         if (tl > 0) {
-            p.arcToOval(
-                CanvasKit.LTRBRect(x, y, x + 2 * tl, y + 2 * tl),
-                180,
-                90,
-                false
-            )
+            p.arcToOval(CanvasKit.LTRBRect(x, y, x + 2 * tl, y + 2 * tl), 180, 90, false)
         }
 
         p.close()

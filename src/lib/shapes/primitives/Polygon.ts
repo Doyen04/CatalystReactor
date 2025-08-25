@@ -67,12 +67,7 @@ class Polygon extends Shape {
         this.calculateBoundingRect()
     }
 
-    override setSize(
-        dragStart: { x: number; y: number },
-        mx: number,
-        my: number,
-        shiftKey: boolean
-    ): void {
+    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
 
@@ -146,11 +141,7 @@ class Polygon extends Shape {
             const [x, y] = this.points[0]
             return {
                 x: x - size,
-                y:
-                    y +
-                    (handle.isDragging || this.bRadius >= padding
-                        ? this.bRadius
-                        : padding),
+                y: y + (handle.isDragging || this.bRadius >= padding ? this.bRadius : padding),
             }
         }
         return { x: this.centerX, y: this.centerY }
@@ -165,17 +156,11 @@ class Polygon extends Shape {
             // If border radius is set, use the tangent point for vertex 1
             if (this.bRadius > 0) {
                 const i = 1
-                const { startPoint, endPoint, controlPoint } =
-                    this.computeRoundedCorner(i)
+                const { startPoint, endPoint, controlPoint } = this.computeRoundedCorner(i)
                 const startObj = { x: startPoint[0], y: startPoint[1] }
                 const endObj = { x: endPoint[0], y: endPoint[1] }
                 const controlObj = { x: controlPoint[0], y: controlPoint[1] }
-                const { x: tangentX, y: tangentY } = this.computeQuadPoint(
-                    startObj,
-                    controlObj,
-                    endObj,
-                    0.5
-                )
+                const { x: tangentX, y: tangentY } = this.computeQuadPoint(startObj, controlObj, endObj, 0.5)
 
                 return { x: tangentX - size, y: tangentY - size }
             } else {
@@ -187,23 +172,13 @@ class Polygon extends Shape {
         return { x: this.centerX, y: this.centerY }
     }
 
-    computeQuadPoint(
-        P0: { x: number; y: number },
-        P1: { x: number; y: number },
-        P2: { x: number; y: number },
-        t: number
-    ) {
-        const x =
-            (1 - t) * (1 - t) * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x
-        const y =
-            (1 - t) * (1 - t) * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y
+    computeQuadPoint(P0: { x: number; y: number }, P1: { x: number; y: number }, P2: { x: number; y: number }, t: number) {
+        const x = (1 - t) * (1 - t) * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x
+        const y = (1 - t) * (1 - t) * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y
         return { x, y }
     }
 
-    override getModifierHandles(
-        fill: string | number[],
-        strokeColor: string | number[]
-    ): Handle[] {
+    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
         const handles = super.getSizeModifierHandles(fill, strokeColor)
         handles.push(new Handle(0, 0, 'top', 'radius', fill, strokeColor))
         handles.push(new Handle(0, 0, 'right', 'vertices', fill, strokeColor))
@@ -309,23 +284,11 @@ class Polygon extends Shape {
         // Use angle-based maximum for better visual results
         const logicalRadius = Math.min(len1 / 2, len2 / 2)
         const halfAngle = angle / 2
-        const maxRadius = Math.min(
-            this.bRadius,
-            Math.min(len1 / 2, len2 / 2) * Math.tan(halfAngle)
-        )
+        const maxRadius = Math.min(this.bRadius, Math.min(len1 / 2, len2 / 2) * Math.tan(halfAngle))
 
-        const startPoint = [
-            curr[0] + norm1[0] * maxRadius,
-            curr[1] + norm1[1] * maxRadius,
-        ]
-        const endPoint = [
-            curr[0] + norm2[0] * maxRadius,
-            curr[1] + norm2[1] * maxRadius,
-        ]
-        const logicalStart = [
-            curr[0] + norm1[0] * logicalRadius,
-            curr[1] + norm1[1] * logicalRadius,
-        ]
+        const startPoint = [curr[0] + norm1[0] * maxRadius, curr[1] + norm1[1] * maxRadius]
+        const endPoint = [curr[0] + norm2[0] * maxRadius, curr[1] + norm2[1] * maxRadius]
+        const logicalStart = [curr[0] + norm1[0] * logicalRadius, curr[1] + norm1[1] * logicalRadius]
         return {
             startPoint,
             endPoint,
@@ -342,10 +305,7 @@ class Polygon extends Shape {
         const firstCorner = this.computeRoundedCorner(0)
 
         if (firstCorner.maxRadius >= firstCorner.logicalRadius) {
-            path.moveTo(
-                firstCorner.logicalStart[0],
-                firstCorner.logicalStart[1]
-            )
+            path.moveTo(firstCorner.logicalStart[0], firstCorner.logicalStart[1])
         } else {
             path.moveTo(firstCorner.startPoint[0], firstCorner.startPoint[1])
         }
@@ -354,13 +314,7 @@ class Polygon extends Shape {
             const { controlPoint, maxRadius } = this.computeRoundedCorner(i)
             const nextIndex = (i + 1) % numPoints
             const nextCorner = this.computeRoundedCorner(nextIndex)
-            path.arcToTangent(
-                controlPoint[0],
-                controlPoint[1],
-                nextCorner.startPoint[0],
-                nextCorner.startPoint[1],
-                maxRadius
-            )
+            path.arcToTangent(controlPoint[0], controlPoint[1], nextCorner.startPoint[0], nextCorner.startPoint[1], maxRadius)
         }
 
         path.close()
@@ -375,8 +329,7 @@ class Polygon extends Shape {
         for (let i = 0, j = n - 1; i < n; j = i++) {
             const [xi, yi] = pts[i]
             const [xj, yj] = pts[j]
-            const intersects =
-                yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi
+            const intersects = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi
 
             if (intersects) inside = !inside
         }

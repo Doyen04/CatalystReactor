@@ -1,9 +1,5 @@
 import { getGradientPreview } from '@/util/getBackgroundFill'
-import {
-    GradientStop,
-    PRESET_LINEAR_GRADIENTS,
-    PRESET_RADIAL_GRADIENTS,
-} from '@lib/types/shapes'
+import { GradientStop, PRESET_LINEAR_GRADIENTS, PRESET_RADIAL_GRADIENTS } from '@lib/types/shapes'
 import { Key } from 'react'
 import { twMerge } from 'tailwind-merge'
 
@@ -13,20 +9,10 @@ interface PresetGradientProps {
     applyPreset: (presetStops: GradientStop[]) => void
 }
 
-const PresetGradients: React.FC<PresetGradientProps> = ({
-    className,
-    gradients,
-    applyPreset,
-}) => {
+const PresetGradients: React.FC<PresetGradientProps> = ({ className, gradients, applyPreset }) => {
     return (
-        <div
-            className={twMerge(
-                `flex flex-col gap-2 rounded w-full ${className}`
-            )}
-        >
-            <label className="text-xs text-left font-bold text-gray-700">
-                Preset Colors
-            </label>
+        <div className={twMerge(`flex flex-col gap-2 rounded w-full ${className}`)}>
+            <label className="text-xs text-left font-bold text-gray-700">Preset Colors</label>
             <div className="flex gap-2">
                 {gradients.map((preset, index: Key) => (
                     <button

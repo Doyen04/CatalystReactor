@@ -1,10 +1,6 @@
 // HSV to RGB conversion utility
 
-const hsvToRgb = (
-    h: number,
-    s: number,
-    v: number
-): [number, number, number] => {
+const hsvToRgb = (h: number, s: number, v: number): [number, number, number] => {
     const c = (v / 100) * (s / 100)
     const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
     const m = v / 100 - c
@@ -39,11 +35,7 @@ const hsvToRgb = (
         b = x
     }
 
-    return [
-        Math.round((r + m) * 255),
-        Math.round((g + m) * 255),
-        Math.round((b + m) * 255),
-    ]
+    return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)]
 }
 
 export default hsvToRgb

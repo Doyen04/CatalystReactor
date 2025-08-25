@@ -11,8 +11,7 @@ interface SceneStore {
 export const useSceneStore = create<SceneStore>(set => ({
     currentShapeProperties: null,
 
-    setCurrentShapeProperties: properties =>
-        set({ currentShapeProperties: properties }),
+    setCurrentShapeProperties: properties => set({ currentShapeProperties: properties }),
 
     updateProperty: (key, value) =>
         set(state => {

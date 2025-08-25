@@ -8,15 +8,7 @@ import KeyboardTool from '@lib/tools/keyboardTool'
 import SceneManager from './SceneManager'
 import ShapeManager from './ShapeManager'
 
-const {
-    PointerDown,
-    PointerMove,
-    PointerUp,
-    PointerDrag,
-    KeyDown,
-    KeyUp,
-    ToolChange,
-} = EventTypes
+const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes
 
 class ToolManager {
     currentTool: Tool
@@ -25,19 +17,11 @@ class ToolManager {
     shapeManager: ShapeManager
     cnvsElm: HTMLCanvasElement
 
-    constructor(
-        sceneManager: SceneManager,
-        shapeManager: ShapeManager,
-        cnvs: HTMLCanvasElement
-    ) {
+    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
         this.sceneManager = sceneManager
         this.shapeManager = shapeManager
         this.cnvsElm = cnvs
-        this.currentTool = new SelectTool(
-            this.sceneManager,
-            this.shapeManager,
-            this.cnvsElm
-        )
+        this.currentTool = new SelectTool(this.sceneManager, this.shapeManager, this.cnvsElm)
         this.keyboardTool = new KeyboardTool(this.shapeManager)
         this.setUpEvent()
     }
@@ -46,58 +30,25 @@ class ToolManager {
         let currentTool = null
         switch (tool) {
             case 'select':
-                currentTool = new SelectTool(
-                    this.sceneManager,
-                    this.shapeManager,
-                    this.cnvsElm
-                )
+                currentTool = new SelectTool(this.sceneManager, this.shapeManager, this.cnvsElm)
                 break
             case 'rect':
-                currentTool = new ShapeTool(
-                    'rect',
-                    this.sceneManager,
-                    this.shapeManager,
-                    this.cnvsElm
-                )
+                currentTool = new ShapeTool('rect', this.sceneManager, this.shapeManager, this.cnvsElm)
                 break
             case 'oval':
-                currentTool = new ShapeTool(
-                    'oval',
-                    this.sceneManager,
-                    this.shapeManager,
-                    this.cnvsElm
-                )
+                currentTool = new ShapeTool('oval', this.sceneManager, this.shapeManager, this.cnvsElm)
                 break
             case 'star':
-                currentTool = new ShapeTool(
-                    'star',
-                    this.sceneManager,
-                    this.shapeManager,
-                    this.cnvsElm
-                )
+                currentTool = new ShapeTool('star', this.sceneManager, this.shapeManager, this.cnvsElm)
                 break
             case 'polygon':
-                currentTool = new ShapeTool(
-                    'polygon',
-                    this.sceneManager,
-                    this.shapeManager,
-                    this.cnvsElm
-                )
+                currentTool = new ShapeTool('polygon', this.sceneManager, this.shapeManager, this.cnvsElm)
                 break
             case 'text':
-                currentTool = new ShapeTool(
-                    'text',
-                    this.sceneManager,
-                    this.shapeManager,
-                    this.cnvsElm
-                )
+                currentTool = new ShapeTool('text', this.sceneManager, this.shapeManager, this.cnvsElm)
                 break
             case 'img':
-                currentTool = new ImageTool(
-                    this.sceneManager,
-                    this.shapeManager,
-                    this.cnvsElm
-                )
+                currentTool = new ImageTool(this.sceneManager, this.shapeManager, this.cnvsElm)
                 break
             default:
                 console.log('ttool not implemented')
@@ -120,30 +71,12 @@ class ToolManager {
         this.addEvent()
     }
     addEvent() {
-        EventQueue.subscribe(
-            PointerDown,
-            this.currentTool.handlePointerDown.bind(this.currentTool)
-        )
-        EventQueue.subscribe(
-            PointerDrag,
-            this.currentTool.handlePointerDrag.bind(this.currentTool)
-        )
-        EventQueue.subscribe(
-            PointerMove,
-            this.currentTool.handlePointerMove.bind(this.currentTool)
-        )
-        EventQueue.subscribe(
-            PointerUp,
-            this.currentTool.handlePointerUp.bind(this.currentTool)
-        )
-        EventQueue.subscribe(
-            KeyDown,
-            this.keyboardTool.handleKeyDown.bind(this.keyboardTool)
-        )
-        EventQueue.subscribe(
-            KeyUp,
-            this.keyboardTool.handleKeyUp.bind(this.keyboardTool)
-        )
+        EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown.bind(this.currentTool))
+        EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag.bind(this.currentTool))
+        EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove.bind(this.currentTool))
+        EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp.bind(this.currentTool))
+        EventQueue.subscribe(KeyDown, this.keyboardTool.handleKeyDown.bind(this.keyboardTool))
+        EventQueue.subscribe(KeyUp, this.keyboardTool.handleKeyUp.bind(this.keyboardTool))
         EventQueue.subscribe(ToolChange, this.handleToolChange.bind(this))
     }
     removeEvent() {
