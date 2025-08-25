@@ -1,5 +1,5 @@
 import { Coord, ShapeType } from '@lib/types/shapes'
-import SceneNode from './SceneNode'
+import SceneNode from '../node/ContainerNode'
 
 enum EventTypes {
     PointerDown = 'pointer:down', //

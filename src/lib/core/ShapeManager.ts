@@ -3,8 +3,8 @@ import { useSceneStore } from '@hooks/sceneStore'
 import { Coord, IShape, Properties } from '@lib/types/shapes'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import throttle from '@lib/helper/throttle'
-import SceneNode from './SceneNode'
 import Handle from '@lib/modifiers/Handles'
+import SceneNode from '@lib/node/Scene'
 
 class ShapeManager {
     private scene: SceneNode | null = null

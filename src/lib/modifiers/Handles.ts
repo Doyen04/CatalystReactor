@@ -3,7 +3,7 @@ import type { Canvas } from 'canvaskit-wasm'
 import { HandlePos, HandleType } from '@lib/types/shapes'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import clamp from '@lib/helper/clamp'
-import SceneNode from '@lib/core/SceneNode'
+import SceneNode from '@lib/node/ContainerNode'
 
 export default class Handle {
     x: number
@@ -152,24 +152,24 @@ export default class Handle {
         scene.getShape().setBorderRadius(newRadius, this.pos)
     }
 
-    updateShapeDim(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+    updateShapeDim(mx: number, my: number, scene: SceneNode) {
         let [width, height] = [0, 0]
-        let nx = 0
-        let ny = 0
+        let localx = 0
+        let localy = 0
 
         const shape = scene.getShape()
-        const boundingRect = shape.getBoundingRect()
+        const { width: currentWidth, height: currentHeight } = shape.getDim()
 
         if (this.anchorPoint === null) {
             const anchorMap = {
-                'top-left': { x: boundingRect.right, y: boundingRect.bottom },
-                'top-right': { x: boundingRect.left, y: boundingRect.bottom },
-                'bottom-left': { x: boundingRect.right, y: boundingRect.top },
-                'bottom-right': { x: boundingRect.left, y: boundingRect.top },
-                top: { x: boundingRect.left, y: boundingRect.bottom },
-                bottom: { x: boundingRect.left, y: boundingRect.top },
-                left: { x: boundingRect.right, y: boundingRect.top },
-                right: { x: boundingRect.left, y: boundingRect.top },
+                'top-left': { x: currentWidth, y: currentHeight },
+                'top-right': { x: 0, y: currentHeight },
+                'bottom-left': { x: currentWidth, y: 0 },
+                'bottom-right': { x: 0, y: 0 },
+                top: { x: 0, y: currentHeight },
+                bottom: { x: 0, y: 0 },
+                left: { x: currentWidth, y: 0 },
+                right: { x: 0, y: 0 },
             }
             this.anchorPoint = anchorMap[this.pos]
         }
@@ -185,64 +185,64 @@ export default class Handle {
             case 'bottom-right': {
                 const flipMap = {
                     'top-left': {
-                        isFlippedX: e.offsetX > this.anchorPoint.x,
-                        isFlippedY: e.offsetY > this.anchorPoint.y,
+                        isFlippedX: mx > this.anchorPoint.x,
+                        isFlippedY: my > this.anchorPoint.y,
                     },
                     'top-right': {
-                        isFlippedX: e.offsetX < this.anchorPoint.x,
-                        isFlippedY: e.offsetY > this.anchorPoint.y,
+                        isFlippedX: mx < this.anchorPoint.x,
+                        isFlippedY: my > this.anchorPoint.y,
                     },
                     'bottom-left': {
-                        isFlippedX: e.offsetX > this.anchorPoint.x,
-                        isFlippedY: e.offsetY < this.anchorPoint.y,
+                        isFlippedX: mx > this.anchorPoint.x,
+                        isFlippedY: my < this.anchorPoint.y,
                     },
                     'bottom-right': {
-                        isFlippedX: e.offsetX < this.anchorPoint.x,
-                        isFlippedY: e.offsetY < this.anchorPoint.y,
+                        isFlippedX: mx < this.anchorPoint.x,
+                        isFlippedY: my < this.anchorPoint.y,
                     },
                 }
                 ;({ isFlippedX, isFlippedY } = flipMap[this.pos])
 
-                width = Math.abs(e.offsetX - this.anchorPoint.x)
-                height = Math.abs(e.offsetY - this.anchorPoint.y)
-                nx = Math.min(this.anchorPoint.x, e.offsetX)
-                ny = Math.min(this.anchorPoint.y, e.offsetY)
+                width = Math.abs(mx - this.anchorPoint.x)
+                height = Math.abs(my - this.anchorPoint.y)
+                localx = Math.min(this.anchorPoint.x, mx)
+                localy = Math.min(this.anchorPoint.y, my)
                 break
             }
 
             // Sides: change only one dimension
             case 'top': {
-                isFlippedY = e.offsetY > this.anchorPoint.y
+                isFlippedY = my > this.anchorPoint.y
                 // keep width and x fixed
-                nx = boundingRect.left
-                ny = Math.min(this.anchorPoint.y, e.offsetY)
-                width = boundingRect.right - boundingRect.left
-                height = Math.abs(e.offsetY - this.anchorPoint.y)
+                localx = 0
+                localy = Math.min(this.anchorPoint.y, my)
+                width = currentWidth
+                height = Math.abs(my - this.anchorPoint.y)
                 break
             }
             case 'bottom': {
-                isFlippedY = e.offsetY < this.anchorPoint.y
-                nx = boundingRect.left
-                ny = Math.min(this.anchorPoint.y, e.offsetY)
-                width = boundingRect.right - boundingRect.left
-                height = Math.abs(e.offsetY - this.anchorPoint.y)
+                isFlippedY = my < this.anchorPoint.y
+                localx = 0
+                localy = Math.min(this.anchorPoint.y, my)
+                width = currentWidth
+                height = Math.abs(my - this.anchorPoint.y)
                 break
             }
             case 'left': {
-                isFlippedX = e.offsetX > this.anchorPoint.x
+                isFlippedX = mx > this.anchorPoint.x
                 // keep height and y fixed
-                ny = boundingRect.top
-                nx = Math.min(this.anchorPoint.x, e.offsetX)
-                height = boundingRect.bottom - boundingRect.top
-                width = Math.abs(e.offsetX - this.anchorPoint.x)
+                localy = 0
+                localx = Math.min(this.anchorPoint.x, mx)
+                height = currentHeight
+                width = Math.abs(mx - this.anchorPoint.x)
                 break
             }
             case 'right': {
-                isFlippedX = e.offsetX < this.anchorPoint.x
-                ny = boundingRect.top
-                nx = Math.min(this.anchorPoint.x, e.offsetX)
-                height = boundingRect.bottom - boundingRect.top
-                width = Math.abs(e.offsetX - this.anchorPoint.x)
+                isFlippedX = mx < this.anchorPoint.x
+                localy = 0
+                localx = Math.min(this.anchorPoint.x, mx)
+                height = currentHeight
+                width = Math.abs(mx - this.anchorPoint.x)
                 break
             }
         }

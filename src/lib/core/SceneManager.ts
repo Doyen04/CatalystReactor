@@ -1,35 +1,20 @@
 import { Canvas } from 'canvaskit-wasm'
-import SceneNode from './SceneNode'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
+import SceneNode from '@lib/node/Scene'
+import ContainerNode from '@lib/node/ContainerNode'
 
 class SceneManager {
-    private scene: SceneNode
+    private scene: ContainerNode
     private shapeModifier: ShapeModifier
 
     constructor(shapeModifier: ShapeModifier) {
-        this.scene = new SceneNode(null)
+        this.scene = new ContainerNode(null)
         this.shapeModifier = shapeModifier
         //remember to add a shape created event
     }
+
     getScene(): SceneNode {
         return this.scene
-    }
-
-    removeNode(node: SceneNode) {
-        if (node.parent) {
-            node.parent.removeChildNode(node)
-            // this.pushHistory();
-        }
-    }
-
-    addNode(node: SceneNode, parent?: SceneNode) {
-        if (!parent) {
-            this.scene.addChildNode(node)
-        } else {
-            parent.addChildNode(node)
-        }
-        // this.pushHistory();
-        // this.render();
     }
 
     getCollidedScene(x: number, y: number): SceneNode | null {
@@ -48,11 +33,24 @@ class SceneManager {
 
         const traverse = (node: SceneNode) => {
             flattened.push(node)
-            node.children.forEach(child => traverse(child))
+            if (Object.hasOwn(node, 'children') && 'children' in node && Array.isArray(node.children)) {
+                node.children.forEach(child => traverse(child))
+            }
         }
-
         this.scene.children.forEach(child => traverse(child))
         return flattened
+    }
+
+    getContainerNodeUnderMouse(x: number, y: number): SceneNode {
+        const scene = this.getCollidedScene(x, y)
+
+        if (!scene) return this.scene
+
+        if (scene instanceof ContainerNode) {
+            return scene
+        } else {
+            return scene?.parent
+        }
     }
 
     draw(skCnvs: Canvas) {

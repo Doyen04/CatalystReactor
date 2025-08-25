@@ -2,9 +2,11 @@ import { ShapeType } from '@lib/types/shapes'
 import Tool from './Tool'
 import { Coord } from '@lib/types/shapes'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
-import SceneNode from '@lib/core/SceneNode'
 import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
+import transformWorldToLocal from '@lib/helper/worldToLocal'
+import ShapeNode from '@lib/node/ShapeNode'
+import SceneNode from '@lib/node/Scene'
 
 class ShapeTool extends Tool {
     shapeType: ShapeType
@@ -13,14 +15,21 @@ class ShapeTool extends Tool {
         this.shapeType = shape
     }
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
+        const scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        const Matrix = this.resource.canvasKit.Matrix
+
+        const { x, y } = transformWorldToLocal(Matrix, Matrix.invert(scene.worldMatrix), { x: e.offsetX, y: e.offsetY })
+        
         const shape = ShapeFactory.createShape(this.shapeType, {
-            x: e.offsetX,
-            y: e.offsetY,
+            x: x,
+            y: y,
         })
+
         if (shape) {
-            const scene: SceneNode = new SceneNode(shape)
-            this.sceneManager.addNode(scene)
-            this.shapeManager.attachNode(scene)
+            const shapenode: SceneNode = new ShapeNode(shape)
+            
+            scene.addChildNode(shapenode)
+            this.shapeManager.attachNode(shapenode)
         }
     }
     override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
@@ -36,9 +45,11 @@ class ShapeTool extends Tool {
         const isFlippedY = deltaY < 0
 
         const currentNode = this.shapeManager.currentScene // You'll need to expose this
+                
         if (currentNode) {
             currentNode.setFlip(isFlippedX, isFlippedY)
         }
+        
         this.shapeManager.drawShape(dragStart, e)
     }
 

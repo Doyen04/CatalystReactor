@@ -6,17 +6,42 @@
         "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
-            "@assets/*": ["src/assets/*"],
-            "@component/*": ["src/component/*"],
-            "@hooks/*": ["src/hooks/*"],
-            "@lib/*": ["src/lib/*"],
-            "@types/*": ["src/types/*"],
-            "@ui/*": ["src/ui/*"],
-            "@/*": ["src/*"],
-            "@util/*": ["src/util/*"],
-            "@helper/*": ["src/lib/helper/*"],
-            "@data/*": ["src/data/*"],
-            "@utils/*": ["src/utils/*"]
+            "@assets/*": [
+                "src/assets/*"
+            ],
+            "@component/*": [
+                "src/component/*"
+            ],
+            "@hooks/*": [
+                "src/hooks/*"
+            ],
+            "@lib/*": [
+                "src/lib/*"
+            ],
+            "@types/*": [
+                "src/types/*"
+            ],
+            "@ui/*": [
+                "src/ui/*"
+            ],
+            "@/*": [
+                "src/*"
+            ],
+            "@util/*": [
+                "src/util/*"
+            ],
+            "@helper/*": [
+                "src/lib/helper/*"
+            ],
+            "@data/*": [
+                "src/data/*"
+            ],
+            "@utils/*": [
+                "src/utils/*"
+            ],
+            "@node/*": [
+                "src/lib/node/*"
+            ]
         }
     }
 }

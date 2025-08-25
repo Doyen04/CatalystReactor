@@ -1,10 +1,11 @@
 import { Canvas } from 'canvaskit-wasm'
 import { Coord, IShape } from '@lib/types/shapes'
-import CanvasKitResources from './CanvasKitResource'
+import CanvasKitResources from '@lib/core/CanvasKitResource'
+import SceneNode from './Scene'
+import transformWorldToLocal from '@lib/helper/worldToLocal'
 
-class SceneNode {
-    private shape: IShape | null
-    // transform: Transform;
+class ContainerNode implements SceneNode {
+    shape: IShape | null
     children: SceneNode[]
     parent: SceneNode | null
     localMatrix: number[] | null
@@ -17,19 +18,8 @@ class SceneNode {
 
         this.setUpMatrix()
         if (!shape) return
-
-        // const { x, y } = shape.getCoord()
-        // this.transform = {
-        //     x: x,
-        //     y: y,
-        //     anchorPoint: { x: x, y: y },
-        //     isFlippedX: false,
-        //     isFlippedY: false,
-        //     rotation: 0,
-        //     scaleX: 1,
-        //     scaleY: 1
-        // };
     }
+
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance()
         if (resources) {
@@ -47,7 +37,11 @@ class SceneNode {
     }
 
     drawOnDrag(dragStart: Coord, e: MouseEvent) {
-        this.shape.setSize(dragStart, e.offsetX, e.offsetY, e.shiftKey)
+        const Matrix = this.resource.canvasKit.Matrix
+        const { x: dx, y: dy } = transformWorldToLocal(Matrix, Matrix.invert(this.parent.worldMatrix), dragStart)
+        const { x: tx, y: ty } = transformWorldToLocal(Matrix, Matrix.invert(this.parent.worldMatrix), { x: e.offsetX, y: e.offsetY })
+
+        this.shape.setSize({ x: dx, y: dy }, tx, ty, e.shiftKey)
 
         this.updateWorldMatrix()
     }
@@ -84,14 +78,22 @@ class SceneNode {
 
         this.updateWorldMatrix()
     }
+    setParent(parent: SceneNode) {
+        this.parent = parent
+    }
 
     addChildNode(child: SceneNode): void {
-        child.parent = this
+        child.setParent(this)
         this.children.push(child)
+
+        this.updateWorldMatrix()
     }
 
     isCollide(x: number, y: number): boolean {
-        return this.shape.pointInShape(x, y)
+        const Matrix = this.resource.canvasKit.Matrix
+        const { x: tx, y: ty } = transformWorldToLocal(Matrix, Matrix.invert(this.worldMatrix), { x, y })
+
+        return this.shape.pointInShape(tx, ty)
     }
 
     removeChildNode(child: SceneNode): void {
@@ -156,8 +158,7 @@ class SceneNode {
         this.recomputeLocalMatrix()
 
         this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
-
-        // Recurse
+        
         for (const c of this.children) {
             c.updateWorldMatrix(this.worldMatrix)
         }
@@ -194,4 +195,4 @@ class SceneNode {
     }
 }
 
-export default SceneNode
+export default ContainerNode

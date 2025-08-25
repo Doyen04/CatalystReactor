@@ -1,6 +1,6 @@
 import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Rect } from 'canvaskit-wasm'
-import { BorderRadius, BoundingRect, Coord, CornerPos, HandlePos, Properties, Size } from '@lib/types/shapes'
+import { BorderRadius, Coord, CornerPos, HandlePos, Properties, Size } from '@lib/types/shapes'
 import Shape from '../base/Shape'
 
 class Rectangle extends Shape {
@@ -139,10 +139,6 @@ class Rectangle extends Shape {
         const { x, y } = this.transform
         const { width, height } = this.dimension
         return { x: x + width / 2, y: y + height / 2 }
-    }
-
-    override getBoundingRect(): BoundingRect {
-        return structuredClone(this.boundingRect)
     }
 
     getBorderRadius() {

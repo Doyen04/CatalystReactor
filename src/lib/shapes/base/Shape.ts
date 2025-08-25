@@ -66,7 +66,9 @@ abstract class Shape implements IShape {
         this.shapeType = type
     }
 
-    abstract getBoundingRect(): BoundingRect
+    getBoundingRect(): BoundingRect {
+        return structuredClone(this.boundingRect)
+    }
     abstract getCenterCoord(): Coord
     abstract handleFlip(isFlippedX: boolean, isFlippedY: boolean): void
     abstract getModifierHandles(): Handle[]

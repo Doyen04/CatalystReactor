@@ -1,4 +1,5 @@
 import { useToolStore } from '@hooks/useTool'
+import CanvasKitResources from '@lib/core/CanvasKitResource'
 import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
 import { Coord } from '@lib/types/shapes'
@@ -13,6 +14,18 @@ abstract class Tool {
         this.shapeManager = shapeManager
         this.cnvsElm = cnvs
     }
+
+    get resource(): CanvasKitResources {
+        const resources = CanvasKitResources.getInstance()
+        if (resources) {
+            return resources
+        } else {
+            console.log('resources is null')
+
+            return null
+        }
+    }
+
     handlePointerUp(coord: Coord, e: MouseEvent) {
         const { setDefaultTool } = useToolStore.getState()
         setDefaultTool()

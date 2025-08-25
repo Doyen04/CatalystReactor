@@ -1,10 +1,9 @@
 import type { Canvas } from 'canvaskit-wasm'
 import Handle from './Handles'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
-// import EventQueue, { EventTypes } from "@lib/core/EventQueue";
 import SText from '@lib/shapes/primitives/SText'
-import SceneNode from '@lib/core/SceneNode'
 import transformWorldToLocal from '@lib/helper/worldToLocal'
+import SceneNode from '@lib/node/Scene'
 
 // const { UpdateModifierHandlesPos } = EventTypes
 
@@ -86,6 +85,7 @@ class ShapeModifier {
             }
         }
         if (!selected) {
+            //use bounding box
             const dimen = this.scene.getShape().getDim()
             const bRect = {
                 left: 0,
@@ -110,16 +110,20 @@ class ShapeModifier {
     }
 
     handleModifierDrag(x: number, y: number, e: MouseEvent) {
+        const Matrix = this.resource.canvasKit.Matrix
+
+        const { mx, my } = transformWorldToLocal(Matrix, Matrix.invert(this.scene.getWorldMatrix()), { x, y })
+
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    this.selectedModifierHandle.updateShapeRadii(x, y, e, this.scene)
+                    this.selectedModifierHandle.updateShapeRadii(mx, my, this.scene)
                     break
                 case 'size':
-                    this.selectedModifierHandle.updateShapeDim(x, y, e, this.scene)
+                    this.selectedModifierHandle.updateShapeDim(mx, my, this.scene)
                     break
                 case 'c-ratio':
-                    this.selectedModifierHandle.updateOvalRatio(x, y, e, this.scene)
+                    this.selectedModifierHandle.updateOvalRatio(mx, my, this.scene)
                     break
                 case 's-ratio':
                     this.selectedModifierHandle.updateStarRatio(x, y, e, this.scene)

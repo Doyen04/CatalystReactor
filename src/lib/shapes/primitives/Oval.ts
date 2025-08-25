@@ -113,6 +113,12 @@ class Oval extends Shape {
         this.arcSegment = prop.arcSegment
     }
 
+    handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
+        if (this.transform.isFlippedX === isFlippedX && this.transform.isFlippedY === isFlippedY) return
+        this.transform.isFlippedX = isFlippedX
+        this.transform.isFlippedY = isFlippedY
+    }
+
     override getDim(): { width: number; height: number } {
         return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
@@ -137,11 +143,11 @@ class Oval extends Shape {
         return { x: this.centerX, y: this.centerY }
     }
 
-    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
-        const handles = super.getSizeModifierHandles(fill, strokeColor)
-        handles.push(new Handle(0, 0, 'arc-end', 'arc', fill, strokeColor))
-        handles.push(new Handle(0, 0, 'arc-start', 'arc', fill, strokeColor))
-        handles.push(new Handle(0, 0, 'center', 'c-ratio', fill, strokeColor))
+    override getModifierHandles(): Handle[] {
+        const handles = super.getSizeModifierHandles()
+        handles.push(new Handle(0, 0, 'arc-end', 'arc'))
+        handles.push(new Handle(0, 0, 'arc-start', 'arc'))
+        handles.push(new Handle(0, 0, 'center', 'c-ratio'))
         return handles
     }
 
@@ -159,11 +165,12 @@ class Oval extends Shape {
 
     private getRatioModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size
+        // const { width, height } = this.getDim()
 
         if (this.arcSegment.ratio === 0) {
             return {
-                x: this.centerX - size,
-                y: this.centerY - size,
+                x: this.radiusX - size,
+                y: this.radiusY - size,
             }
         }
 
@@ -172,8 +179,8 @@ class Oval extends Shape {
 
         const handleAngle = handle.isDragging ? handle.handleRatioAngle : (this.arcSegment.startAngle + this.arcSegment.endAngle) / 2
 
-        const handleX = this.centerX + innerRadiusX * Math.cos(handleAngle)
-        const handleY = this.centerY + innerRadiusY * Math.sin(handleAngle)
+        const handleX = innerRadiusX * Math.cos(handleAngle)
+        const handleY = innerRadiusY * Math.sin(handleAngle)
 
         return {
             x: handleX - size,
@@ -225,21 +232,23 @@ class Oval extends Shape {
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        this.setPaint()
+        const { fill, stroke } = this.initPaints()
+        const { width, height } = this.getDim()
 
-        const rect = this.resource.canvasKit.LTRBRect(
-            this.boundingRect.left,
-            this.boundingRect.top,
-            this.boundingRect.right,
-            this.boundingRect.bottom
-        )
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, width, height)
+
         if (this.isTorus() || this.isArc()) {
             // Draw torus using path
-            this.drawComplexShape(canvas, rect)
+            const path = this.drawComplexShape(canvas, rect)
+            canvas.drawPath(path, fill)
+            canvas.drawPath(path, stroke)
+            path.delete()
         } else {
-            canvas.drawOval(rect, this.resource.paint)
-            canvas.drawOval(rect, this.resource.strokePaint)
+            canvas.drawOval(rect, fill)
+            canvas.drawOval(rect, stroke)
         }
+
+        this.resetPaint()
     }
 
     private drawComplexShape(canvas: Canvas, rect: Rect) {
@@ -264,9 +273,7 @@ class Oval extends Shape {
         }
         path.setFillType(canvasKit.FillType.EvenOdd)
 
-        canvas.drawPath(path, this.resource.paint)
-        canvas.drawPath(path, this.resource.strokePaint)
-        path.delete()
+        return path
     }
 
     private drawArc(rect: Rect, path: Path, startDegrees: number, sweepDegrees: number) {
