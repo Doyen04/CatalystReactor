@@ -177,10 +177,12 @@ class Oval extends Shape {
         const innerRadiusX = this.radiusX * this.arcSegment.ratio
         const innerRadiusY = this.radiusY * this.arcSegment.ratio
 
+        console.log(this.radiusX, this.arcSegment.ratio, innerRadiusX, innerRadiusY)
+
         const handleAngle = handle.isDragging ? handle.handleRatioAngle : (this.arcSegment.startAngle + this.arcSegment.endAngle) / 2
 
-        const handleX = innerRadiusX * Math.cos(handleAngle)
-        const handleY = innerRadiusY * Math.sin(handleAngle)
+        const handleX = this.radiusX + innerRadiusX * Math.cos(handleAngle)
+        const handleY = this.radiusY + innerRadiusY * Math.sin(handleAngle)
 
         return {
             x: handleX - size,
@@ -203,8 +205,8 @@ class Oval extends Shape {
         const theta = handle.pos === 'arc-end' ? this.arcSegment.endAngle : this.arcSegment.startAngle
 
         // Compute handle's center point along ellipse, then offset by handle size
-        const handleCenterX = this.centerX + rx * Math.cos(theta)
-        const handleCenterY = this.centerY + ry * Math.sin(theta)
+        const handleCenterX = this.radiusX + rx * Math.cos(theta)
+        const handleCenterY = this.radiusY + ry * Math.sin(theta)
 
         return {
             x: handleCenterX - size,
@@ -255,11 +257,12 @@ class Oval extends Shape {
         const { canvasKit } = this.resource
         const path = new canvasKit.Path()
 
-        const innerRect = canvasKit.LTRBRect(
-            this.centerX - this.radiusX * this.arcSegment.ratio,
-            this.centerY - this.radiusY * this.arcSegment.ratio,
-            this.centerX + this.radiusX * this.arcSegment.ratio,
-            this.centerY + this.radiusY * this.arcSegment.ratio
+        //0 + radx + radx
+        const innerRect = canvasKit.XYWHRect(
+            this.radiusX - this.radiusX * this.arcSegment.ratio,
+            this.radiusY - this.radiusY * this.arcSegment.ratio,
+            this.radiusX * this.arcSegment.ratio * 2,
+            this.radiusY * this.arcSegment.ratio * 2
         )
         const startDegrees = (this.arcSegment.startAngle * 180) / Math.PI
         const sweepDegrees = ((this.arcSegment.endAngle - this.arcSegment.startAngle) * 180) / Math.PI
@@ -277,7 +280,7 @@ class Oval extends Shape {
     }
 
     private drawArc(rect: Rect, path: Path, startDegrees: number, sweepDegrees: number) {
-        path.moveTo(this.centerX, this.centerY)
+        path.moveTo(this.radiusX, this.radiusY)
         path.arcToOval(rect, startDegrees, sweepDegrees, false)
         path.close()
     }
@@ -288,11 +291,11 @@ class Oval extends Shape {
     }
 
     private drawComplexTorusArc(rect: Rect, innerRect: Rect, path: Path, startDegrees: number, sweepDegrees: number) {
-        const innerStartX = this.centerX + this.radiusX * this.arcSegment.ratio * Math.cos(this.arcSegment.startAngle)
-        const innerStartY = this.centerY + this.radiusY * this.arcSegment.ratio * Math.sin(this.arcSegment.startAngle)
+        const innerStartX = this.radiusX + this.radiusX * this.arcSegment.ratio * Math.cos(this.arcSegment.startAngle)
+        const innerStartY = this.radiusY + this.radiusY * this.arcSegment.ratio * Math.sin(this.arcSegment.startAngle)
 
-        const outerEndX = this.centerX + this.radiusX * Math.cos(this.arcSegment.endAngle)
-        const outerEndY = this.centerY + this.radiusY * Math.sin(this.arcSegment.endAngle)
+        const outerEndX = this.radiusX + this.radiusX * Math.cos(this.arcSegment.endAngle)
+        const outerEndY = this.radiusY + this.radiusY * Math.sin(this.arcSegment.endAngle)
 
         path.moveTo(innerStartX, innerStartY)
         path.arcToOval(innerRect, startDegrees, sweepDegrees, false)

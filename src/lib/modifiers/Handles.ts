@@ -1,6 +1,6 @@
 // Handle.ts
 import type { Canvas } from 'canvaskit-wasm'
-import { HandlePos, HandleType } from '@lib/types/shapes'
+import { Coord, HandlePos, HandleType } from '@lib/types/shapes'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import clamp from '@lib/helper/clamp'
 import SceneNode from '@lib/node/Scene'
@@ -71,9 +71,9 @@ export default class Handle {
         return dx * dx + dy * dy <= r * r
     }
 
-    private calculateRatioFromMousePosition(e: MouseEvent, centerX: number, centerY: number, width: number, height: number): number {
-        const deltaX = e.offsetX - centerX
-        const deltaY = e.offsetY - centerY
+    private calculateRatioFromMousePosition(e: Coord, centerX: number, centerY: number, width: number, height: number): number {
+        const deltaX = e.x - centerX
+        const deltaY = e.y - centerY
         const radiusX = width / 2
         const radiusY = height / 2
 
@@ -266,16 +266,16 @@ export default class Handle {
         return t0
     }
 
-    updateOvalRatio(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+    updateOvalRatio(x: number, y: number, scene: SceneNode) {
         const shape = scene.getShape()
-        const { x, y } = shape.getCenterCoord()
+        const { x: cx, y: cy } = shape.getCenterCoord()
         const { width, height } = shape.getDim()
 
         const radiusX = width / 2
         const radiusY = height / 2
 
-        const deltaX = e.offsetX - x
-        const deltaY = e.offsetY - y
+        const deltaX = x - cx
+        const deltaY = y - cy
 
         //parametric deg
         const handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
@@ -288,7 +288,7 @@ export default class Handle {
             this.handleRatioAngle = handleAngle
         }
 
-        const ratio = this.calculateRatioFromMousePosition(e, x, y, width, height)
+        const ratio = this.calculateRatioFromMousePosition({x, y}, cx, cy, width, height)
         shape.setRatio(ratio)
     }
 
