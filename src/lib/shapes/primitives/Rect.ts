@@ -138,7 +138,7 @@ class Rectangle extends Shape {
     override getCenterCoord(): Coord {
         const { x, y } = this.transform
         const { width, height } = this.dimension
-        return { x: x + (width / 2), y: y + (height / 2) }
+        return { x: x + width / 2, y: y + height / 2 }
     }
 
     getBorderRadius() {
@@ -302,10 +302,6 @@ class Rectangle extends Shape {
         hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1)) // Blue with transparency
         hoverPaint.setStrokeWidth(2)
 
-        // // Add dash effect for hover
-        // const dashEffect = this.resource.canvasKit.PathEffect.MakeDash([5, 5], 0);
-        // hoverPaint.setPathEffect(dashEffect);
-
         if (this.hasRadius() && this.bdradius.locked) {
             const radius = this.bdradius['top-left']
             const rrect = this.resource.canvasKit.RRectXY(rect, radius, radius)
@@ -313,6 +309,7 @@ class Rectangle extends Shape {
         } else if (this.hasRadius()) {
             const path = this.makeCustomRRectPath()
             canvas.drawPath(path, hoverPaint)
+            path.delete()
         } else {
             canvas.drawRect(rect, hoverPaint)
         }

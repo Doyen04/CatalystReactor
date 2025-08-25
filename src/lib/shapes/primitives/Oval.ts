@@ -251,6 +251,25 @@ class Oval extends Shape {
         }
 
         this.resetPaint()
+        if (this.isHover) {
+            this.drawHoverEffect(canvas, rect)
+        }
+    }
+
+    private drawHoverEffect(canvas: Canvas, rect: Rect): void {
+        if (!this.resource) return
+
+        const hoverPaint = this.resource.strokePaint
+        hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1)) // Blue with transparency
+        hoverPaint.setStrokeWidth(2)
+
+        if (this.isTorus() || this.isArc()) {
+            const path = this.drawComplexShape(canvas, rect)
+            canvas.drawPath(path, hoverPaint)
+            path.delete()
+        } else {
+            canvas.drawOval(rect, hoverPaint)
+        }
     }
 
     private drawComplexShape(canvas: Canvas, rect: Rect) {
