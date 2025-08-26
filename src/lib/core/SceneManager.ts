@@ -49,7 +49,7 @@ class SceneManager {
         if (scene instanceof ContainerNode) {
             return scene
         } else {
-            return scene?.parent
+            return scene?.getParent()
         }
     }
 

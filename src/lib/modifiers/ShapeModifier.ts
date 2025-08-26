@@ -2,7 +2,6 @@ import type { Canvas } from 'canvaskit-wasm'
 import Handle from './Handles'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import SText from '@lib/shapes/primitives/SText'
-import transformWorldToLocal from '@lib/helper/worldToLocal'
 import SceneNode from '@lib/node/Scene'
 
 // const { UpdateModifierHandlesPos } = EventTypes
@@ -62,12 +61,11 @@ class ShapeModifier {
     selectModifier(x: number, y: number) {
         if (this.handles.length == 0 || !this.scene) return null
         let selected: Handle = null
-        const Matrix = this.resource.canvasKit.Matrix
 
-        ;({ x, y } = transformWorldToLocal(Matrix, Matrix.invert(this.scene.getWorldMatrix()), { x, y }))
+        const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
 
         for (const node of this.handles) {
-            if (node && node.isCollide(x, y)) {
+            if (node && node.isCollide(tx, ty)) {
                 selected = node
                 break
             }
@@ -82,10 +80,10 @@ class ShapeModifier {
                 bottom: dimen.height,
             }
             const tolerance = 5
-            const nearTop = Math.abs(y - bRect.top) <= tolerance && x >= bRect.left - tolerance && x <= bRect.right + tolerance
-            const nearBottom = Math.abs(y - bRect.bottom) <= tolerance && x >= bRect.left - tolerance && x <= bRect.right + tolerance
-            const nearLeft = Math.abs(x - bRect.left) <= tolerance && y >= bRect.top - tolerance && y <= bRect.bottom + tolerance
-            const nearRight = Math.abs(x - bRect.right) <= tolerance && y >= bRect.top - tolerance && y <= bRect.bottom + tolerance
+            const nearTop = Math.abs(ty - bRect.top) <= tolerance && tx >= bRect.left - tolerance && tx <= bRect.right + tolerance
+            const nearBottom = Math.abs(ty - bRect.bottom) <= tolerance && tx >= bRect.left - tolerance && tx <= bRect.right + tolerance
+            const nearLeft = Math.abs(tx - bRect.left) <= tolerance && ty >= bRect.top - tolerance && ty <= bRect.bottom + tolerance
+            const nearRight = Math.abs(tx - bRect.right) <= tolerance && ty >= bRect.top - tolerance && ty <= bRect.bottom + tolerance
 
             //work on this
             if (nearTop) selected = new Handle(0, 0, 'top', 'size')
@@ -98,8 +96,7 @@ class ShapeModifier {
     }
 
     handleModifierDrag(x: number, y: number, e: MouseEvent) {
-        const Matrix = this.resource.canvasKit.Matrix
-        const { x: mx, y: my } = transformWorldToLocal(Matrix, Matrix.invert(this.scene.parent.getWorldMatrix()), { x: e.offsetX, y: e.offsetY })
+        const { x: mx, y: my } = this.scene.worldToParentLocal(e.offsetX, e.offsetY)
 
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
@@ -119,7 +116,7 @@ class ShapeModifier {
                     this.selectedModifierHandle.updateShapeArc(x, y, e, this.scene)
                     break
                 case 'vertices':
-                    this.selectedModifierHandle.updateShapeVertices(x, y, e, this.scene)
+                    this.selectedModifierHandle.updateShapeVertices(mx, my, this.scene)
                     break
                 case 'angle':
                     this.selectedModifierHandle.updateShapeAngle(mx, my, this.scene)
@@ -199,9 +196,7 @@ class ShapeModifier {
 
     canDraw(): boolean {
         if (!this.scene && !this.scene.getShape()) return false
-        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect()
-        const width = right - left
-        const height = bottom - top
+        const { width, height } = this.scene.getShape().getDim()
         const minSize = 5
 
         return width < minSize || height < minSize
@@ -209,8 +204,11 @@ class ShapeModifier {
 
     collideRect(x: number, y: number): boolean {
         if (!this.scene) return false
-        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect()
-        return x >= left && x <= right && y >= top && y <= bottom
+
+        const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
+        const { width, height } = this.scene.getShape().getDim()
+
+        return tx >= 0 && tx <= width && ty >= 0 && ty <= height
     }
 
     draw(canvas: Canvas): void {

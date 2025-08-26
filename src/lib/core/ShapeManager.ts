@@ -48,9 +48,7 @@ class ShapeManager {
     handleTinyShapes(): void {
         if (!this.scene) return
 
-        const { left, top, right, bottom } = this.scene.getShape().getBoundingRect()
-        const width = right - left
-        const height = bottom - top
+        const { height, width } = this.scene.getShape().getDim()
         const minSize = 5
 
         if (width < minSize || height < minSize) {

@@ -349,12 +349,7 @@ class Rectangle extends Shape {
     }
 
     override pointInShape(x: number, y: number): boolean {
-        return (
-            x >= this.transform.x &&
-            x <= this.transform.x + this.dimension.width &&
-            y >= this.transform.y &&
-            y <= this.transform.y + this.dimension.height
-        )
+        return x >= 0 && x <= this.dimension.width && y >= 0 && y <= this.dimension.height
     }
 
     override cleanUp(): void {}

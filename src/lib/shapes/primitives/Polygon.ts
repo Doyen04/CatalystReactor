@@ -1,6 +1,6 @@
 import type { Canvas, Path } from 'canvaskit-wasm'
 import Shape from '../base/Shape'
-import { HandlePos, Properties, Sides } from '@lib/types/shapes'
+import { Coord, HandlePos, Properties, Sides } from '@lib/types/shapes'
 import Handle from '@lib/modifiers/Handles'
 import { Points } from '@lib/types/shapeTypes'
 import clamp from '@lib/helper/clamp'
@@ -35,7 +35,7 @@ class Polygon extends Shape {
         this.calculateBoundingRect()
     }
 
-    updateBorderRadius(newRadius: number, pos: HandlePos) {
+    setBorderRadius(newRadius: number, pos: HandlePos) {
         if (pos != 'top') return
 
         const { width, height } = this.getDim()
@@ -109,6 +109,15 @@ class Polygon extends Shape {
         this.setVertexCount(prop.sides.sides)
     }
 
+    override getCenterCoord(): Coord {
+        return { x: this.centerX, y: this.centerY }
+    }
+
+    override handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
+        this.transform.isFlippedX = isFlippedX
+        this.transform.isFlippedY = isFlippedY
+    }
+
     override getProperties(): Properties {
         return {
             transform: this.transform,
@@ -117,9 +126,11 @@ class Polygon extends Shape {
             sides: this.sides,
         }
     }
+
     getVertexCount(): number {
         return this.sides.sides
     }
+
     override getModifierHandlesPos(handle: Handle): { x: number; y: number } {
         if (handle.type === 'size') {
             return super.getSizeModifierHandlesPos(handle)
@@ -178,10 +189,10 @@ class Polygon extends Shape {
         return { x, y }
     }
 
-    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
-        const handles = super.getSizeModifierHandles(fill, strokeColor)
-        handles.push(new Handle(0, 0, 'top', 'radius', fill, strokeColor))
-        handles.push(new Handle(0, 0, 'right', 'vertices', fill, strokeColor))
+    override getModifierHandles(): Handle[] {
+        const handles = super.getSizeModifierHandles()
+        handles.push(new Handle(0, 0, 'top', 'radius'))
+        handles.push(new Handle(0, 0, 'right', 'vertices'))
         return handles
     }
 
@@ -193,8 +204,8 @@ class Polygon extends Shape {
         const angleStep = (2 * Math.PI) / sides
         const angle = startAngle + index * angleStep
 
-        const x = this.centerX + this.radiusX * Math.cos(angle)
-        const y = this.centerY + this.radiusY * Math.sin(angle)
+        const x = this.radiusX + this.radiusX * Math.cos(angle)
+        const y = this.radiusY + this.radiusY * Math.sin(angle)
 
         return { x, y }
     }
@@ -227,7 +238,8 @@ class Polygon extends Shape {
 
     override draw(canvas: Canvas): void {
         if (!this.resource) return
-        this.setPaint()
+
+        const { fill, stroke } = this.initPaints()
 
         const path = new this.resource.canvasKit.Path()
 
@@ -247,9 +259,11 @@ class Polygon extends Shape {
             }
         }
 
-        canvas.drawPath(path, this.resource.paint)
-        canvas.drawPath(path, this.resource.strokePaint)
+        canvas.drawPath(path, fill)
+        canvas.drawPath(path, stroke)
         path.delete()
+
+        this.resetPaint()
     }
 
     private computeRoundedCorner(index: number) {
@@ -325,11 +339,14 @@ class Polygon extends Shape {
         const n = pts.length
         if (n < 3) return false
 
+        const relativeX = x - this.radiusX * 2
+        const relativeY = y - this.radiusY * 2
+
         let inside = false
         for (let i = 0, j = n - 1; i < n; j = i++) {
             const [xi, yi] = pts[i]
             const [xj, yj] = pts[j]
-            const intersects = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi
+            const intersects = yi > relativeY !== yj > relativeY && relativeX < ((xj - xi) * (relativeY - yi)) / (yj - yi) + xi
 
             if (intersects) inside = !inside
         }

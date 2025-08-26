@@ -351,7 +351,7 @@ export default class Handle {
         shape.setArc(start, start + sweep)
     }
 
-    updateShapeVertices(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+    updateShapeVertices(x: number, y: number, scene: SceneNode) {
         const shape = scene.getShape()
         const GAP = 10 // defined distance for both x and y
         const count = shape.getVertexCount()
@@ -363,9 +363,9 @@ export default class Handle {
 
         const { x: px, y: py } = shape.getVertex(prev, vertex)
         const { x: nx, y: ny } = shape.getVertex(next, vertex)
-        if (e.offsetY < ny && (Math.abs(e.offsetX - nx) < GAP || Math.abs(e.offsetY - ny) < GAP)) {
+        if (y < ny && (Math.abs(x - nx) < GAP || Math.abs(y - ny) < GAP)) {
             shape.setVertexCount(next)
-        } else if (e.offsetY > py && (Math.abs(e.offsetX - px) < GAP || Math.abs(e.offsetY - py) < GAP)) {
+        } else if (y > py && (Math.abs(x - px) < GAP || Math.abs(y - py) < GAP)) {
             shape.setVertexCount(prev)
         }
     }

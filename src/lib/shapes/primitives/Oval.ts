@@ -158,6 +158,8 @@ class Oval extends Shape {
             return this.getRatioModifierHandlesPos(handle)
         } else if (handle.type == 'arc') {
             return this.getArcModifierHandlesPos(handle)
+        } else if (handle.type == 'angle') {
+            return super.getAngleModifierHandlesPos(handle)
         } else {
             return { x: 0, y: 0 }
         }
@@ -176,8 +178,6 @@ class Oval extends Shape {
 
         const innerRadiusX = this.radiusX * this.arcSegment.ratio
         const innerRadiusY = this.radiusY * this.arcSegment.ratio
-
-        console.log(this.radiusX, this.arcSegment.ratio, innerRadiusX, innerRadiusY)
 
         const handleAngle = handle.isDragging ? handle.handleRatioAngle : (this.arcSegment.startAngle + this.arcSegment.endAngle) / 2
 
@@ -329,9 +329,8 @@ class Oval extends Shape {
         if (this.radiusX <= 0 || this.radiusY <= 0) {
             return false
         }
-
-        const dx = x - this.centerX
-        const dy = y - this.centerY
+        const dx = x - this.radiusX
+        const dy = y - this.radiusY
 
         // (x-cx)²/rx² + (y-cy)²/ry² <= 1
         const normalizedDistance = (dx * dx) / (this.radiusX * this.radiusX) + (dy * dy) / (this.radiusY * this.radiusY)
