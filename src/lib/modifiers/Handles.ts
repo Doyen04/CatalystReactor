@@ -159,8 +159,7 @@ export default class Handle {
         let nx = 0
         let ny = 0
 
-        const shape = scene.getShape()
-        const boundingRect = shape.getBoundingRect()
+        const boundingRect = scene.getBoundingRect()
 
         if (this.anchorPoint === null) {
             const anchorMap = {
@@ -174,7 +173,10 @@ export default class Handle {
                 right: { x: boundingRect.left, y: boundingRect.top },
             }
             this.anchorPoint = anchorMap[this.pos]
+            // scene.toLocal(anchorMap[this.pos].x, anchorMap[this.pos].y)
         }
+
+        console.log(this.anchorPoint, x, y)
 
         let isFlippedX = false,
             isFlippedY = false
@@ -244,18 +246,18 @@ export default class Handle {
                 ny = boundingRect.top
                 nx = Math.min(this.anchorPoint.x, x)
                 height = boundingRect.bottom - boundingRect.top
+                console.log(Math.abs(x - this.anchorPoint.x), this.anchorPoint, x)
+
                 width = Math.abs(x - this.anchorPoint.x)
                 break
             }
         }
 
-        console.log(isFlippedX, isFlippedY)
-
         scene.setFlip(isFlippedX, isFlippedY)
         scene.setPosition(nx, ny)
         scene.setDimension(width, height)
     }
-
+   
     clampAngleToArc(t: number, start: number, end: number, prev: number): number {
         const TWO_PI = 2 * Math.PI
 
@@ -288,7 +290,7 @@ export default class Handle {
             this.handleRatioAngle = handleAngle
         }
 
-        const ratio = this.calculateRatioFromMousePosition({x, y}, cx, cy, width, height)
+        const ratio = this.calculateRatioFromMousePosition({ x, y }, cx, cy, width, height)
         shape.setRatio(ratio)
     }
 
@@ -374,12 +376,7 @@ export default class Handle {
         const shape = scene.getShape()
         if (!shape) return
 
-        //work on this
-        const { width, height } = shape.getDim()
         let { transform } = shape.getProperties()
-        if (!transform.anchorPoint) {
-            shape.setAnchorPoint({ x: width / 2, y: height / 2 })
-        }
 
         ;({ transform } = shape.getProperties())
 

@@ -137,6 +137,8 @@ class ShapeManager {
         }
 
         const handle = this.shapeModifier.selectModifier(x, y)
+        console.log('selected handle:', handle)
+
         if (handle) {
             this.selected = true
             return true

@@ -115,6 +115,50 @@ abstract class SceneNode {
         this.updateWorldMatrix()
     }
 
+    getBoundingRect() {
+        const { width, height } = this.shape.getDim()
+
+        const localCorners = [
+            { x: 0, y: 0 },
+            { x: width, y: 0 },
+            { x: 0, y: height },
+            { x: width, y: height },
+        ]
+
+        // Transform from local coordinates to parent coordinates
+        const parentCorners = localCorners.map(pt => this.localToParent(pt.x, pt.y))
+
+        const xs = parentCorners.map(p => p.x)
+        const ys = parentCorners.map(p => p.y)
+
+        return {
+            left: Math.min(...xs),
+            top: Math.min(...ys),
+            right: Math.max(...xs),
+            bottom: Math.max(...ys),
+        }
+    }
+
+    // toParent(x: number, y: number) {
+    //     const Matrix = this.resource.canvasKit.Matrix
+    //     const transformedPoint = Matrix.mapPoints(this.parent.worldMatrix, [x, y])
+    //     return {
+    //         x: transformedPoint[0],
+    //         y: transformedPoint[1],
+    //     }
+    // }
+
+    localToParent(x: number, y: number) {
+        const Matrix = this.resource.canvasKit.Matrix
+        const { transform } = this.shape.getProperties()
+        const tOnly = Matrix.translated(transform.x, transform.y)
+        const transformedPoint = Matrix.mapPoints(tOnly, [x, y])
+        return {
+            x: transformedPoint[0],
+            y: transformedPoint[1],
+        }
+    }
+
     worldToParentLocal(x: number, y: number) {
         const Matrix = this.resource.canvasKit.Matrix
         const inverseMatrix = Matrix.invert(this.parent.worldMatrix)
@@ -128,6 +172,7 @@ abstract class SceneNode {
     worldToLocal(x: number, y: number) {
         const Matrix = this.resource.canvasKit.Matrix
         const inverseMatrix = Matrix.invert(this.worldMatrix)
+
         const transformedPoint = Matrix.mapPoints(inverseMatrix, [x, y])
         return {
             x: transformedPoint[0],

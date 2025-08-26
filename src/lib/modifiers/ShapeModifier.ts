@@ -204,7 +204,7 @@ class ShapeModifier {
 
     collideRect(x: number, y: number): boolean {
         if (!this.scene) return false
-
+        
         const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
         const { width, height } = this.scene.getShape().getDim()
 
