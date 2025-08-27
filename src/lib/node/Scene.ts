@@ -25,58 +25,51 @@ abstract class SceneNode {
 
     setDimension(width: number, height: number): void {
         this.shape.setDim(width, height)
-        this.updateWorldMatrix()
+
+        // this.updateWorldMatrix()
     }
 
     setAngle(angle: number): void {
         this.shape.setAngle(angle)
-        this.updateWorldMatrix()
+
+        // this.updateWorldMatrix()
     }
 
     setFlip(isFlippedX: boolean, isFlippedY: boolean): void {
         this.shape.handleFlip(isFlippedX, isFlippedY)
-        this.updateWorldMatrix()
+
+        // this.updateWorldMatrix()
     }
 
     setPosition(x: number, y: number): void {
         this.shape.setCoord(x, y)
 
-        this.updateWorldMatrix()
+        // this.updateWorldMatrix()
     }
 
     move(dx: number, dy: number): void {
         this.shape.moveShape(dx, dy)
 
-        this.updateWorldMatrix()
+        // this.updateWorldMatrix()
     }
 
     setParent(parent: SceneNode) {
         this.parent = parent
+    }
+
+    drawOnDrag(dragStart: Coord, e: MouseEvent) {
+        const { x: dx, y: dy } = this.worldToParentLocal(dragStart.x, dragStart.y)
+        const { x: tx, y: ty } = this.worldToParentLocal(e.offsetX, e.offsetY)
+
+        this.shape.setSize({ x: dx, y: dy }, tx, ty, e.shiftKey)
 
         this.updateWorldMatrix()
     }
 
-    getShape(): IShape {
-        return this.shape
-    }
+    drawDefault() {
+        this.shape.drawDefault()
 
-    getParent(): SceneNode | null {
-        return this.parent
-    }
-
-    getLocalMatrix(): number[] | null {
-        return this.localMatrix
-    }
-
-    getWorldMatrix(): number[] | null {
-        return this.worldMatrix
-    }
-    hasShape(): boolean {
-        return this.shape != null
-    }
-
-    setLocalMatrix(matrix: number[]) {
-        this.localMatrix = matrix
+        // this.updateWorldMatrix()
     }
 
     // Build a local matrix from current transform.
@@ -85,6 +78,8 @@ abstract class SceneNode {
         if (!this.shape) {
             return
         }
+        console.log('called');
+        
         const Matrix = this.resource.canvasKit.Matrix
         const { transform } = this.shape.getProperties()
 
@@ -100,55 +95,7 @@ abstract class SceneNode {
         this.localMatrix = Matrix.multiply(T, R, S)
     }
 
-    drawOnDrag(dragStart: Coord, e: MouseEvent) {
-        const { x: dx, y: dy } = this.worldToParentLocal(dragStart.x, dragStart.y)
-        const { x: tx, y: ty } = this.worldToParentLocal(e.offsetX, e.offsetY)
-
-        this.shape.setSize({ x: dx, y: dy }, tx, ty, e.shiftKey)
-
-        this.updateWorldMatrix()
-    }
-
-    drawDefault() {
-        this.shape.drawDefault()
-
-        this.updateWorldMatrix()
-    }
-
-    getBoundingRect() {
-        const { width, height } = this.shape.getDim()
-
-        const localCorners = [
-            { x: 0, y: 0 },
-            { x: width, y: 0 },
-            { x: 0, y: height },
-            { x: width, y: height },
-        ]
-
-        // Transform from local coordinates to parent coordinates
-        const parentCorners = localCorners.map(pt => this.localToParent(pt.x, pt.y))
-
-        const xs = parentCorners.map(p => p.x)
-        const ys = parentCorners.map(p => p.y)
-
-        return {
-            left: Math.min(...xs),
-            top: Math.min(...ys),
-            right: Math.max(...xs),
-            bottom: Math.max(...ys),
-        }
-    }
-
-    // toParent(x: number, y: number) {
-    //     const Matrix = this.resource.canvasKit.Matrix
-    //     const transformedPoint = Matrix.mapPoints(this.parent.worldMatrix, [x, y])
-    //     return {
-    //         x: transformedPoint[0],
-    //         y: transformedPoint[1],
-    //     }
-    // }
-
-    localToParent(x: number, y: number) {
+    getRelativePosition(x: number, y: number) {
         const Matrix = this.resource.canvasKit.Matrix
         const { transform } = this.shape.getProperties()
         const tOnly = Matrix.translated(transform.x, transform.y)
@@ -185,14 +132,40 @@ abstract class SceneNode {
         return this.shape.pointInShape(tx, ty)
     }
 
+    getShape(): IShape {
+        return this.shape
+    }
+
+    getParent(): SceneNode | null {
+        return this.parent
+    }
+
+    getLocalMatrix(): number[] | null {
+        return this.localMatrix
+    }
+
+    getWorldMatrix(): number[] | null {
+        return this.worldMatrix
+    }
+
+    hasShape(): boolean {
+        return this.shape != null
+    }
+
+    setLocalMatrix(matrix: number[]) {
+        this.localMatrix = matrix
+    }
+
     removeChildNode(child: SceneNode): void {
         console.log('implement removeChildNode', child)
         // Implementation for removing a child node
     }
+
     addChildNode(child: SceneNode): void {
         console.log('implement addChildNode', child)
         // Implementation for adding a child node
     }
+
     abstract draw(ctx: Canvas): void
     abstract updateWorldMatrix(matrix?: number[]): void
     abstract destroy(): void

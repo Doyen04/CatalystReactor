@@ -103,9 +103,11 @@ class ShapeModifier {
                 case 'radius':
                     this.selectedModifierHandle.updateShapeRadii(mx, my, this.scene)
                     break
-                case 'size':
-                    this.selectedModifierHandle.updateShapeDim(mx, my, this.scene)
+                case 'size': {
+                    const { x: px, y: py } = this.scene.worldToLocal(e.offsetX, e.offsetY)
+                    this.selectedModifierHandle.updateShapeDim(px, py, this.scene)
                     break
+                }
                 case 'c-ratio':
                     this.selectedModifierHandle.updateOvalRatio(mx, my, this.scene)
                     break
@@ -204,7 +206,7 @@ class ShapeModifier {
 
     collideRect(x: number, y: number): boolean {
         if (!this.scene) return false
-        
+
         const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
         const { width, height } = this.scene.getShape().getDim()
 

@@ -22,7 +22,7 @@ class ShapeNode extends SceneNode {
 
     override draw(canvas: Canvas): void {
         canvas.save()
-        canvas.concat(this.localMatrix)
+        canvas.concat(this.worldMatrix)
 
         if (this.shape) this.shape.draw(canvas)
         canvas.restore()

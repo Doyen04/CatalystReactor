@@ -16,8 +16,6 @@ class ContainerNode extends SceneNode {
     addChildNode(child: SceneNode): void {
         child.setParent(this)
         this.children.push(child)
-
-        this.updateWorldMatrix()
     }
 
     removeChildNode(child: SceneNode): void {
@@ -44,7 +42,7 @@ class ContainerNode extends SceneNode {
 
     override draw(canvas: Canvas): void {
         canvas.save()
-        canvas.concat(this.localMatrix)
+        canvas.concat(this.worldMatrix)
 
         if (this.shape) this.shape.draw(canvas)
         this.children.forEach(node => node.draw(canvas))
