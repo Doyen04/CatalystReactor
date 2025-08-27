@@ -15,9 +15,13 @@ class ShapeNode extends SceneNode {
 
         const parentMatrix = parentWorld ?? Matrix.identity()
 
-        this.recomputeLocalMatrix()
+        if (this.canComputeMatrix) {
+            this.recomputeLocalMatrix()
 
-        this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
+            this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
+        }
+
+        this.canComputeMatrix = false
     }
 
     override draw(canvas: Canvas): void {

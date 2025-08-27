@@ -7,6 +7,7 @@ abstract class SceneNode {
     protected parent: SceneNode | null
     protected localMatrix: number[] | null
     protected worldMatrix: number[] | null
+    protected canComputeMatrix: boolean = false
 
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance()
@@ -26,31 +27,31 @@ abstract class SceneNode {
     setDimension(width: number, height: number): void {
         this.shape.setDim(width, height)
 
-        // this.updateWorldMatrix()
+        this.canComputeMatrix = true
     }
 
     setAngle(angle: number): void {
         this.shape.setAngle(angle)
 
-        // this.updateWorldMatrix()
+        this.canComputeMatrix = true
     }
 
     setFlip(isFlippedX: boolean, isFlippedY: boolean): void {
         this.shape.handleFlip(isFlippedX, isFlippedY)
 
-        // this.updateWorldMatrix()
+        this.canComputeMatrix = true
     }
 
     setPosition(x: number, y: number): void {
         this.shape.setCoord(x, y)
 
-        // this.updateWorldMatrix()
+        this.canComputeMatrix = true
     }
 
     move(dx: number, dy: number): void {
         this.shape.moveShape(dx, dy)
 
-        // this.updateWorldMatrix()
+        this.canComputeMatrix = true
     }
 
     setParent(parent: SceneNode) {
@@ -63,13 +64,13 @@ abstract class SceneNode {
 
         this.shape.setSize({ x: dx, y: dy }, tx, ty, e.shiftKey)
 
-        this.updateWorldMatrix()
+        this.canComputeMatrix = true
     }
 
     drawDefault() {
         this.shape.drawDefault()
 
-        // this.updateWorldMatrix()
+        this.canComputeMatrix = true
     }
 
     // Build a local matrix from current transform.
@@ -78,8 +79,8 @@ abstract class SceneNode {
         if (!this.shape) {
             return
         }
-        console.log('called');
-        
+        console.log('called')
+
         const Matrix = this.resource.canvasKit.Matrix
         const { transform } = this.shape.getProperties()
 

@@ -154,25 +154,112 @@ export default class Handle {
         scene.getShape().setBorderRadius(newRadius, this.pos)
     }
 
-    removeRotation(x: number, y: number, rotation: number): { x: number; y: number } {
-        const cos = Math.cos(-rotation) // Negative angle for inverse
-        const sin = Math.sin(-rotation)
+    // updateShapeDim(x: number, y: number, scene: SceneNode) {
+    //     let [width, height] = [0, 0]
+    //     let nx = 0
+    //     let ny = 0
 
-        return {
-            x: x * cos - y * sin,
-            y: x * sin + y * cos,
-        }
-    }
+    //     const boundingRect = scene.getShape().getBoundingRect()
+
+    //     if (this.anchorPoint === null) {
+    //         const anchorMap = {
+    //             'top-left': { x: boundingRect.right, y: boundingRect.bottom },
+    //             'top-right': { x: boundingRect.left, y: boundingRect.bottom },
+    //             'bottom-left': { x: boundingRect.right, y: boundingRect.top },
+    //             'bottom-right': { x: boundingRect.left, y: boundingRect.top },
+    //             top: { x: boundingRect.left, y: boundingRect.bottom },
+    //             bottom: { x: boundingRect.left, y: boundingRect.top },
+    //             left: { x: boundingRect.right, y: boundingRect.top },
+    //             right: { x: boundingRect.left, y: boundingRect.top },
+    //         }
+    //         this.anchorPoint = anchorMap[this.pos]
+    //     }
+
+    //     let isFlippedX = false,
+    //         isFlippedY = false
+
+    //     switch (this.pos) {
+    //         // Corners: change both width and height
+    //         case 'top-left':
+    //         case 'top-right':
+    //         case 'bottom-left':
+    //         case 'bottom-right': {
+    //             const flipMap = {
+    //                 'top-left': {
+    //                     isFlippedX: x > this.anchorPoint.x,
+    //                     isFlippedY: y > this.anchorPoint.y,
+    //                 },
+    //                 'top-right': {
+    //                     isFlippedX: x < this.anchorPoint.x,
+    //                     isFlippedY: y > this.anchorPoint.y,
+    //                 },
+    //                 'bottom-left': {
+    //                     isFlippedX: x > this.anchorPoint.x,
+    //                     isFlippedY: y < this.anchorPoint.y,
+    //                 },
+    //                 'bottom-right': {
+    //                     isFlippedX: x < this.anchorPoint.x,
+    //                     isFlippedY: y < this.anchorPoint.y,
+    //                 },
+    //             }
+    //             ;({ isFlippedX, isFlippedY } = flipMap[this.pos])
+
+    //             width = Math.abs(x - this.anchorPoint.x)
+    //             height = Math.abs(y - this.anchorPoint.y)
+    //             nx = Math.min(this.anchorPoint.x, x)
+    //             ny = Math.min(this.anchorPoint.y, y)
+    //             break
+    //         }
+
+    //         // Sides: change only one dimension
+    //         case 'top': {
+    //             isFlippedY = y > this.anchorPoint.y
+    //             // keep width and x fixed
+    //             nx = boundingRect.left
+    //             ny = Math.min(this.anchorPoint.y, y)
+    //             width = boundingRect.right - boundingRect.left
+    //             height = Math.abs(y - this.anchorPoint.y)
+    //             break
+    //         }
+    //         case 'bottom': {
+    //             isFlippedY = y < this.anchorPoint.y
+    //             nx = boundingRect.left
+    //             ny = Math.min(this.anchorPoint.y, y)
+    //             width = boundingRect.right - boundingRect.left
+    //             height = Math.abs(y - this.anchorPoint.y)
+    //             break
+    //         }
+    //         case 'left': {
+    //             isFlippedX = x > this.anchorPoint.x
+    //             // keep height and y fixed
+    //             ny = boundingRect.top
+    //             nx = Math.min(this.anchorPoint.x, x)
+    //             height = boundingRect.bottom - boundingRect.top
+    //             width = Math.abs(x - this.anchorPoint.x)
+    //             break
+    //         }
+    //         case 'right': {
+    //             isFlippedX = x < this.anchorPoint.x
+    //             ny = boundingRect.top
+    //             nx = Math.min(this.anchorPoint.x, x)
+    //             height = boundingRect.bottom - boundingRect.top
+    //             width = Math.abs(x - this.anchorPoint.x)
+    //             break
+    //         }
+    //     }
+
+    //     scene.setFlip(isFlippedX, isFlippedY)
+    //     const { x: mx, y: my } = scene.getRelativePosition(nx, ny)
+    //     scene.setPosition(mx, my)
+    //     scene.setDimension(width, height)
+    // }
 
     updateShapeDim(x: number, y: number, scene: SceneNode) {
-        let [width, height] = [0, 0]
-        let nx = 0
-        let ny = 0
-
         const boundingRect = scene.getShape().getBoundingRect()
 
+        // initialize anchor only once
         if (this.anchorPoint === null) {
-            const anchorMap = {
+            const anchorMap: Record<string, { x: number; y: number }> = {
                 'top-left': { x: boundingRect.right, y: boundingRect.bottom },
                 'top-right': { x: boundingRect.left, y: boundingRect.bottom },
                 'bottom-left': { x: boundingRect.right, y: boundingRect.top },
@@ -185,81 +272,62 @@ export default class Handle {
             this.anchorPoint = anchorMap[this.pos]
         }
 
-        let isFlippedX = false,
-            isFlippedY = false
+        let isFlippedX = false
+        let isFlippedY = false
+        let width = 0
+        let height = 0
+        let nx = 0
+        let ny = 0
 
+        console.log(x, this.anchorPoint, y);
+        
         switch (this.pos) {
-            // Corners: change both width and height
             case 'top-left':
             case 'top-right':
             case 'bottom-left':
             case 'bottom-right': {
-                const flipMap = {
-                    'top-left': {
-                        isFlippedX: x > this.anchorPoint.x,
-                        isFlippedY: y > this.anchorPoint.y,
-                    },
-                    'top-right': {
-                        isFlippedX: x < this.anchorPoint.x,
-                        isFlippedY: y > this.anchorPoint.y,
-                    },
-                    'bottom-left': {
-                        isFlippedX: x > this.anchorPoint.x,
-                        isFlippedY: y < this.anchorPoint.y,
-                    },
-                    'bottom-right': {
-                        isFlippedX: x < this.anchorPoint.x,
-                        isFlippedY: y < this.anchorPoint.y,
-                    },
-                }
-                ;({ isFlippedX, isFlippedY } = flipMap[this.pos])
-
-                width = Math.abs(x - this.anchorPoint.x)
-                height = Math.abs(y - this.anchorPoint.y)
+                const dx = x - this.anchorPoint.x
+                const dy = y - this.anchorPoint.y
+                width = Math.abs(dx)
+                height = Math.abs(dy)
+                isFlippedX = (this.pos.includes('left') && dx > 0) || (this.pos.includes('right') && dx < 0)
+                isFlippedY = (this.pos.includes('top') && dy > 0) || (this.pos.includes('bottom') && dy < 0)
                 nx = Math.min(this.anchorPoint.x, x)
                 ny = Math.min(this.anchorPoint.y, y)
                 break
             }
-
-            // Sides: change only one dimension
-            case 'top': {
-                isFlippedY = y > this.anchorPoint.y
-                // keep width and x fixed
-                nx = boundingRect.left
-                ny = Math.min(this.anchorPoint.y, y)
-                width = boundingRect.right - boundingRect.left
-                height = Math.abs(y - this.anchorPoint.y)
-                break
-            }
+            case 'top':
             case 'bottom': {
-                isFlippedY = y < this.anchorPoint.y
+                const dy = y - this.anchorPoint.y
+                height = Math.abs(dy)
+                isFlippedY = (this.pos === 'top' && dy > 0) || (this.pos === 'bottom' && dy < 0)
                 nx = boundingRect.left
                 ny = Math.min(this.anchorPoint.y, y)
                 width = boundingRect.right - boundingRect.left
-                height = Math.abs(y - this.anchorPoint.y)
                 break
             }
-            case 'left': {
-                isFlippedX = x > this.anchorPoint.x
-                // keep height and y fixed
-                ny = boundingRect.top
-                nx = Math.min(this.anchorPoint.x, x)
-                height = boundingRect.bottom - boundingRect.top
-                width = Math.abs(x - this.anchorPoint.x)
-                break
-            }
+            case 'left':
             case 'right': {
-                isFlippedX = x < this.anchorPoint.x
+                const dx = x - this.anchorPoint.x
+                width = Math.abs(dx)
+                isFlippedX = (this.pos === 'left' && dx > 0) || (this.pos === 'right' && dx < 0)
                 ny = boundingRect.top
                 nx = Math.min(this.anchorPoint.x, x)
                 height = boundingRect.bottom - boundingRect.top
-                width = Math.abs(x - this.anchorPoint.x)
                 break
+            }
+            default: {
+                nx = boundingRect.left
+                ny = boundingRect.top
+                width = boundingRect.right - boundingRect.left
+                height = boundingRect.bottom - boundingRect.top
             }
         }
 
-        scene.setFlip(isFlippedX, isFlippedY)
+        // convert into local coordinates of the scene
         const { x: mx, y: my } = scene.getRelativePosition(nx, ny)
+
+        scene.setFlip(isFlippedX, isFlippedY)
         scene.setPosition(mx, my)
         scene.setDimension(width, height)
     }
@@ -382,12 +450,11 @@ export default class Handle {
         const shape = scene.getShape()
         if (!shape) return
 
-        let { transform } = shape.getProperties()
+        const { x: rx, y: ry } = shape.getRotationAnchorPoint()
+        const { x: sx, y: sy } = shape.getCoord()
 
-        ;({ transform } = shape.getProperties())
-
-        const ax = transform.anchorPoint.x + transform.x
-        const ay = transform.anchorPoint.y + transform.y
+        const ax = rx + sx
+        const ay = ry + sy
 
         // Angle in radians
         const angle = Math.atan2(y - ay, x - ax)

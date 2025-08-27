@@ -43,6 +43,7 @@ abstract class Shape implements IShape {
     protected style: Style
     protected boundingRect: BoundingRect
     protected isHover: boolean
+    protected anchorPosition: Coord
 
     constructor({ x, y, type, rotation = 0, scale = 1, _fill = '#fff', strokeWidth = 1, strokeColor = '#000' }: Arguments) {
         if (new.target === Shape) throw new Error('Shape is abstract; extend it!')
@@ -54,6 +55,7 @@ abstract class Shape implements IShape {
             scaleY: scale,
             anchorPoint: null,
         }
+        this.anchorPosition = { x: 0.5, y: 0.5 }
 
         const fill: SolidFill = { type: 'solid', color: _fill }
         const stroke: SolidFill = { type: 'solid', color: strokeColor }
@@ -69,6 +71,18 @@ abstract class Shape implements IShape {
     getBoundingRect(): BoundingRect {
         return structuredClone(this.boundingRect)
     }
+
+    getRotationAnchorPoint() {
+        const { width, height } = this.getDim()
+
+        this.transform.anchorPoint = {
+            x: width * this.anchorPosition.x,
+            y: height * this.anchorPosition.y,
+        }
+
+        return this.transform.anchorPoint
+    }
+
     abstract getCenterCoord(): Coord
     abstract handleFlip(isFlippedX: boolean, isFlippedY: boolean): void
     abstract getModifierHandles(): Handle[]

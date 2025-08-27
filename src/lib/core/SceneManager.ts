@@ -54,6 +54,7 @@ class SceneManager {
     }
 
     draw(skCnvs: Canvas) {
+        this.scene.updateWorldMatrix()
         this.scene.draw(skCnvs)
         this.shapeModifier.draw(skCnvs)
     }

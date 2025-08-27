@@ -6,12 +6,11 @@ import Shape from '../base/Shape'
 class Rectangle extends Shape {
     dimension: Size
     bdradius: BorderRadius
-    anchorPosition: Coord
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, type: 'rect', ...shapeProps })
         this.dimension = { width: 0, height: 0 }
-        this.anchorPosition = { x: 0.5, y: 0.5 }
+
         this.bdradius = {
             'top-left': 0,
             'top-right': 0,
@@ -69,17 +68,7 @@ class Rectangle extends Shape {
             this.dimension.height = Math.abs(deltaY)
         }
 
-        this.updateRotationAnchorPoint()
         this.calculateBoundingRect()
-    }
-
-    updateRotationAnchorPoint() {
-        const { width, height } = this.dimension
-
-        this.transform.anchorPoint = {
-            x: width * this.anchorPosition.x,
-            y: height * this.anchorPosition.y,
-        }
     }
 
     override setCoord(x: number, y: number): void {
@@ -94,7 +83,6 @@ class Rectangle extends Shape {
         this.dimension.width = width
         this.dimension.height = height
 
-        this.updateRotationAnchorPoint()
         this.calculateBoundingRect()
     }
 
