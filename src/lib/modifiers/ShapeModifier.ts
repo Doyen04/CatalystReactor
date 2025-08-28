@@ -98,14 +98,14 @@ class ShapeModifier {
     handleModifierDrag(x: number, y: number, e: MouseEvent) {
         const { x: mx, y: my } = this.scene.worldToParentLocal(e.offsetX, e.offsetY)
 
+       
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
                     this.selectedModifierHandle.updateShapeRadii(mx, my, this.scene)
                     break
                 case 'size': {
-                    const { x: px, y: py } = this.scene.worldToLocal(e.offsetX, e.offsetY)
-                    this.selectedModifierHandle.updateShapeDim(px, py, this.scene)
+                    this.selectedModifierHandle.updateShapeDim(e.offsetX, e.offsetY, this.scene)
                     break
                 }
                 case 'c-ratio':
@@ -218,7 +218,7 @@ class ShapeModifier {
             return
         }
         this.setPaint()
-        canvas.concat(this.scene.getLocalMatrix())
+        canvas.concat(this.scene.getWorldMatrix())
 
         const dimen = this.scene.getShape().getDim()
 

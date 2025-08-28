@@ -3,7 +3,7 @@ import Tool from './Tool'
 import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
 import Handle from '@lib/modifiers/Handles'
-import SceneNode from '@lib/node/ContainerNode'
+import SceneNode from '@lib/node/Scene'
 
 class SelectTool extends Tool {
     private hoveredScene: SceneNode | null = null

@@ -105,7 +105,11 @@ class ShapeManager {
     }
 
     handleHover(x: number, y: number): Handle | null {
-        if (!this.shapeModifier) return null
+        if (!this.shapeModifier || !this.scene) return null
+
+        const rect = this.scene.getBoundingAbsoluteRect()
+
+        console.log(rect, x, y)
 
         const isCollide = this.shapeModifier.collideRect(x, y)
         if (isCollide) {
