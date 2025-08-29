@@ -33,14 +33,13 @@ abstract class SceneNode {
         const Matrix = this.resource.canvasKit.Matrix
 
         const parentTrans = this.parent.worldMatrix
-        const oldLocaltrans = this.localMatrix
-
-        console.log(this.unrotatePointAboutCenter_CanvasKit(attrib.position.x, attrib.position.y), 'unrot')
+        const oldWorldTrans = this.worldMatrix
 
         const T = Matrix.translated(attrib.position.x, attrib.position.y)
         const R = Matrix.rotated(0, ax, ay)
         const S = Matrix.scaled(1, 1, ax, ay)
         const Tx = Matrix.multiply(T, R, S)
+
         const Rx = Matrix.rotated(transform.rotation || 0, ax, ay)
 
         const inverseParentTrans = Matrix.invert(parentTrans)
@@ -50,8 +49,7 @@ abstract class SceneNode {
 
         console.log(newLocaltrans, 'newlocaltrans', x, y, transform.rotation, R, S, Tx, Rx)
         console.log(inverseParentTrans, 'parenttrans-inverse')
-        console.log(this.worldMatrix, 'oldWorldtrans')
-        console.log(oldLocaltrans, 'oldlocaltrans')
+        console.log(oldWorldTrans, 'oldlocaltrans')
 
         // this.setFlip(attrib.flip.x, attrib.flip.y)
 
@@ -59,25 +57,16 @@ abstract class SceneNode {
 
         // this.setDimension(Math.abs(attrib.dimension.width), Math.abs(attrib.dimension.height))
     }
-    // CanvasKit Matrix helpers assumed available as Matrix
-    unrotatePointAboutCenter_CanvasKit(wx, wy) {
-        const Matrix = this.resource.canvasKit.Matrix
-        const { transform } = this.shape.getProperties()
-        const { width, height } = this.shape.getDim()
-        const cx = transform.x + width / 2
-        const cy = transform.y + height / 2
 
-        // build undo rotation: T(cx,cy) * R(-theta) * T(-cx,-cy)
-        const Tneg = Matrix.translated(-cx, -cy)
-        const Rinv = Matrix.rotated(-transform.rotation, 0, 0) // rotate about origin
-        const Tpos = Matrix.translated(cx, cy)
+    getRadianQuadrant(theta) {
+        const twoPi = 2 * Math.PI
+        let angle = theta % twoPi
+        if (angle < 0) angle += twoPi
 
-        const undo = Matrix.multiply(Tpos, Rinv, Tneg)
-
-        const ux = undo[0] * wx + undo[1] * wy + undo[3]
-        const uy = undo[4] * wx + undo[5] * wy + undo[7]
-
-        return { x: ux, y: uy }
+        if (angle < Math.PI / 2) return 'Quadrant I' // 0 to π/2
+        else if (angle < Math.PI) return 'Quadrant II' // π/2 to π
+        else if (angle < (3 * Math.PI) / 2) return 'Quadrant III' // π to 3π/2
+        else return 'Quadrant IV' // 3π/2 to 2π
     }
 
     setDimension(width: number, height: number): void {

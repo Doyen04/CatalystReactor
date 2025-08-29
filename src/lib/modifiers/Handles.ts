@@ -450,7 +450,6 @@ export default class Handle {
         // Angle in radians
         const cy = y - ay
         const cx = x - ax
-        console.log(cx, cy)
 
         const angle = Math.atan2(cy, cx)
         // Normalize angle to 0-2π range
