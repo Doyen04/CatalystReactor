@@ -28,40 +28,56 @@ abstract class SceneNode {
         const { x, y } = this.worldToParentLocal(attrib.position.x, attrib.position.y)
         const { transform } = this.shape.getProperties()
 
-        const sx = transform.scaleX ?? 1
-        const sy = transform.scaleY ?? 1
-
         const { x: ax, y: ay } = transform.anchorPoint == null ? { x: 0, y: 0 } : transform.anchorPoint
 
         const Matrix = this.resource.canvasKit.Matrix
-        const oldTr = this.worldMatrix
+
+        const parentTrans = this.parent.worldMatrix
+        const oldLocaltrans = this.localMatrix
+
+        console.log(this.unrotatePointAboutCenter_CanvasKit(attrib.position.x, attrib.position.y), 'unrot')
+
         const T = Matrix.translated(attrib.position.x, attrib.position.y)
-        const R = Matrix.rotated(transform.rotation || 0, ax, ay)
-        const S = Matrix.scaled(sx, sy, ax, ay)
+        const R = Matrix.rotated(0, ax, ay)
+        const S = Matrix.scaled(1, 1, ax, ay)
+        const Tx = Matrix.multiply(T, R, S)
+        const Rx = Matrix.rotated(transform.rotation || 0, ax, ay)
 
-        const res = Matrix.multiply(T, R, S)
+        const inverseParentTrans = Matrix.invert(parentTrans)
+        const inverseR = Matrix.invert(Rx)
 
-        const delta = Matrix.multiply(Matrix.invert(res), oldTr)
-        const delta2 = Matrix.multiply(res, Matrix.invert(oldTr))
+        const newLocaltrans = Matrix.multiply(inverseR, inverseParentTrans, Tx)
 
-        console.log(delta, Matrix.multiply(delta, oldTr), 'rong', Matrix.multiply(oldTr, delta))
-        console.log(transform.rotation, attrib.position, transform.anchorPoint, 'local', x, y)
-        console.log(delta2, Matrix.multiply(delta2, oldTr), 'next', Matrix.multiply(oldTr, delta2))
-
-        console.log(
-            delta,
-            Matrix.multiply(this.worldMatrix, delta, oldTr, this.localMatrix),
-            'test',
-            Matrix.multiply(this.localMatrix, oldTr, delta, this.worldMatrix)
-        )
-        console.log(transform.rotation, attrib.position, transform.anchorPoint, 'local', x, y)
-        console.log(delta2, Matrix.multiply(delta2, oldTr), 'next', Matrix.multiply(oldTr, delta2))
+        console.log(newLocaltrans, 'newlocaltrans', x, y, transform.rotation, R, S, Tx, Rx)
+        console.log(inverseParentTrans, 'parenttrans-inverse')
+        console.log(this.worldMatrix, 'oldWorldtrans')
+        console.log(oldLocaltrans, 'oldlocaltrans')
 
         // this.setFlip(attrib.flip.x, attrib.flip.y)
 
-        this.setPosition(attrib.position.x, attrib.position.y)
+        // this.setPosition(attrib.position.x, attrib.position.y)
 
-        this.setDimension(Math.abs(attrib.dimension.width), Math.abs(attrib.dimension.height))
+        // this.setDimension(Math.abs(attrib.dimension.width), Math.abs(attrib.dimension.height))
+    }
+    // CanvasKit Matrix helpers assumed available as Matrix
+    unrotatePointAboutCenter_CanvasKit(wx, wy) {
+        const Matrix = this.resource.canvasKit.Matrix
+        const { transform } = this.shape.getProperties()
+        const { width, height } = this.shape.getDim()
+        const cx = transform.x + width / 2
+        const cy = transform.y + height / 2
+
+        // build undo rotation: T(cx,cy) * R(-theta) * T(-cx,-cy)
+        const Tneg = Matrix.translated(-cx, -cy)
+        const Rinv = Matrix.rotated(-transform.rotation, 0, 0) // rotate about origin
+        const Tpos = Matrix.translated(cx, cy)
+
+        const undo = Matrix.multiply(Tpos, Rinv, Tneg)
+
+        const ux = undo[0] * wx + undo[1] * wy + undo[3]
+        const uy = undo[4] * wx + undo[5] * wy + undo[7]
+
+        return { x: ux, y: uy }
     }
 
     setDimension(width: number, height: number): void {

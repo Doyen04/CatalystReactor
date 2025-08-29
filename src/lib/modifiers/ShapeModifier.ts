@@ -121,7 +121,7 @@ class ShapeModifier {
                     this.selectedModifierHandle.updateShapeVertices(mx, my, this.scene)
                     break
                 case 'angle':
-                    this.selectedModifierHandle.updateShapeAngle(mx, my, this.scene)
+                    this.selectedModifierHandle.updateShapeAngle(e.offsetX, e.offsetY, this.scene)
                     break
                 default:
                     break
