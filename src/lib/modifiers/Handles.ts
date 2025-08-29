@@ -255,7 +255,7 @@ export default class Handle {
     // }
 
     updateShapeDim(x: number, y: number, scene: SceneNode) {
-        const boundingRect = scene.getShape().getBoundingRect()
+        const boundingRect = scene.getBoundingAbsoluteRect()
 
         // initialize anchor only once
         if (this.anchorPoint === null) {
@@ -268,52 +268,51 @@ export default class Handle {
                 bottom: { x: boundingRect.left, y: boundingRect.top },
                 left: { x: boundingRect.right, y: boundingRect.top },
                 right: { x: boundingRect.left, y: boundingRect.top },
-                'shape-pos': { x: boundingRect.left, y: boundingRect.top },
+                'shape-top-left': { x: boundingRect.left, y: boundingRect.top },
+                'shape-bottom-right': { x: boundingRect.right, y: boundingRect.bottom },
             }
             this.anchorPoint = anchorMap
         }
 
-        ;({ x, y } = scene.worldToLocal(x, y))
         let width,
-            height,
-            nx,
-            ny = 0
+            height = 0
         console.log(x, y, 'local coords')
 
         switch (this.pos) {
             case 'top-left':
                 width = this.anchorPoint[this.pos].x - x
                 height = this.anchorPoint[this.pos].y - y
-                nx = width < 0 ? this.anchorPoint[this.pos].x : this.anchorPoint[this.pos].x - width
-                ny = height < 0 ? this.anchorPoint[this.pos].y : this.anchorPoint[this.pos].y - height
+                // nx = width < 0 ? this.anchorPoint[this.pos].x : this.anchorPoint[this.pos].x - width
+                // ny = height < 0 ? this.anchorPoint[this.pos].y : this.anchorPoint[this.pos].y - height
                 break
             case 'top-right':
                 width = x - this.anchorPoint[this.pos].x
                 height = this.anchorPoint[this.pos].y - y
-                nx = width < 0 ? this.anchorPoint[this.pos].x + width : this.anchorPoint[this.pos].x
-                ny = height < 0 ? this.anchorPoint[this.pos].y : this.anchorPoint[this.pos].y - height
+                // nx = width < 0 ? this.anchorPoint[this.pos].x + width : this.anchorPoint[this.pos].x
+                // ny = height < 0 ? this.anchorPoint[this.pos].y : this.anchorPoint[this.pos].y - height
                 break
             case 'bottom-left':
                 width = this.anchorPoint[this.pos].x - x
                 height = y - this.anchorPoint[this.pos].y
-                nx = width < 0 ? this.anchorPoint[this.pos].x : this.anchorPoint[this.pos].x - width
-                ny = height < 0 ? this.anchorPoint[this.pos].y + height : this.anchorPoint[this.pos].y
+                // nx = width < 0 ? this.anchorPoint[this.pos].x : this.anchorPoint[this.pos].x - width
+                // ny = height < 0 ? this.anchorPoint[this.pos].y + height : this.anchorPoint[this.pos].y
                 break
             case 'bottom-right':
                 width = x - this.anchorPoint[this.pos].x
                 height = y - this.anchorPoint[this.pos].y
-                nx = width < 0 ? this.anchorPoint[this.pos].x + width : this.anchorPoint[this.pos].x
-                ny = height < 0 ? this.anchorPoint[this.pos].y + height : this.anchorPoint[this.pos].y
+                // nx = width < 0 ? this.anchorPoint[this.pos].x + width : this.anchorPoint[this.pos].x
+                // ny = height < 0 ? this.anchorPoint[this.pos].y + height : this.anchorPoint[this.pos].y
                 break
 
             default:
                 break
         }
 
+        const { x: nx, y: ny } = this.anchorPoint['shape-top-left']
         console.log(x, y, this.anchorPoint, nx, ny, 'rew', width, height, this.pos, 'insideresize')
 
         // convert into local coordinates of the scene
-        ;({ x: nx, y: ny } = scene.getAbsolutePosition(nx, ny))
+        // ;({ x: nx, y: ny } = scene.getAbsolutePosition(nx, ny))
         console.log(nx, ny, 'local coords')
 
         scene.updateScene({

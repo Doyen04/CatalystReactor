@@ -53,9 +53,9 @@ abstract class SceneNode {
 
         // this.setFlip(attrib.flip.x, attrib.flip.y)
 
-        // this.setPosition(attrib.position.x, attrib.position.y)
+        this.setPosition(attrib.position.x, attrib.position.y)
 
-        // this.setDimension(Math.abs(attrib.dimension.width), Math.abs(attrib.dimension.height))
+        this.setDimension(Math.abs(attrib.dimension.width), Math.abs(attrib.dimension.height))
     }
 
     getRadianQuadrant(theta) {
