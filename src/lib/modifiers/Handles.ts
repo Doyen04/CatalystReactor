@@ -160,8 +160,6 @@ export default class Handle {
         const dx = localCurrent[0] - localStart[0]
         const dy = localCurrent[1] - localStart[1]
 
-        console.log(localStart, localCurrent, dx, dy)
-
         switch (this.pos) {
             case 'top-left':
                 newWidth = initialProps.dimension.width - dx
@@ -215,12 +213,12 @@ export default class Handle {
             initialProps.rotationAnchor
         )
 
-        const offset = scene.toZeroTransform(zeroTransform, handleNewLocal.x, handleNewLocal.y)
-        const posX = (fixedWorld ? fixedWorld[0] : initialProps.position.x) - offset.x
-        const posY = (fixedWorld ? fixedWorld[1] : initialProps.position.y) - offset.y
+        const offset = Matrix.mapPoints(zeroTransform, [handleNewLocal.x, handleNewLocal.y])
+        const posX = (fixedWorld ? fixedWorld[0] : initialProps.position.x) - offset[0]
+        const posY = (fixedWorld ? fixedWorld[1] : initialProps.position.y) - offset[1]
 
         scene.updateScene({
-            position: { x: posX, y: posY },
+            position: { x: Math.floor(posX), y: Math.floor(posY) },
             scale: { x: desiredScaleX, y: desiredScaleY },
             dimension: { width: absW, height: absH },
         })

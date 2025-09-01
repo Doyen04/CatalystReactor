@@ -117,15 +117,6 @@ abstract class SceneNode {
         }
     }
 
-    toZeroTransform(zeroTransform: number[], x: number, y: number) {
-        const Matrix = this.resource.canvasKit.Matrix
-        const transformedPoint = Matrix.mapPoints(zeroTransform, [x, y])
-        return {
-            x: transformedPoint[0],
-            y: transformedPoint[1],
-        }
-    }
-
     buildZeroTransform(width: number, height: number, rotation: number, scale: { x: number; y: number }, rotationAnchor: { x: number; y: number }) {
         const Matrix = this.resource.canvasKit.Matrix
 
