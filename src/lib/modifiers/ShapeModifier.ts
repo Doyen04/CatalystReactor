@@ -14,6 +14,7 @@ interface ShapeProps {
     rotation: number
     rotationAnchor: Coord
     inverseWorldTransform: number[]
+    worldTransform: number[]
 }
 
 class ShapeModifier {
@@ -78,6 +79,7 @@ class ShapeModifier {
                 scale: scale,
                 rotation: rotation,
                 rotationAnchor: rotationAnchor,
+                worldTransform: this.scene.getWorldMatrix(),
                 inverseWorldTransform: Matrix.invert(this.scene.getWorldMatrix()),
             }
 

@@ -67,7 +67,7 @@ class InputManager {
     }
 
     resize(e?: Event): void {
-        console.log('resizing----5----')
+        console.log('resizing----5----', e)
 
         EventQueue.trigger(CreateSurface)
     }

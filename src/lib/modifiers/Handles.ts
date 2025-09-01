@@ -204,7 +204,7 @@ export default class Handle {
 
         const fixedHandleKey = this.getOppositeHandle(this.pos)
         const fixedLocal = this.getHandleLocalPoint(fixedHandleKey, initialProps.dimension.width, initialProps.dimension.height)
-        const fixedWorld = scene.localToWorld(fixedLocal.x, fixedLocal.y)
+        const fixedWorld = Matrix.mapPoints(initialProps.worldTransform, [fixedLocal.x, fixedLocal.y])
         const handleNewLocal = this.getHandleLocalPoint(fixedHandleKey, absW, absH)
 
         const zeroTransform = scene.buildZeroTransform(
@@ -216,20 +216,8 @@ export default class Handle {
         )
 
         const offset = scene.toZeroTransform(zeroTransform, handleNewLocal.x, handleNewLocal.y)
-        const posX = (fixedWorld ? fixedWorld.x : initialProps.position.x) - offset.x
-        const posY = (fixedWorld ? fixedWorld.y : initialProps.position.y) - offset.y
-
-        console.log(
-            `invStart: ${JSON.stringify(initialProps.inverseWorldTransform)}, localStart: ${JSON.stringify(
-                localStart
-            )}, localCurrent: ${JSON.stringify(
-                localCurrent
-            )}, dx: ${dx}, dy: ${dy}, willFlipX: ${willFlipX}, willFlipY: ${willFlipY}, absW: ${absW}, absH: ${absH}, desiredScaleX: ${desiredScaleX}, desiredScaleY: ${desiredScaleY}, fixedKey: ${fixedHandleKey}, fixedWorld: ${JSON.stringify(
-                fixedWorld
-            )}, anchorLocalNew: ${JSON.stringify(handleNewLocal)}, zeroTransform: ${JSON.stringify(zeroTransform)}, offset: ${JSON.stringify(
-                offset
-            )}, posX: ${posX}, posY: ${posY}`
-        )
+        const posX = (fixedWorld ? fixedWorld[0] : initialProps.position.x) - offset.x
+        const posY = (fixedWorld ? fixedWorld[1] : initialProps.position.y) - offset.y
 
         scene.updateScene({
             position: { x: posX, y: posY },
