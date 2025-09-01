@@ -367,8 +367,11 @@ export interface IShape {
     getModifierHandlesPos(handle: Handle): Coord
 
     drawDefault(): void
+    getRotationAngle(): number
+    getScale(): { x: number; y: number }
     getProperties(): Properties
     setProperties(prop: Properties): void
+    setScale(x: number, y: number): void
     pointInShape(x: number, y: number): boolean
     moveShape(mx: number, my: number): void
     calculateBoundingRect(): void

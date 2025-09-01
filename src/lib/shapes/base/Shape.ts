@@ -43,7 +43,7 @@ abstract class Shape implements IShape {
     protected style: Style
     protected boundingRect: BoundingRect
     protected isHover: boolean
-    protected anchorPosition: Coord
+    protected rotationAnchorPosition: Coord
 
     constructor({ x, y, type, rotation = 0, scale = 1, _fill = '#fff', strokeWidth = 1, strokeColor = '#000' }: Arguments) {
         if (new.target === Shape) throw new Error('Shape is abstract; extend it!')
@@ -53,9 +53,9 @@ abstract class Shape implements IShape {
             rotation,
             scaleX: scale,
             scaleY: scale,
-            anchorPoint: null,
+            anchorPoint: { x: 0, y: 0 },
         }
-        this.anchorPosition = { x: 0.5, y: 0.5 }
+        this.rotationAnchorPosition = { x: 0.5, y: 0.5 }
 
         const fill: SolidFill = { type: 'solid', color: _fill }
         const stroke: SolidFill = { type: 'solid', color: strokeColor }
@@ -66,21 +66,6 @@ abstract class Shape implements IShape {
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 }
         this.isHover = false
         this.shapeType = type
-    }
-
-    getBoundingRect(): BoundingRect {
-        return structuredClone(this.boundingRect)
-    }
-
-    getRotationAnchorPoint() {
-        const { width, height } = this.getDim()
-
-        this.transform.anchorPoint = {
-            x: width * this.anchorPosition.x,
-            y: height * this.anchorPosition.y,
-        }
-
-        return this.transform.anchorPoint
     }
 
     abstract getCenterCoord(): Coord
@@ -112,6 +97,14 @@ abstract class Shape implements IShape {
 
             return null
         }
+    }
+
+    getBoundingRect(): BoundingRect {
+        return structuredClone(this.boundingRect)
+    }
+
+    getRotationAnchorPoint() {
+        return this.rotationAnchorPosition
     }
 
     getAngleModifierHandles(): Handle[] {
@@ -273,9 +266,11 @@ abstract class Shape implements IShape {
     protected isShader(obj): boolean {
         return obj != null && typeof obj === 'object' && obj.constructor?.name === 'Shader'
     }
+
     protected isColor(fill): boolean {
         return fill instanceof Float32Array
     }
+
     protected initPaints(): { stroke: Paint; fill: Paint } {
         const fillShader = this.setPaint(this.style.fill.color)
         const strokeShader = this.setPaint(this.style.stroke.fill.color)
@@ -297,6 +292,7 @@ abstract class Shape implements IShape {
         this.resource.strokePaint.setStrokeWidth(this.style.stroke.width)
         return { stroke: this.resource.strokePaint, fill: this.resource.paint }
     }
+
     protected resetPaint() {
         this.resource.paint.setShader(null)
         this.resource.strokePaint.setShader(null)
@@ -305,23 +301,42 @@ abstract class Shape implements IShape {
         this.resource.strokePaint.setAlphaf(1.0)
     }
 
+    getRotationAngle(): number {
+        return this.transform.rotation || 0
+    }
+
+    getScale(): { x: number; y: number } {
+        return {
+            x: this.transform.scaleX || 1,
+            y: this.transform.scaleY || 1,
+        }
+    }
+
     setAngle(angle: number): void {
         this.transform.rotation = angle
         // this.style.strokeColor = color;
     }
 
     setAnchorPoint(anchor: Coord): void {
-        this.transform.anchorPoint = anchor
+        console.log('not yet implemented', anchor)
+        // this.transform.anchorPoint = anchor
     }
 
     setStrokeColor(stroke: string | number[]): void {
         console.log(stroke)
     }
+
+    setScale(x: number, y: number): void {
+        this.transform.scaleX = x
+        this.transform.scaleY = y
+    }
+
     setStrokeWidth(width: number): void {
         console.log(width)
 
         // this.style.strokeWidth = width;
     }
+
     setFill(color: string): void {
         console.log(color)
 
@@ -332,6 +347,7 @@ abstract class Shape implements IShape {
         // EventQueue.trigger(Render)
         this.isHover = bool
     }
+
     makeImageShader(dim: Size, canvasKitImage: CanvasKitImage, scaleMode: ScaleMode = 'fill'): Shader {
         if (!this.resource?.canvasKit) return null
         const ck = this.resource.canvasKit

@@ -26,11 +26,16 @@ class ShapeManager {
         this.throttledUpdate(props)
     }
 
-    drag(x: number, y: number, e: MouseEvent) {
+    handleMouseDown(dragStart: Coord, e: MouseEvent) {
+        this.shapeModifier.storeShapeInitialProps()
+        console.log('not used', dragStart, e)
+    }
+
+    drag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
         if (this.shapeModifier.hasSelectedHandle()) {
-            this.shapeModifier.drag(x, y, e)
+            this.shapeModifier.drag(dragStart, dx, dy, e)
         } else {
-            this.scene.move(x, y)
+            this.scene.move(dx, dy)
         }
         this.shapeModifier.update()
         const props = this.scene.getShape().getProperties()
@@ -106,7 +111,7 @@ class ShapeManager {
 
     handleHover(x: number, y: number): Handle | null {
         if (!this.shapeModifier || !this.scene) return null
-        
+
         const isCollide = this.shapeModifier.collideRect(x, y)
         if (isCollide) {
             this.shapeModifier.setHover(true)

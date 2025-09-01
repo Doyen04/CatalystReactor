@@ -19,81 +19,27 @@ abstract class SceneNode {
             return null
         }
     }
+
     setUpMatrix() {
-        this.localMatrix = this.resource.canvasKit.Matrix.identity()
-        this.worldMatrix = this.resource.canvasKit.Matrix.identity()
-    }
-
-    updateScene(attrib: { position: Coord; dimension: Size }) {
-        const { transform } = this.shape.getProperties()
-
         const Matrix = this.resource.canvasKit.Matrix
+        this.localMatrix = Matrix.identity()
+        this.worldMatrix = Matrix.identity()
+    }
 
-        const parentTrans = this.parent.worldMatrix
-        const oldWorldTrans = this.worldMatrix
-
-        const T = Matrix.translated(attrib.position.x, attrib.position.y)
-
-        const inverseParentTrans = Matrix.invert(parentTrans)
-
-        const newLocaltrans = Matrix.multiply(inverseParentTrans, T)
-
-        console.log(newLocaltrans, 'newlocaltrans', transform.rotation)
-        console.log(inverseParentTrans, 'parenttrans-inverse')
-        console.log(oldWorldTrans, 'oldlocaltrans')
-
-        // this.setFlip(attrib.flip.x, attrib.flip.y)
-
+    updateScene(attrib: { position: Coord; scale: Coord; dimension: Size }) {
         this.setPosition(attrib.position.x, attrib.position.y)
-
+        this.setScale(attrib.scale.x, attrib.scale.y)
         this.setDimension(Math.abs(attrib.dimension.width), Math.abs(attrib.dimension.height))
-    }
-
-    unrotateToLocal(worldX: number, worldY: number) {
-        const { transform } = this.shape.getProperties()
-
-        const { x: ax, y: ay } = transform.anchorPoint == null ? { x: 0, y: 0 } : transform.anchorPoint
-
-        const center = {
-            x: transform.x + ax,
-            y: transform.y + ay,
-        }
-
-        // Rotate mouse coordinates to local space
-        const cos = Math.cos(-transform.rotation)
-        const sin = Math.sin(-transform.rotation)
-        const dx = worldX - center.x
-        const dy = worldY - center.y
-
-        return {
-            x: center.x + (dx * cos - dy * sin),
-            y: center.y + (dx * sin + dy * cos),
-        }
-    }
-
-    rotateToLocal(worldX: number, worldY: number) {
-        const { transform } = this.shape.getProperties()
-
-        const { x: ax, y: ay } = transform.anchorPoint == null ? { x: 0, y: 0 } : transform.anchorPoint
-
-        const center = {
-            x: transform.x + ax,
-            y: transform.y + ay,
-        }
-
-        const cos = Math.cos(transform.rotation)
-        const sin = Math.sin(transform.rotation)
-        const dx = worldX - center.x
-        const dy = worldY - center.y
-
-        return {
-            x: center.x + (dx * cos - dy * sin),
-            y: center.y + (dx * sin + dy * cos),
-        }
     }
 
     setDimension(width: number, height: number): void {
         this.shape.setDim(width, height)
+
+        this.canComputeMatrix = true
+    }
+
+    setScale(x: number, y: number): void {
+        this.shape.setScale(x, y)
 
         this.canComputeMatrix = true
     }
@@ -141,77 +87,13 @@ abstract class SceneNode {
         this.canComputeMatrix = true
     }
 
-    decompose(matrix: number[]) {
-        const [a, c, tx, b, d, ty, persp0, persp1, persp2] = matrix
-
-        // Translation is straightforward
-        const translation = { x: tx, y: ty }
-
-        // Calculate scale magnitudes
-        const scaleX = Math.sqrt(a * a + b * b)
-        const scaleY = Math.sqrt(c * c + d * d)
-
-        // Determine if there's a reflection (negative determinant)
-        const determinant = a * d - b * c
-        const actualScaleY = determinant < 0 ? -scaleY : scaleY
-
-        // Calculate rotation from the first column vector
-        const rotation = Math.atan2(b, a)
-
-        // Normalize by scale to isolate skew
-        const normalizedA = a / scaleX
-        const normalizedB = b / scaleX
-        const normalizedC = c / actualScaleY
-        const normalizedD = d / actualScaleY
-
-        // Calculate skew angle
-        const skewX =
-            Math.atan2(normalizedA * normalizedC + normalizedB * normalizedD, normalizedA * normalizedA + normalizedB * normalizedB) - rotation
-
-        return {
-            translation,
-            rotation,
-            scale: { x: scaleX, y: actualScaleY },
-            skew: { x: skewX, y: 0 }, // 2D transforms typically don't have Y skew
-            matrix: matrix.slice(),
-        }
-    }
-
-    getTransform(matrix: number[]) {
+    localToWorld(dx: number, dy: number) {
         const Matrix = this.resource.canvasKit.Matrix
-        const tOnly = this.decompose(matrix)
-        return Matrix.translated(tOnly.translation.x, tOnly.translation.y)
-    }
-
-    getAbsolutePosition(dx?: number, dy?: number) {
-        const Matrix = this.resource.canvasKit.Matrix
-        const transformedPoint = Matrix.mapPoints(this.worldMatrix, [dx || 0, dy || 0])
+        const transformedPoint = Matrix.mapPoints(this.worldMatrix, [dx, dy])
         return {
             x: transformedPoint[0],
             y: transformedPoint[1],
         }
-    }
-
-    // Build a local matrix from current transform.
-    // Note: shapes already draw in absolute coords (x,y). We rotate/scale around the visual center.
-    protected recomputeLocalMatrix(): void {
-        if (!this.shape) {
-            return
-        }
-
-        const Matrix = this.resource.canvasKit.Matrix
-        const { transform } = this.shape.getProperties()
-
-        const sx = transform.scaleX ?? 1
-        const sy = transform.scaleY ?? 1
-
-        const { x: ax, y: ay } = transform.anchorPoint == null ? { x: 0, y: 0 } : transform.anchorPoint
-
-        const T = Matrix.translated(transform.x, transform.y)
-        const R = Matrix.rotated(transform.rotation || 0, ax, ay)
-        const S = Matrix.scaled(sx, sy, ax, ay)
-
-        this.localMatrix = Matrix.multiply(T, R, S)
     }
 
     worldToParentLocal(x: number, y: number) {
@@ -235,6 +117,51 @@ abstract class SceneNode {
         }
     }
 
+    toZeroTransform(zeroTransform: number[], x: number, y: number) {
+        const Matrix = this.resource.canvasKit.Matrix
+        const transformedPoint = Matrix.mapPoints(zeroTransform, [x, y])
+        return {
+            x: transformedPoint[0],
+            y: transformedPoint[1],
+        }
+    }
+
+    buildZeroTransform(width: number, height: number, rotation: number, scale: { x: number; y: number }, rotationAnchor: { x: number; y: number }) {
+        const Matrix = this.resource.canvasKit.Matrix
+
+        const anchorX = width * (rotationAnchor?.x ?? 0.5)
+        const anchorY = height * (rotationAnchor?.y ?? 0.5)
+
+        const R = Matrix.rotated(rotation || 0, anchorX, anchorY)
+        const S = Matrix.scaled(scale?.x ?? 1, scale?.y ?? 1, anchorX, anchorY)
+
+        return Matrix.multiply(R, S)
+    }
+
+    // Build a local matrix from current transform.
+    // Note: shapes already draw in absolute coords (x,y). We rotate/scale around the visual center.
+    protected recomputeLocalMatrix(): void {
+        if (!this.shape) {
+            return
+        }
+
+        const Matrix = this.resource.canvasKit.Matrix
+
+        const { x, y } = this.shape.getCoord()
+        const { width, height } = this.shape.getDim()
+        const rotation = this.shape.getRotationAngle()
+        const { x: sx, y: sy } = this.shape.getScale()
+        const anchor = this.shape.getRotationAnchorPoint()
+        const offsetX = anchor.x * width
+        const offsetY = anchor.y * height
+
+        const T = Matrix.translated(x, y)
+        const R = Matrix.rotated(rotation || 0, offsetX, offsetY)
+        const S = Matrix.scaled(sx, sy, offsetX, offsetY)
+
+        this.localMatrix = Matrix.multiply(T, R, S)
+    }
+
     isCollide(x: number, y: number): boolean {
         const { x: tx, y: ty } = this.worldToLocal(x, y)
         return this.shape.pointInShape(tx, ty)
@@ -245,7 +172,7 @@ abstract class SceneNode {
     }
 
     getAngle(): number {
-        const { rotation } = this.shape.getProperties().transform
+        const rotation = this.shape.getRotationAngle()
         return rotation || 0
     }
 
@@ -259,21 +186,6 @@ abstract class SceneNode {
 
     getWorldMatrix(): number[] | null {
         return this.worldMatrix
-    }
-
-    getBoundingUnrotatedAbsoluteRect() {
-        const { width, height } = this.shape.getDim()
-
-        // Transform from local coordinates to parent coordinates
-        let parentCorners = this.getAbsolutePosition()
-        parentCorners = this.unrotateToLocal(parentCorners.x, parentCorners.y)
-
-        return {
-            left: parentCorners.x,
-            top: parentCorners.y,
-            right: parentCorners.x + width,
-            bottom: parentCorners.y + height,
-        }
     }
 
     hasShape(): boolean {

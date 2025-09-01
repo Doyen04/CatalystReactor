@@ -6,14 +6,12 @@ const { PointerDown, PointerMove, PointerUp, PointerDrag, CreateSurface, KeyDown
 class InputManager {
     private canvasEl: HTMLCanvasElement
     private isPointerDown: boolean
-    private isDragging: boolean
     private dragStart: Coord
 
     constructor(cnvs: HTMLCanvasElement) {
         this.canvasEl = cnvs
 
         this.isPointerDown = false
-        this.isDragging = false
         this.dragStart = null
 
         // Bind events
@@ -52,7 +50,7 @@ class InputManager {
     onPointerUp(e: MouseEvent) {
         console.log('up')
         this.isPointerDown = false
-
+        this.dragStart = null
         EventQueue.trigger(PointerUp, this.dragStart, e)
     }
 
@@ -87,7 +85,6 @@ class InputManager {
         this.canvasEl = null
 
         this.isPointerDown = null
-        this.isDragging = null
         this.dragStart = null
     }
 }

@@ -3,8 +3,18 @@ import Handle from './Handles'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import SText from '@lib/shapes/primitives/SText'
 import SceneNode from '@lib/node/Scene'
+import { Coord, Size } from '@lib/types/shapes'
 
 // const { UpdateModifierHandlesPos } = EventTypes
+
+interface ShapeProps {
+    position: Coord
+    dimension: Size
+    scale: Coord
+    rotation: number
+    rotationAnchor: Coord
+    inverseWorldTransform: number[]
+}
 
 class ShapeModifier {
     private scene: SceneNode | null
@@ -14,6 +24,7 @@ class ShapeModifier {
     private handles: Handle[]
     private isHovered: boolean
     private selectedModifierHandle: Handle | null
+    private initialProps: ShapeProps | null = null
     private font: SText
 
     constructor() {
@@ -50,11 +61,35 @@ class ShapeModifier {
         }
     }
 
+    storeShapeInitialProps() {
+        if (!this.scene) return
+
+        const Matrix = this.resource.canvasKit.Matrix
+        const dim = this.scene.getShape().getDim()
+        const position = this.scene.getShape().getCoord()
+        const scale = this.scene.getShape().getScale()
+        const rotation = this.scene.getShape().getRotationAngle()
+        const rotationAnchor = this.scene.getShape().getRotationAnchorPoint()
+
+        if (this.initialProps === null) {
+            const initialProps = {
+                position: position,
+                dimension: dim,
+                scale: scale,
+                rotation: rotation,
+                rotationAnchor: rotationAnchor,
+                inverseWorldTransform: Matrix.invert(this.scene.getWorldMatrix()),
+            }
+
+            this.initialProps = initialProps
+        }
+    }
+
     handleRemoveModiferHandle() {
         console.log('finished dragging handle')
         if (!this.selectedModifierHandle) return
         this.selectedModifierHandle.isDragging = false
-        this.selectedModifierHandle.resetAnchorPoint()
+        this.initialProps = null
         this.selectedModifierHandle = null
     }
 
@@ -95,30 +130,27 @@ class ShapeModifier {
         return selected
     }
 
-    handleModifierDrag(x: number, y: number, e: MouseEvent) {
-        const { x: mx, y: my } = this.scene.worldToParentLocal(e.offsetX, e.offsetY)
-
-       
+    handleModifierDrag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    this.selectedModifierHandle.updateShapeRadii(mx, my, this.scene)
+                    this.selectedModifierHandle.updateShapeRadii(dx, dy, this.scene)
                     break
                 case 'size': {
-                    this.selectedModifierHandle.updateShapeDim(e.offsetX, e.offsetY, this.scene)
+                    this.selectedModifierHandle.updateShapeDim(dragStart, e, this.scene, this.initialProps)
                     break
                 }
                 case 'c-ratio':
-                    this.selectedModifierHandle.updateOvalRatio(mx, my, this.scene)
+                    this.selectedModifierHandle.updateOvalRatio(dx, dy, this.scene)
                     break
                 case 's-ratio':
-                    this.selectedModifierHandle.updateStarRatio(x, y, e, this.scene)
+                    this.selectedModifierHandle.updateStarRatio(dx, dy, e, this.scene)
                     break
                 case 'arc':
-                    this.selectedModifierHandle.updateShapeArc(x, y, e, this.scene)
+                    this.selectedModifierHandle.updateShapeArc(dx, dy, e, this.scene)
                     break
                 case 'vertices':
-                    this.selectedModifierHandle.updateShapeVertices(mx, my, this.scene)
+                    this.selectedModifierHandle.updateShapeVertices(dx, dy, this.scene)
                     break
                 case 'angle':
                     this.selectedModifierHandle.updateShapeAngle(e.offsetX, e.offsetY, this.scene)
@@ -133,10 +165,11 @@ class ShapeModifier {
         this.updateResizerPositions()
     }
 
-    drag(x: number, y: number, e: MouseEvent) {
+    drag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
         this.selectedModifierHandle.isDragging = true
         if (this.selectedModifierHandle.type === 'size') this.isHovered = false
-        this.handleModifierDrag(x, y, e)
+
+        this.handleModifierDrag(dragStart, dx, dy, e)
     }
 
     updateResizerPositions() {

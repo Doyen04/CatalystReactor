@@ -19,6 +19,7 @@ class SelectTool extends Tool {
 
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
+        this.shapeManager.handleMouseDown(dragStart, e)
         this.handleClickCount(e)
     }
 
@@ -174,7 +175,7 @@ class SelectTool extends Tool {
         const dx = e.offsetX - this.lastMouseCoord.x
         const dy = e.offsetY - this.lastMouseCoord.y
         if (this.shapeManager.hasSelection()) {
-            this.shapeManager.drag(dx, dy, e)
+            this.shapeManager.drag(dragStart, dx, dy, e)
         }
 
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
