@@ -177,7 +177,6 @@ class ShapeModifier {
     updateResizerPositions() {
         if (!this.scene) {
             console.log(' no shape for updateresizer')
-
             return
         }
 
@@ -198,6 +197,7 @@ class ShapeModifier {
         const pos = (width - tWidth) / 2
         this.font.setCoord(pos, height + 5)
     }
+
     setPaint(): void {
         if (!this.resource) return
 
@@ -210,6 +210,7 @@ class ShapeModifier {
 
         this.resource.paint.setColor(fillColor)
     }
+
     hasShape() {
         return this.scene.getShape() !== null
     }
@@ -234,9 +235,9 @@ class ShapeModifier {
     canDraw(): boolean {
         if (!this.scene && !this.scene.getShape()) return false
         const { width, height } = this.scene.getShape().getDim()
-        const minSize = 5
+        const MINSIZE = 5
 
-        return width < minSize || height < minSize
+        return width < MINSIZE || height < MINSIZE
     }
 
     collideRect(x: number, y: number): boolean {

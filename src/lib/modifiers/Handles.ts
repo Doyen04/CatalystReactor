@@ -4,6 +4,7 @@ import { Coord, HandlePos, HandleType } from '@lib/types/shapes'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import clamp from '@lib/helper/clamp'
 import SceneNode from '@lib/node/Scene'
+import { getHandleLocalPoint, getOppositeHandle } from '@lib/helper/handleUtil'
 
 export default class Handle {
     x: number
@@ -200,10 +201,10 @@ export default class Handle {
         const desiredScaleX = willFlipX ? -Math.sign(initialProps.scale.x || 1) : Math.sign(initialProps.scale.x || 1)
         const desiredScaleY = willFlipY ? -Math.sign(initialProps.scale.y || 1) : Math.sign(initialProps.scale.y || 1)
 
-        const fixedHandleKey = this.getOppositeHandle(this.pos)
-        const fixedLocal = this.getHandleLocalPoint(fixedHandleKey, initialProps.dimension.width, initialProps.dimension.height)
+        const fixedHandleKey = getOppositeHandle(this.pos)
+        const fixedLocal = getHandleLocalPoint(fixedHandleKey, initialProps.dimension.width, initialProps.dimension.height)
         const fixedWorld = Matrix.mapPoints(initialProps.worldTransform, [fixedLocal.x, fixedLocal.y])
-        const handleNewLocal = this.getHandleLocalPoint(fixedHandleKey, absW, absH)
+        const handleNewLocal = getHandleLocalPoint(fixedHandleKey, absW, absH)
 
         const zeroTransform = scene.buildZeroTransform(
             absW,
@@ -222,43 +223,6 @@ export default class Handle {
             scale: { x: desiredScaleX, y: desiredScaleY },
             dimension: { width: absW, height: absH },
         })
-    }
-
-    getOppositeHandle(pos: HandlePos) {
-        const map = {
-            'top-left': 'bottom-right',
-            'top-right': 'bottom-left',
-            'bottom-left': 'top-right',
-            'bottom-right': 'top-left',
-            top: 'bottom',
-            bottom: 'top',
-            left: 'right',
-            right: 'left',
-        }
-        return map[pos] || 'bottom-right'
-    }
-
-    getHandleLocalPoint(pos: HandlePos, width: number, height: number) {
-        switch (pos) {
-            case 'top-left':
-                return { x: 0, y: 0 }
-            case 'top-right':
-                return { x: width, y: 0 }
-            case 'bottom-left':
-                return { x: 0, y: height }
-            case 'bottom-right':
-                return { x: width, y: height }
-            case 'top':
-                return { x: width / 2, y: 0 }
-            case 'bottom':
-                return { x: width / 2, y: height }
-            case 'left':
-                return { x: 0, y: height / 2 }
-            case 'right':
-                return { x: width, y: height / 2 }
-            default:
-                return { x: width, y: height }
-        }
     }
 
     clampAngleToArc(t: number, start: number, end: number, prev: number): number {
