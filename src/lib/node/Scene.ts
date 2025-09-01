@@ -25,10 +25,7 @@ abstract class SceneNode {
     }
 
     updateScene(attrib: { position: Coord; dimension: Size }) {
-        const { x, y } = this.worldToParentLocal(attrib.position.x, attrib.position.y)
         const { transform } = this.shape.getProperties()
-
-        const { x: ax, y: ay } = transform.anchorPoint == null ? { x: 0, y: 0 } : transform.anchorPoint
 
         const Matrix = this.resource.canvasKit.Matrix
 
@@ -36,18 +33,12 @@ abstract class SceneNode {
         const oldWorldTrans = this.worldMatrix
 
         const T = Matrix.translated(attrib.position.x, attrib.position.y)
-        const R = Matrix.rotated(0, ax, ay)
-        const S = Matrix.scaled(1, 1, ax, ay)
-        const Tx = Matrix.multiply(T, R, S)
-
-        const Rx = Matrix.rotated(transform.rotation || 0, ax, ay)
 
         const inverseParentTrans = Matrix.invert(parentTrans)
-        const inverseR = Matrix.invert(Rx)
 
-        const newLocaltrans = Matrix.multiply(inverseR, inverseParentTrans, Tx)
+        const newLocaltrans = Matrix.multiply(inverseParentTrans, T)
 
-        console.log(newLocaltrans, 'newlocaltrans', x, y, transform.rotation, R, S, Tx, Rx)
+        console.log(newLocaltrans, 'newlocaltrans', transform.rotation)
         console.log(inverseParentTrans, 'parenttrans-inverse')
         console.log(oldWorldTrans, 'oldlocaltrans')
 
@@ -58,15 +49,47 @@ abstract class SceneNode {
         this.setDimension(Math.abs(attrib.dimension.width), Math.abs(attrib.dimension.height))
     }
 
-    getRadianQuadrant(theta) {
-        const twoPi = 2 * Math.PI
-        let angle = theta % twoPi
-        if (angle < 0) angle += twoPi
+    unrotateToLocal(worldX: number, worldY: number) {
+        const { transform } = this.shape.getProperties()
 
-        if (angle < Math.PI / 2) return 'Quadrant I' // 0 to π/2
-        else if (angle < Math.PI) return 'Quadrant II' // π/2 to π
-        else if (angle < (3 * Math.PI) / 2) return 'Quadrant III' // π to 3π/2
-        else return 'Quadrant IV' // 3π/2 to 2π
+        const { x: ax, y: ay } = transform.anchorPoint == null ? { x: 0, y: 0 } : transform.anchorPoint
+
+        const center = {
+            x: transform.x + ax,
+            y: transform.y + ay,
+        }
+
+        // Rotate mouse coordinates to local space
+        const cos = Math.cos(-transform.rotation)
+        const sin = Math.sin(-transform.rotation)
+        const dx = worldX - center.x
+        const dy = worldY - center.y
+
+        return {
+            x: center.x + (dx * cos - dy * sin),
+            y: center.y + (dx * sin + dy * cos),
+        }
+    }
+
+    rotateToLocal(worldX: number, worldY: number) {
+        const { transform } = this.shape.getProperties()
+
+        const { x: ax, y: ay } = transform.anchorPoint == null ? { x: 0, y: 0 } : transform.anchorPoint
+
+        const center = {
+            x: transform.x + ax,
+            y: transform.y + ay,
+        }
+
+        const cos = Math.cos(transform.rotation)
+        const sin = Math.sin(transform.rotation)
+        const dx = worldX - center.x
+        const dy = worldY - center.y
+
+        return {
+            x: center.x + (dx * cos - dy * sin),
+            y: center.y + (dx * sin + dy * cos),
+        }
     }
 
     setDimension(width: number, height: number): void {
@@ -238,11 +261,12 @@ abstract class SceneNode {
         return this.worldMatrix
     }
 
-    getBoundingAbsoluteRect() {
+    getBoundingUnrotatedAbsoluteRect() {
         const { width, height } = this.shape.getDim()
 
         // Transform from local coordinates to parent coordinates
-        const parentCorners = this.getAbsolutePosition()
+        let parentCorners = this.getAbsolutePosition()
+        parentCorners = this.unrotateToLocal(parentCorners.x, parentCorners.y)
 
         return {
             left: parentCorners.x,
