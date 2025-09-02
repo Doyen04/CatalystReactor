@@ -3,19 +3,10 @@ import Handle from './Handles'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import SText from '@lib/shapes/primitives/SText'
 import SceneNode from '@lib/node/Scene'
-import { Coord, Size } from '@lib/types/shapes'
+import { Coord } from '@lib/types/shapes'
+import { ShapeData } from './modifier'
 
 // const { UpdateModifierHandlesPos } = EventTypes
-
-interface ShapeProps {
-    position: Coord
-    dimension: Size
-    scale: Coord
-    rotation: number
-    rotationAnchor: Coord
-    inverseWorldTransform: number[]
-    worldTransform: number[]
-}
 
 class ShapeModifier {
     private scene: SceneNode | null
@@ -25,7 +16,7 @@ class ShapeModifier {
     private handles: Handle[]
     private isHovered: boolean
     private selectedModifierHandle: Handle | null
-    private initialProps: ShapeProps | null = null
+    private initialShapeData: ShapeData | null = null
     private font: SText
 
     constructor() {
@@ -62,7 +53,7 @@ class ShapeModifier {
         }
     }
 
-    storeShapeInitialProps() {
+    storeShapeInitialShapeData() {
         if (!this.scene) return
 
         const Matrix = this.resource.canvasKit.Matrix
@@ -72,8 +63,8 @@ class ShapeModifier {
         const rotation = this.scene.getShape().getRotationAngle()
         const rotationAnchor = this.scene.getShape().getRotationAnchorPoint()
 
-        if (this.initialProps === null) {
-            const initialProps = {
+        if (this.initialShapeData === null) {
+            const initialShapeData = {
                 position: position,
                 dimension: dim,
                 scale: scale,
@@ -83,7 +74,7 @@ class ShapeModifier {
                 inverseWorldTransform: Matrix.invert(this.scene.getWorldMatrix()),
             }
 
-            this.initialProps = initialProps
+            this.initialShapeData = initialShapeData
         }
     }
 
@@ -91,7 +82,7 @@ class ShapeModifier {
         console.log('finished dragging handle')
         if (!this.selectedModifierHandle) return
         this.selectedModifierHandle.isDragging = false
-        this.initialProps = null
+        this.initialShapeData = null
         this.selectedModifierHandle = null
     }
 
@@ -136,12 +127,14 @@ class ShapeModifier {
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    this.selectedModifierHandle.updateShapeRadii(e, this.scene, this.initialProps)
+                    this.selectedModifierHandle.updateShapeRadii(e, this.scene, this.initialShapeData)
                     break
-                case 'size': {
-                    this.selectedModifierHandle.updateShapeDim(dragStart, e, this.scene, this.initialProps)
+                case 'size':
+                    this.selectedModifierHandle.updateShapeDim(dragStart, e, this.scene, this.initialShapeData)
                     break
-                }
+                case 'angle':
+                    this.selectedModifierHandle.updateShapeAngle(e, this.scene, this.initialShapeData)
+                    break
                 case 'c-ratio':
                     this.selectedModifierHandle.updateOvalRatio(dx, dy, this.scene)
                     break
@@ -154,8 +147,19 @@ class ShapeModifier {
                 case 'vertices':
                     this.selectedModifierHandle.updateShapeVertices(dx, dy, this.scene)
                     break
+                default:
+                    break
+            }
+        }
+    }
+
+    handleModifierDown(dragStart: Coord, e: MouseEvent) {
+        if (!this.scene) return
+
+        if (this.selectedModifierHandle) {
+            switch (this.selectedModifierHandle.type) {
                 case 'angle':
-                    this.selectedModifierHandle.updateShapeAngle(e.offsetX, e.offsetY, this.scene)
+                    this.selectedModifierHandle.shapeAngleOnMouseDown(e, this.scene, this.initialShapeData)
                     break
                 default:
                     break
@@ -210,7 +214,8 @@ class ShapeModifier {
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
         if (!this.scene) return
 
-        this.storeShapeInitialProps()
+        this.storeShapeInitialShapeData()
+        this.handleModifierDown(dragStart, e)
     }
 
     hasShape() {

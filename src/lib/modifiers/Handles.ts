@@ -5,6 +5,7 @@ import CanvasKitResources from '@lib/core/CanvasKitResource'
 import clamp from '@lib/helper/clamp'
 import SceneNode from '@lib/node/Scene'
 import { getHandleLocalPoint, getOppositeHandle } from '@lib/helper/handleUtil'
+import { ShapeData } from './modifier'
 
 export default class Handle {
     x: number
@@ -87,10 +88,10 @@ export default class Handle {
         return ratio
     }
 
-    updateShapeRadii(e: MouseEvent, scene: SceneNode, initialProps) {
+    updateShapeRadii(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
         const { left, right, top, bottom } = scene.getShape().getRelativeBoundingRect()
         const Matrix = this.resource.canvasKit.Matrix
-        const localCurrent = Matrix.mapPoints(initialProps.inverseWorldTransform, [e.offsetX, e.offsetY])
+        const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
 
         console.log(left, right, top, bottom, e.offsetX, e.offsetY)
 
@@ -154,45 +155,45 @@ export default class Handle {
         scene.getShape().setBorderRadius(newRadius, this.pos)
     }
 
-    updateShapeDim(dragStart: Coord, e: MouseEvent, scene: SceneNode, initialProps) {
+    updateShapeDim(dragStart: Coord, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
         const Matrix = this.resource.canvasKit.Matrix
-        const localStart = Matrix.mapPoints(initialProps.inverseWorldTransform, [dragStart.x, dragStart.y])
-        const localCurrent = Matrix.mapPoints(initialProps.inverseWorldTransform, [e.offsetX, e.offsetY])
+        const localStart = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [dragStart.x, dragStart.y])
+        const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
 
-        let newWidth = initialProps.dimension.width
-        let newHeight = initialProps.dimension.height
+        let newWidth = initialShapeData.dimension.width
+        let newHeight = initialShapeData.dimension.height
 
         const dx = localCurrent[0] - localStart[0]
         const dy = localCurrent[1] - localStart[1]
 
         switch (this.pos) {
             case 'top-left':
-                newWidth = initialProps.dimension.width - dx
-                newHeight = initialProps.dimension.height - dy
+                newWidth = initialShapeData.dimension.width - dx
+                newHeight = initialShapeData.dimension.height - dy
                 break
             case 'top-right':
-                newWidth = initialProps.dimension.width + dx
-                newHeight = initialProps.dimension.height - dy
+                newWidth = initialShapeData.dimension.width + dx
+                newHeight = initialShapeData.dimension.height - dy
                 break
             case 'bottom-left':
-                newWidth = initialProps.dimension.width - dx
-                newHeight = initialProps.dimension.height + dy
+                newWidth = initialShapeData.dimension.width - dx
+                newHeight = initialShapeData.dimension.height + dy
                 break
             case 'bottom-right':
-                newWidth = initialProps.dimension.width + dx
-                newHeight = initialProps.dimension.height + dy
+                newWidth = initialShapeData.dimension.width + dx
+                newHeight = initialShapeData.dimension.height + dy
                 break
             case 'top':
-                newHeight = initialProps.dimension.height - dy
+                newHeight = initialShapeData.dimension.height - dy
                 break
             case 'bottom':
-                newHeight = initialProps.dimension.height + dy
+                newHeight = initialShapeData.dimension.height + dy
                 break
             case 'left':
-                newWidth = initialProps.dimension.width - dx
+                newWidth = initialShapeData.dimension.width - dx
                 break
             case 'right':
-                newWidth = initialProps.dimension.width + dx
+                newWidth = initialShapeData.dimension.width + dx
                 break
         }
 
@@ -202,25 +203,25 @@ export default class Handle {
         const absW = Math.max(MIN_SIZE, Math.abs(newWidth))
         const absH = Math.max(MIN_SIZE, Math.abs(newHeight))
 
-        const desiredScaleX = willFlipX ? -Math.sign(initialProps.scale.x || 1) : Math.sign(initialProps.scale.x || 1)
-        const desiredScaleY = willFlipY ? -Math.sign(initialProps.scale.y || 1) : Math.sign(initialProps.scale.y || 1)
+        const desiredScaleX = willFlipX ? -Math.sign(initialShapeData.scale.x || 1) : Math.sign(initialShapeData.scale.x || 1)
+        const desiredScaleY = willFlipY ? -Math.sign(initialShapeData.scale.y || 1) : Math.sign(initialShapeData.scale.y || 1)
 
         const fixedHandleKey = getOppositeHandle(this.pos)
-        const fixedLocal = getHandleLocalPoint(fixedHandleKey, initialProps.dimension.width, initialProps.dimension.height)
-        const fixedWorld = Matrix.mapPoints(initialProps.worldTransform, [fixedLocal.x, fixedLocal.y])
+        const fixedLocal = getHandleLocalPoint(fixedHandleKey, initialShapeData.dimension.width, initialShapeData.dimension.height)
+        const fixedWorld = Matrix.mapPoints(initialShapeData.worldTransform, [fixedLocal.x, fixedLocal.y])
         const handleNewLocal = getHandleLocalPoint(fixedHandleKey, absW, absH)
 
         const zeroTransform = scene.buildZeroTransform(
             absW,
             absH,
-            initialProps.rotation,
+            initialShapeData.rotation,
             { x: desiredScaleX, y: desiredScaleY },
-            initialProps.rotationAnchor
+            initialShapeData.rotationAnchor
         )
 
         const offset = Matrix.mapPoints(zeroTransform, [handleNewLocal.x, handleNewLocal.y])
-        const posX = (fixedWorld ? fixedWorld[0] : initialProps.position.x) - offset[0]
-        const posY = (fixedWorld ? fixedWorld[1] : initialProps.position.y) - offset[1]
+        const posX = (fixedWorld ? fixedWorld[0] : initialShapeData.position.x) - offset[0]
+        const posY = (fixedWorld ? fixedWorld[1] : initialShapeData.position.y) - offset[1]
 
         console.log(offset, posX, posY, fixedWorld, this.pos)
 
@@ -345,31 +346,33 @@ export default class Handle {
         }
     }
 
-    updateShapeAngle(x: number, y: number, scene: SceneNode) {
+    shapeAngleOnMouseDown(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+        const Matrix = this.resource.canvasKit.Matrix
+        const center = Matrix.mapPoints(initialShapeData.worldTransform, [
+            initialShapeData.dimension.width * initialShapeData.rotationAnchor.x,
+            initialShapeData.dimension.height * initialShapeData.rotationAnchor.y,
+        ])
+
+        const initialMouseAngle = Math.atan2(e.offsetY - center[1], e.offsetX - center[0])
+        initialShapeData.initialMouseAngle = initialMouseAngle
+    }
+
+    updateShapeAngle(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
         const shape = scene.getShape()
         if (!shape) return
+        const Matrix = this.resource.canvasKit.Matrix
+        const center = Matrix.mapPoints(initialShapeData.worldTransform, [
+            initialShapeData.dimension.width * initialShapeData.rotationAnchor.x,
+            initialShapeData.dimension.height * initialShapeData.rotationAnchor.y,
+        ])
 
-        const { x: rx, y: ry } = shape.getRotationAnchorPoint()
-        const { width, height } = shape.getDim()
-        const { x: sx, y: sy } = shape.getCoord()
+        const currentMouseAngle = Math.atan2(e.offsetY - center[1], e.offsetX - center[0])
 
-        const prevAngle = scene.getAngle()
+        const startMouseAngle = initialShapeData.initialMouseAngle ?? currentMouseAngle
+        const delta = currentMouseAngle - startMouseAngle
+        const baseRotation = initialShapeData.rotation
 
-        const offsetX = rx * width
-        const offsetY = ry * height
-
-        const ax = offsetX + sx
-        const ay = offsetY + sy
-
-        // Angle in radians
-        const cy = y - ay
-        const cx = x - ax
-
-        const angle = Math.atan2(cy, cx)
-        // Normalize angle to 0-2π range
-        const delta = angle - prevAngle
-
-        scene.setAngle(prevAngle + delta)
+        scene.setAngle(baseRotation + delta)
     }
 
     createPaint() {
