@@ -6,9 +6,6 @@ import { ArcSegment, Coord, Properties } from '@lib/types/shapes'
 class Oval extends Shape {
     private radiusX: number
     private radiusY: number
-
-    private isFlippedX: boolean
-    private isFlippedY: boolean
     private centerX: number
     private centerY: number
     private arcSegment: ArcSegment
@@ -18,8 +15,6 @@ class Oval extends Shape {
         this.arcSegment = { startAngle: 0, endAngle: 2 * Math.PI, ratio: 0 }
         this.radiusX = 0
         this.radiusY = 0
-        this.transform.isFlippedX = false
-        this.transform.isFlippedY = false
         this.centerX = 0
         this.centerY = 0
         this.calculateBoundingRect()
@@ -77,8 +72,14 @@ class Oval extends Shape {
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
 
-        this.isFlippedX = deltaX < 0
-        this.isFlippedY = deltaY < 0
+        const willFlipX = deltaX < 0
+        const willFlipY = deltaY < 0
+
+        const scaleX = willFlipX ? -1 : 1
+        const scaleY = willFlipY ? -1 : 1
+
+        this.transform.scaleX = scaleX
+        this.transform.scaleY = scaleY
 
         if (shiftKey) {
             // Circle mode - use the larger distance for perfect circle
@@ -111,12 +112,6 @@ class Oval extends Shape {
         this.setDim(prop.size.width, prop.size.height)
         this.style = prop.style
         this.arcSegment = prop.arcSegment
-    }
-
-    handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
-        if (this.transform.isFlippedX === isFlippedX && this.transform.isFlippedY === isFlippedY) return
-        this.transform.isFlippedX = isFlippedX
-        this.transform.isFlippedY = isFlippedY
     }
 
     override getDim(): { width: number; height: number } {
@@ -178,6 +173,8 @@ class Oval extends Shape {
 
         const innerRadiusX = this.radiusX * this.arcSegment.ratio
         const innerRadiusY = this.radiusY * this.arcSegment.ratio
+        
+        console.log(handle.isDragging)
 
         const handleAngle = handle.isDragging ? handle.handleRatioAngle : (this.arcSegment.startAngle + this.arcSegment.endAngle) / 2
 
@@ -216,10 +213,10 @@ class Oval extends Shape {
 
     override calculateBoundingRect(): void {
         this.boundingRect = {
-            top: this.transform.y,
-            left: this.transform.x,
-            bottom: this.transform.y + this.radiusY * 2,
-            right: this.transform.x + this.radiusX * 2,
+            top: 0,
+            left: 0,
+            bottom: this.radiusY * 2,
+            right: this.radiusX * 2,
         }
     }
 

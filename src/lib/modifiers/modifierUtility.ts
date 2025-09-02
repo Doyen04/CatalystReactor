@@ -18,24 +18,6 @@ function resource(): CanvasKitResources {
     }
 }
 
-export function calculateRatioFromMousePosition(e: Coord, centerX: number, centerY: number, width: number, height: number): number {
-    const deltaX = e.x - centerX
-    const deltaY = e.y - centerY
-    const radiusX = width / 2
-    const radiusY = height / 2
-
-    const deg = Math.atan2(deltaY, deltaX)
-    const cos = Math.cos(deg)
-    const sin = Math.sin(deg)
-
-    const ellipseRadiusAtAngle = Math.sqrt((radiusX * radiusX * radiusY * radiusY) / (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin))
-
-    const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-    const ratio = Math.min(0.99, distanceFromCenter / ellipseRadiusAtAngle)
-
-    return ratio
-}
-
 export function updateShapeRadii(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const { left, right, top, bottom } = scene.getRelativeBoundingRect()
     const Matrix = resource().canvasKit.Matrix
@@ -186,28 +168,54 @@ export function clampAngleToArc(t: number, start: number, end: number, prev: num
     return t0
 }
 
-export function updateOvalRatio(x: number, y: number, scene: SceneNode) {
-    const { x: cx, y: cy } = scene.getCenterCoord()
-    const { width, height } = scene.getDim()
-
+function calculateRatioFromMousePosition(e: Coord, centerX: number, centerY: number, width: number, height: number): number {
+    const deltaX = e.x - centerX
+    const deltaY = e.y - centerY
     const radiusX = width / 2
     const radiusY = height / 2
 
-    const deltaX = x - cx
-    const deltaY = y - cy
+    const deg = Math.atan2(deltaY, deltaX)
+    const cos = Math.cos(deg)
+    const sin = Math.sin(deg)
+
+    const ellipseRadiusAtAngle = Math.sqrt((radiusX * radiusX * radiusY * radiusY) / (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin))
+
+    const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+    const ratio = Math.min(0.99, distanceFromCenter / ellipseRadiusAtAngle)
+
+    return ratio
+}
+
+export function updateOvalRatio(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+    const Matrix = resource().canvasKit.Matrix
+    const center = Matrix.mapPoints(initialShapeData.worldTransform, [
+        initialShapeData.dimension.width * initialShapeData.rotationAnchor.x,
+        initialShapeData.dimension.height * initialShapeData.rotationAnchor.y,
+    ])
+
+    const deltaX = e.offsetX - center[0]
+    const deltaY = e.offsetY - center[1]
+    const radiusX = initialShapeData.dimension.width / 2
+    const radiusY = initialShapeData.dimension.height / 2
 
     //parametric deg
     const handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
     const { start, end } = scene.getArcAngles()
     if (scene.isArc()) {
         console.log('inside ')
-        const Angle = this.clampAngleToArc(handleAngle, start, end, this.handleRatioAngle)
-        this.handleRatioAngle = Angle
+        const Angle = clampAngleToArc(handleAngle, start, end, handle.handleRatioAngle)
+        handle.handleRatioAngle = Angle
     } else {
-        this.handleRatioAngle = handleAngle
+        handle.handleRatioAngle = handleAngle
     }
 
-    const ratio = calculateRatioFromMousePosition({ x, y }, cx, cy, width, height)
+    const ratio = calculateRatioFromMousePosition(
+        { x: e.offsetX, y: e.offsetY },
+        center[0],
+        center[1],
+        initialShapeData.dimension.width,
+        initialShapeData.dimension.height
+    )
     scene.setRatio(ratio)
 }
 

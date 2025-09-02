@@ -114,6 +114,7 @@ class ShapeManager {
     }
 
     finishDrag() {
+    
         if (!this.scene) return
         this.selected = false
         this.shapeModifier.handleRemoveModiferHandle()

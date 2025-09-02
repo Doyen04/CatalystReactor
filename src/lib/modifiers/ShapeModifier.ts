@@ -27,10 +27,14 @@ class ShapeModifier {
     private isHovered: boolean
     private selectedModifierHandle: Handle | null
     private initialShapeData: ShapeData | null = null
+    private handleArcAngle: number | null = null
+    private handleRatioAngle: number | null = null
     private font: SText
 
     constructor() {
         this.scene = null
+        this.handleArcAngle = null
+        this.handleRatioAngle = null
         this.strokeColor = '#00f'
         this.strokeWidth = 1
         this.handles = []
@@ -92,9 +96,9 @@ class ShapeModifier {
     handleRemoveModiferHandle() {
         console.log('finished dragging handle')
         this.initialShapeData = null
-        this.selectedModifierHandle = null
         if (this.selectedModifierHandle) {
             this.selectedModifierHandle.isDragging = false
+            this.selectedModifierHandle = null
         }
     }
 
@@ -139,16 +143,16 @@ class ShapeModifier {
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    updateShapeRadii(this.selectedModifierHandle,e, this.scene, this.initialShapeData)
+                    updateShapeRadii(this.selectedModifierHandle, e, this.scene, this.initialShapeData)
                     break
                 case 'size':
-                    updateShapeDim(this.selectedModifierHandle,dragStart, e, this.scene, this.initialShapeData)
+                    updateShapeDim(this.selectedModifierHandle, dragStart, e, this.scene, this.initialShapeData)
                     break
                 case 'angle':
                     updateShapeAngle(e, this.scene, this.initialShapeData)
                     break
                 case 'c-ratio':
-                    updateOvalRatio( dx, dy, this.scene)
+                    updateOvalRatio(this.selectedModifierHandle, e, this.scene, this.initialShapeData)
                     break
                 case 's-ratio':
                     updateStarRatio(dx, dy, e, this.scene)
@@ -191,6 +195,8 @@ class ShapeModifier {
     }
 
     updateResizerPositions() {
+        console.log('bo')
+
         if (!this.scene) {
             console.log(' no shape for updateresizer')
             return
