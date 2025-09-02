@@ -5,7 +5,6 @@ import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import throttle from '@lib/helper/throttle'
 import Handle from '@lib/modifiers/Handles'
 import SceneNode from '@lib/node/Scene'
-import { Canvas } from 'canvaskit-wasm'
 
 class ShapeManager {
     private scene: SceneNode | null = null
@@ -21,27 +20,25 @@ class ShapeManager {
 
     drawShape(dragStart: Coord, e: MouseEvent) {
         this.scene.drawOnDrag(dragStart, e)
-        this.shapeModifier.updateResizerPositions(this.scene)
+        this.shapeModifier.update()
 
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
-        this.shapeModifier.handleMouseDown(dragStart, e, this.scene)
+        this.shapeModifier.handleMouseDown(dragStart, e)
         console.log('not used', dragStart, e)
     }
 
     drag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
         if (this.shapeModifier.hasSelectedHandle()) {
-            this.shapeModifier.drag(dragStart, dx, dy, e, this.scene)
+            this.shapeModifier.drag(dragStart, dx, dy, e)
         } else {
-            console.log('before-dragging', this.scene.getCoord());
             this.scene.move(dx, dy)
-            console.log('after-dragging', this.scene.getCoord());
         }
 
-        this.shapeModifier.updateResizerPositions(this.scene)
+        this.shapeModifier.update()
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
@@ -57,7 +54,7 @@ class ShapeManager {
             console.log('Shape removed: too small add default size')
         }
 
-        this.shapeModifier.updateResizerPositions(this.scene)
+        this.shapeModifier.update()
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
@@ -72,7 +69,7 @@ class ShapeManager {
 
     attachNode(scene: SceneNode) {
         this.scene = scene
-        this.shapeModifier.setUpHandles(scene)
+        this.shapeModifier.attachShape(scene)
         this.selected = true
         // Optionally sync initial props:
         const props = this.scene.getProperties()
@@ -81,6 +78,7 @@ class ShapeManager {
 
     detachShape() {
         this.scene = null
+        this.shapeModifier.detachShape()
         useSceneStore.getState().clearProperties()
     }
 
@@ -91,7 +89,7 @@ class ShapeManager {
             ...prop,
             [key]: value,
         })
-        this.shapeModifier.updateResizerPositions(this.scene)
+        this.shapeModifier.update()
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
@@ -99,14 +97,14 @@ class ShapeManager {
     handleHover(x: number, y: number): Handle | null {
         if (!this.shapeModifier || !this.scene) return null
 
-        const isCollide = this.shapeModifier.collideRect(x, y, this.scene)
+        const isCollide = this.shapeModifier.collideRect(x, y)
         if (isCollide) {
             this.shapeModifier.setHover(true)
         } else {
             this.shapeModifier.setHover(false)
         }
 
-        return this.shapeModifier.selectModifierHandles(x, y, this.scene)
+        return this.shapeModifier.selectModifier(x, y)
     }
 
     resetHover(scene: SceneNode | null) {
@@ -119,7 +117,7 @@ class ShapeManager {
         if (!this.scene) return
         this.selected = false
         this.shapeModifier.handleRemoveModiferHandle()
-        this.shapeModifier.updateResizerPositions(this.scene)
+        this.shapeModifier.update()
     }
 
     collide(x: number, y: number): boolean {
@@ -128,7 +126,7 @@ class ShapeManager {
             return false
         }
 
-        const handle = this.shapeModifier.selectModifierHandles(x, y, this.scene)
+        const handle = this.shapeModifier.selectModifier(x, y)
         console.log('selected handle:', handle)
 
         if (handle) {
@@ -137,10 +135,6 @@ class ShapeManager {
         }
         this.selected = this.scene.pointInShape(x, y) ? true : false
         return this.selected
-    }
-
-    draw(skCnvs: Canvas) {
-        this.shapeModifier.draw(skCnvs, this.scene)
     }
 
     // Additional methods: move, resize, updateBorderRadius, etc.
