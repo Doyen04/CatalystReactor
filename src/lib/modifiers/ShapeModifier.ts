@@ -136,7 +136,7 @@ class ShapeModifier {
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    this.selectedModifierHandle.updateShapeRadii(dx, dy, this.scene)
+                    this.selectedModifierHandle.updateShapeRadii(e, this.scene, this.initialProps)
                     break
                 case 'size': {
                     this.selectedModifierHandle.updateShapeDim(dragStart, e, this.scene, this.initialProps)

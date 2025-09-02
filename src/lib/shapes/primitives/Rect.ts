@@ -87,46 +87,46 @@ class Rectangle extends Shape {
     }
 
     handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
-        if (this.transform.isFlippedX === isFlippedX && this.transform.isFlippedY === isFlippedY) return
-        this.transform.isFlippedX = isFlippedX
-        this.transform.isFlippedY = isFlippedY
-        this.flippedRadii()
+        // if (this.transform.isFlippedX === isFlippedX && this.transform.isFlippedY === isFlippedY) return
+        // this.transform.isFlippedX = isFlippedX
+        // this.transform.isFlippedY = isFlippedY
+        // this.flippedRadii()
     }
 
-    protected flippedRadii = () => {
-        let radii = structuredClone(this.bdradius)
+    // protected flippedRadii = () => {
+    //     let radii = structuredClone(this.bdradius)
 
-        if (this.transform.isFlippedX && this.transform.isFlippedY) {
-            // opposite corners
-            radii = {
-                'top-left': this.bdradius['bottom-right'],
-                'top-right': this.bdradius['bottom-left'],
-                'bottom-right': this.bdradius['top-left'],
-                'bottom-left': this.bdradius['top-right'],
-                locked: this.bdradius.locked,
-            }
-        } else if (this.transform.isFlippedX) {
-            // swap left/right
-            radii = {
-                'top-left': this.bdradius['top-right'],
-                'top-right': this.bdradius['top-left'],
-                'bottom-right': this.bdradius['bottom-left'],
-                'bottom-left': this.bdradius['bottom-right'],
-                locked: this.bdradius.locked,
-            }
-        } else if (this.transform.isFlippedY) {
-            // swap top/bottom
-            radii = {
-                'top-left': this.bdradius['bottom-left'],
-                'top-right': this.bdradius['bottom-right'],
-                'bottom-right': this.bdradius['top-right'],
-                'bottom-left': this.bdradius['top-left'],
-                locked: this.bdradius.locked,
-            }
-        }
+    //     if (this.transform.isFlippedX && this.transform.isFlippedY) {
+    //         // opposite corners
+    //         radii = {
+    //             'top-left': this.bdradius['bottom-right'],
+    //             'top-right': this.bdradius['bottom-left'],
+    //             'bottom-right': this.bdradius['top-left'],
+    //             'bottom-left': this.bdradius['top-right'],
+    //             locked: this.bdradius.locked,
+    //         }
+    //     } else if (this.transform.isFlippedX) {
+    //         // swap left/right
+    //         radii = {
+    //             'top-left': this.bdradius['top-right'],
+    //             'top-right': this.bdradius['top-left'],
+    //             'bottom-right': this.bdradius['bottom-left'],
+    //             'bottom-left': this.bdradius['bottom-right'],
+    //             locked: this.bdradius.locked,
+    //         }
+    //     } else if (this.transform.isFlippedY) {
+    //         // swap top/bottom
+    //         radii = {
+    //             'top-left': this.bdradius['bottom-left'],
+    //             'top-right': this.bdradius['bottom-right'],
+    //             'bottom-right': this.bdradius['top-right'],
+    //             'bottom-left': this.bdradius['top-left'],
+    //             locked: this.bdradius.locked,
+    //         }
+    //     }
 
-        return radii
-    }
+    //     return radii
+    // }
 
     override setProperties(prop: Properties): void {
         this.transform = prop.transform
@@ -146,7 +146,7 @@ class Rectangle extends Shape {
         const { width, height } = this.dimension
         const max = Math.min(width, height)
 
-        const temp = this.flippedRadii()
+        const temp = this.bdradius
 
         if (!this.hasRadius()) {
             return { ...temp }
@@ -193,7 +193,7 @@ class Rectangle extends Shape {
             transform: { ...this.transform },
             size: { ...this.dimension },
             style: { ...this.style },
-            borderRadius: { ...this.flippedRadii() },
+            borderRadius: { ...this.bdradius },
         }
     }
 

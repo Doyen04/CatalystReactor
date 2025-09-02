@@ -87,16 +87,20 @@ export default class Handle {
         return ratio
     }
 
-    updateShapeRadii(x: number, y: number, scene: SceneNode) {
+    updateShapeRadii(e: MouseEvent, scene: SceneNode, initialProps) {
         const { left, right, top, bottom } = scene.getShape().getBoundingRect()
+        const Matrix = this.resource.canvasKit.Matrix
+        const localCurrent = Matrix.mapPoints(initialProps.inverseWorldTransform, [e.offsetX, e.offsetY])
 
-        console.log(left, right, top, bottom, x, y)
+        console.log(left, right, top, bottom, e.offsetX, e.offsetY)
 
         let cornerX: number,
             cornerY: number,
             distX: number,
             distY: number,
             newRadius = 0
+
+        const [x, y] = localCurrent
 
         switch (this.pos) {
             case 'top-left':
@@ -217,6 +221,8 @@ export default class Handle {
         const offset = Matrix.mapPoints(zeroTransform, [handleNewLocal.x, handleNewLocal.y])
         const posX = (fixedWorld ? fixedWorld[0] : initialProps.position.x) - offset[0]
         const posY = (fixedWorld ? fixedWorld[1] : initialProps.position.y) - offset[1]
+
+        console.log(offset, posX, posY, fixedWorld, this.pos)
 
         scene.updateScene({
             position: { x: Math.floor(posX), y: Math.floor(posY) },
