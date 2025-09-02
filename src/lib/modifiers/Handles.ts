@@ -88,7 +88,7 @@ export default class Handle {
     }
 
     updateShapeRadii(e: MouseEvent, scene: SceneNode, initialProps) {
-        const { left, right, top, bottom } = scene.getShape().getBoundingRect()
+        const { left, right, top, bottom } = scene.getShape().getRelativeBoundingRect()
         const Matrix = this.resource.canvasKit.Matrix
         const localCurrent = Matrix.mapPoints(initialProps.inverseWorldTransform, [e.offsetX, e.offsetY])
 

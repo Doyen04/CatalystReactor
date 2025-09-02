@@ -357,7 +357,7 @@ export interface IShape {
     type?: ShapeType
 
     getShapeType(): ShapeType
-    getBoundingRect(): BoundingRect
+    getRelativeBoundingRect(): BoundingRect
     getRotationAnchorPoint(): Coord
     createCanvasKitImage(image: ArrayBuffer | null): void
     handleFlip(isFlippedX: boolean, isFlippedY: boolean): void

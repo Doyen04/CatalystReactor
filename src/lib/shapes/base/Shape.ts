@@ -99,7 +99,7 @@ abstract class Shape implements IShape {
         }
     }
 
-    getBoundingRect(): BoundingRect {
+    getRelativeBoundingRect(): BoundingRect {
         return structuredClone(this.boundingRect)
     }
 
