@@ -1,5 +1,6 @@
 import CanvasKitResources from '@lib/core/CanvasKitResource'
-import { BoundingRect, Coord, IShape, Size } from '@lib/types/shapes'
+import Handle from '@lib/modifiers/Handles'
+import { BoundingRect, Coord, HandlePos, IShape, Properties, Size } from '@lib/types/shapes'
 import { Canvas } from 'canvaskit-wasm'
 
 abstract class SceneNode {
@@ -50,12 +51,6 @@ abstract class SceneNode {
         this.canComputeMatrix = true
     }
 
-    setFlip(isFlippedX: boolean, isFlippedY: boolean): void {
-        this.shape.handleFlip(isFlippedX, isFlippedY)
-
-        this.canComputeMatrix = true
-    }
-
     setPosition(x: number, y: number): void {
         this.shape.setCoord(x, y)
 
@@ -66,6 +61,7 @@ abstract class SceneNode {
         this.shape.moveShape(dx, dy)
 
         this.canComputeMatrix = true
+        console.log(this.worldMatrix, 'aftermoveinscene')
     }
 
     setParent(parent: SceneNode) {
@@ -139,6 +135,7 @@ abstract class SceneNode {
         const Matrix = this.resource.canvasKit.Matrix
 
         const { x, y } = this.shape.getCoord()
+
         const { width, height } = this.shape.getDim()
         const rotation = this.shape.getRotationAngle()
         const { x: sx, y: sy } = this.shape.getScale()
@@ -185,10 +182,6 @@ abstract class SceneNode {
         return { left, top, right, bottom }
     }
 
-    getShape(): IShape {
-        return this.shape
-    }
-
     getAngle(): number {
         const rotation = this.shape.getRotationAngle()
         return rotation || 0
@@ -206,12 +199,128 @@ abstract class SceneNode {
         return this.worldMatrix
     }
 
+    getDim(): { width: number; height: number } | null {
+        return this.shape ? this.shape.getDim() : null
+    }
+
+    getProperties(): Properties | null {
+        return this.shape ? this.shape.getProperties() : null
+    }
+
+    getCoord(): Coord | null {
+        return this.shape ? this.shape.getCoord() : null
+    }
+
+    getModifierHandlesPos(handle: Handle): { x: number; y: number } | null {
+        if (!this.shape) return null
+
+        return this.shape.getModifierHandlesPos(handle)
+    }
+
+    getScale(): { x: number; y: number } | null {
+        return this.shape ? this.shape.getScale() : null
+    }
+
+    getRotationAngle(): number | null {
+        return this.shape ? this.shape.getRotationAngle() : null
+    }
+
+    getRotationAnchorPoint(): { x: number; y: number } | null {
+        return this.shape ? this.shape.getRotationAnchorPoint() : null
+    }
+
+    getModifierHandles(): Handle[] | null {
+        return this.shape ? this.shape.getModifierHandles() : null
+    }
+
+    getRelativeBoundingRect(): BoundingRect | null {
+        if (!this.shape) return null
+      
+        return this.shape.getRelativeBoundingRect()
+    }
+
+    getCenterCoord(): { x: number; y: number } | null {
+        if (!this.shape) return null
+
+        return this.shape.getCenterCoord()
+    }
+
+    getArcAngles(): { start: number; end: number } | null {
+        if (!this.shape) return null
+
+        return this.shape.getArcAngles()
+    }
+
+    getVertexCount(): number | null {
+        if (!this.shape) return null
+
+        return this.shape.getVertexCount()
+    }
+
+    getShapeType(): string | null {
+        if (!this.shape) return null
+
+        return this.shape.getShapeType()
+    }
+
+    getVertex(prev: number, vertex: number): { x: number; y: number } | null {
+        if (!this.shape) return null
+
+        return this.shape.getVertex(prev, vertex)
+    }
+
+    isArc(): boolean {
+        if (!this.shape) return false
+
+        return this.shape.isArc()
+    }
+
+    setVertexCount(count: number): void {
+        if (this.shape) {
+            this.shape.setVertexCount(count)
+        }
+    }
+
+    setArc( start: number, end: number ): void {
+        if (this.shape) {
+            this.shape.setArc( start, end )
+        }
+    }
+
+    setRatio(ratio: number): void {
+        if (this.shape) {
+            this.shape.setRatio(ratio)
+        }
+    }
+
+    setBorderRadius(radius: number, position: HandlePos): void {
+        if (this.shape) {
+            this.shape.setBorderRadius(radius, position)
+        }
+    }
+
+    setProperties(properties: Properties): void {
+        if (this.shape) {
+            this.shape.setProperties(properties)
+        }
+    }
+
     hasShape(): boolean {
         return this.shape != null
     }
 
+    pointInShape(x: number, y: number): boolean {
+        return this.shape ? this.shape.pointInShape(x, y) : false
+    }
+
     setLocalMatrix(matrix: number[]) {
         this.localMatrix = matrix
+    }
+
+    setHovered(hovered: boolean): void {
+        if (this.shape) {
+            this.shape.setHovered(hovered)
+        }
     }
 
     removeChildNode(child: SceneNode): void {

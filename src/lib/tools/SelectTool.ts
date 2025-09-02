@@ -65,22 +65,22 @@ class SelectTool extends Tool {
         }
 
         this.shapeManager.attachNode(scene)
-        if (this.canEdit(scene.getShape()) && scene.getShape().pointInShape(e.offsetX, e.offsetY)) {
-            scene.getShape().setCursorPosFromCoord(e.offsetX, e.offsetY)
-        }
+        // if (this.canEdit(scene.getScene()) && scene.pointInShape(e.offsetX, e.offsetY)) {
+        //     scene.setCursorPosFromCoord(e.offsetX, e.offsetY)
+        // }
     }
 
     private handleDoubleClick(e: MouseEvent) {
-        console.log('Double click detected')
+        console.log('Double click detected',e)
 
-        if (this.shapeManager.hasShape()) {
-            const shape = this.shapeManager.currentShape
+        // if (this.shapeManager.hasShape()) {
+        //     const shape = this.shapeManager.currentShape
 
-            if (shape.pointInShape(e.offsetX, e.offsetY)) {
-                shape.startEditing()
-                shape.selectAll()
-            }
-        }
+        //     if (shape.pointInShape(e.offsetX, e.offsetY)) {
+        //         shape.startEditing()
+        //         shape.selectAll()
+        //     }
+        // }
     }
 
     override handlePointerUp() {
@@ -157,13 +157,13 @@ class SelectTool extends Tool {
 
     setHoveredShape(scene: SceneNode) {
         if (this.hoveredScene) {
-            this.hoveredScene.getShape().setHovered(false)
+            this.hoveredScene.setHovered(false)
         }
         this.hoveredScene = scene
 
         if (!scene) return
         this.shapeManager.resetHover(scene)
-        this.hoveredScene.getShape().setHovered(true)
+        this.hoveredScene.setHovered(true)
     }
 
     override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
@@ -174,9 +174,8 @@ class SelectTool extends Tool {
 
         const dx = e.offsetX - this.lastMouseCoord.x
         const dy = e.offsetY - this.lastMouseCoord.y
-        if (this.shapeManager.hasSelection()) {
-            this.shapeManager.drag(dragStart, dx, dy, e)
-        }
+
+        this.shapeManager.drag(dragStart, dx, dy, e)
 
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
     }

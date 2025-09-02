@@ -24,8 +24,6 @@ class Rectangle extends Shape {
     override moveShape(dx: number, dy: number): void {
         this.transform.x += dx
         this.transform.y += dy
-        this.transform.originalX += dx
-        this.transform.originalY += dy
 
         this.calculateBoundingRect()
     }

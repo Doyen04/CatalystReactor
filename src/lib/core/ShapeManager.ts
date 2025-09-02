@@ -1,6 +1,6 @@
 // ShapeManager.ts
 import { useSceneStore } from '@hooks/sceneStore'
-import { Coord, IShape, Properties } from '@lib/types/shapes'
+import { Coord, Properties } from '@lib/types/shapes'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import throttle from '@lib/helper/throttle'
 import Handle from '@lib/modifiers/Handles'
@@ -22,7 +22,7 @@ class ShapeManager {
         this.scene.drawOnDrag(dragStart, e)
         this.shapeModifier.update()
 
-        const props = this.scene.getShape().getProperties()
+        const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
 
@@ -35,25 +35,20 @@ class ShapeManager {
         if (this.shapeModifier.hasSelectedHandle()) {
             this.shapeModifier.drag(dragStart, dx, dy, e)
         } else {
+            console.log('before-dragging', this.scene.getCoord());
             this.scene.move(dx, dy)
+            console.log('after-dragging', this.scene.getCoord());
         }
-        this.shapeModifier.update()
-        const props = this.scene.getShape().getProperties()
-        this.throttledUpdate(props)
-    }
 
-    move(x: number, y: number) {
-        this.scene.move(x, y)
         this.shapeModifier.update()
-
-        const props = this.scene.getShape().getProperties()
+        const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
 
     handleTinyShapes(): void {
         if (!this.scene) return
 
-        const { height, width } = this.scene.getShape().getDim()
+        const { height, width } = this.scene.getDim()
         const minSize = 5
 
         if (width < minSize || height < minSize) {
@@ -62,20 +57,12 @@ class ShapeManager {
         }
 
         this.shapeModifier.update()
-        const props = this.scene.getShape().getProperties()
+        const props = this.scene.getProperties()
         this.throttledUpdate(props)
-    }
-
-    get currentShape(): IShape {
-        return this.scene.getShape()
     }
 
     get currentScene(): SceneNode {
         return this.scene
-    }
-
-    hasShape(): boolean {
-        return this.scene.getShape() != null
     }
 
     hasSelection(): boolean {
@@ -87,7 +74,7 @@ class ShapeManager {
         this.shapeModifier.attachShape(scene)
         this.selected = true
         // Optionally sync initial props:
-        const props = this.scene.getShape().getProperties()
+        const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
 
@@ -98,14 +85,14 @@ class ShapeManager {
     }
 
     updateProperty<K extends keyof Properties>(key: K, value: Properties[K]) {
-        if (!this.scene.getShape()) throw new Error('No shape attached')
-        const prop = this.scene.getShape().getProperties()
-        this.scene.getShape().setProperties({
+        if (!this.scene) throw new Error('No shape attached')
+        const prop = this.scene.getProperties()
+        this.scene.setProperties({
             ...prop,
             [key]: value,
         })
         this.shapeModifier.update()
-        const props = this.scene.getShape().getProperties()
+        const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
 
@@ -148,7 +135,7 @@ class ShapeManager {
             this.selected = true
             return true
         }
-        this.selected = this.scene.getShape().pointInShape(x, y) ? true : false
+        this.selected = this.scene.pointInShape(x, y) ? true : false
         return this.selected
     }
 

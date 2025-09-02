@@ -19,6 +19,7 @@ class ShapeNode extends SceneNode {
             this.recomputeLocalMatrix()
 
             this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
+            console.log(this.worldMatrix, this.localMatrix, 'while-about-to-compute-localmatrix')
         }
 
         this.canComputeMatrix = false

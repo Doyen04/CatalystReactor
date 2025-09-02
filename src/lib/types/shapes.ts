@@ -216,8 +216,6 @@ export interface Transform {
     anchorPoint: Coord | null
     isFlippedX?: boolean
     isFlippedY?: boolean
-    originalX?: number
-    originalY?: number
 }
 
 export interface Size {

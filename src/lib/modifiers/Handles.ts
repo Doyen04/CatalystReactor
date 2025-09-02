@@ -89,7 +89,7 @@ export default class Handle {
     }
 
     updateShapeRadii(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
-        const { left, right, top, bottom } = scene.getShape().getRelativeBoundingRect()
+        const { left, right, top, bottom } = scene.getRelativeBoundingRect()
         const Matrix = this.resource.canvasKit.Matrix
         const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
 
@@ -152,7 +152,7 @@ export default class Handle {
 
                 break
         }
-        scene.getShape().setBorderRadius(newRadius, this.pos)
+        scene.setBorderRadius(newRadius, this.pos)
     }
 
     updateShapeDim(dragStart: Coord, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
@@ -223,7 +223,7 @@ export default class Handle {
         const posX = (fixedWorld ? fixedWorld[0] : initialShapeData.position.x) - offset[0]
         const posY = (fixedWorld ? fixedWorld[1] : initialShapeData.position.y) - offset[1]
 
-        console.log(offset, posX, posY, fixedWorld, this.pos)
+        console.log(posX, posY, initialShapeData.worldTransform, 'while-resizing')
 
         scene.updateScene({
             position: { x: Math.floor(posX), y: Math.floor(posY) },
@@ -243,9 +243,8 @@ export default class Handle {
     }
 
     updateOvalRatio(x: number, y: number, scene: SceneNode) {
-        const shape = scene.getShape()
-        const { x: cx, y: cy } = shape.getCenterCoord()
-        const { width, height } = shape.getDim()
+        const { x: cx, y: cy } = scene.getCenterCoord()
+        const { width, height } = scene.getDim()
 
         const radiusX = width / 2
         const radiusY = height / 2
@@ -255,8 +254,8 @@ export default class Handle {
 
         //parametric deg
         const handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
-        const { start, end } = shape.getArcAngles()
-        if (shape.isArc()) {
+        const { start, end } = scene.getArcAngles()
+        if (scene.isArc()) {
             console.log('inside ')
             const Angle = this.clampAngleToArc(handleAngle, start, end, this.handleRatioAngle)
             this.handleRatioAngle = Angle
@@ -265,17 +264,16 @@ export default class Handle {
         }
 
         const ratio = this.calculateRatioFromMousePosition({ x, y }, cx, cy, width, height)
-        shape.setRatio(ratio)
+        scene.setRatio(ratio)
     }
 
     updateStarRatio(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
-        const shape = scene.getShape()
-        const { x, y } = shape.getCenterCoord()
-        const { width, height } = shape.getDim()
+        const { x, y } = scene.getCenterCoord()
+        const { width, height } = scene.getDim()
 
         const ratio = this.calculateRatioFromMousePosition(e, x, y, width, height)
 
-        shape.setRatio(ratio)
+        scene.setRatio(ratio)
     }
 
     updateShapeArc(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
@@ -287,14 +285,13 @@ export default class Handle {
     }
 
     updateShapeArcStart(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
-        const shape = scene.getShape()
-        const { x, y } = shape.getCenterCoord()
-        const { width, height } = shape.getDim()
+        const { x, y } = scene.getCenterCoord()
+        const { width, height } = scene.getDim()
         const deltaX = e.offsetX - x
         const deltaY = e.offsetY - y
         const radiusX = width / 2
         const radiusY = height / 2
-        const { start, end } = shape.getArcAngles()
+        const { start, end } = scene.getArcAngles()
 
         //parametric deg
         let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
@@ -303,18 +300,17 @@ export default class Handle {
         if (angle < 0) angle += 2 * Math.PI
         const delta = angle - start
 
-        shape.setArc(start + delta, end + delta)
+        scene.setArc(start + delta, end + delta)
     }
 
     updateShapeArcEnd(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
-        const shape = scene.getShape()
-        const { x, y } = shape.getCenterCoord()
-        const { width, height } = shape.getDim()
+        const { x, y } = scene.getCenterCoord()
+        const { width, height } = scene.getDim()
         const deltaX = e.offsetX - x
         const deltaY = e.offsetY - y
         const radiusX = width / 2
         const radiusY = height / 2
-        const { start } = shape.getArcAngles()
+        const { start } = scene.getArcAngles()
 
         //parametric deg
         let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
@@ -324,25 +320,24 @@ export default class Handle {
         let sweep = angle - start
         if (sweep <= 0) sweep += 2 * Math.PI
 
-        shape.setArc(start, start + sweep)
+        scene.setArc(start, start + sweep)
     }
 
     updateShapeVertices(x: number, y: number, scene: SceneNode) {
-        const shape = scene.getShape()
         const GAP = 10 // defined distance for both x and y
-        const count = shape.getVertexCount()
+        const count = scene.getVertexCount()
 
         const next = clamp(count + 1, 3, 60)
         const prev = clamp(count - 1, 3, 60)
 
-        const vertex = shape.getShapeType() === 'star' ? 2 : 1
+        const vertex = scene.getShapeType() === 'star' ? 2 : 1
 
-        const { x: px, y: py } = shape.getVertex(prev, vertex)
-        const { x: nx, y: ny } = shape.getVertex(next, vertex)
+        const { x: px, y: py } = scene.getVertex(prev, vertex)
+        const { x: nx, y: ny } = scene.getVertex(next, vertex)
         if (y < ny && (Math.abs(x - nx) < GAP || Math.abs(y - ny) < GAP)) {
-            shape.setVertexCount(next)
+            scene.setVertexCount(next)
         } else if (y > py && (Math.abs(x - px) < GAP || Math.abs(y - py) < GAP)) {
-            shape.setVertexCount(prev)
+            scene.setVertexCount(prev)
         }
     }
 
@@ -358,8 +353,7 @@ export default class Handle {
     }
 
     updateShapeAngle(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
-        const shape = scene.getShape()
-        if (!shape) return
+        if (!scene) return
         const Matrix = this.resource.canvasKit.Matrix
         const center = Matrix.mapPoints(initialShapeData.worldTransform, [
             initialShapeData.dimension.width * initialShapeData.rotationAnchor.x,

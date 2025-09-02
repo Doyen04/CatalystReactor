@@ -37,7 +37,7 @@ class ShapeModifier {
             return
         }
 
-        this.handles = this.scene.getShape().getModifierHandles()
+        this.handles = this.scene.getModifierHandles()
         this.updateResizerPositions()
     }
 
@@ -57,11 +57,12 @@ class ShapeModifier {
         if (!this.scene) return
 
         const Matrix = this.resource.canvasKit.Matrix
-        const dim = this.scene.getShape().getDim()
-        const position = this.scene.getShape().getCoord()
-        const scale = this.scene.getShape().getScale()
-        const rotation = this.scene.getShape().getRotationAngle()
-        const rotationAnchor = this.scene.getShape().getRotationAnchorPoint()
+        const dim = this.scene.getDim()
+        const position = this.scene.getCoord()
+
+        const scale = this.scene.getScale()
+        const rotation = this.scene.getRotationAngle()
+        const rotationAnchor = this.scene.getRotationAnchorPoint()
 
         if (this.initialShapeData === null) {
             const initialShapeData = {
@@ -70,12 +71,13 @@ class ShapeModifier {
                 scale: scale,
                 rotation: rotation,
                 rotationAnchor: rotationAnchor,
-                worldTransform: this.scene.getWorldMatrix(),
-                inverseWorldTransform: Matrix.invert(this.scene.getWorldMatrix()),
+                worldTransform: [...this.scene.getWorldMatrix()],
+                inverseWorldTransform: Matrix.invert([...this.scene.getWorldMatrix()]),
             }
 
             this.initialShapeData = initialShapeData
         }
+        console.log(position, this.initialShapeData.worldTransform, 'onrisepos')
     }
 
     handleRemoveModiferHandle() {
@@ -100,7 +102,7 @@ class ShapeModifier {
         }
         if (!selected) {
             //use bounding box
-            const dimen = this.scene.getShape().getDim()
+            const dimen = this.scene.getDim()
             const bRect = {
                 left: 0,
                 top: 0,
@@ -185,7 +187,7 @@ class ShapeModifier {
         }
 
         for (const resizer of this.handles) {
-            const { x, y } = this.scene.getShape().getModifierHandlesPos(resizer)
+            const { x, y } = this.scene.getModifierHandlesPos(resizer)
             resizer.updatePosition(x, y)
         }
         this.updateText()
@@ -193,7 +195,7 @@ class ShapeModifier {
 
     //local coord
     updateText() {
-        const { width, height } = this.scene.getShape().getDim()
+        const { width, height } = this.scene.getDim()
 
         this.font.setText(`${width} X ${height}`)
     }
@@ -219,14 +221,11 @@ class ShapeModifier {
     }
 
     hasShape() {
-        return this.scene.getShape() !== null
+        return this.scene !== null
     }
 
     hasSelectedHandle() {
         return this.selectedModifierHandle !== null
-    }
-    getShape() {
-        return this.scene.getShape()
     }
     detachShape() {
         this.scene = null
@@ -240,8 +239,8 @@ class ShapeModifier {
     }
 
     canDraw(): boolean {
-        if (!this.scene && !this.scene.getShape()) return false
-        const { width, height } = this.scene.getShape().getDim()
+        if (!this.scene) return false
+        const { width, height } = this.scene.getDim()
         const MINSIZE = 5
 
         return width < MINSIZE || height < MINSIZE
@@ -251,7 +250,7 @@ class ShapeModifier {
         if (!this.scene) return false
 
         const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
-        const { width, height } = this.scene.getShape().getDim()
+        const { width, height } = this.scene.getDim()
 
         return tx >= 0 && tx <= width && ty >= 0 && ty <= height
     }
@@ -265,7 +264,7 @@ class ShapeModifier {
         canvas.save()
         canvas.concat(this.scene.getWorldMatrix())
 
-        const dimen = this.scene.getShape().getDim()
+        const dimen = this.scene.getDim()
 
         const rect = this.resource.canvasKit.XYWHRect(0, 0, dimen.width, dimen.height)
 
@@ -300,8 +299,8 @@ class ShapeModifier {
     }
 
     destroy() {
-        if (this.scene.getShape()) {
-            this.scene.getShape().destroy()
+        if (this.scene) {
+            this.scene.destroy()
             this.scene = null
         }
         this.strokeColor = ''
