@@ -33,11 +33,10 @@ class ContainerNode extends SceneNode {
 
         if (this.canComputeMatrix) {
             this.recomputeLocalMatrix()
-
-            this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
+            this.canComputeMatrix = false
         }
 
-        this.canComputeMatrix = false
+        this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
 
         for (const c of this.children) {
             c.updateWorldMatrix(this.worldMatrix)

@@ -5,7 +5,16 @@ import SText from '@lib/shapes/primitives/SText'
 import SceneNode from '@lib/node/Scene'
 import { Coord } from '@lib/types/shapes'
 import { ShapeData } from './modifier'
-import { updateShapeRadii, updateShapeDim, updateShapeAngle, updateOvalRatio, updateStarRatio, updateShapeArc, updateShapeVertices, shapeAngleOnMouseDown } from './modifierUtility'
+import {
+    updateShapeRadii,
+    updateShapeDim,
+    updateShapeAngle,
+    updateOvalRatio,
+    updateStarRatio,
+    updateShapeArc,
+    updateShapeVertices,
+    shapeAngleOnMouseDown,
+} from './modifierUtility'
 
 // const { UpdateModifierHandlesPos } = EventTypes
 
@@ -78,15 +87,15 @@ class ShapeModifier {
 
             this.initialShapeData = initialShapeData
         }
-        console.log(position, this.initialShapeData.worldTransform, 'onrisepos')
     }
 
     handleRemoveModiferHandle() {
         console.log('finished dragging handle')
-        if (!this.selectedModifierHandle) return
-        this.selectedModifierHandle.isDragging = false
         this.initialShapeData = null
         this.selectedModifierHandle = null
+        if (this.selectedModifierHandle) {
+            this.selectedModifierHandle.isDragging = false
+        }
     }
 
     selectModifier(x: number, y: number) {
@@ -130,25 +139,25 @@ class ShapeModifier {
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    updateShapeRadii(e, this.scene, this.initialShapeData)
+                    updateShapeRadii(this.selectedModifierHandle,e, this.scene, this.initialShapeData)
                     break
                 case 'size':
-                    updateShapeDim(dragStart, e, this.scene, this.initialShapeData)
+                    updateShapeDim(this.selectedModifierHandle,dragStart, e, this.scene, this.initialShapeData)
                     break
                 case 'angle':
                     updateShapeAngle(e, this.scene, this.initialShapeData)
                     break
                 case 'c-ratio':
-                    updateOvalRatio(dx, dy, this.scene)
+                    updateOvalRatio( dx, dy, this.scene)
                     break
                 case 's-ratio':
                     updateStarRatio(dx, dy, e, this.scene)
                     break
                 case 'arc':
-                    updateShapeArc(dx, dy, e, this.scene)
+                    updateShapeArc(this.selectedModifierHandle, dx, dy, e, this.scene)
                     break
                 case 'vertices':
-                    updateShapeVertices(dx, dy, this.scene)
+                    updateShapeVertices(dx, dy, e, this.scene)
                     break
                 default:
                     break

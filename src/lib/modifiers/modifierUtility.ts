@@ -1,10 +1,22 @@
-import clamp from "@lib/helper/clamp"
-import { getOppositeHandle, getHandleLocalPoint } from "@lib/helper/handleUtil"
-import SceneNode from "@lib/node/Scene"
-import { Coord } from "@lib/types/shapes"
-import { ShapeData } from "./modifier"
+import clamp from '@lib/helper/clamp'
+import { getOppositeHandle, getHandleLocalPoint } from '@lib/helper/handleUtil'
+import SceneNode from '@lib/node/Scene'
+import { Coord } from '@lib/types/shapes'
+import { ShapeData } from './modifier'
+import CanvasKitResources from '@lib/core/CanvasKitResource'
+import Handle from './Handles'
 
+function resource(): CanvasKitResources {
+    const resources = CanvasKitResources.getInstance()
 
+    if (resources) {
+        return resources
+    } else {
+        console.log('resources is null')
+
+        return null
+    }
+}
 
 export function calculateRatioFromMousePosition(e: Coord, centerX: number, centerY: number, width: number, height: number): number {
     const deltaX = e.x - centerX
@@ -24,7 +36,7 @@ export function calculateRatioFromMousePosition(e: Coord, centerX: number, cente
     return ratio
 }
 
-export function updateShapeRadii(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+export function updateShapeRadii(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const { left, right, top, bottom } = scene.getRelativeBoundingRect()
     const Matrix = this.resource.canvasKit.Matrix
     const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
@@ -39,7 +51,7 @@ export function updateShapeRadii(e: MouseEvent, scene: SceneNode, initialShapeDa
 
     const [x, y] = localCurrent
 
-    switch (this.pos) {
+    switch (handle.pos) {
         case 'top-left':
             cornerX = left
             cornerY = top
@@ -91,8 +103,8 @@ export function updateShapeRadii(e: MouseEvent, scene: SceneNode, initialShapeDa
     scene.setBorderRadius(newRadius, this.pos)
 }
 
-export function updateShapeDim(dragStart: Coord, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
-    const Matrix = this.resource.canvasKit.Matrix
+export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+    const Matrix = resource().canvasKit.Matrix
     const localStart = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [dragStart.x, dragStart.y])
     const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
 
@@ -102,7 +114,7 @@ export function updateShapeDim(dragStart: Coord, e: MouseEvent, scene: SceneNode
     const dx = localCurrent[0] - localStart[0]
     const dy = localCurrent[1] - localStart[1]
 
-    switch (this.pos) {
+    switch (handle.pos) {
         case 'top-left':
             newWidth = initialShapeData.dimension.width - dx
             newHeight = initialShapeData.dimension.height - dy
@@ -199,7 +211,7 @@ export function updateOvalRatio(x: number, y: number, scene: SceneNode) {
         this.handleRatioAngle = handleAngle
     }
 
-    const ratio = this.calculateRatioFromMousePosition({ x, y }, cx, cy, width, height)
+    const ratio = calculateRatioFromMousePosition({ x, y }, cx, cy, width, height)
     scene.setRatio(ratio)
 }
 
@@ -207,13 +219,13 @@ export function updateStarRatio(dx: number, dy: number, e: MouseEvent, scene: Sc
     const { x, y } = scene.getCenterCoord()
     const { width, height } = scene.getDim()
 
-    const ratio = this.calculateRatioFromMousePosition(e, x, y, width, height)
+    const ratio = calculateRatioFromMousePosition(e, x, y, width, height)
 
     scene.setRatio(ratio)
 }
 
-export function updateShapeArc(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
-    if (this.pos == 'arc-end') {
+export function updateShapeArc(handle: Handle, dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+    if (handle.pos == 'arc-end') {
         updateShapeArcEnd(dx, dy, e, scene)
     } else {
         updateShapeArcStart(dx, dy, e, scene)
@@ -259,9 +271,10 @@ function updateShapeArcEnd(dx: number, dy: number, e: MouseEvent, scene: SceneNo
     scene.setArc(start, start + sweep)
 }
 
-export function updateShapeVertices(x: number, y: number, scene: SceneNode) {
+export function updateShapeVertices(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
     const GAP = 10 // defined distance for both x and y
     const count = scene.getVertexCount()
+    const { x, y } = {x:e.offsetX, y:e.offsetY}
 
     const next = clamp(count + 1, 3, 60)
     const prev = clamp(count - 1, 3, 60)
@@ -278,7 +291,7 @@ export function updateShapeVertices(x: number, y: number, scene: SceneNode) {
 }
 
 export function shapeAngleOnMouseDown(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
-    const Matrix = this.resource.canvasKit.Matrix
+    const Matrix = resource().canvasKit.Matrix
     const center = Matrix.mapPoints(initialShapeData.worldTransform, [
         initialShapeData.dimension.width * initialShapeData.rotationAnchor.x,
         initialShapeData.dimension.height * initialShapeData.rotationAnchor.y,
@@ -290,7 +303,7 @@ export function shapeAngleOnMouseDown(e: MouseEvent, scene: SceneNode, initialSh
 
 export function updateShapeAngle(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     if (!scene) return
-    const Matrix = this.resource.canvasKit.Matrix
+    const Matrix = resource().canvasKit.Matrix
     const center = Matrix.mapPoints(initialShapeData.worldTransform, [
         initialShapeData.dimension.width * initialShapeData.rotationAnchor.x,
         initialShapeData.dimension.height * initialShapeData.rotationAnchor.y,

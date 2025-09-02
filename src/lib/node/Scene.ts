@@ -61,7 +61,6 @@ abstract class SceneNode {
         this.shape.moveShape(dx, dy)
 
         this.canComputeMatrix = true
-        console.log(this.worldMatrix, 'aftermoveinscene')
     }
 
     setParent(parent: SceneNode) {
@@ -235,7 +234,7 @@ abstract class SceneNode {
 
     getRelativeBoundingRect(): BoundingRect | null {
         if (!this.shape) return null
-      
+
         return this.shape.getRelativeBoundingRect()
     }
 
@@ -281,9 +280,9 @@ abstract class SceneNode {
         }
     }
 
-    setArc( start: number, end: number ): void {
+    setArc(start: number, end: number): void {
         if (this.shape) {
-            this.shape.setArc( start, end )
+            this.shape.setArc(start, end)
         }
     }
 
