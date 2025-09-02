@@ -57,6 +57,15 @@ class Rectangle extends Shape {
         this.transform.x = Math.min(dragStart.x, mx)
         this.transform.y = Math.min(dragStart.y, my)
 
+        const willFlipX = deltaX < 0
+        const willFlipY = deltaY < 0
+
+        const scaleX = willFlipX ? -1 : 1
+        const scaleY = willFlipY ? -1 : 1
+
+        this.transform.scaleX = scaleX
+        this.transform.scaleY = scaleY
+
         if (shiftKey) {
             const size = Math.max(Math.abs(deltaX), Math.abs(deltaY))
             this.dimension.width = size
@@ -82,13 +91,6 @@ class Rectangle extends Shape {
         this.dimension.height = height
 
         this.calculateBoundingRect()
-    }
-
-    handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
-        // if (this.transform.isFlippedX === isFlippedX && this.transform.isFlippedY === isFlippedY) return
-        // this.transform.isFlippedX = isFlippedX
-        // this.transform.isFlippedY = isFlippedY
-        // this.flippedRadii()
     }
 
     // protected flippedRadii = () => {

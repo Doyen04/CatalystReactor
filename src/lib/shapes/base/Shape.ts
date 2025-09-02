@@ -69,7 +69,6 @@ abstract class Shape implements IShape {
     }
 
     abstract getCenterCoord(): Coord
-    abstract handleFlip(isFlippedX: boolean, isFlippedY: boolean): void
     abstract getModifierHandles(): Handle[]
     abstract getModifierHandlesPos(handle: Handle): { x: number; y: number }
     abstract pointInShape(x: number, y: number): boolean

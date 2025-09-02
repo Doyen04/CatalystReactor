@@ -358,7 +358,6 @@ export interface IShape {
     getRelativeBoundingRect(): BoundingRect
     getRotationAnchorPoint(): Coord
     createCanvasKitImage(image: ArrayBuffer | null): void
-    handleFlip(isFlippedX: boolean, isFlippedY: boolean): void
     // Methods that all shapes should implement
     getModifierHandles(): Handle[]
     getSizeModifierHandlesPos(handle: Handle): Coord
