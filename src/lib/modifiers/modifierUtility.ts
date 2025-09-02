@@ -154,7 +154,7 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
     const desiredScaleX = willFlipX ? -Math.sign(initialShapeData.scale.x || 1) : Math.sign(initialShapeData.scale.x || 1)
     const desiredScaleY = willFlipY ? -Math.sign(initialShapeData.scale.y || 1) : Math.sign(initialShapeData.scale.y || 1)
 
-    const fixedHandleKey = getOppositeHandle(this.pos)
+    const fixedHandleKey = getOppositeHandle(handle.pos)
     const fixedLocal = getHandleLocalPoint(fixedHandleKey, initialShapeData.dimension.width, initialShapeData.dimension.height)
     const fixedWorld = Matrix.mapPoints(initialShapeData.worldTransform, [fixedLocal.x, fixedLocal.y])
     const handleNewLocal = getHandleLocalPoint(fixedHandleKey, absW, absH)
@@ -170,8 +170,6 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
     const offset = Matrix.mapPoints(zeroTransform, [handleNewLocal.x, handleNewLocal.y])
     const posX = (fixedWorld ? fixedWorld[0] : initialShapeData.position.x) - offset[0]
     const posY = (fixedWorld ? fixedWorld[1] : initialShapeData.position.y) - offset[1]
-
-    console.log(posX, posY, initialShapeData.worldTransform, 'while-resizing')
 
     scene.updateScene({
         position: { x: Math.floor(posX), y: Math.floor(posY) },
@@ -274,7 +272,7 @@ function updateShapeArcEnd(dx: number, dy: number, e: MouseEvent, scene: SceneNo
 export function updateShapeVertices(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
     const GAP = 10 // defined distance for both x and y
     const count = scene.getVertexCount()
-    const { x, y } = {x:e.offsetX, y:e.offsetY}
+    const { x, y } = { x: e.offsetX, y: e.offsetY }
 
     const next = clamp(count + 1, 3, 60)
     const prev = clamp(count - 1, 3, 60)
