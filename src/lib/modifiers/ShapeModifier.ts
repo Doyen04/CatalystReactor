@@ -35,7 +35,7 @@ class ShapeModifier {
         this.handles = []
         this.isHovered = false
         this.selectedModifierHandle = null
-        this.font = new SText(200, 0)
+        this.font = new SText(0, 0)
     }
 
     attachShape(scene: SceneNode) {
@@ -192,10 +192,6 @@ class ShapeModifier {
         const { width, height } = this.scene.getShape().getDim()
 
         this.font.setText(`${width} X ${height}`)
-
-        const { width: tWidth } = this.font.getDim()
-        const pos = (width - tWidth) / 2
-        this.font.setCoord(pos, height + 5)
     }
 
     setPaint(): void {
@@ -209,6 +205,12 @@ class ShapeModifier {
         this.resource.strokePaint.setStrokeWidth(this.strokeWidth)
 
         this.resource.paint.setColor(fillColor)
+    }
+
+    handleMouseDown(dragStart: Coord, e: MouseEvent) {
+        if (!this.scene) return
+
+        this.storeShapeInitialProps()
     }
 
     hasShape() {
@@ -254,6 +256,8 @@ class ShapeModifier {
             return
         }
         this.setPaint()
+
+        canvas.save()
         canvas.concat(this.scene.getWorldMatrix())
 
         const dimen = this.scene.getShape().getDim()
@@ -261,7 +265,6 @@ class ShapeModifier {
         const rect = this.resource.canvasKit.XYWHRect(0, 0, dimen.width, dimen.height)
 
         canvas.drawRect(rect, this.resource.strokePaint)
-        this.font.draw(canvas)
 
         this.handles.forEach(handle => {
             if (handle.type === 'size') {
@@ -270,6 +273,25 @@ class ShapeModifier {
                 handle.draw(canvas)
             }
         })
+
+        canvas.restore()
+
+        this.drawText(canvas)
+    }
+
+    drawText(canvas: Canvas) {
+        if (!this.scene) return
+
+        const bRect = this.scene.getAbsoluteBoundingRect()
+
+        canvas.save()
+        canvas.translate((bRect.left + bRect.right) / 2, bRect.bottom + 5)
+
+        const { width: tWidth } = this.font.getDim()
+        canvas.translate(-tWidth / 2, 0)
+
+        this.font.draw(canvas)
+        canvas.restore()
     }
 
     destroy() {

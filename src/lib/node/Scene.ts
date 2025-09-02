@@ -1,5 +1,5 @@
 import CanvasKitResources from '@lib/core/CanvasKitResource'
-import { Coord, IShape, Size } from '@lib/types/shapes'
+import { BoundingRect, Coord, IShape, Size } from '@lib/types/shapes'
 import { Canvas } from 'canvaskit-wasm'
 
 abstract class SceneNode {
@@ -156,6 +156,33 @@ abstract class SceneNode {
     isCollide(x: number, y: number): boolean {
         const { x: tx, y: ty } = this.worldToLocal(x, y)
         return this.shape.pointInShape(tx, ty)
+    }
+
+    getAbsoluteBoundingRect(): BoundingRect {
+        if (!this.shape) {
+            return null
+        }
+
+        const { width, height } = this.shape.getDim()
+
+        const corners = [
+            [0, 0],
+            [width, 0],
+            [0, height],
+            [width, height],
+        ]
+
+        const transformedCorners = corners.map(pt => this.localToWorld(pt[0], pt[1]))
+
+        const xs = transformedCorners.map(p => p.x)
+        const ys = transformedCorners.map(p => p.y)
+
+        const left = Math.min(...xs)
+        const right = Math.max(...xs)
+        const top = Math.min(...ys)
+        const bottom = Math.max(...ys)
+
+        return { left, top, right, bottom }
     }
 
     getShape(): IShape {

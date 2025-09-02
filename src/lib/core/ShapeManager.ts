@@ -27,7 +27,7 @@ class ShapeManager {
     }
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
-        this.shapeModifier.storeShapeInitialProps()
+        this.shapeModifier.handleMouseDown(dragStart, e)
         console.log('not used', dragStart, e)
     }
 
