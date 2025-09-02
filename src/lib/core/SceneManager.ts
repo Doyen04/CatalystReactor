@@ -1,15 +1,15 @@
 import { Canvas } from 'canvaskit-wasm'
-import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
+import ShapeManager from './ShapeManager'
 
 class SceneManager {
     private scene: ContainerNode
-    private shapeModifier: ShapeModifier
+    private shapeManager: ShapeManager
 
-    constructor(shapeModifier: ShapeModifier) {
+    constructor(shapeManager: ShapeManager) {
         this.scene = new ContainerNode(null)
-        this.shapeModifier = shapeModifier
+        this.shapeManager = shapeManager
         //remember to add a shape created event
     }
 
@@ -56,7 +56,7 @@ class SceneManager {
     draw(skCnvs: Canvas) {
         this.scene.updateWorldMatrix()
         this.scene.draw(skCnvs)
-        this.shapeModifier.draw(skCnvs)
+        this.shapeManager.draw(skCnvs)
     }
 
     destroy() {

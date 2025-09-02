@@ -9,7 +9,6 @@ import { ShapeData } from './modifier'
 // const { UpdateModifierHandlesPos } = EventTypes
 
 class ShapeModifier {
-    private scene: SceneNode | null
     private strokeColor: string | number[]
     private strokeWidth: number
     private fill: string = '#fff'
@@ -20,7 +19,6 @@ class ShapeModifier {
     private font: SText
 
     constructor() {
-        this.scene = null
         this.strokeColor = '#00f'
         this.strokeWidth = 1
         this.handles = []
@@ -29,16 +27,15 @@ class ShapeModifier {
         this.font = new SText(0, 0)
     }
 
-    attachShape(scene: SceneNode) {
+    setUpHandles(scene: SceneNode) {
         this.handles = []
-        this.scene = scene
-        if (!this.scene) {
+        if (!scene) {
             console.log('no shape for shape modifier')
             return
         }
 
-        this.handles = this.scene.getModifierHandles()
-        this.updateResizerPositions()
+        this.handles = scene.getModifierHandles()
+        this.updateResizerPositions(scene)
     }
 
     get resource(): CanvasKitResources {
@@ -53,16 +50,16 @@ class ShapeModifier {
         }
     }
 
-    storeShapeInitialShapeData() {
-        if (!this.scene) return
+    storeShapeInitialShapeData(scene: SceneNode) {
+        if (!scene) return
 
         const Matrix = this.resource.canvasKit.Matrix
-        const dim = this.scene.getDim()
-        const position = this.scene.getCoord()
+        const dim = scene.getDim()
+        const position = scene.getCoord()
 
-        const scale = this.scene.getScale()
-        const rotation = this.scene.getRotationAngle()
-        const rotationAnchor = this.scene.getRotationAnchorPoint()
+        const scale = scene.getScale()
+        const rotation = scene.getRotationAngle()
+        const rotationAnchor = scene.getRotationAnchorPoint()
 
         if (this.initialShapeData === null) {
             const initialShapeData = {
@@ -71,8 +68,8 @@ class ShapeModifier {
                 scale: scale,
                 rotation: rotation,
                 rotationAnchor: rotationAnchor,
-                worldTransform: [...this.scene.getWorldMatrix()],
-                inverseWorldTransform: Matrix.invert([...this.scene.getWorldMatrix()]),
+                worldTransform: [...scene.getWorldMatrix()],
+                inverseWorldTransform: Matrix.invert([...scene.getWorldMatrix()]),
             }
 
             this.initialShapeData = initialShapeData
@@ -88,11 +85,11 @@ class ShapeModifier {
         this.selectedModifierHandle = null
     }
 
-    selectModifier(x: number, y: number) {
-        if (this.handles.length == 0 || !this.scene) return null
+    selectModifierHandles(x: number, y: number, scene: SceneNode) {
+        if (this.handles.length == 0 || !scene) return null
         let selected: Handle = null
 
-        const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
+        const { x: tx, y: ty } = scene.worldToLocal(x, y)
 
         for (const node of this.handles) {
             if (node && node.isCollide(tx, ty)) {
@@ -102,7 +99,7 @@ class ShapeModifier {
         }
         if (!selected) {
             //use bounding box
-            const dimen = this.scene.getDim()
+            const dimen = scene.getDim()
             const bRect = {
                 left: 0,
                 top: 0,
@@ -125,29 +122,29 @@ class ShapeModifier {
         return selected
     }
 
-    handleModifierDrag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
+    handleModifierDrag(dragStart: Coord, dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
-                    this.selectedModifierHandle.updateShapeRadii(e, this.scene, this.initialShapeData)
+                    this.selectedModifierHandle.updateShapeRadii(e, scene, this.initialShapeData)
                     break
                 case 'size':
-                    this.selectedModifierHandle.updateShapeDim(dragStart, e, this.scene, this.initialShapeData)
+                    this.selectedModifierHandle.updateShapeDim(dragStart, e, scene, this.initialShapeData)
                     break
                 case 'angle':
-                    this.selectedModifierHandle.updateShapeAngle(e, this.scene, this.initialShapeData)
+                    this.selectedModifierHandle.updateShapeAngle(e, scene, this.initialShapeData)
                     break
                 case 'c-ratio':
-                    this.selectedModifierHandle.updateOvalRatio(dx, dy, this.scene)
+                    this.selectedModifierHandle.updateOvalRatio(dx, dy, scene)
                     break
                 case 's-ratio':
-                    this.selectedModifierHandle.updateStarRatio(dx, dy, e, this.scene)
+                    this.selectedModifierHandle.updateStarRatio(dx, dy, e, scene)
                     break
                 case 'arc':
-                    this.selectedModifierHandle.updateShapeArc(dx, dy, e, this.scene)
+                    this.selectedModifierHandle.updateShapeArc(dx, dy, e, scene)
                     break
                 case 'vertices':
-                    this.selectedModifierHandle.updateShapeVertices(dx, dy, this.scene)
+                    this.selectedModifierHandle.updateShapeVertices(dx, dy, scene)
                     break
                 default:
                     break
@@ -155,13 +152,13 @@ class ShapeModifier {
         }
     }
 
-    handleModifierDown(dragStart: Coord, e: MouseEvent) {
-        if (!this.scene) return
+    handleModifierDown(dragStart: Coord, e: MouseEvent, scene: SceneNode) {
+        if (!scene) return
 
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'angle':
-                    this.selectedModifierHandle.shapeAngleOnMouseDown(e, this.scene, this.initialShapeData)
+                    this.selectedModifierHandle.shapeAngleOnMouseDown(e, scene, this.initialShapeData)
                     break
                 default:
                     break
@@ -169,33 +166,29 @@ class ShapeModifier {
         }
     }
 
-    update() {
-        this.updateResizerPositions()
-    }
-
-    drag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
+    drag(dragStart: Coord, dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
         this.selectedModifierHandle.isDragging = true
         if (this.selectedModifierHandle.type === 'size') this.isHovered = false
 
-        this.handleModifierDrag(dragStart, dx, dy, e)
+        this.handleModifierDrag(dragStart, dx, dy, e, scene)
     }
 
-    updateResizerPositions() {
-        if (!this.scene) {
+    updateResizerPositions(scene: SceneNode) {
+        if (!scene) {
             console.log(' no shape for updateresizer')
             return
         }
 
         for (const resizer of this.handles) {
-            const { x, y } = this.scene.getModifierHandlesPos(resizer)
+            const { x, y } = scene.getModifierHandlesPos(resizer)
             resizer.updatePosition(x, y)
         }
-        this.updateText()
+        this.updateText(scene)
     }
 
     //local coord
-    updateText() {
-        const { width, height } = this.scene.getDim()
+    updateText(scene: SceneNode) {
+        const { width, height } = scene.getDim()
 
         this.font.setText(`${width} X ${height}`)
     }
@@ -213,23 +206,17 @@ class ShapeModifier {
         this.resource.paint.setColor(fillColor)
     }
 
-    handleMouseDown(dragStart: Coord, e: MouseEvent) {
-        if (!this.scene) return
+    handleMouseDown(dragStart: Coord, e: MouseEvent, scene: SceneNode) {
+        if (!scene) return
 
-        this.storeShapeInitialShapeData()
-        this.handleModifierDown(dragStart, e)
-    }
-
-    hasShape() {
-        return this.scene !== null
+        this.storeShapeInitialShapeData(scene)
+        this.handleModifierDown(dragStart, e, scene)
     }
 
     hasSelectedHandle() {
         return this.selectedModifierHandle !== null
     }
-    detachShape() {
-        this.scene = null
-    }
+
     setHover(bool: boolean) {
         // EventQueue.trigger(Render)
         this.isHovered = bool
@@ -238,33 +225,33 @@ class ShapeModifier {
         return this.isHovered
     }
 
-    canDraw(): boolean {
-        if (!this.scene) return false
-        const { width, height } = this.scene.getDim()
+    canDraw(scene: SceneNode): boolean {
+        if (!scene) return false
+        const { width, height } = scene.getDim()
         const MINSIZE = 5
 
         return width < MINSIZE || height < MINSIZE
     }
 
-    collideRect(x: number, y: number): boolean {
-        if (!this.scene) return false
+    collideRect(x: number, y: number, scene: SceneNode): boolean {
+        if (!scene) return false
 
-        const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
-        const { width, height } = this.scene.getDim()
+        const { x: tx, y: ty } = scene.worldToLocal(x, y)
+        const { width, height } = scene.getDim()
 
         return tx >= 0 && tx <= width && ty >= 0 && ty <= height
     }
 
-    draw(canvas: Canvas): void {
-        if (!this.scene || this.canDraw() || !this.resource) {
+    draw(canvas: Canvas, scene: SceneNode): void {
+        if (!scene || this.canDraw(scene) || !this.resource) {
             return
         }
         this.setPaint()
 
         canvas.save()
-        canvas.concat(this.scene.getWorldMatrix())
+        canvas.concat(scene.getWorldMatrix())
 
-        const dimen = this.scene.getDim()
+        const dimen = scene.getDim()
 
         const rect = this.resource.canvasKit.XYWHRect(0, 0, dimen.width, dimen.height)
 
@@ -280,13 +267,13 @@ class ShapeModifier {
 
         canvas.restore()
 
-        this.drawText(canvas)
+        this.drawText(canvas, scene)
     }
 
-    drawText(canvas: Canvas) {
-        if (!this.scene) return
+    drawText(canvas: Canvas, scene: SceneNode) {
+        if (!scene) return
 
-        const bRect = this.scene.getAbsoluteBoundingRect()
+        const bRect = scene.getAbsoluteBoundingRect()
 
         canvas.save()
         canvas.translate((bRect.left + bRect.right) / 2, bRect.bottom + 5)
@@ -299,10 +286,6 @@ class ShapeModifier {
     }
 
     destroy() {
-        if (this.scene) {
-            this.scene.destroy()
-            this.scene = null
-        }
         this.strokeColor = ''
         this.strokeWidth = 0
         this.fill = ''
