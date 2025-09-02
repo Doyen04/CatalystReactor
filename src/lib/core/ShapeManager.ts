@@ -35,11 +35,11 @@ class ShapeManager {
         if (this.shapeModifier.hasSelectedHandle()) {
             this.shapeModifier.drag(dragStart, dx, dy, e)
         } else {
-            this.scene.move(dx, dy)
+            this.scene?.move(dx, dy)
         }
 
         this.shapeModifier.update()
-        const props = this.scene.getProperties()
+        const props = this.scene?.getProperties()
         this.throttledUpdate(props)
     }
 

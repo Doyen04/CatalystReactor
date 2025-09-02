@@ -38,10 +38,8 @@ export function calculateRatioFromMousePosition(e: Coord, centerX: number, cente
 
 export function updateShapeRadii(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const { left, right, top, bottom } = scene.getRelativeBoundingRect()
-    const Matrix = this.resource.canvasKit.Matrix
+    const Matrix = resource().canvasKit.Matrix
     const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
-
-    console.log(left, right, top, bottom, e.offsetX, e.offsetY)
 
     let cornerX: number,
         cornerY: number,
@@ -100,7 +98,7 @@ export function updateShapeRadii(handle: Handle, e: MouseEvent, scene: SceneNode
 
             break
     }
-    scene.setBorderRadius(newRadius, this.pos)
+    scene.setBorderRadius(newRadius, handle.pos)
 }
 
 export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
