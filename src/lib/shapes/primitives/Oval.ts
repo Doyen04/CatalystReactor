@@ -187,15 +187,14 @@ class Oval extends Shape {
 
     private getArcModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size
-        const gap = 20
 
         const outerRx = this.radiusX
         const outerRy = this.radiusY
         const innerRx = this.radiusX * this.arcSegment.ratio
         const innerRy = this.radiusY * this.arcSegment.ratio
 
-        const rx = this.arcSegment.ratio === 0 ? outerRx - gap : (outerRx + innerRx) / 2
-        const ry = this.arcSegment.ratio === 0 ? outerRy - gap : (outerRy + innerRy) / 2
+        const rx = this.arcSegment.ratio === 0 ? outerRx * 0.8 : (outerRx + innerRx) / 2
+        const ry = this.arcSegment.ratio === 0 ? outerRy * 0.8 : (outerRy + innerRy) / 2
 
         const theta = handle.pos === 'arc-end' ? this.arcSegment.endAngle : this.arcSegment.startAngle
 
@@ -278,8 +277,8 @@ class Oval extends Shape {
             this.radiusX * this.arcSegment.ratio * 2,
             this.radiusY * this.arcSegment.ratio * 2
         )
-        const startDegrees = (this.arcSegment.startAngle * 180) / Math.PI
-        const sweepDegrees = ((this.arcSegment.endAngle - this.arcSegment.startAngle) * 180) / Math.PI
+        const startDegrees = this.arcSegment.startAngle * (180 / Math.PI)
+        const sweepDegrees = (this.arcSegment.endAngle - this.arcSegment.startAngle) * (180 / Math.PI)
 
         if (this.isTorus() && !this.isArc()) {
             this.drawTorus(rect, innerRect, path)

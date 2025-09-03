@@ -205,7 +205,6 @@ export function updateOvalRatio(handle: Handle, e: MouseEvent, scene: SceneNode,
 
     const { start, end } = scene.getArcAngles()
     if (scene.isArc()) {
-        console.log('inside ')
         const Angle = clampAngleToArc(handleAngle, start, end, handle.handleRatioAngle)
         handle.handleRatioAngle = Angle
     } else {
@@ -225,21 +224,27 @@ export function updateStarRatio(dx: number, dy: number, e: MouseEvent, scene: Sc
     scene.setRatio(ratio)
 }
 
-export function updateShapeArc(handle: Handle, dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+export function updateShapeArc(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     if (handle.pos == 'arc-end') {
-        updateShapeArcEnd(dx, dy, e, scene)
+        updateShapeArcEnd(e, scene, initialShapeData)
     } else {
-        updateShapeArcStart(dx, dy, e, scene)
+        updateShapeArcStart(e, scene, initialShapeData)
     }
 }
 
-function updateShapeArcStart(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
-    const { x, y } = scene.getCenterCoord()
+function updateShapeArcStart(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+    const Matrix = resource().canvasKit.Matrix
+
     const { width, height } = scene.getDim()
-    const deltaX = e.offsetX - x
-    const deltaY = e.offsetY - y
     const radiusX = width / 2
     const radiusY = height / 2
+    const { x: cx, y: cy } = { x: radiusX, y: radiusY }
+
+    const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
+    const [localX, localY] = localCurrent
+
+    const deltaX = localX - cx
+    const deltaY = localY - cy
     const { start, end } = scene.getArcAngles()
 
     //parametric deg
@@ -252,13 +257,19 @@ function updateShapeArcStart(dx: number, dy: number, e: MouseEvent, scene: Scene
     scene.setArc(start + delta, end + delta)
 }
 
-function updateShapeArcEnd(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
-    const { x, y } = scene.getCenterCoord()
+function updateShapeArcEnd(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+    const Matrix = resource().canvasKit.Matrix
+
+    const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
+    const [localX, localY] = localCurrent
+
     const { width, height } = scene.getDim()
-    const deltaX = e.offsetX - x
-    const deltaY = e.offsetY - y
     const radiusX = width / 2
     const radiusY = height / 2
+    const { x: cx, y: cy } = { x: radiusX, y: radiusY }
+
+    const deltaX = localX - cx
+    const deltaY = localY - cy
     const { start } = scene.getArcAngles()
 
     //parametric deg

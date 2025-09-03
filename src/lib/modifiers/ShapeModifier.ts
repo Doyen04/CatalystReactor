@@ -27,14 +27,10 @@ class ShapeModifier {
     private isHovered: boolean
     private selectedModifierHandle: Handle | null
     private initialShapeData: ShapeData | null = null
-    private handleArcAngle: number | null = null
-    private handleRatioAngle: number | null = null
     private font: SText
 
     constructor() {
         this.scene = null
-        this.handleArcAngle = null
-        this.handleRatioAngle = null
         this.strokeColor = '#00f'
         this.strokeWidth = 1
         this.handles = []
@@ -148,17 +144,17 @@ class ShapeModifier {
                 case 'size':
                     updateShapeDim(this.selectedModifierHandle, dragStart, e, this.scene, this.initialShapeData)
                     break
-                case 'angle':
-                    updateShapeAngle(e, this.scene, this.initialShapeData)
-                    break
                 case 'c-ratio':
                     updateOvalRatio(this.selectedModifierHandle, e, this.scene, this.initialShapeData)
                     break
+                case 'arc':
+                    updateShapeArc(this.selectedModifierHandle, e, this.scene, this.initialShapeData)
+                    break
+                case 'angle':
+                    updateShapeAngle(e, this.scene, this.initialShapeData)
+                    break
                 case 's-ratio':
                     updateStarRatio(dx, dy, e, this.scene)
-                    break
-                case 'arc':
-                    updateShapeArc(this.selectedModifierHandle, dx, dy, e, this.scene)
                     break
                 case 'vertices':
                     updateShapeVertices(dx, dy, e, this.scene)

@@ -12,7 +12,7 @@ export default class Handle {
     stroke: string | number[]
     fill: string | number[]
     isDragging: boolean = false
-    handleArcAngle: number | null = null
+    // handleArcAngle: number | null = null
     handleRatioAngle: number | null = null
 
     constructor(x: number, y: number, pos: HandlePos, type: HandleType, size = 6) {
@@ -27,7 +27,7 @@ export default class Handle {
         if (type !== 'size' && type !== 'angle') {
             this.size = 4
             if (type === 'arc' || type === 'c-ratio') {
-                this.handleArcAngle = 0
+                // this.handleArcAngle = 0
                 this.handleRatioAngle = 0
             }
         } else {
