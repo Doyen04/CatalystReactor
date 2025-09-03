@@ -158,7 +158,7 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
     })
 }
 
-export function clampAngleToArc(t: number, start: number, end: number, prev: number): number {
+function clampAngleToArc(t: number, start: number, end: number, prev: number): number {
     const TWO_PI = 2 * Math.PI
 
     const t0 = t < 0 ? t + TWO_PI : t
@@ -226,13 +226,13 @@ export function updateStarRatio(dx: number, dy: number, e: MouseEvent, scene: Sc
 
 export function updateShapeArc(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     if (handle.pos == 'arc-end') {
-        updateShapeArcEnd(e, scene, initialShapeData)
+        updateShapeArcEnd(handle, e, scene, initialShapeData)
     } else {
-        updateShapeArcStart(e, scene, initialShapeData)
+        updateShapeArcStart(handle, e, scene, initialShapeData)
     }
 }
 
-function updateShapeArcStart(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+function updateShapeArcStart(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const Matrix = resource().canvasKit.Matrix
 
     const { width, height } = scene.getDim()
@@ -254,10 +254,13 @@ function updateShapeArcStart(e: MouseEvent, scene: SceneNode, initialShapeData: 
     if (angle < 0) angle += 2 * Math.PI
     const delta = angle - start
 
+    const ratio = calculateRatioFromMousePosition({ x: localX, y: localY }, radiusX, radiusY, width, height)
+    handle.handleRatioFromCenter = ratio
+
     scene.setArc(start + delta, end + delta)
 }
 
-function updateShapeArcEnd(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const Matrix = resource().canvasKit.Matrix
 
     const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
@@ -280,6 +283,10 @@ function updateShapeArcEnd(e: MouseEvent, scene: SceneNode, initialShapeData: Sh
     let sweep = angle - start
     if (sweep <= 0) sweep += 2 * Math.PI
 
+    const ratio = calculateRatioFromMousePosition({ x: localX, y: localY }, radiusX, radiusY, width, height)
+    handle.handleRatioFromCenter = ratio
+
+    console.log(`Arc start: ${start}, end: ${start + sweep}`)
     scene.setArc(start, start + sweep)
 }
 

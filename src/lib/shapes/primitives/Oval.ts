@@ -193,8 +193,15 @@ class Oval extends Shape {
         const innerRx = this.radiusX * this.arcSegment.ratio
         const innerRy = this.radiusY * this.arcSegment.ratio
 
-        const rx = this.arcSegment.ratio === 0 ? outerRx * 0.8 : (outerRx + innerRx) / 2
-        const ry = this.arcSegment.ratio === 0 ? outerRy * 0.8 : (outerRy + innerRy) / 2
+        let rx = 0
+        let ry = 0
+        if (handle.isDragging) {
+            rx = outerRx * handle.handleRatioFromCenter
+            ry = outerRy * handle.handleRatioFromCenter
+        } else {
+            rx = this.arcSegment.ratio === 0 ? outerRx * 0.8 : (outerRx + innerRx) / 2
+            ry = this.arcSegment.ratio === 0 ? outerRy * 0.8 : (outerRy + innerRy) / 2
+        }
 
         const theta = handle.pos === 'arc-end' ? this.arcSegment.endAngle : this.arcSegment.startAngle
 

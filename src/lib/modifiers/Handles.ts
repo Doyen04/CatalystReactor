@@ -12,7 +12,7 @@ export default class Handle {
     stroke: string | number[]
     fill: string | number[]
     isDragging: boolean = false
-    // handleArcAngle: number | null = null
+    handleRatioFromCenter: number | null = null
     handleRatioAngle: number | null = null
 
     constructor(x: number, y: number, pos: HandlePos, type: HandleType, size = 6) {
@@ -26,9 +26,11 @@ export default class Handle {
         // By default, use Oval for radius, Rect for size
         if (type !== 'size' && type !== 'angle') {
             this.size = 4
-            if (type === 'arc' || type === 'c-ratio') {
-                // this.handleArcAngle = 0
+            if (type === 'c-ratio') {
                 this.handleRatioAngle = 0
+            }
+            if (type == 'arc') {
+                this.handleRatioFromCenter = 0
             }
         } else {
             this.size = size // Default size for the rect shaped resizers
@@ -64,7 +66,6 @@ export default class Handle {
         return dx * dx + dy * dy <= r * r
     }
 
-   
     createPaint() {
         if (!this.resource) return
         const cnvsKit = this.resource
