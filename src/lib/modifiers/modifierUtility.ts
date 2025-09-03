@@ -276,17 +276,19 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
     const { start } = scene.getArcAngles()
 
     //parametric deg
-    let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
-    // Normalize angle to 0-2π range
-    if (angle < 0) angle += 2 * Math.PI
+    const angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
 
     let sweep = angle - start
-    if (sweep <= 0) sweep += 2 * Math.PI
+
+    console.log(`Arc start: ${start}, angle ${angle} sweep ${sweep}`)
+
+    if (sweep < 0) {
+        sweep += 2 * Math.PI
+    }
 
     const ratio = calculateRatioFromMousePosition({ x: localX, y: localY }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
 
-    console.log(`Arc start: ${start}, end: ${start + sweep}`)
     scene.setArc(start, start + sweep)
 }
 
