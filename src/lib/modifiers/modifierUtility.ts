@@ -188,18 +188,21 @@ function calculateRatioFromMousePosition(e: Coord, centerX: number, centerY: num
 
 export function updateOvalRatio(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const Matrix = resource().canvasKit.Matrix
-    const center = Matrix.mapPoints(initialShapeData.worldTransform, [
-        initialShapeData.dimension.width * initialShapeData.rotationAnchor.x,
-        initialShapeData.dimension.height * initialShapeData.rotationAnchor.y,
-    ])
 
-    const deltaX = e.offsetX - center[0]
-    const deltaY = e.offsetY - center[1]
-    const radiusX = initialShapeData.dimension.width / 2
-    const radiusY = initialShapeData.dimension.height / 2
+    const localCurrent = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
+    const [localX, localY] = localCurrent
+
+    const { width, height } = scene.getDim()
+
+    const radiusX = width / 2
+    const radiusY = height / 2
+
+    const deltaX = localX - radiusX
+    const deltaY = localY - radiusY
 
     //parametric deg
     const handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
+
     const { start, end } = scene.getArcAngles()
     if (scene.isArc()) {
         console.log('inside ')
@@ -209,13 +212,7 @@ export function updateOvalRatio(handle: Handle, e: MouseEvent, scene: SceneNode,
         handle.handleRatioAngle = handleAngle
     }
 
-    const ratio = calculateRatioFromMousePosition(
-        { x: e.offsetX, y: e.offsetY },
-        center[0],
-        center[1],
-        initialShapeData.dimension.width,
-        initialShapeData.dimension.height
-    )
+    const ratio = calculateRatioFromMousePosition({ x: localX, y: localY }, radiusX, radiusY, width, height)
     scene.setRatio(ratio)
 }
 

@@ -53,9 +53,9 @@ class Oval extends Shape {
         this.arcSegment.ratio = nx
     }
 
-    override setCoord(centerX: number, centerY: number): void {
-        this.transform.x = centerX
-        this.transform.y = centerY
+    override setCoord(x: number, y: number): void {
+        this.transform.x = x
+        this.transform.y = y
 
         this.centerX = this.transform.x + this.radiusX
         this.centerY = this.transform.y + this.radiusY
@@ -173,8 +173,6 @@ class Oval extends Shape {
 
         const innerRadiusX = this.radiusX * this.arcSegment.ratio
         const innerRadiusY = this.radiusY * this.arcSegment.ratio
-        
-        console.log(handle.isDragging)
 
         const handleAngle = handle.isDragging ? handle.handleRatioAngle : (this.arcSegment.startAngle + this.arcSegment.endAngle) / 2
 

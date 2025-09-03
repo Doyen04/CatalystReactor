@@ -195,8 +195,6 @@ class ShapeModifier {
     }
 
     updateResizerPositions() {
-        console.log('bo')
-
         if (!this.scene) {
             console.log(' no shape for updateresizer')
             return
