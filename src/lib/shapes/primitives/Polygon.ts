@@ -71,6 +71,12 @@ class Polygon extends Shape {
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
 
+        const willFlipX = deltaX < 0
+        const willFlipY = deltaY < 0
+
+        this.transform.scaleX = willFlipX ? -1 : 1
+        this.transform.scaleY = willFlipY ? -1 : 1
+
         this.centerX = (dragStart.x + mx) / 2
         this.centerY = (dragStart.y + my) / 2
 
@@ -113,11 +119,6 @@ class Polygon extends Shape {
         return { x: this.centerX, y: this.centerY }
     }
 
-    override handleFlip(isFlippedX: boolean, isFlippedY: boolean): void {
-        this.transform.isFlippedX = isFlippedX
-        this.transform.isFlippedY = isFlippedY
-    }
-
     override getProperties(): Properties {
         return {
             transform: this.transform,
@@ -138,6 +139,8 @@ class Polygon extends Shape {
             return this.getRadiusModifierHandlesPos(handle)
         } else if (handle.type === 'vertices') {
             return this.getVerticesModifierHandlesPos(handle)
+        } else if (handle.type == 'angle') {
+            return super.getAngleModifierHandlesPos(handle)
         }
         return { x: 0, y: 0 }
     }
@@ -183,14 +186,11 @@ class Polygon extends Shape {
         return { x: this.centerX, y: this.centerY }
     }
 
-    computeQuadPoint(P0: { x: number; y: number }, P1: { x: number; y: number }, P2: { x: number; y: number }, t: number) {
-        const x = (1 - t) * (1 - t) * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x
-        const y = (1 - t) * (1 - t) * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y
-        return { x, y }
-    }
-
     override getModifierHandles(): Handle[] {
         const handles = super.getSizeModifierHandles()
+        super.getAngleModifierHandles().forEach(handle => {
+            handles.push(handle)
+        })
         handles.push(new Handle(0, 0, 'top', 'radius'))
         handles.push(new Handle(0, 0, 'right', 'vertices'))
         return handles
@@ -210,6 +210,12 @@ class Polygon extends Shape {
         return { x, y }
     }
 
+    computeQuadPoint(P0: { x: number; y: number }, P1: { x: number; y: number }, P2: { x: number; y: number }, t: number) {
+        const x = (1 - t) * (1 - t) * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x
+        const y = (1 - t) * (1 - t) * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y
+        return { x, y }
+    }
+
     private generateRegularPolygon(): Points[] {
         const points: Points[] = []
 
@@ -223,10 +229,10 @@ class Polygon extends Shape {
     }
 
     override calculateBoundingRect(): void {
-        const left = this.transform.x
-        const top = this.transform.y
-        const right = this.transform.x + this.radiusX * 2
-        const bottom = this.transform.y + this.radiusY * 2
+        const left = 0
+        const top = 0
+        const right = this.radiusX * 2
+        const bottom = this.radiusY * 2
 
         this.boundingRect = {
             left: left,
@@ -244,17 +250,9 @@ class Polygon extends Shape {
         const path = new this.resource.canvasKit.Path()
 
         if (this.points.length >= 3) {
-            // Not enough points for a polygon, draw as regular lines
             if (this.bRadius == 0) {
-                const [startX, startY] = this.points[0]
-                path.moveTo(startX, startY)
-                for (let i = 1; i < this.points.length; i++) {
-                    const [x, y] = this.points[i]
-                    path.lineTo(x, y)
-                }
-                path.close()
+                this.createRegularPolygon(path)
             } else {
-                // Create rounded polygon
                 this.createRoundedPolygonPath(path)
             }
         }
@@ -264,6 +262,29 @@ class Polygon extends Shape {
         path.delete()
 
         this.resetPaint()
+        if (this.isHover) {
+            this.drawHoverEffect(canvas)
+        }
+    }
+
+    private drawHoverEffect(canvas: Canvas): void {
+        if (!this.resource) return
+        const { canvasKit } = this.resource
+        const path = new canvasKit.Path()
+
+        const hoverPaint = this.resource.strokePaint
+        hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1)) // Blue with transparency
+        hoverPaint.setStrokeWidth(2)
+
+        if (this.points.length >= 3) {
+            if (this.bRadius == 0) {
+                this.createRegularPolygon(path)
+            } else {
+                this.createRoundedPolygonPath(path)
+            }
+        }
+        canvas.drawPath(path, hoverPaint)
+        path.delete()
     }
 
     private computeRoundedCorner(index: number) {
@@ -273,7 +294,7 @@ class Polygon extends Shape {
         const curr = this.points[index]
         const next = this.points[(index + 1) % n]
 
-        const vec1 = [prev[0] - curr[0], prev[1] - curr[1]]
+        const vec1 = [curr[0] - prev[0], curr[1] - prev[1]]
         const vec2 = [next[0] - curr[0], next[1] - curr[1]]
 
         const len1 = Math.hypot(vec1[0], vec1[1])
@@ -292,61 +313,110 @@ class Polygon extends Shape {
         const norm1 = [vec1[0] / len1, vec1[1] / len1]
         const norm2 = [vec2[0] / len2, vec2[1] / len2]
 
-        const dot = norm1[0] * norm2[0] + norm1[1] * norm2[1]
-        const angle = Math.acos(Math.max(-1, Math.min(1, dot)))
+        // Calculate maximum corner radius based on polygon geometry
+        const maxCornerRadius = Math.min(this.radiusX, this.radiusY) * Math.cos(Math.PI / n)
 
-        // Use angle-based maximum for better visual results
-        const logicalRadius = Math.min(len1 / 2, len2 / 2)
-        const halfAngle = angle / 2
-        const maxRadius = Math.min(this.bRadius, Math.min(len1 / 2, len2 / 2) * Math.tan(halfAngle))
+        // Scale the border radius similar to the reference implementation
+        // This creates a perfect circle at 1/2 radius
+        const scaledRadius = maxCornerRadius * Math.min(1, (this.bRadius / Math.min(this.radiusX, this.radiusY)) * 2)
 
-        const startPoint = [curr[0] + norm1[0] * maxRadius, curr[1] + norm1[1] * maxRadius]
-        const endPoint = [curr[0] + norm2[0] * maxRadius, curr[1] + norm2[1] * maxRadius]
-        const logicalStart = [curr[0] + norm1[0] * logicalRadius, curr[1] + norm1[1] * logicalRadius]
+        // Ensure we don't exceed the edge lengths
+        const actualRadius = Math.min(scaledRadius, Math.min(len1 / 2, len2 / 2))
+
+        const startPoint = [curr[0] - norm1[0] * actualRadius, curr[1] - norm1[1] * actualRadius]
+        const endPoint = [curr[0] + norm2[0] * actualRadius, curr[1] + norm2[1] * actualRadius]
+        const logicalStart = [curr[0] - norm1[0] * Math.min(len1 / 2, len2 / 2), curr[1] - norm1[1] * Math.min(len1 / 2, len2 / 2)]
+
         return {
             startPoint,
             endPoint,
             controlPoint: curr,
-            maxRadius,
-            logicalRadius,
+            maxRadius: actualRadius,
+            logicalRadius: Math.min(len1 / 2, len2 / 2),
             logicalStart,
         }
+    }
+
+    private createRegularPolygon(path: Path) {
+        const [startX, startY] = this.points[0]
+        path.moveTo(startX, startY)
+        for (let i = 1; i < this.points.length; i++) {
+            const [x, y] = this.points[i]
+            path.lineTo(x, y)
+        }
+        path.close()
     }
 
     private createRoundedPolygonPath(path: Path): void {
         const numPoints = this.points.length
 
+        // Get the first corner to determine starting point
         const firstCorner = this.computeRoundedCorner(0)
-
-        if (firstCorner.maxRadius >= firstCorner.logicalRadius) {
-            path.moveTo(firstCorner.logicalStart[0], firstCorner.logicalStart[1])
-        } else {
-            path.moveTo(firstCorner.startPoint[0], firstCorner.startPoint[1])
-        }
+        path.moveTo(firstCorner.startPoint[0], firstCorner.startPoint[1])
 
         for (let i = 0; i < numPoints; i++) {
-            const { controlPoint, maxRadius } = this.computeRoundedCorner(i)
-            const nextIndex = (i + 1) % numPoints
-            const nextCorner = this.computeRoundedCorner(nextIndex)
-            path.arcToTangent(controlPoint[0], controlPoint[1], nextCorner.startPoint[0], nextCorner.startPoint[1], maxRadius)
+            const corner = this.computeRoundedCorner(i)
+            console.log(corner)
+
+            if (i > 0) {
+                path.lineTo(corner.startPoint.x, corner.startPoint.y)
+            }
+            path.quadTo(corner.controlPoint.x, corner.controlPoint.y, corner.endPoint.x, corner.endPoint.y)
         }
 
         path.close()
     }
+
+    // private computeRoundedCorner(i: number) {
+    //     const sides = this.points.length
+    //     const prev = this.points[(i - 1 + sides) % sides]
+    //     const curr = this.points[i]
+    //     const next = this.points[(i + 1) % sides]
+    //     const vec1 = { x: curr[0] - prev[0], y: curr[1] - prev[1] }
+    //     const vec2 = { x: next[0] - curr[0], y: next[1] - curr[1] }
+    //     const len1 = Math.hypot(vec1.x, vec1.y)
+    //     const len2 = Math.hypot(vec2.x, vec2.y)
+
+    //     let currCornerRadius = this.bRadius
+    //     // if (typeof this.bRadius === 'number') {
+    //     //     currCornerRadius = this.bRadius
+    //     // } else {
+    //     //     currCornerRadius = i < cornerRadius.length ? cornerRadius[i] : 0
+    //     // }
+    //     const maxCornerRadius = Math.min(this.radiusX, this.radiusY) * Math.cos(Math.PI / sides)
+    //     // cornerRadius creates perfect circle at 1/2 radius
+    //     currCornerRadius = maxCornerRadius * Math.min(1, (currCornerRadius / Math.min(this.radiusX, this.radiusY)) * 2)
+
+    //     // currCornerRadius = Math.min(currCornerRadius, Math.min(len1 / 2, len2 / 2))
+
+    //     const normalVec1 = { x: vec1.x / len1, y: vec1.y / len1 }
+    //     const normalVec2 = { x: vec2.x / len2, y: vec2.y / len2 }
+    //     const p1 = {
+    //         x: curr[0] - normalVec1.x * currCornerRadius,
+    //         y: curr[1] - normalVec1.y * currCornerRadius,
+    //     }
+    //     const p2 = {
+    //         x: curr[0] + normalVec2.x * currCornerRadius,
+    //         y: curr[1] + normalVec2.y * currCornerRadius,
+    //     }
+
+    //     return {
+    //         startPoint: p1,
+    //         endPoint: p2,
+    //         controlPoint: { x: curr[0], y: curr[1] },
+    //     }
+    // }
 
     override pointInShape(x: number, y: number): boolean {
         const pts = this.points
         const n = pts.length
         if (n < 3) return false
 
-        const relativeX = x - this.radiusX * 2
-        const relativeY = y - this.radiusY * 2
-
         let inside = false
         for (let i = 0, j = n - 1; i < n; j = i++) {
             const [xi, yi] = pts[i]
             const [xj, yj] = pts[j]
-            const intersects = yi > relativeY !== yj > relativeY && relativeX < ((xj - xi) * (relativeY - yi)) / (yj - yi) + xi
+            const intersects = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi
 
             if (intersects) inside = !inside
         }

@@ -159,13 +159,9 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
 }
 
 function clampAngleToArc(t: number, start: number, end: number, prev: number): number {
-    const TWO_PI = 2 * Math.PI
-
-    const t0 = t < 0 ? t + TWO_PI : t
-
-    if (t0 < start) return prev
-    if (t0 > end) return prev
-    return t0
+    if (t < start) return prev
+    if (t > end) return prev
+    return t
 }
 
 function calculateRatioFromMousePosition(e: Coord, centerX: number, centerY: number, width: number, height: number): number {
@@ -201,7 +197,8 @@ export function updateOvalRatio(handle: Handle, e: MouseEvent, scene: SceneNode,
     const deltaY = localY - radiusY
 
     //parametric deg
-    const handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
+    let handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
+    if (handleAngle < 0) handleAngle += 2 * Math.PI
 
     const { start, end } = scene.getArcAngles()
     if (scene.isArc()) {
@@ -292,10 +289,11 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
     scene.setArc(start, start + sweep)
 }
 
-export function updateShapeVertices(dx: number, dy: number, e: MouseEvent, scene: SceneNode) {
+export function updateShapeVertices(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const GAP = 10 // defined distance for both x and y
+    const Matrix = resource().canvasKit.Matrix
     const count = scene.getVertexCount()
-    const { x, y } = { x: e.offsetX, y: e.offsetY }
+    const [x, y] = Matrix.mapPoints(initialShapeData.inverseWorldTransform, [e.offsetX, e.offsetY])
 
     const next = clamp(count + 1, 3, 60)
     const prev = clamp(count - 1, 3, 60)

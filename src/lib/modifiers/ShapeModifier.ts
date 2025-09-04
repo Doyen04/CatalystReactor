@@ -157,7 +157,7 @@ class ShapeModifier {
                     updateStarRatio(dx, dy, e, this.scene)
                     break
                 case 'vertices':
-                    updateShapeVertices(dx, dy, e, this.scene)
+                    updateShapeVertices(e, this.scene, this.initialShapeData)
                     break
                 default:
                     break

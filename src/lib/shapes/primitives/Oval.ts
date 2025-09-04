@@ -2,6 +2,7 @@ import Handle from '@/lib/modifiers/Handles'
 import Shape from '../base/Shape'
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { ArcSegment, Coord, Properties } from '@lib/types/shapes'
+import clamp from '@lib/helper/clamp'
 
 class Oval extends Shape {
     private radiusX: number
@@ -140,6 +141,9 @@ class Oval extends Shape {
 
     override getModifierHandles(): Handle[] {
         const handles = super.getSizeModifierHandles()
+        super.getAngleModifierHandles().forEach(handle => {
+            handles.push(handle)
+        })
         handles.push(new Handle(0, 0, 'arc-end', 'arc'))
         handles.push(new Handle(0, 0, 'arc-start', 'arc'))
         handles.push(new Handle(0, 0, 'center', 'c-ratio'))
@@ -196,8 +200,9 @@ class Oval extends Shape {
         let rx = 0
         let ry = 0
         if (handle.isDragging) {
-            rx = outerRx * handle.handleRatioFromCenter
-            ry = outerRy * handle.handleRatioFromCenter
+            const ratio = clamp(handle.handleRatioFromCenter, this.arcSegment.ratio, 1)
+            rx = outerRx * ratio
+            ry = outerRy * ratio
         } else {
             rx = this.arcSegment.ratio === 0 ? outerRx * 0.8 : (outerRx + innerRx) / 2
             ry = this.arcSegment.ratio === 0 ? outerRy * 0.8 : (outerRy + innerRy) / 2
