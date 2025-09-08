@@ -137,9 +137,8 @@ class Rectangle extends Shape {
     }
 
     override getCenterCoord(): Coord {
-        const { x, y } = this.transform
         const { width, height } = this.dimension
-        return { x: x + width / 2, y: y + height / 2 }
+        return { x: width / 2, y: height / 2 }
     }
 
     getBorderRadius() {

@@ -7,8 +7,6 @@ import clamp from '@lib/helper/clamp'
 class Oval extends Shape {
     private radiusX: number
     private radiusY: number
-    private centerX: number
-    private centerY: number
     private arcSegment: ArcSegment
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
@@ -16,26 +14,18 @@ class Oval extends Shape {
         this.arcSegment = { startAngle: 0, endAngle: 2 * Math.PI, ratio: 0 }
         this.radiusX = 0
         this.radiusY = 0
-        this.centerX = 0
-        this.centerY = 0
         this.calculateBoundingRect()
     }
 
     override moveShape(mx: number, my: number): void {
         this.transform.x += mx
         this.transform.y += my
-        this.centerX += mx
-        this.centerY += my
         this.calculateBoundingRect()
     }
 
     setRadius(radius: number): void {
         this.radiusX = radius
         this.radiusY = radius
-
-        this.centerX = this.transform.x + radius
-        this.centerY = this.transform.y + radius
-
         this.calculateBoundingRect()
     }
 
@@ -43,10 +33,6 @@ class Oval extends Shape {
     override setDim(width: number, height: number) {
         this.radiusX = width / 2
         this.radiusY = height / 2
-
-        this.centerX = this.transform.x + this.radiusX
-        this.centerY = this.transform.y + this.radiusY
-
         this.calculateBoundingRect()
     }
 
@@ -57,10 +43,6 @@ class Oval extends Shape {
     override setCoord(x: number, y: number): void {
         this.transform.x = x
         this.transform.y = y
-
-        this.centerX = this.transform.x + this.radiusX
-        this.centerY = this.transform.y + this.radiusY
-
         this.calculateBoundingRect()
     }
 
@@ -88,18 +70,12 @@ class Oval extends Shape {
             this.radiusX = radius / 2
             this.radiusY = radius / 2
 
-            this.centerX = dragStart.x + (deltaX >= 0 ? this.radiusX : -this.radiusX)
-            this.centerY = dragStart.y + (deltaY >= 0 ? this.radiusY : -this.radiusY)
-
             this.transform.x = deltaX >= 0 ? dragStart.x : dragStart.x - radius
             this.transform.y = deltaY >= 0 ? dragStart.y : dragStart.y - radius
         } else {
             // Oval mode
             this.radiusX = Math.abs(deltaX) / 2
             this.radiusY = Math.abs(deltaY) / 2
-
-            this.centerX = (dragStart.x + mx) / 2
-            this.centerY = (dragStart.y + my) / 2
 
             this.transform.x = deltaX < 0 ? mx : dragStart.x
             this.transform.y = deltaY < 0 ? my : dragStart.y
@@ -136,7 +112,7 @@ class Oval extends Shape {
     }
 
     getCenterCoord(): { x: number; y: number } {
-        return { x: this.centerX, y: this.centerY }
+        return { x: this.radiusX, y: this.radiusY }
     }
 
     override getModifierHandles(): Handle[] {
