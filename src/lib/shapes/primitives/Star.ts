@@ -182,8 +182,7 @@ class Star extends Shape {
         const size = handle.size
         const padding = 10
         const radius = Math.min(this.bRadius, this.getMaxRadius())
-        console.log(radius, this.bRadius);
-        
+
         if (this.points.length > 0) {
             const { x, y } = this.points[0]
             return {

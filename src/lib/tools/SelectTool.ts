@@ -151,8 +151,6 @@ class SelectTool extends Tool {
         this.setCursorForHandle(handle)
 
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
-        console.log(scene, 'hoveredscene')
-
         this.setHoveredShape(scene)
     }
 
