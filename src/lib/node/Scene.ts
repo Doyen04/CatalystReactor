@@ -308,10 +308,6 @@ abstract class SceneNode {
         return this.shape != null
     }
 
-    pointInShape(x: number, y: number): boolean {
-        return this.shape ? this.shape.pointInShape(x, y) : false
-    }
-
     setLocalMatrix(matrix: number[]) {
         this.localMatrix = matrix
     }

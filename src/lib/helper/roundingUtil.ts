@@ -33,14 +33,13 @@ function computeRoundedCorner(shapeType: 'star' | 'polygon', i: number, points: 
     const dot = Vector.dot(normStart, normEnd)
     const angle = Math.acos(dot)
     let r = 0
+    const rInside = Math.min(len1 / 2, len2 / 2) * Math.tan(angle / 2)
 
     if (shapeType == 'polygon') {
-        const rInside = Math.min(len1 / 2, len2 / 2) * Math.tan(angle / 2)
         r = Math.min(rInside, radius)
     } else if (shapeType == 'star') {
-        const rInside = Math.min(len1 / 2, len2 / 2) * Math.tan(angle / 2)
         r = i % 2 === 0 ? radius : Math.min(rInside, radius)
-        console.log(i, r, rInside, radius)
+        // console.log(i, r, rInside, radius)//fix this for stars
     }
 
     // Distance to offset along each edge

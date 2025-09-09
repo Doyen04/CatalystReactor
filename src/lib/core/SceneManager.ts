@@ -18,7 +18,7 @@ class SceneManager {
     }
 
     getCollidedScene(x: number, y: number): SceneNode | null {
-        const flattened = this.flattenScene()
+        const flattened = this.flattenScene()//work on this
 
         for (const node of flattened) {
             if (node && node.isCollide(x, y)) {

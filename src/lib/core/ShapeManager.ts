@@ -134,7 +134,7 @@ class ShapeManager {
             this.selected = true
             return true
         }
-        this.selected = this.scene.pointInShape(x, y) ? true : false
+        this.selected = this.scene.isCollide(x, y) ? true : false
         return this.selected
     }
 

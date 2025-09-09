@@ -57,7 +57,6 @@ class SelectTool extends Tool {
             return
         }
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
-        console.log(scene, 'scene selected')
 
         if (!scene) {
             this.shapeManager.detachShape()
@@ -71,7 +70,7 @@ class SelectTool extends Tool {
     }
 
     private handleDoubleClick(e: MouseEvent) {
-        console.log('Double click detected',e)
+        console.log('Double click detected', e)
 
         // if (this.shapeManager.hasShape()) {
         //     const shape = this.shapeManager.currentShape
@@ -152,6 +151,8 @@ class SelectTool extends Tool {
         this.setCursorForHandle(handle)
 
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
+        console.log(scene, 'hoveredscene')
+
         this.setHoveredShape(scene)
     }
 
