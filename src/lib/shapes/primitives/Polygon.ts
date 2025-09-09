@@ -3,7 +3,8 @@ import Shape from '../base/Shape'
 import { Coord, HandlePos, Properties, Sides } from '@lib/types/shapes'
 import Handle from '@lib/modifiers/Handles'
 import clamp from '@lib/helper/clamp'
-import Vector from '@lib/helper/vector'
+import computeRoundedCorner from '@lib/helper/roundingUtil'
+import { arcPointAtFraction } from '@lib/helper/pointInArc'
 
 class Polygon extends Shape {
     bRadius: number
@@ -117,6 +118,16 @@ class Polygon extends Shape {
         return this.sides.sides
     }
 
+    override getModifierHandles(): Handle[] {
+        const handles = super.getSizeModifierHandles()
+        super.getAngleModifierHandles().forEach(handle => {
+            handles.push(handle)
+        })
+        handles.push(new Handle(0, 0, 'top', 'radius'))
+        handles.push(new Handle(0, 0, 'right', 'vertices'))
+        return handles
+    }
+
     override getModifierHandlesPos(handle: Handle): Coord {
         if (handle.type === 'size') {
             return super.getSizeModifierHandlesPos(handle)
@@ -133,11 +144,13 @@ class Polygon extends Shape {
     private getRadiusModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size
         const padding = 10
+        const radius = Math.min(this.bRadius, this.getMaxRadius())
+
         if (this.points.length > 0) {
             const { x, y } = this.points[0]
             return {
                 x: x - size,
-                y: y + (handle.isDragging || this.bRadius >= padding ? this.bRadius : padding),
+                y: y + (handle.isDragging || radius >= padding ? radius : padding),
             }
         }
         return { x: this.radiusX, y: this.radiusY }
@@ -146,28 +159,22 @@ class Polygon extends Shape {
     private getVerticesModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size
         if (this.points.length > 1) {
-            // If border radius is set, use the tangent point for vertex 1
             if (this.bRadius > 0) {
-                const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = this.computeRoundedCorner(1)
-                const { x: tangentX, y: tangentY } = this.arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
+                const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
+                    'polygon',
+                    1,
+                    this.points,
+                    this.sides.sides,
+                    Math.min(this.bRadius, this.getMaxRadius())
+                )
+                const { x: tangentX, y: tangentY } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
                 return { x: tangentX - size, y: tangentY - size }
             } else {
-                // No border radius, use raw vertex
                 const { x, y } = this.points[1]
                 return { x: x - size, y: y - size }
             }
         }
         return { x: this.radiusX, y: this.radiusY }
-    }
-
-    override getModifierHandles(): Handle[] {
-        const handles = super.getSizeModifierHandles()
-        super.getAngleModifierHandles().forEach(handle => {
-            handles.push(handle)
-        })
-        handles.push(new Handle(0, 0, 'top', 'radius'))
-        handles.push(new Handle(0, 0, 'right', 'vertices'))
-        return handles
     }
 
     override getDim(): { width: number; height: number } {
@@ -182,6 +189,10 @@ class Polygon extends Shape {
         const y = this.radiusY + this.radiusY * Math.sin(angle)
 
         return { x, y }
+    }
+
+    getMaxRadius() {
+        return Math.min(this.radiusX, this.radiusY) * Math.cos(Math.PI / this.sides.sides)
     }
 
     private generateRegularPolygon(): Coord[] {
@@ -264,101 +275,15 @@ class Polygon extends Shape {
         path.close()
     }
 
-    /**
-    FORMULA FOR CALCULATING CORNER RADIUS
-    const rMax = Math.min(len1 / 2, len2 / 2) * Math.tan(angle / 2) BEST FOR IRREGULAR SHAPE
-    const rMax = Math.min(len1, len2) * (1 / Math.tan(angle / 2));
-    const rMax = Math.min(width, height) / 2 * Math.cos(Math.PI / n);
-    const rMax =  (sideLength / 2) * (1 / Math.tan(Math.PI / n)) 
-    **/
-    private computeRoundedCorner(i: number) {
-        const n = this.sides.sides
-
-        if (n < 3) throw new Error('Polygon must have at least 3 sides')
-
-        const rMax = Math.min(this.radiusX, this.radiusY) * Math.cos(Math.PI / n)
-
-        const vertices = this.points
-        const startPoint = vertices[(i - 1 + n) % n]
-        const controlPoint = vertices[i]
-        const endPoint = vertices[(i + 1) % n]
-
-        // Direction vectors
-        const v1 = Vector.subtract(startPoint, controlPoint)
-        const v2 = Vector.subtract(endPoint, controlPoint)
-
-        const len1 = Vector.length(v1)
-        const len2 = Vector.length(v2)
-
-        // Normalize
-        const normStart = Vector.normalize(v1)
-        const normEnd = Vector.normalize(v2)
-
-        // Angle between edges
-        const dot = Vector.dot(normStart, normEnd)
-        const angle = Math.acos(dot)
-
-        const rInside = Math.min(len1 / 2, len2 / 2) * Math.tan(angle / 2)
-
-        const r = Math.min(rInside, this.bRadius)
-
-        // Distance to offset along each edge
-        const dist = r / Math.tan(angle / 2)
-
-        // Cut points
-        const arcStart = Vector.add(controlPoint, Vector.scale(normStart, dist))
-        const arcEnd = Vector.add(controlPoint, Vector.scale(normEnd, dist))
-
-        const turnSign = Math.sign(Vector.cross(normStart, normEnd)) || 1 // orientation of the corner
-        const startNormal = turnSign > 0 ? Vector.leftNormal(normStart) : Vector.rightNormal(normStart)
-        const endNormal = turnSign > 0 ? Vector.rightNormal(normEnd) : Vector.leftNormal(normEnd)
-
-        const centerCandidateFromStart = Vector.add(arcStart, Vector.scale(Vector.normalize(startNormal), r))
-        const centerCandidateFromEnd = Vector.add(arcEnd, Vector.scale(Vector.normalize(endNormal), r))
-        const arcCenter = {
-            x: (centerCandidateFromStart.x + centerCandidateFromEnd.x) * 0.5,
-            y: (centerCandidateFromStart.y + centerCandidateFromEnd.y) * 0.5,
-        }
-
-        return {
-            startPoint: arcStart,
-            endPoint: arcEnd,
-            controlPoint: controlPoint,
-            currentRadius: r,
-            maxRadius: rMax, //work on this
-            arcCenter: arcCenter,
-            turnSign: turnSign,
-        }
-    }
-
-    getArcParameters(startPoint: Coord, endPoint: Coord, arcCenter: Coord, currentRadius: number, turnSign: number) {
-        function normalizeAngle(angle: number) {
-            while (angle <= -Math.PI) angle += Math.PI * 2
-            while (angle > Math.PI) angle -= Math.PI * 2
-            return angle
-        }
-
-        const a1 = Math.atan2(startPoint.y - arcCenter.y, startPoint.x - arcCenter.x)
-        const a2 = Math.atan2(endPoint.y - arcCenter.y, endPoint.x - arcCenter.x)
-        let delta = normalizeAngle(a2 - a1)
-
-        // Enforce arcTo fillet direction: left turn => CW (delta <= 0), right turn => CCW (delta >= 0)
-        if (turnSign > 0 && delta > 0) delta -= Math.PI * 2
-        if (turnSign < 0 && delta < 0) delta += Math.PI * 2
-
-        return { center: arcCenter, radius: currentRadius, startAngle: a1, deltaAngle: delta }
-    }
-
-    arcPointAtFraction(startPoint: Coord, endPoint: Coord, arcCenter: Coord, currentRadius: number, turnSign: number, t: number) {
-        const params = this.getArcParameters(startPoint, endPoint, arcCenter, currentRadius, turnSign)
-        const clamped = Math.max(0, Math.min(1, t))
-        const theta = params.startAngle + clamped * params.deltaAngle
-        return { x: params.center.x + params.radius * Math.cos(theta), y: params.center.y + params.radius * Math.sin(theta) }
-    }
-
-    createRoundedPolygonPath(path: Path) {
+    private createRoundedPolygonPath(path: Path) {
         for (let i = 0; i < this.points.length; i++) {
-            const { startPoint, endPoint, controlPoint, currentRadius } = this.computeRoundedCorner(i)
+            const { startPoint, endPoint, controlPoint, currentRadius } = computeRoundedCorner(
+                'polygon',
+                i,
+                this.points,
+                this.sides.sides,
+                Math.min(this.bRadius, this.getMaxRadius())
+            )
             if (i === 0) {
                 path.moveTo(startPoint.x, startPoint.y)
             } else {

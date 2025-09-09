@@ -209,11 +209,14 @@ class Rectangle extends Shape {
         return handles
     }
 
+    getMaxRadius() {
+        return Math.min(this.dimension.width, this.dimension.height) / 2
+    }
+
     //local coord
     getRadiusModiferHandlesPos(handle: Handle): { x: number; y: number } {
         let r = this.bdradius[handle.pos]
-        const max = Math.min(this.dimension.width, this.dimension.height) / 2
-        r = Math.min(r, max)
+        r = Math.min(r, this.getMaxRadius())
         const padding = 15
         const size = handle.size
 
