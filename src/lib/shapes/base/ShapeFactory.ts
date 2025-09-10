@@ -3,14 +3,15 @@ import Rectangle from '../primitives/Rect'
 import Star from '../primitives/Star'
 import Polygon from '../primitives/Polygon'
 import PText from '../primitives/PText'
-import { IShape, Coord, ShapeType } from '@lib/types/shapes'
+import { Coord, ShapeType } from '@lib/types/shapes'
 import PImage from '../primitives/Image'
 
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
+import type Shape from './Shape'
 
 export default class ShapeFactory {
-    static createShape(type: ShapeType, options: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer }): IShape {
-        let shape: IShape
+    static createShape(type: ShapeType, options: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer }): Shape {
+        let shape: Shape
 
         switch (type) {
             case 'rect':

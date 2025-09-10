@@ -1,4 +1,4 @@
-import { Coord, IShape } from '@lib/types/shapes'
+import { Coord } from '@lib/types/shapes'
 import Tool from './Tool'
 import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
@@ -178,10 +178,6 @@ class SelectTool extends Tool {
 
         this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
     }
-    canEdit(shape: IShape) {
-        return shape && typeof shape.canEdit === 'function' && shape.canEdit()
-    }
-
     override toolChange(): void {
         super.toolChange()
         if (this.clickTimer) {

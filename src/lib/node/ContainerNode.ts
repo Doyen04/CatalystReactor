@@ -1,11 +1,12 @@
 import { Canvas } from 'canvaskit-wasm'
-import { IShape } from '@lib/types/shapes'
+// import { IShape } from '@lib/types/shapes'
 import SceneNode from './Scene'
+import type Shape from '@lib/shapes/base/Shape'
 
 class ContainerNode extends SceneNode {
     children: SceneNode[]
 
-    constructor(shape: IShape | null) {
+    constructor(shape: Shape | null) {
         super()
         this.shape = shape
         this.children = []
@@ -13,12 +14,12 @@ class ContainerNode extends SceneNode {
         this.setUpMatrix()
     }
 
-    addChildNode(child: SceneNode): void {
+    override addChildNode(child: SceneNode): void {
         child.setParent(this)
         this.children.push(child)
     }
 
-    removeChildNode(child: SceneNode): void {
+    override removeChildNode(child: SceneNode): void {
         const i = this.children.indexOf(child)
         if (i !== -1) {
             child.setParent(null)

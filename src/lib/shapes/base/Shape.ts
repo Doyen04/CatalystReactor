@@ -9,7 +9,6 @@ import {
     CornerPos,
     FillStyle,
     ImageFill,
-    IShape,
     LinearGradient,
     Properties,
     RadialGradient,
@@ -33,7 +32,7 @@ interface Arguments {
     strokeColor?: string
 }
 
-abstract class Shape implements IShape {
+abstract class Shape {
     protected IWidth: number
     protected IHeight: number
     protected aspectRatio: number = 1

@@ -1,9 +1,10 @@
 import { Canvas } from 'canvaskit-wasm'
-import { IShape } from '@lib/types/shapes'
+// import { IShape } from '@lib/types/shapes'
 import SceneNode from './Scene'
+import type Shape from '@lib/shapes/base/Shape'
 
 class ShapeNode extends SceneNode {
-    constructor(shape: IShape | null) {
+    constructor(shape: Shape | null) {
         super()
         this.shape = shape
         this.parent = null
