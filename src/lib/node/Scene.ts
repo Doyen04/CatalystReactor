@@ -328,6 +328,19 @@ abstract class SceneNode {
         // Implementation for adding a child node
     }
 
+    canEdit() {
+        return this.shape && typeof (this.shape as IShape).canEdit === 'function' && (this.shape as IShape).canEdit()
+    }
+
+    insertText(char: string, shiftKey: boolean) {
+        console.log('not', char, shiftKey)
+    }
+    deleteText(direc: string) {
+        console.log(direc)
+    }
+    moveCursor(direc: string, shiftKey: boolean) {
+        console.log(direc, shiftKey)
+    }
     abstract draw(ctx: Canvas): void
     abstract updateWorldMatrix(matrix?: number[]): void
     abstract destroy(): void

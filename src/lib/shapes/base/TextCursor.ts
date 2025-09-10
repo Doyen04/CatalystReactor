@@ -105,7 +105,7 @@ class TextCursor {
         const rects = paragraph.getRectsForRange(startIndex, endIndex, CK.RectHeightStyle.IncludeLineSpacingTop, CK.RectWidthStyle.Tight)
 
         if (!rects.length) return []
-        let [x, y, w, h] = rects[rects.length - 1].rect
+        const [x, y, w, h] = rects[rects.length - 1].rect
 
         if (current.startIndex == this.cursorIndex) {
             return [x, y, 2, height]
@@ -247,7 +247,7 @@ class TextCursor {
         }
         this.setPaint()
 
-        canvas.drawLine(this.x + this.textX, this.y + this.textY, this.x + this.textX, this.y + this.textY + this.height, this.resource.strokePaint)
+        canvas.drawLine(this.textX, this.textY, this.textX, this.textY + this.height, this.resource.strokePaint)
     }
 
     destroy(): void {

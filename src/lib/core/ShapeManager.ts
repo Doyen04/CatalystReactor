@@ -37,14 +37,16 @@ class ShapeManager {
         if (this.shapeModifier.hasSelectedHandle()) {
             this.shapeModifier.drag(dragStart, dx, dy, e)
         } else {
-            this.scene?.move(dx, dy)
+            this.scene.move(dx, dy)
         }
 
         this.shapeModifier.update()
         const props = this.scene?.getProperties()
         this.throttledUpdate(props)
     }
-
+    moveScene(dx: number, dy: number) {
+        this.scene.move(dx, dy)
+    }
     handleTinyShapes(): void {
         if (!this.scene) return
 
@@ -63,6 +65,10 @@ class ShapeManager {
 
     get currentScene(): SceneNode {
         return this.scene
+    }
+
+    hasScene() {
+        return this.scene != null
     }
 
     hasSelection(): boolean {

@@ -209,6 +209,17 @@ class Rectangle extends Shape {
         return handles
     }
 
+    override getModifierHandlesPos(handle: Handle): { x: number; y: number } {
+        if (handle.type === 'radius') {
+            return this.getRadiusModiferHandlesPos(handle)
+        } else if (handle.type === 'size') {
+            return super.getSizeModifierHandlesPos(handle)
+        } else if (handle.type == 'angle') {
+            return super.getAngleModifierHandlesPos(handle)
+        }
+        return { x: 0, y: 0 }
+    }
+
     getMaxRadius() {
         return Math.min(this.dimension.width, this.dimension.height) / 2
     }
@@ -242,17 +253,6 @@ class Rectangle extends Shape {
         }
 
         return { x, y }
-    }
-
-    override getModifierHandlesPos(handle: Handle): { x: number; y: number } {
-        if (handle.type === 'radius') {
-            return this.getRadiusModiferHandlesPos(handle)
-        } else if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle)
-        } else if (handle.type == 'angle') {
-            return super.getAngleModifierHandlesPos(handle)
-        }
-        return { x: 0, y: 0 }
     }
 
     override calculateBoundingRect(): void {

@@ -1,6 +1,6 @@
-import { IShape } from '@lib/types/shapes'
 import { isPrintableCharUnicode } from '@/util/textUtil'
 import ShapeManager from '@lib/core/ShapeManager'
+import SceneNode from '@lib/node/Scene'
 
 class KeyboardTool {
     private shapeManager: ShapeManager | null = null
@@ -42,28 +42,31 @@ class KeyboardTool {
                 break
         }
     }
-    handleKeyUp(e: KeyboardEvent) {}
+
+    handleKeyUp(e: KeyboardEvent) {
+        console.log(e, 'keyup')
+    }
 
     private handleTextKey(e: KeyboardEvent) {
-        if (this.shapeManager.hasShape()) {
-            const shape = this.shapeManager.currentShape
+        if (this.shapeManager.hasScene()) {
+            const scene = this.shapeManager.currentScene
 
-            if (this.canEdit(shape)) {
-                shape.insertText(e.key, e.shiftKey)
+            if (scene.canEdit()) {
+                scene.insertText(e.key, e.shiftKey)
             }
         }
     }
     private deleteSelected(e: KeyboardEvent) {
-        if (this.shapeManager.currentShape) {
-            const shape = this.shapeManager.currentShape
+        if (this.shapeManager.hasScene()) {
+            const scene = this.shapeManager.currentScene
 
-            if (this.canEdit(shape)) {
+            if (scene.canEdit()) {
                 switch (e.key) {
                     case 'Delete':
-                        shape.deleteText('forward')
+                        scene.deleteText('forward')
                         break
                     case 'Backspace':
-                        shape.deleteText('backward')
+                        scene.deleteText('backward')
                         break
                     default:
                         console.log('delete direction not implemented')
@@ -76,42 +79,44 @@ class KeyboardTool {
     }
     private handleEscape() {}
 
-    private handleTab(e: KeyboardEvent) {}
+    private handleTab(e: KeyboardEvent) {
+        console.log(e)
+    }
     private handleEnter(e: KeyboardEvent) {
-        if (this.shapeManager.hasShape()) {
-            const shape = this.shapeManager.currentShape
+        if (this.shapeManager.hasScene()) {
+            const scene = this.shapeManager.currentScene
 
-            if (this.canEdit(shape)) {
-                shape.insertText('\n', e.shiftKey)
+            if (scene.canEdit()) {
+                scene.insertText('\n', e.shiftKey)
             }
         }
     }
     private handleArrowKeys(e: KeyboardEvent) {
-        if (this.shapeManager.hasShape()) {
-            const shape = this.shapeManager.currentShape
+        if (this.shapeManager.hasScene()) {
+            const scene = this.shapeManager.currentScene
 
-            if (this.canEdit(shape)) {
-                this.moveTextCursor(e, shape)
+            if (scene.canEdit()) {
+                this.moveTextCursor(e, scene)
             } else {
                 this.moveCurrentShape(e)
             }
         }
     }
 
-    moveTextCursor(e: KeyboardEvent, shape: IShape) {
-        if (shape) {
+    moveTextCursor(e: KeyboardEvent, scene: SceneNode) {
+        if (scene) {
             switch (e.key) {
                 case 'ArrowUp':
-                    shape.moveCursor('up', e.shiftKey)
+                    scene.moveCursor('up', e.shiftKey)
                     break
                 case 'ArrowDown':
-                    shape.moveCursor('down', e.shiftKey)
+                    scene.moveCursor('down', e.shiftKey)
                     break
                 case 'ArrowLeft':
-                    shape.moveCursor('left', e.shiftKey)
+                    scene.moveCursor('left', e.shiftKey)
                     break
                 case 'ArrowRight':
-                    shape.moveCursor('right', e.shiftKey)
+                    scene.moveCursor('right', e.shiftKey)
                     break
                 default:
                     console.log('direction not implemented')
@@ -124,25 +129,21 @@ class KeyboardTool {
         console.log(e.key)
         switch (e.key) {
             case 'ArrowUp':
-                this.shapeManager.move(0, -2)
+                this.shapeManager.moveScene(0, -2)
                 break
             case 'ArrowDown':
-                this.shapeManager.move(0, 2)
+                this.shapeManager.moveScene(0, 2)
                 break
             case 'ArrowLeft':
-                this.shapeManager.move(-2, 0)
+                this.shapeManager.moveScene(-2, 0)
                 break
             case 'ArrowRight':
-                this.shapeManager.move(2, 0)
+                this.shapeManager.moveScene(2, 0)
                 break
             default:
                 console.log('direction not implemented')
                 break
         }
-    }
-
-    canEdit(shape: IShape) {
-        return shape && typeof (shape as IShape).canEdit === 'function' && (shape as IShape).canEdit()
     }
 }
 

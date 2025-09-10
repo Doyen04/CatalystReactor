@@ -2,7 +2,7 @@ import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
 import { Canvas, Color, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
 import Handle from '@lib/modifiers/Handles'
-import { Properties, Size } from '@lib/types/shapes'
+import { Coord, Properties, Size } from '@lib/types/shapes'
 
 //TODO:optimise this guy  make sure resources is done in canvaskitresources and all font is loaded there then use style to target it
 
@@ -63,15 +63,27 @@ class PText extends Shape {
         return this.text
     }
 
+    override getCenterCoord(): Coord {
+        return {
+            x: (this.dimension.width > 0 ? this.dimension.width : this.TWidth) / 2,
+            y: (this.dimension.height > 0 ? this.dimension.height : this.THeight) / 2,
+        }
+    }
+
     override getModifierHandlesPos(handle: Handle): { x: number; y: number } {
         if (handle.type === 'size') {
             return super.getSizeModifierHandlesPos(handle)
+        } else if (handle.type == 'angle') {
+            return super.getAngleModifierHandlesPos(handle)
         }
         return { x: 0, y: 0 }
     }
 
-    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
-        const handles = super.getSizeModifierHandles(fill, strokeColor)
+    override getModifierHandles(): Handle[] {
+        const handles = super.getSizeModifierHandles()
+        super.getAngleModifierHandles().forEach(handle => {
+            handles.push(handle)
+        })
         return handles
     }
 
@@ -173,14 +185,30 @@ class PText extends Shape {
     }
 
     override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
-        // For text, we might adjust font size instead of traditional sizing
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
 
-        this.dimension.width = Math.abs(deltaX)
-        this.dimension.height = Math.abs(deltaY)
         this.transform.x = Math.min(dragStart.x, mx)
         this.transform.y = Math.min(dragStart.y, my)
+
+        const willFlipX = deltaX < 0
+        const willFlipY = deltaY < 0
+
+        const scaleX = willFlipX ? -1 : 1
+        const scaleY = willFlipY ? -1 : 1
+
+        this.transform.scaleX = scaleX
+        this.transform.scaleY = scaleY
+
+        if (shiftKey) {
+            const size = Math.max(Math.abs(deltaX), Math.abs(deltaY))
+            this.dimension.width = size
+            this.dimension.height = size
+        } else {
+            this.dimension.width = Math.abs(deltaX)
+            this.dimension.height = Math.abs(deltaY)
+        }
+
         this.calculateBoundingRect()
     }
 
@@ -192,10 +220,10 @@ class PText extends Shape {
 
     calculateBoundingRect(): void {
         this.boundingRect = {
-            left: this.transform.x,
-            top: this.transform.y,
-            right: this.transform.x + (this.dimension.width > 0 ? this.dimension.width : this.TWidth),
-            bottom: this.transform.y + (this.dimension.height > 0 ? this.dimension.height : this.THeight),
+            left: 0,
+            top: 0,
+            right: this.dimension.width > 0 ? this.dimension.width : this.TWidth,
+            bottom: this.dimension.height > 0 ? this.dimension.height : this.THeight,
         }
     }
 
@@ -206,7 +234,7 @@ class PText extends Shape {
         }
 
         try {
-            canvas.drawParagraph(this.paragraph, this.transform.x, this.transform.y)
+            canvas.drawParagraph(this.paragraph, 0, 0)
             this.cursor.draw(canvas)
         } catch (error) {
             console.error('Error drawing PText:', error)
@@ -244,11 +272,11 @@ class PText extends Shape {
         const textBefore = this.text.slice(0, this.cursor.cursorPosIndex)
         const textAfter = this.text.slice(this.cursor.cursorPosIndex)
         this.text = textBefore + char + textAfter
-        this.cursor.updateCursorPosIndex(char.length)
-
+        
         this.setUpParagraph()
         this.calculateTextDim()
         this.calculateBoundingRect()
+        this.cursor.updateCursorPosIndex(char.length)
         this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
     }
 

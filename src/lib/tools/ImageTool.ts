@@ -31,16 +31,27 @@ class ImageTool extends Tool {
 
     handleFileSelect = async (files: FileList) => {
         if (files && files.length > 0) {
-            const fileData = Array.from(files).map(file => ({
-                url: URL.createObjectURL(file),
-                name: file.name,
-            }))
-            this.imageData = await loadImage(fileData)
-            console.log(this.imageData, 'images')
+            try {
+                const fileData = Array.from(files).map(file => ({
+                    url: URL.createObjectURL(file),
+                    name: file.name,
+                }))
 
-            fileData.forEach(item => URL.revokeObjectURL(item.url))
+                this.imageData = await loadImage(fileData)
+                console.log(this.imageData, 'images loaded')
+
+                // Clean up URLs
+                fileData.forEach(item => URL.revokeObjectURL(item.url))
+
+                await this.preloadSelectedImages()
+            } catch (error) {
+                console.error('Error loading images:', error)
+                this.isLoading = false
+            }
+        } else {
+            console.log('No files selected')
+            this.isLoading = false
         }
-        this.preloadSelectedImages()
     }
 
     private async preloadSelectedImages() {
@@ -66,7 +77,7 @@ class ImageTool extends Tool {
     }
 
     private getPreloadedImage(): { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer } | null {
-        if (!this.imageData) return
+        if (!this.imageData) return null
 
         const [currentImage, ...rest] = this.imageData
         if (!currentImage) {
@@ -78,8 +89,8 @@ class ImageTool extends Tool {
         return imag ? { CanvasKitImage: imag, imageBuffer: currentImage.imageBuffer } : null
     }
 
-    isImageDataEmpty(){
-        return Array.isArray(this.imageData) && this.imageData.length == 0 || this.imageData == null
+    isImageDataEmpty() {
+        return (Array.isArray(this.imageData) && this.imageData.length == 0) || this.imageData == null
     }
 
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
@@ -107,7 +118,7 @@ class ImageTool extends Tool {
         if (shape) {
             const shapeNode: SceneNode = new ShapeNode(shape)
             scene.addChildNode(shapeNode)
-            this.shapeManager.attachNode(shapeNode) 
+            this.shapeManager.attachNode(shapeNode)
         }
     }
     override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
@@ -126,6 +137,7 @@ class ImageTool extends Tool {
 
     override toolChange(): void {
         this.preloadedImages.clear()
+        this.imageData = null
         this.isLoading = false
         console.log('imageTool Cleaned', this.imageData) //clean images
         super.toolChange()
