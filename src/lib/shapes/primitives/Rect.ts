@@ -49,7 +49,7 @@ class Rectangle extends Shape {
         }
     }
 
-    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
+    override setSize(dragStart: Coord, mx: number, my: number, shiftKey: boolean): void {
         // Calculate dimensions
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y

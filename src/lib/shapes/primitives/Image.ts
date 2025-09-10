@@ -1,26 +1,30 @@
-import type { Canvas } from 'canvaskit-wasm'
 import Rectangle from './Rect'
+import { Coord, ImageFill, SolidFill } from '@lib/types/shapes'
 
 class PImage extends Rectangle {
-    private imageLoaded: boolean = false
-
     constructor(x: number, y: number, imageElem: ArrayBuffer) {
         super(x, y, { type: 'img' })
-        if (imageElem) {
-            this.createCanvasKitImage(imageElem)
+
+        this.maintainAspectRatio = true
+        const fill: ImageFill = { type: 'image', imageData: imageElem, scaleMode: 'fit' }
+        const stroke: SolidFill = { type: 'solid', color: '#000' }
+        this.style = {
+            fill: { color: fill, opacity: 1 },
+            stroke: { fill: { color: stroke, opacity: 1 }, width: 1 },
         }
         this.calculateBoundingRect()
     }
-    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
+
+    override setSize(dragStart: Coord, mx: number, my: number, shiftKey: boolean): void {
         // Calculate dimensions
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
 
-        this.transform.isFlippedX = deltaX < 0
-        this.transform.isFlippedY = deltaY < 0
+        const willFlipX = deltaX < 0
+        const willFlipY = deltaY < 0
 
-        this.transform.originalX = dragStart.x
-        this.transform.originalY = dragStart.y
+        this.transform.scaleX = willFlipX ? -1 : 1
+        this.transform.scaleY = willFlipY ? -1 : 1
 
         if (shiftKey || this.maintainAspectRatio) {
             // When shift is held OR aspect ratio should be maintained
@@ -51,19 +55,6 @@ class PImage extends Rectangle {
 
             this.dimension.width = newWidth
             this.dimension.height = newHeight
-
-            // Position based on drag direction
-            if (deltaX >= 0) {
-                this.transform.x = this.transform.originalX
-            } else {
-                this.transform.x = this.transform.originalX - this.dimension.width
-            }
-
-            if (deltaY >= 0) {
-                this.transform.y = this.transform.originalY
-            } else {
-                this.transform.y = this.transform.originalY - this.dimension.height
-            }
         } else {
             // Free resizing without aspect ratio constraint
             this.dimension.width = Math.abs(deltaX)
@@ -75,38 +66,32 @@ class PImage extends Rectangle {
         this.calculateBoundingRect()
     }
 
-    override draw(canvas: Canvas): void {
-        if (!this.resource?.canvasKit || !this.canvasKitImage) return
+    // override draw(canvas: Canvas): void {
+    //     if (!this.resource?.canvasKit) return
 
-        const ck = this.resource.canvasKit
-        this.setPaint()
+    //     const ck = this.resource.canvasKit
+    //     const { fill, stroke } = this.initPaints()
 
-        const rect = ck.XYWHRect(this.transform.x, this.transform.y, this.dimension.width, this.dimension.height)
+    //     const rect = ck.XYWHRect(0, 0, this.dimension.width, this.dimension.height)
 
-        const imageShader = this.makeImageShader(this.dimension)
+    //     if (this.hasRadius() && this.bdradius.locked) {
+    //         const radius = this.bdradius['top-left']
+    //         const rrect = ck.RRectXY(rect, radius, radius)
+    //         canvas.drawRRect(rrect, fill)
+    //         canvas.drawRRect(rrect, stroke)
+    //     } else if (this.hasRadius()) {
+    //         const path = this.makeCustomRRectPath()
+    //         canvas.drawPath(path, fill)
+    //         canvas.drawPath(path, stroke)
+    //     } else {
+    //         canvas.drawRect(rect, fill)
+    //         canvas.drawRect(rect, stroke)
+    //     }
 
-        this.resource.paint.setShader(imageShader)
-
-        if (this.hasRadius() && this.bdradius.locked) {
-            const radius = this.bdradius['top-left']
-            const rrect = ck.RRectXY(rect, radius, radius)
-            canvas.drawRRect(rrect, this.resource.paint)
-            canvas.drawRRect(rrect, this.resource.strokePaint)
-        } else if (this.hasRadius()) {
-            const path = this.makeCustomRRectPath()
-            canvas.drawPath(path, this.resource.paint)
-            canvas.drawPath(path, this.resource.strokePaint)
-        } else {
-            canvas.drawRect(rect, this.resource.paint)
-            canvas.drawRect(rect, this.resource.strokePaint)
-        }
-
-        this.resource.paint.setShader(null)
-    }
+    //     this.resetPaint()
+    // }
     override cleanUp(): void {}
     override destroy(): void {
-        this.canvasKitImage.delete()
-        this.imageLoaded = null
         this.aspectRatio = null
         this.maintainAspectRatio = null
         this.IWidth = 0

@@ -36,7 +36,7 @@ abstract class Tool {
     abstract handlePointerDown(dragStart: Coord, e: MouseEvent): void
 
     toolChange(): void {
-        console.log('tool changed')
+        console.log( 'tool changed')
     }
 }
 

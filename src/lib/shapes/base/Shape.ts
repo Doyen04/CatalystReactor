@@ -37,7 +37,7 @@ abstract class Shape implements IShape {
     protected IWidth: number
     protected IHeight: number
     protected aspectRatio: number = 1
-    protected maintainAspectRatio: boolean = true
+    protected maintainAspectRatio: boolean = false
     protected shapeType: ShapeType
     protected transform: Transform
     protected style: Style
@@ -115,7 +115,7 @@ abstract class Shape implements IShape {
     }
 
     //local coord
-    getAngleModifierHandlesPos(handle: Handle): { x: number; y: number } {
+    getAngleModifierHandlesPos(handle: Handle): Coord {
         const dimen = this.getDim()
         const bRect = {
             left: 0,
@@ -162,7 +162,7 @@ abstract class Shape implements IShape {
     }
 
     //local coord
-    getSizeModifierHandlesPos(handle: Handle): { x: number; y: number } {
+    getSizeModifierHandlesPos(handle: Handle): Coord {
         const dimen = this.getDim()
         const bRect = {
             left: 0,
@@ -186,7 +186,7 @@ abstract class Shape implements IShape {
         }
     }
 
-    getCoord(): { x: number; y: number } {
+    getCoord(): Coord {
         return { x: this.transform.x, y: this.transform.y }
     }
 
@@ -196,6 +196,61 @@ abstract class Shape implements IShape {
         this.setCoord(this.transform.x - defSize / 2, this.transform.y - defSize / 2)
     }
 
+    protected isShader(obj): boolean {
+        return obj != null && typeof obj === 'object' && obj.constructor?.name === 'Shader'
+    }
+
+    protected isColor(fill): boolean {
+        return fill instanceof Float32Array
+    }
+
+    getRotationAngle(): number {
+        return this.transform.rotation || 0
+    }
+
+    getScale(): { x: number; y: number } {
+        return {
+            x: this.transform.scaleX || 1,
+            y: this.transform.scaleY || 1,
+        }
+    }
+
+    setAngle(angle: number): void {
+        this.transform.rotation = angle
+        // this.style.strokeColor = color;
+    }
+
+    setAnchorPoint(anchor: Coord): void {
+        console.log('not yet implemented', anchor)
+        // this.transform.anchorPoint = anchor
+    }
+
+    setStrokeColor(stroke: string | number[]): void {
+        console.log(stroke)
+    }
+
+    setScale(x: number, y: number): void {
+        this.transform.scaleX = x
+        this.transform.scaleY = y
+    }
+
+    setStrokeWidth(width: number): void {
+        console.log(width)
+
+        // this.style.strokeWidth = width;
+    }
+
+    setFill(color: string): void {
+        console.log(color)
+
+        //     this.style.fill = color;
+    }
+
+    setHovered(bool: boolean) {
+        // EventQueue.trigger(Render)
+        this.isHover = bool
+    }
+
     //better management for canvaskit resources
     private setPaint(fill: FillStyle): Color | Shader | null {
         if (!this.resource) return
@@ -203,8 +258,6 @@ abstract class Shape implements IShape {
             case 'solid': {
                 const solid = fill as SolidFill
                 const value = Array.isArray(solid.color) ? new Float32Array(solid.color) : this.resource.canvasKit.parseColorString(solid.color)
-                // console.log(value);
-
                 return value
             }
             case 'linear': {
@@ -262,14 +315,6 @@ abstract class Shape implements IShape {
         }
     }
 
-    protected isShader(obj): boolean {
-        return obj != null && typeof obj === 'object' && obj.constructor?.name === 'Shader'
-    }
-
-    protected isColor(fill): boolean {
-        return fill instanceof Float32Array
-    }
-
     protected initPaints(): { stroke: Paint; fill: Paint } {
         const fillShader = this.setPaint(this.style.fill.color)
         const strokeShader = this.setPaint(this.style.stroke.fill.color)
@@ -298,53 +343,6 @@ abstract class Shape implements IShape {
 
         this.resource.paint.setAlphaf(1.0)
         this.resource.strokePaint.setAlphaf(1.0)
-    }
-
-    getRotationAngle(): number {
-        return this.transform.rotation || 0
-    }
-
-    getScale(): { x: number; y: number } {
-        return {
-            x: this.transform.scaleX || 1,
-            y: this.transform.scaleY || 1,
-        }
-    }
-
-    setAngle(angle: number): void {
-        this.transform.rotation = angle
-        // this.style.strokeColor = color;
-    }
-
-    setAnchorPoint(anchor: Coord): void {
-        console.log('not yet implemented', anchor)
-        // this.transform.anchorPoint = anchor
-    }
-
-    setStrokeColor(stroke: string | number[]): void {
-        console.log(stroke)
-    }
-
-    setScale(x: number, y: number): void {
-        this.transform.scaleX = x
-        this.transform.scaleY = y
-    }
-
-    setStrokeWidth(width: number): void {
-        console.log(width)
-
-        // this.style.strokeWidth = width;
-    }
-
-    setFill(color: string): void {
-        console.log(color)
-
-        //     this.style.fill = color;
-    }
-
-    setHovered(bool: boolean) {
-        // EventQueue.trigger(Render)
-        this.isHover = bool
     }
 
     makeImageShader(dim: Size, canvasKitImage: CanvasKitImage, scaleMode: ScaleMode = 'fill'): Shader {
@@ -396,8 +394,8 @@ abstract class Shape implements IShape {
         }
 
         // Calculate centering offset for fill/fit modes
-        const scaleX = scale * (this.transform.isFlippedX ? -1 : 1)
-        const scaleY = scale * (this.transform.isFlippedY ? -1 : 1)
+        const scaleX = scale
+        const scaleY = scale
         const finalMatrix = ck.Matrix.multiply(ck.Matrix.translated(offsetX, offsetY), ck.Matrix.scaled(scaleX, scaleY))
 
         return canvasKitImage.makeShaderOptions(tileMode, tileMode, ck.FilterMode.Linear, ck.MipmapMode.None, finalMatrix)

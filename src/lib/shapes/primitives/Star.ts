@@ -69,7 +69,7 @@ class Star extends Shape {
         this.calculateBoundingRect()
     }
 
-    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
+    override setSize(dragStart: Coord, mx: number, my: number, shiftKey: boolean): void {
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
 
@@ -235,7 +235,7 @@ class Star extends Shape {
         return { x: this.radiusX, y: this.radiusY }
     }
 
-    getCenterCoord(): { x: number; y: number } {
+    getCenterCoord(): Coord {
         return { x: this.radiusX, y: this.radiusY }
     }
     override getDim(): { width: number; height: number } {

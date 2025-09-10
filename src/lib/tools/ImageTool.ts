@@ -3,8 +3,9 @@ import Tool from './Tool'
 import { useImageStore } from '@hooks/imageStore'
 import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
-import SceneNode from '@lib/node/ContainerNode'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
+import SceneNode from '@lib/node/Scene'
+import ShapeNode from '@lib/node/ShapeNode'
 
 class ImageTool extends Tool {
     constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
@@ -19,15 +20,18 @@ class ImageTool extends Tool {
             console.warn('No images available. Please select images first.')
             return
         }
+        const scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+
+        const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
         const shape = ShapeFactory.createShape('img', {
-            x: e.offsetX,
-            y: e.offsetY,
+            x,
+            y,
         })
+
         if (shape) {
-            const scene: SceneNode = new SceneNode()
-            scene.shape = shape
-            this.sceneManager.addNode(scene)
-            this.shapeManager.attachShape(shape)
+            const shapeNode: SceneNode = new ShapeNode(shape)
+            scene.addChildNode(shapeNode)
+            this.shapeManager.attachNode(shapeNode)
         }
     }
     override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
