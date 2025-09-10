@@ -250,14 +250,14 @@ export interface RadialGradient {
 
 export interface ImageFill {
     type: 'image'
-    imageData: ArrayBuffer
+    imageData?: ArrayBuffer
     cnvsImage?: CanvasKitImage
     scaleMode: ScaleMode
 }
 
 export interface PatternFill {
     type: 'pattern'
-    imageData: ArrayBuffer
+    imageData?: ArrayBuffer
     cnvsImage?: CanvasKitImage
     repeat: 'repeat' | 'repeat-x' | 'repeat-y' | 'no-repeat'
 }

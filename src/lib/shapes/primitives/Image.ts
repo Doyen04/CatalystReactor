@@ -1,22 +1,31 @@
 import Rectangle from './Rect'
 import { Coord, ImageFill, SolidFill } from '@lib/types/shapes'
+import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 
 class PImage extends Rectangle {
-    constructor(x: number, y: number, imageElem: ArrayBuffer) {
+    imageLoaded: boolean
+    constructor(x: number, y: number, imageElem: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer }) {
         super(x, y, { type: 'img' })
 
-        this.maintainAspectRatio = true
-        const fill: ImageFill = { type: 'image', imageData: imageElem, scaleMode: 'fit' }
+        const fill: ImageFill = { type: 'image', imageData: imageElem.imageBuffer, cnvsImage: imageElem.CanvasKitImage, scaleMode: 'fit' }
         const stroke: SolidFill = { type: 'solid', color: '#000' }
         this.style = {
             fill: { color: fill, opacity: 1 },
             stroke: { fill: { color: stroke, opacity: 1 }, width: 1 },
         }
+        this.maintainAspectRatio = true
+        this.setupImage()
         this.calculateBoundingRect()
+    }
+    setupImage() {
+        const imageFill = this.style.fill.color as ImageFill
+        if (imageFill.cnvsImage) {
+            const image = imageFill.cnvsImage
+            this.aspectRatio = this.calculateAspectRatio(image.width(), image.height())
+        }
     }
 
     override setSize(dragStart: Coord, mx: number, my: number, shiftKey: boolean): void {
-        // Calculate dimensions
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
 
@@ -66,36 +75,28 @@ class PImage extends Rectangle {
         this.calculateBoundingRect()
     }
 
-    // override draw(canvas: Canvas): void {
-    //     if (!this.resource?.canvasKit) return
+    private calculateAspectRatio(width: number, height: number): number {
+        if (height === 0) {
+            console.warn('Image height is 0, defaulting aspect ratio to 1')
+            return 1
+        }
+        return width / height
+    }
 
-    //     const ck = this.resource.canvasKit
-    //     const { fill, stroke } = this.initPaints()
+    private getGCD(a: number, b: number): number {
+        return b === 0 ? a : this.getGCD(b, a % b)
+    }
 
-    //     const rect = ck.XYWHRect(0, 0, this.dimension.width, this.dimension.height)
-
-    //     if (this.hasRadius() && this.bdradius.locked) {
-    //         const radius = this.bdradius['top-left']
-    //         const rrect = ck.RRectXY(rect, radius, radius)
-    //         canvas.drawRRect(rrect, fill)
-    //         canvas.drawRRect(rrect, stroke)
-    //     } else if (this.hasRadius()) {
-    //         const path = this.makeCustomRRectPath()
-    //         canvas.drawPath(path, fill)
-    //         canvas.drawPath(path, stroke)
-    //     } else {
-    //         canvas.drawRect(rect, fill)
-    //         canvas.drawRect(rect, stroke)
-    //     }
-
-    //     this.resetPaint()
-    // }
+    getSimplifiedAspectRatio(): string {
+        const gcd = this.getGCD(this.dimension.width, this.dimension.height)
+        const simplifiedWidth = this.dimension.width / gcd
+        const simplifiedHeight = this.dimension.height / gcd
+        return `${simplifiedWidth}:${simplifiedHeight}`
+    }
     override cleanUp(): void {}
     override destroy(): void {
         this.aspectRatio = null
         this.maintainAspectRatio = null
-        this.IWidth = 0
-        this.IHeight = 0
     }
 }
 

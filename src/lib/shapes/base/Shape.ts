@@ -301,13 +301,13 @@ abstract class Shape implements IShape {
             }
             case 'image': {
                 const imageFill = fill as ImageFill
-                if (!imageFill.cnvsImage) {
+                if (!imageFill.cnvsImage && imageFill.imageData) {
                     const image = this.createCanvasKitImage(imageFill.imageData)
                     imageFill.cnvsImage = image
                 }
                 const size = this.getDim()
-
-                return this.makeImageShader(size, imageFill.cnvsImage, imageFill.scaleMode)
+                const shader = this.makeImageShader(size, imageFill.cnvsImage, imageFill.scaleMode)
+                return shader
             }
             case 'pattern':
                 // Similar to image but with pattern-specific handling

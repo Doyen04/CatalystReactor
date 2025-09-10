@@ -19,6 +19,8 @@ class ShapeManager {
     }
 
     drawShape(dragStart: Coord, e: MouseEvent) {
+        if (!this.scene) return
+
         this.scene.drawOnDrag(dragStart, e)
         this.shapeModifier.update()
 
@@ -114,7 +116,6 @@ class ShapeManager {
     }
 
     finishDrag() {
-    
         if (!this.scene) return
         this.selected = false
         this.shapeModifier.handleRemoveModiferHandle()

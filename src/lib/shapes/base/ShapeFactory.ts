@@ -5,10 +5,11 @@ import Polygon from '../primitives/Polygon'
 import PText from '../primitives/PText'
 import { IShape, Coord, ShapeType } from '@lib/types/shapes'
 import PImage from '../primitives/Image'
-import { useImageStore } from '@hooks/imageStore'
+
+import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 
 export default class ShapeFactory {
-    static createShape(type: ShapeType, options: Coord): IShape {
+    static createShape(type: ShapeType, options: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer }): IShape {
         let shape: IShape
 
         switch (type) {
@@ -28,14 +29,7 @@ export default class ShapeFactory {
                 shape = new PText(options.x, options.y)
                 break
             case 'img': {
-                const { getNextImage } = useImageStore.getState()
-                const img = getNextImage()
-
-                if (!img) {
-                    console.log('no file ')
-                    return null
-                }
-                shape = new PImage(options.x, options.y, img)
+                shape = new PImage(options.x, options.y, image)
                 break
             }
             default:

@@ -1,5 +1,5 @@
 import { loadImage } from '@/util/loadFile'
-import { useFilePicker } from '@hooks/useFileOpener'
+import { FilePicker } from '@/util/fileOpener'
 import { twMerge } from 'tailwind-merge'
 import DropDownPicker from './DropDownPicker'
 import { ImageFill, ScaleMode } from '@lib/types/shapes'
@@ -34,14 +34,17 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, im
     const handleFileSelect = async (files: FileList) => {
         if (files && files.length > 0) {
             if (imageUrl) URL.revokeObjectURL(imageUrl)
-            const urlList = Array.from(files).map(file => URL.createObjectURL(file))
-            const images = await loadImage(urlList)
+            const fileData = Array.from(files).map(file => ({
+                url: URL.createObjectURL(file),
+                name: file.name,
+            }))
+            const images = await loadImage(fileData)
 
-            setImageUrl(urlList[0])
-            setCurrentImage(images[0])
+            setImageUrl(fileData[0].url)
+            setCurrentImage(images[0].imageBuffer)
             const imageFill: ImageFill = {
                 type: 'image',
-                imageData: images[0],
+                imageData: images[0].imageBuffer,
                 scaleMode: currentScaleMode,
             }
             onImageChange(imageFill)
@@ -61,7 +64,7 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, im
         }
     }
 
-    const { openFilePicker } = useFilePicker({
+    const openFilePicker = FilePicker({
         accept: 'image/*',
         multiple: false,
         onFileSelect: file => handleFileSelect(file),
