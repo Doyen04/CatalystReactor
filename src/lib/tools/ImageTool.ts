@@ -73,14 +73,17 @@ class ImageTool extends Tool {
             this.imageData = null
             return null
         }
-
         this.imageData = rest
         const imag = this.preloadedImages.get(currentImage.name)
         return imag ? { CanvasKitImage: imag, imageBuffer: currentImage.imageBuffer } : null
     }
 
+    isImageDataEmpty(){
+        return Array.isArray(this.imageData) && this.imageData.length == 0 || this.imageData == null
+    }
+
     override handlePointerDown(dragStart: Coord, e: MouseEvent) {
-        if (!this.imageData) {
+        if (this.isImageDataEmpty()) {
             console.warn('No images available. Please select images first.')
             return
         }
@@ -104,11 +107,11 @@ class ImageTool extends Tool {
         if (shape) {
             const shapeNode: SceneNode = new ShapeNode(shape)
             scene.addChildNode(shapeNode)
-            this.shapeManager.attachNode(shapeNode)
+            this.shapeManager.attachNode(shapeNode) 
         }
     }
     override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
-        if (!this.imageData) {
+        if (this.isImageDataEmpty()) {
             this.preloadedImages.clear()
             console.log('Image placement completed, clearing image store')
             super.handlePointerUp(dragStart, e)
