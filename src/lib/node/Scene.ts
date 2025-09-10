@@ -374,6 +374,10 @@ abstract class SceneNode {
         }
         console.log(direc, shiftKey)
     }
+
+    cleanUp(){
+        this.shape.cleanUp()
+    }
     abstract draw(ctx: Canvas): void
     abstract updateWorldMatrix(matrix?: number[]): void
     abstract destroy(): void

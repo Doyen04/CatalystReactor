@@ -58,12 +58,11 @@ class SelectTool extends Tool {
         }
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
 
-        if (!scene) {
-            this.shapeManager.detachShape()
-            return
-        }
+        this.shapeManager.detachShape()
 
-        this.shapeManager.attachNode(scene)
+        if (scene) {
+            this.shapeManager.attachNode(scene)
+        }
         // if (this.canEdit(scene.getScene()) && scene.pointInShape(e.offsetX, e.offsetY)) {
         //     scene.setCursorPosFromCoord(e.offsetX, e.offsetY)
         // }

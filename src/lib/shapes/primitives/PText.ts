@@ -215,7 +215,7 @@ class PText extends Shape {
     pointInShape(x: number, y: number): boolean {
         const w = this.dimension.width == 0 ? this.TWidth : this.dimension.width
         const h = this.dimension.height == 0 ? this.THeight : this.dimension.height
-        return x >= this.transform.x && x <= this.transform.x + w && y >= this.transform.y && y <= this.transform.y + h
+        return x >= 0 && x <= w && y >= 0 && y <= h
     }
 
     calculateBoundingRect(): void {
@@ -272,7 +272,7 @@ class PText extends Shape {
         const textBefore = this.text.slice(0, this.cursor.cursorPosIndex)
         const textAfter = this.text.slice(this.cursor.cursorPosIndex)
         this.text = textBefore + char + textAfter
-        
+
         this.setUpParagraph()
         this.calculateTextDim()
         this.calculateBoundingRect()

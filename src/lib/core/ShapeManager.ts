@@ -76,6 +76,8 @@ class ShapeManager {
     }
 
     attachNode(scene: SceneNode) {
+        if (!scene) return 
+        
         this.scene = scene
         this.shapeModifier.attachShape(scene)
         this.selected = true
@@ -85,6 +87,7 @@ class ShapeManager {
     }
 
     detachShape() {
+        this.scene?.cleanUp()
         this.scene = null
         this.shapeModifier.detachShape()
         useSceneStore.getState().clearProperties()
