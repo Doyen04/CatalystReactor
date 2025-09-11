@@ -3,6 +3,7 @@ import Shape from '../base/Shape'
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { ArcSegment, Coord, Properties } from '@lib/types/shapes'
 import clamp from '@lib/helper/clamp'
+import { normalizeAngle } from '@lib/helper/normalise'
 
 class Oval extends Shape {
     private radiusX: number
@@ -266,7 +267,7 @@ class Oval extends Shape {
             this.radiusY * this.arcSegment.ratio * 2
         )
         const startDegrees = this.arcSegment.startAngle * (180 / Math.PI)
-        const sweepDegrees = (this.arcSegment.endAngle - this.arcSegment.startAngle) * (180 / Math.PI)
+        const sweepDegrees = normalizeAngle(this.arcSegment.endAngle - this.arcSegment.startAngle) * (180 / Math.PI)
 
         if (this.isTorus() && !this.isArc()) {
             this.drawTorus(rect, innerRect, path)

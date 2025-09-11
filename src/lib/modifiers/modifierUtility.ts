@@ -5,6 +5,7 @@ import { Coord } from '@lib/types/shapes'
 import { ShapeData } from './modifier'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import Handle from './Handles'
+import { normalizeAngle } from '@lib/helper/normalise'
 
 function resource(): CanvasKitResources {
     const resources = CanvasKitResources.getInstance()
@@ -173,8 +174,6 @@ function clampAngleToArc(t: number, start: number, end: number, prev: number): n
         }
     }
 
-    console.log(t, start, end, prev)
-
     if (!check()) return prev
     return t
 }
@@ -210,7 +209,7 @@ export function updateOvalRatio(handle: Handle, e: MouseEvent, scene: SceneNode,
 
     //parametric deg
     let handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
-    if (handleAngle < 0) handleAngle += 2 * Math.PI
+    handleAngle = normalizeAngle(handleAngle)
 
     const { start, end } = scene.getArcAngles()
     if (scene.isArc()) {
@@ -257,22 +256,18 @@ function updateShapeArcStart(handle: Handle, e: MouseEvent, scene: SceneNode, in
     const { start, end } = scene.getArcAngles()
 
     //parametric deg
-    let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
+    const angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
 
     // Normalize angle to 0-2π range
-    if (angle < 0) angle += 2 * Math.PI
     const delta = angle - start
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
 
-    scene.setArc(start + delta, end + delta)
-}
+    const newStart = normalizeAngle(start + delta)
+    const newEnd = normalizeAngle(end + delta)
 
-function normalizeAngle(angle: number): number {
-    while (angle < 0) angle += 2 * Math.PI
-    while (angle >= 2 * Math.PI) angle -= 2 * Math.PI
-    return angle
+    scene.setArc(newStart, newEnd)
 }
 
 function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
@@ -291,14 +286,16 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
     //parametric deg
     const angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
 
-    let sweep = angle - start
-
-    sweep = normalizeAngle(sweep)
+    const sweep = angle - start
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
 
-    scene.setArc(start, start + sweep)
+    const newEnd = normalizeAngle(start + sweep)
+
+    console.log(start, newEnd, 'test')
+
+    scene.setArc(start, newEnd)
 }
 
 export function updateShapeVertices(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
