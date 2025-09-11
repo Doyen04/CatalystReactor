@@ -13,7 +13,6 @@ import {
     updateStarRatio,
     updateShapeArc,
     updateShapeVertices,
-    shapeAngleOnMouseDown,
 } from './modifierUtility'
 
 // const { UpdateModifierHandlesPos } = EventTypes
@@ -67,22 +66,24 @@ class ShapeModifier {
         if (!this.scene) return
 
         const Matrix = this.resource.canvasKit.Matrix
-        const dim = this.scene.getDim()
+        const dimension = this.scene.getDim()
         const position = this.scene.getCoord()
 
         const scale = this.scene.getScale()
         const rotation = this.scene.getRotationAngle()
         const rotationAnchor = this.scene.getRotationAnchorPoint()
+        const arcAngle = this.scene.getArcAngles()
 
         if (this.initialShapeData === null) {
             const initialShapeData = {
-                position: position,
-                dimension: dim,
-                scale: scale,
-                rotation: rotation,
-                rotationAnchor: rotationAnchor,
+                position,
+                dimension,
+                scale,
+                rotation,
+                rotationAnchor,
                 worldTransform: [...this.scene.getWorldMatrix()],
                 inverseWorldTransform: Matrix.invert([...this.scene.getWorldMatrix()]),
+                arcAngle
             }
 
             this.initialShapeData = initialShapeData
@@ -170,9 +171,17 @@ class ShapeModifier {
 
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
-                case 'angle':
-                    shapeAngleOnMouseDown(e, this.scene, this.initialShapeData)
+                case 'angle': {
+                    const Matrix = this.resource.canvasKit.Matrix
+                    const center = Matrix.mapPoints(this.initialShapeData.worldTransform, [
+                        this.initialShapeData.dimension.width * this.initialShapeData.rotationAnchor.x,
+                        this.initialShapeData.dimension.height * this.initialShapeData.rotationAnchor.y,
+                    ])
+
+                    const initialMouseAngle = Math.atan2(e.offsetY - center[1], e.offsetX - center[0])
+                    this.initialShapeData.initialMouseAngle = initialMouseAngle
                     break
+                }
                 default:
                     break
             }

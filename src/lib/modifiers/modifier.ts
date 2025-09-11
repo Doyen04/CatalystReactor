@@ -9,4 +9,5 @@ export interface ShapeData {
     inverseWorldTransform: number[]
     worldTransform: number[]
     initialMouseAngle?: number
+    arcAngle?: { start: number; end: number }
 }

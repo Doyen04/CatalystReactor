@@ -161,8 +161,21 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
 }
 
 function clampAngleToArc(t: number, start: number, end: number, prev: number): number {
-    if (t < start) return prev
-    if (t > end) return prev
+    t = normalizeAngle(t)
+    start = normalizeAngle(start)
+    end = normalizeAngle(end)
+
+    const check = () => {
+        if (start <= end) {
+            return start <= t && t <= end
+        } else {
+            return t >= start || t <= end
+        }
+    }
+
+    console.log(t, start, end, prev)
+
+    if (!check()) return prev
     return t
 }
 
@@ -256,6 +269,12 @@ function updateShapeArcStart(handle: Handle, e: MouseEvent, scene: SceneNode, in
     scene.setArc(start + delta, end + delta)
 }
 
+function normalizeAngle(angle: number): number {
+    while (angle < 0) angle += 2 * Math.PI
+    while (angle >= 2 * Math.PI) angle -= 2 * Math.PI
+    return angle
+}
+
 function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const localCurrent = tranformPoint(initialShapeData.inverseWorldTransform, e.offsetX, e.offsetY)
 
@@ -266,16 +285,15 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
 
     const deltaX = localCurrent.x - cx
     const deltaY = localCurrent.y - cy
-    const { start } = scene.getArcAngles()
+
+    const { start } = initialShapeData.arcAngle
 
     //parametric deg
     const angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
 
     let sweep = angle - start
 
-    if (sweep < 0) {
-        sweep += 2 * Math.PI
-    }
+    sweep = normalizeAngle(sweep)
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
@@ -300,17 +318,6 @@ export function updateShapeVertices(e: MouseEvent, scene: SceneNode, initialShap
     } else if (y > py && (Math.abs(x - px) < GAP || Math.abs(y - py) < GAP)) {
         scene.setVertexCount(prev)
     }
-}
-
-export function shapeAngleOnMouseDown(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
-    const center = tranformPoint(
-        initialShapeData.worldTransform,
-        initialShapeData.dimension.width * initialShapeData.rotationAnchor.x,
-        initialShapeData.dimension.height * initialShapeData.rotationAnchor.y
-    )
-
-    const initialMouseAngle = Math.atan2(e.offsetY - center.y, e.offsetX - center.x)
-    initialShapeData.initialMouseAngle = initialMouseAngle
 }
 
 export function updateShapeAngle(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
