@@ -1,4 +1,18 @@
-import { Triangle, Lasso, Maximize2, MousePointer2, Square, Star, Type, Circle, Image } from 'lucide-react'
+import {
+    Triangle,
+    Lasso,
+    Maximize2,
+    MousePointer2,
+    Square,
+    Star,
+    Type,
+    Circle,
+    Image,
+    AlignHorizontalJustifyCenter,
+    AlignVerticalJustifyCenter,
+    Grid3X3,
+    Frame,
+} from 'lucide-react'
 import './Component.css'
 import Button from '../ui/Button'
 import MoreButton from '@ui/MoreButton'
@@ -20,6 +34,29 @@ function ToolBar() {
             toolName: 'scale',
             icon: <Maximize2 className={'w-4 h-4'} />,
             tip: 'Scale',
+        },
+    ]
+
+    const GroupTools = [
+        {
+            toolName: 'row',
+            icon: <AlignHorizontalJustifyCenter className="w-4 h-4" />,
+            tip: 'Row',
+        },
+        {
+            toolName: 'column',
+            icon: <AlignVerticalJustifyCenter className="w-4 h-4" />,
+            tip: 'Column',
+        },
+        {
+            toolName: 'grid',
+            icon: <Grid3X3 className="w-4 h-4" />,
+            tip: 'Grid',
+        },
+        {
+            toolName: 'frame',
+            icon: <Frame className="w-4 h-4" />,
+            tip: 'Frame',
         },
     ]
 
@@ -64,11 +101,16 @@ function ToolBar() {
 
     return (
         <div className={'toolbar'}>
-            <Button tool={SelectTools[0]} group={SelectTools} groupId='select'/>
-            <MoreButton tools={SelectTools} tip={'SelectTools'} groupId='select'/>
-            <Button tool={ShapeTools[0]} group={ShapeTools} groupId='shape'/>
-            <MoreButton tools={ShapeTools} tip={'ShapeTools'} groupId='shape'/>
-            <Button tool={TextTool} group={[TextTool]} groupId='text'/>
+            <Button tool={SelectTools[0]} group={SelectTools} groupId="select" />
+            <MoreButton tools={SelectTools} tip={'SelectTools'} groupId="select" />
+
+            <Button tool={GroupTools[0]} group={GroupTools} groupId="group" />
+            <MoreButton tools={GroupTools} tip={'GroupingTools'} groupId="group" />
+
+            <Button tool={ShapeTools[0]} group={ShapeTools} groupId="shape" />
+            <MoreButton tools={ShapeTools} tip={'ShapeTools'} groupId="shape" />
+
+            <Button tool={TextTool} group={[TextTool]} groupId="text" />
         </div>
     )
 }
