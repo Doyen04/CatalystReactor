@@ -354,6 +354,18 @@ abstract class SceneNode {
         // Implementation for adding a child node
     }
 
+    checkCrossing(prev: number, curr: number) {
+        if (this.shape instanceof Oval) {
+            return this.shape.checkCrossing(prev, curr)
+        }
+    }
+
+    toDegree(rad: number) {
+        if (this.shape instanceof Oval) {
+            return this.shape.toDegree(rad)
+        }
+    }
+
     canEdit() {
         return this.shape && this.shape instanceof PText
     }
@@ -375,7 +387,7 @@ abstract class SceneNode {
         console.log(direc, shiftKey)
     }
 
-    cleanUp(){
+    cleanUp() {
         this.shape.cleanUp()
     }
     abstract draw(ctx: Canvas): void

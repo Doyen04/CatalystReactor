@@ -286,14 +286,16 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
     //parametric deg
     const angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
 
-    const sweep = angle - start
+    const sweep = normalizeAngle(angle - start)
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
 
     const newEnd = normalizeAngle(start + sweep)
 
-    console.log(start, newEnd, 'test')
+    // if (scene.checkCrossing(end, newEnd)) {
+    //     console.log('crossing')
+    // }
 
     scene.setArc(start, newEnd)
 }

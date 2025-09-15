@@ -59,16 +59,16 @@ function ToolBar() {
 
     const { setTool, tool: currentTool } = useToolStore()
     if (!currentTool) {
-        setTool(SelectTools[0])
+        setTool(SelectTools[0], 'select')
     }
 
     return (
         <div className={'toolbar'}>
-            <Button tool={SelectTools[0]} group={SelectTools} />
-            <MoreButton tools={SelectTools} tip={'SelectTools'} />
-            <Button tool={ShapeTools[0]} group={ShapeTools} />
-            <MoreButton tools={ShapeTools} tip={'ShapeTools'} />
-            <Button tool={TextTool} group={[TextTool]} />
+            <Button tool={SelectTools[0]} group={SelectTools} groupId='select'/>
+            <MoreButton tools={SelectTools} tip={'SelectTools'} groupId='select'/>
+            <Button tool={ShapeTools[0]} group={ShapeTools} groupId='shape'/>
+            <MoreButton tools={ShapeTools} tip={'ShapeTools'} groupId='shape'/>
+            <Button tool={TextTool} group={[TextTool]} groupId='text'/>
         </div>
     )
 }

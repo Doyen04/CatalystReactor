@@ -9,12 +9,15 @@ class Oval extends Shape {
     private radiusX: number
     private radiusY: number
     private arcSegment: ArcSegment
+    private isLargeArc: boolean
+    private startCrossed: boolean | null = false
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, type: 'oval', ...shapeProps })
         this.arcSegment = { startAngle: 0, endAngle: 2 * Math.PI, ratio: 0 }
         this.radiusX = 0
         this.radiusY = 0
+        this.isLargeArc = true
         this.calculateBoundingRect()
     }
 
@@ -197,6 +200,32 @@ class Oval extends Shape {
         }
     }
 
+    getSweep() {
+        const sweep = normalizeAngle(this.arcSegment.endAngle - this.arcSegment.startAngle)
+
+        return sweep
+    }
+
+    toDegree(rad: number) {
+        return rad * (180 / Math.PI)
+    }
+
+    checkCrossing(prevAngle, currAngle) {
+        // Normalize angles
+        const prev = normalizeAngle(prevAngle)
+        const curr = normalizeAngle(currAngle)
+        const bound = normalizeAngle(this.arcSegment.startAngle)
+        const diff = curr - prev
+        const diffBound = curr - bound
+
+        const diffDeg = this.toDegree(diff - diffBound)
+
+        if (diffDeg == 0) {
+            if (curr < Math.PI) this.startCrossed = true //use big arc
+            if (curr > Math.PI) this.startCrossed = true //normal
+        }
+    }
+
     override calculateBoundingRect(): void {
         this.boundingRect = {
             top: 0,
@@ -266,8 +295,10 @@ class Oval extends Shape {
             this.radiusX * this.arcSegment.ratio * 2,
             this.radiusY * this.arcSegment.ratio * 2
         )
-        const startDegrees = this.arcSegment.startAngle * (180 / Math.PI)
-        const sweepDegrees = normalizeAngle(this.arcSegment.endAngle - this.arcSegment.startAngle) * (180 / Math.PI)
+        const startDegrees = this.toDegree(this.arcSegment.startAngle)
+        const sweep = this.getSweep()
+
+        const sweepDegrees = this.toDegree(sweep)
 
         if (this.isTorus() && !this.isArc()) {
             this.drawTorus(rect, innerRect, path)

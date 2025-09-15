@@ -34,6 +34,8 @@ class ShapeManager {
     }
 
     drag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
+        if (!this.scene) return
+
         if (this.shapeModifier.hasSelectedHandle()) {
             this.shapeModifier.drag(dragStart, dx, dy, e)
         } else {
@@ -76,8 +78,8 @@ class ShapeManager {
     }
 
     attachNode(scene: SceneNode) {
-        if (!scene) return 
-        
+        if (!scene) return
+
         this.scene = scene
         this.shapeModifier.attachShape(scene)
         this.selected = true

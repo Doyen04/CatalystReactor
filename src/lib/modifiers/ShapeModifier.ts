@@ -83,7 +83,7 @@ class ShapeModifier {
                 rotationAnchor,
                 worldTransform: [...this.scene.getWorldMatrix()],
                 inverseWorldTransform: Matrix.invert([...this.scene.getWorldMatrix()]),
-                arcAngle
+                arcAngle,
             }
 
             this.initialShapeData = initialShapeData

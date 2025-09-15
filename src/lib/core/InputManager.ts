@@ -39,7 +39,6 @@ class InputManager {
     }
 
     onPointerMove(e: MouseEvent) {
-        console.log('move')
         if (this.isPointerDown) {
             EventQueue.trigger(PointerDrag, this.dragStart, e)
         } else {

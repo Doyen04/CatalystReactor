@@ -10,9 +10,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
         tip: string
     }>
     tip: string
+    groupId: string
 }
 
-const MoreButton = forwardRef<HTMLButtonElement, ButtonProps>(({ tools, tip, className, children, ...props }, ref) => {
+const MoreButton = forwardRef<HTMLButtonElement, ButtonProps>(({ tools, tip, groupId, className, ...props }, ref) => {
     const { setTool, tool: currentTool } = useToolStore()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
@@ -22,7 +23,7 @@ const MoreButton = forwardRef<HTMLButtonElement, ButtonProps>(({ tools, tip, cla
     const activeStyles = isActive ? 'border-grey-500 bg-gray-500/50 text-grey-400' : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
 
     const handleToolSelect = (tool: { toolName: string; icon: React.ReactNode; tip: string }) => {
-        if (currentTool.toolName !== tool.toolName) setTool(tool)
+        if (currentTool.toolName !== tool.toolName) setTool(tool, groupId)
         setIsDropdownOpen(false)
     }
     return (
