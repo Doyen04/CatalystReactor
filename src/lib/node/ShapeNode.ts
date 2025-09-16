@@ -21,12 +21,13 @@ class ShapeNode extends SceneNode {
 
             this.canComputeMatrix = false
         }
+
         this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
     }
 
     override draw(canvas: Canvas): void {
         canvas.save()
-        canvas.concat(this.worldMatrix)
+        canvas.concat(this.localMatrix)
 
         if (this.shape) this.shape.draw(canvas)
         canvas.restore()

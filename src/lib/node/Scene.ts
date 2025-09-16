@@ -157,6 +157,7 @@ abstract class SceneNode {
 
     isCollide(x: number, y: number): boolean {
         const { x: tx, y: ty } = this.worldToLocal(x, y)
+
         return this.shape.pointInShape(tx, ty)
     }
 
@@ -255,7 +256,8 @@ abstract class SceneNode {
         if (this.shape instanceof Oval) {
             return this.shape.getArcAngles()
         } else {
-            throw new Error('not implemented')
+            return null
+            // throw new Error('not implemented')
         }
     }
 
@@ -264,7 +266,8 @@ abstract class SceneNode {
         if (this.shape instanceof Star || this.shape instanceof Polygon) {
             return this.shape.getVertexCount()
         } else {
-            throw new Error('not implemented')
+            return null
+            // throw new Error('not implemented')
         }
     }
 
@@ -279,7 +282,8 @@ abstract class SceneNode {
         if (this.shape instanceof Star || this.shape instanceof Polygon) {
             return this.shape.getVertex(prev, vertex)
         } else {
-            throw new Error('not implemented')
+            return null
+            // throw new Error('not implemented')
         }
     }
 
@@ -288,7 +292,8 @@ abstract class SceneNode {
         if (this.shape instanceof Oval) {
             return this.shape.isArc()
         } else {
-            throw new Error('not implemented')
+            return null
+            // throw new Error('not implemented')
         }
     }
 
@@ -296,7 +301,8 @@ abstract class SceneNode {
         if (this.shape instanceof Star || this.shape instanceof Polygon) {
             return this.shape.setVertexCount(count)
         } else {
-            throw new Error('not implemented')
+            return null
+            // throw new Error('not implemented')
         }
     }
 
@@ -304,7 +310,8 @@ abstract class SceneNode {
         if (this.shape instanceof Oval) {
             return this.shape.setArc(start, end)
         } else {
-            throw new Error('not implemented')
+            return null
+            // throw new Error('not implemented')
         }
     }
 
@@ -312,7 +319,8 @@ abstract class SceneNode {
         if (this.shape instanceof Oval) {
             return this.shape.setRatio(ratio)
         } else {
-            throw new Error('not implemented')
+            return null
+            // throw new Error('not implemented')
         }
     }
 
@@ -320,7 +328,8 @@ abstract class SceneNode {
         if (this.shape instanceof Star || this.shape instanceof Polygon || this.shape instanceof Rectangle) {
             return this.shape.setBorderRadius(radius, position)
         } else {
-            throw new Error('not implemented')
+            return null
+            // throw new Error('not implemented')
         }
     }
 

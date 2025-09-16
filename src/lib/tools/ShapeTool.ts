@@ -17,6 +17,7 @@ class ShapeTool extends Tool {
         const scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
+        console.log(x, y, 'scene',scene)
 
         const shape = ShapeFactory.createShape(this.shapeType, {
             x: x,

@@ -2,11 +2,12 @@ import SelectTool from '@/lib/tools/SelectTool'
 import ShapeTool from '@/lib/tools/ShapeTool'
 import Tool from '@/lib/tools/SelectTool'
 import EventQueue, { EventTypes } from './EventQueue'
-import { ToolType } from '@lib/types/shapeTypes'
 import ImageTool from '@lib/tools/ImageTool'
 import KeyboardTool from '@lib/tools/keyboardTool'
 import SceneManager from './SceneManager'
 import ShapeManager from './ShapeManager'
+import { ToolType } from '@lib/tools/toolTypes'
+import GroupTool from '@lib/tools/GroupTool'
 
 const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes
 
@@ -33,19 +34,17 @@ class ToolManager {
                 currentTool = new SelectTool(this.sceneManager, this.shapeManager, this.cnvsElm)
                 break
             case 'rect':
-                currentTool = new ShapeTool('rect', this.sceneManager, this.shapeManager, this.cnvsElm)
-                break
             case 'oval':
-                currentTool = new ShapeTool('oval', this.sceneManager, this.shapeManager, this.cnvsElm)
-                break
             case 'star':
-                currentTool = new ShapeTool('star', this.sceneManager, this.shapeManager, this.cnvsElm)
-                break
             case 'polygon':
-                currentTool = new ShapeTool('polygon', this.sceneManager, this.shapeManager, this.cnvsElm)
-                break
             case 'text':
-                currentTool = new ShapeTool('text', this.sceneManager, this.shapeManager, this.cnvsElm)
+                currentTool = new ShapeTool(tool, this.sceneManager, this.shapeManager, this.cnvsElm)
+                break
+            case 'row':
+            case 'column':
+            case 'grid':
+            case 'frame':
+                currentTool = new GroupTool(tool, this.sceneManager, this.shapeManager, this.cnvsElm)
                 break
             case 'img':
                 currentTool = new ImageTool(this.sceneManager, this.shapeManager, this.cnvsElm)

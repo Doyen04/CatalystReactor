@@ -7,6 +7,7 @@ export interface ShapeData {
     rotation: number
     rotationAnchor: Coord
     inverseWorldTransform: number[]
+    localTransform: number[]
     worldTransform: number[]
     initialMouseAngle?: number
     arcAngle?: { start: number; end: number }

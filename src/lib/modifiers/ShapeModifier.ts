@@ -81,6 +81,7 @@ class ShapeModifier {
                 scale,
                 rotation,
                 rotationAnchor,
+                localTransform: [...this.scene.getLocalMatrix()],
                 worldTransform: [...this.scene.getWorldMatrix()],
                 inverseWorldTransform: Matrix.invert([...this.scene.getWorldMatrix()]),
                 arcAngle,
