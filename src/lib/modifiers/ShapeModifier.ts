@@ -137,7 +137,7 @@ class ShapeModifier {
         return selected
     }
 
-    handleModifierDrag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
+    handleModifierDrag(dragStart: Coord, e: MouseEvent) {
         if (this.selectedModifierHandle) {
             switch (this.selectedModifierHandle.type) {
                 case 'radius':
@@ -193,11 +193,11 @@ class ShapeModifier {
         this.updateResizerPositions()
     }
 
-    drag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
+    drag(dragStart: Coord, e: MouseEvent) {
         this.selectedModifierHandle.isDragging = true
         if (this.selectedModifierHandle.type === 'size') this.isHovered = false
 
-        this.handleModifierDrag(dragStart, dx, dy, e)
+        this.handleModifierDrag(dragStart, e)
     }
 
     updateResizerPositions() {

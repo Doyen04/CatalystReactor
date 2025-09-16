@@ -1,18 +1,12 @@
-import { Coord } from '@lib/types/shapes'
 import EventQueue, { EventTypes } from './EventQueue'
 
-const { PointerDown, PointerMove, PointerUp, PointerDrag, CreateSurface, KeyDown, KeyUp } = EventTypes
+const { PointerDown, PointerMove, PointerUp, CreateSurface, KeyDown, KeyUp } = EventTypes
 
 class InputManager {
     private canvasEl: HTMLCanvasElement
-    private isPointerDown: boolean
-    private dragStart: Coord
 
     constructor(cnvs: HTMLCanvasElement) {
         this.canvasEl = cnvs
-
-        this.isPointerDown = false
-        this.dragStart = null
 
         // Bind events
         this.setUpEvent()
@@ -33,24 +27,16 @@ class InputManager {
     onPointerDown(e: MouseEvent) {
         console.log('down')
         this.canvasEl.focus()
-        this.isPointerDown = true
-        this.dragStart = { x: e.offsetX, y: e.offsetY }
-        EventQueue.trigger(PointerDown, this.dragStart, e)
+        EventQueue.trigger(PointerDown, e)
     }
 
     onPointerMove(e: MouseEvent) {
-        if (this.isPointerDown) {
-            EventQueue.trigger(PointerDrag, this.dragStart, e)
-        } else {
-            EventQueue.trigger(PointerMove, this.dragStart, e)
-        }
+        EventQueue.trigger(PointerMove, e)
     }
 
     onPointerUp(e: MouseEvent) {
         console.log('up')
-        this.isPointerDown = false
-        this.dragStart = null
-        EventQueue.trigger(PointerUp, this.dragStart, e)
+        EventQueue.trigger(PointerUp, e)
     }
 
     onKeyDown(e: KeyboardEvent) {
@@ -82,9 +68,6 @@ class InputManager {
     destroy() {
         this.removeEventListeners()
         this.canvasEl = null
-
-        this.isPointerDown = null
-        this.dragStart = null
     }
 }
 

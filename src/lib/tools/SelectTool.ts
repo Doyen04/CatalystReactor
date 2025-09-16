@@ -1,4 +1,3 @@
-import { Coord } from '@lib/types/shapes'
 import Tool from './Tool'
 import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
@@ -7,7 +6,6 @@ import SceneNode from '@lib/node/Scene'
 
 class SelectTool extends Tool {
     private hoveredScene: SceneNode | null = null
-    private lastMouseCoord: Coord | null = null
     private clickTimer: NodeJS.Timeout | null = null
     private clickCount: number = 0
     private lastClickTime: number = 0
@@ -17,9 +15,9 @@ class SelectTool extends Tool {
         super(sceneManager, shapeManager, cnvs)
     }
 
-    override handlePointerDown(dragStart: Coord, e: MouseEvent) {
-        this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
-        this.shapeManager.handleMouseDown(dragStart, e)
+    override handlePointerDown(e: MouseEvent) {
+        super.handlePointerDown(e)
+        this.shapeManager.handleMouseDown(this.dragStart, e)
         this.handleClickCount(e)
     }
 
@@ -37,7 +35,9 @@ class SelectTool extends Tool {
 
         // Set timer to process the click(s)
         this.clickTimer = setTimeout(() => {
-            this.processClick(e, this.clickCount)
+            if (!this.isDragging) {
+                this.processClick(e, this.clickCount)
+            }
             this.clickCount = 0
         }, this.doubleClickDelay)
     }
@@ -51,12 +51,16 @@ class SelectTool extends Tool {
     }
 
     private handleSingleClick(e: MouseEvent) {
+        console.log('click triggered')
+
         const selected = this.shapeManager.collide(e.offsetX, e.offsetY)
 
-        if (selected) {
+        const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
+        const currentSelection = this.shapeManager.currentScene
+
+        if (selected || scene === currentSelection) {
             return
         }
-        const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
 
         this.shapeManager.detachShape()
 
@@ -79,13 +83,6 @@ class SelectTool extends Tool {
         //         shape.selectAll()
         //     }
         // }
-    }
-
-    override handlePointerUp() {
-        this.shapeManager.finishDrag()
-        // EventQueue.trigger(FinaliseSelection)
-        // EventQueue.trigger(UpdateModifierHandlesPos)
-        // EventQueue.trigger(Render)
     }
 
     setCursorForHandle(handle: Handle) {
@@ -145,7 +142,15 @@ class SelectTool extends Tool {
         }
     }
 
-    override handlePointerMove(dragStart: Coord, e: MouseEvent): void {
+    override handlePointerMove(e: MouseEvent): void {
+        if (this.isPointerDown) {
+            this.handlePointerDrag(e)
+        } else {
+            this.moveHandler(e)
+        }
+    }
+
+    moveHandler(e: MouseEvent) {
         const handle = this.shapeManager.handleHover(e.offsetX, e.offsetY)
         this.setCursorForHandle(handle)
 
@@ -164,19 +169,24 @@ class SelectTool extends Tool {
         this.hoveredScene.setHovered(true)
     }
 
-    override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-        if (!this.lastMouseCoord) {
+    override handlePointerDrag(e: MouseEvent): void {
+        if (!this.dragStart) {
             console.log('mousecoord is null')
             return
         }
-
-        const dx = e.offsetX - this.lastMouseCoord.x
-        const dy = e.offsetY - this.lastMouseCoord.y
-
-        this.shapeManager.drag(dragStart, dx, dy, e)
-
-        this.lastMouseCoord = { x: e.offsetX, y: e.offsetY }
+        this.shapeManager.drag(this.dragStart, e)
+        this.isDragging = true
     }
+
+    override handlePointerUp() {
+        console.log('up')
+
+        this.shapeManager.finishDrag()
+        this.isPointerDown = false
+        this.dragStart = null
+        this.isDragging = false
+    }
+
     override toolChange(): void {
         super.toolChange()
         if (this.clickTimer) {

@@ -9,7 +9,7 @@ import ShapeManager from './ShapeManager'
 import { ToolType } from '@lib/tools/toolTypes'
 import GroupTool from '@lib/tools/GroupTool'
 
-const { PointerDown, PointerMove, PointerUp, PointerDrag, KeyDown, KeyUp, ToolChange } = EventTypes
+const { PointerDown, PointerMove, PointerUp, KeyDown, KeyUp, ToolChange } = EventTypes
 
 class ToolManager {
     currentTool: Tool
@@ -58,6 +58,7 @@ class ToolManager {
         if (currentTool) EventQueue.trigger(ToolChange, currentTool)
         this.setUpEvent()
     }
+    
     handleToolChange(tool: Tool) {
         if (tool !== this.currentTool) {
             if (this.currentTool) this.currentTool.toolChange()
@@ -71,7 +72,6 @@ class ToolManager {
     }
     addEvent() {
         EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown.bind(this.currentTool))
-        EventQueue.subscribe(PointerDrag, this.currentTool.handlePointerDrag.bind(this.currentTool))
         EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove.bind(this.currentTool))
         EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp.bind(this.currentTool))
         EventQueue.subscribe(KeyDown, this.keyboardTool.handleKeyDown.bind(this.keyboardTool))
@@ -80,7 +80,6 @@ class ToolManager {
     }
     removeEvent() {
         EventQueue.unSubscribeAll(PointerDown)
-        EventQueue.unSubscribeAll(PointerDrag)
         EventQueue.unSubscribeAll(PointerMove)
         EventQueue.unSubscribeAll(PointerUp)
         EventQueue.unSubscribeAll(KeyDown)

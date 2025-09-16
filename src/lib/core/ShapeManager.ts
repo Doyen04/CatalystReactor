@@ -33,13 +33,13 @@ class ShapeManager {
         console.log('not used', dragStart, e)
     }
 
-    drag(dragStart: Coord, dx: number, dy: number, e: MouseEvent) {
+    drag(dragStart: Coord, e: MouseEvent) {
         if (!this.scene) return
 
         if (this.shapeModifier.hasSelectedHandle()) {
-            this.shapeModifier.drag(dragStart, dx, dy, e)
+            this.shapeModifier.drag(dragStart, e)
         } else {
-            this.scene.move(dx, dy)
+            // this.scene.move(dx, dy)
         }
 
         this.shapeModifier.update()

@@ -1,6 +1,5 @@
 import { ShapeType } from '@lib/types/shapes'
 import Tool from './Tool'
-import { Coord } from '@lib/types/shapes'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
@@ -13,11 +12,13 @@ class ShapeTool extends Tool {
         super(sceneManager, shapeManager, cnvs)
         this.shapeType = shape
     }
-    override handlePointerDown(dragStart: Coord, e: MouseEvent) {
+
+    override handlePointerDown(e: MouseEvent) {
+        super.handlePointerDown(e)
         const scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
-        console.log(x, y, 'scene',scene)
+        console.log(x, y, 'scene', scene)
 
         const shape = ShapeFactory.createShape(this.shapeType, {
             x: x,
@@ -31,12 +32,20 @@ class ShapeTool extends Tool {
             this.shapeManager.attachNode(shapenode)
         }
     }
-    override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
-        this.shapeManager.handleTinyShapes()
-        super.handlePointerUp?.(dragStart, e)
+    override handlePointerMove(e: MouseEvent): void {
+        if (this.isPointerDown) {
+            this.handlePointerDrag(e)
+        }
     }
-    override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-        this.shapeManager.drawShape(dragStart, e)
+    override handlePointerUp(e: MouseEvent): void {
+        this.shapeManager.handleTinyShapes()
+        super.handlePointerUp?.(e)
+    }
+
+    override handlePointerDrag(e: MouseEvent): void {
+        console.log(this.dragStart, e, { x: e.offsetX - this.dragStart.x, y: e.offsetY - this.dragStart.y })
+
+        this.shapeManager.drawShape(this.dragStart, e)
     }
 
     setShape(shape: ShapeType) {

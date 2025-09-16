@@ -139,7 +139,7 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
 
     const fixedHandleKey = getOppositeHandle(handle.pos)
     const fixedLocal = getHandleLocalPoint(fixedHandleKey, initialShapeData.dimension.width, initialShapeData.dimension.height)
-    const fixedWorld = tranformPoint(initialShapeData.localTransform, fixedLocal.x, fixedLocal.y)
+    const fixedWorld = tranformPoint(initialShapeData.worldTransform, fixedLocal.x, fixedLocal.y)
     const handleNewLocal = getHandleLocalPoint(fixedHandleKey, absW, absH)
 
     const zeroTransform = scene.buildZeroTransform(
@@ -153,7 +153,7 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
     const offset = tranformPoint(zeroTransform, handleNewLocal.x, handleNewLocal.y)
     const posX = (fixedWorld ? fixedWorld.x : initialShapeData.position.x) - offset.x
     const posY = (fixedWorld ? fixedWorld.y : initialShapeData.position.y) - offset.y
-    console.log(posX, posY,'updatedim')
+    console.log(posX, posY,'updatedim', handle.pos)
 
     scene.updateScene({
         position: { x: Math.floor(posX), y: Math.floor(posY) },

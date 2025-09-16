@@ -1,11 +1,9 @@
 import { Coord, ShapeType } from '@lib/types/shapes'
-import SceneNode from '../node/ContainerNode'
 
 enum EventTypes {
     PointerDown = 'pointer:down', //
     PointerUp = 'pointer:up', //
     PointerMove = 'pointer:move', //
-    PointerDrag = 'pointer:drag', //
     KeyDown = 'key:down', //
     KeyUp = 'key:up', //
 
@@ -31,10 +29,9 @@ enum EventTypes {
 }
 
 type Handlers = {
-    [EventTypes.PointerDown]: (dragStart: Coord, e: MouseEvent) => void
-    [EventTypes.PointerUp]: (dragStart: Coord, e: MouseEvent) => void
-    [EventTypes.PointerMove]: (dragStart: Coord, e: MouseEvent) => void
-    [EventTypes.PointerDrag]: (dragStart: Coord, e: MouseEvent) => void
+    [EventTypes.PointerDown]: (e: MouseEvent) => void
+    [EventTypes.PointerUp]: (e: MouseEvent) => void
+    [EventTypes.PointerMove]: (e: MouseEvent) => void
     [EventTypes.KeyDown]: (e: KeyboardEvent) => void
     [EventTypes.KeyUp]: (e: KeyboardEvent) => void
     [EventTypes.CreateScene]: (type: ShapeType, x: number, y: number) => void
