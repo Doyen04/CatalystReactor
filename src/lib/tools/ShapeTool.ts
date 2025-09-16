@@ -43,8 +43,6 @@ class ShapeTool extends Tool {
     }
 
     override handlePointerDrag(e: MouseEvent): void {
-        console.log(this.dragStart, e, { x: e.offsetX - this.dragStart.x, y: e.offsetY - this.dragStart.y })
-
         this.shapeManager.drawShape(this.dragStart, e)
     }
 

@@ -34,9 +34,9 @@ abstract class SceneNode {
     }
 
     updateScene(attrib: { position: Coord; scale: Coord; dimension: Size }) {
-        this.setPosition(attrib.position.x, attrib.position.y)
+        this.setPosition(Math.floor(attrib.position.x), Math.floor(attrib.position.y))
         this.setScale(attrib.scale.x, attrib.scale.y)
-        this.setDimension(Math.abs(attrib.dimension.width), Math.abs(attrib.dimension.height))
+        this.setDimension(Math.floor(Math.abs(attrib.dimension.width)), Math.floor(Math.abs(attrib.dimension.height)))
     }
 
     setDimension(width: number, height: number): void {
