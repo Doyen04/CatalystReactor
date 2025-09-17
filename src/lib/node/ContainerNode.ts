@@ -1,4 +1,4 @@
-import { Canvas } from 'canvaskit-wasm'
+import { Canvas, Paint } from 'canvaskit-wasm'
 // import { IShape } from '@lib/types/shapes'
 import SceneNode from './Scene'
 import type Shape from '@lib/shapes/base/Shape'
@@ -37,20 +37,20 @@ class ContainerNode extends SceneNode {
         this.applyLayout()
     }
 
-    private applyLayout(): void {
+    applyLayout(): void {
         if (!this.shape || this.children.length === 0) return
 
-        const { type, gap = 10, padding = 10, alignment = 'start' } = this.layoutConstraints
+        const { type } = this.layoutConstraints
 
         switch (type) {
             case 'row':
-                this.applyRowLayout(gap, padding, alignment)
+                this.applyRowLayout()
                 break
             case 'column':
-                this.applyColumnLayout(gap, padding, alignment)
+                this.applyColumnLayout()
                 break
             case 'grid':
-                this.applyGridLayout(gap, padding)
+                this.applyGridLayout()
                 break
             case 'frame':
             default:
@@ -59,8 +59,10 @@ class ContainerNode extends SceneNode {
         }
     }
 
-    private applyRowLayout(gap: number, padding: number, alignment: string): void {
-        let currentX = padding
+    private applyRowLayout(): void {
+        const { padding, alignment, gap } = this.layoutConstraints
+
+        let currentX = padding.left
         const containerBounds = this.shape.getDim()
         const containerHeight = containerBounds.height
 
@@ -76,15 +78,15 @@ class ContainerNode extends SceneNode {
                     yPos = (containerHeight - childBounds.height) / 2
                     break
                 case 'end':
-                    yPos = containerHeight - childBounds.height - padding
+                    yPos = containerHeight - childBounds.height - padding.right
                     break
                 case 'stretch':
-                    yPos = padding
-                    child.setDimension(childBounds.width, containerHeight - padding * 2)
+                    yPos = padding.top
+                    child.setDimension(childBounds.width, containerHeight - padding.top - padding.bottom)
                     break
                 case 'start':
                 default:
-                    yPos = padding
+                    yPos = padding.top
                     break
             }
 
@@ -103,15 +105,18 @@ class ContainerNode extends SceneNode {
                 if (!child.hasShape()) return sum
                 return sum + child.getDim().width + (index > 0 ? gap : 0)
             }, 0) +
-            padding * 2
+            padding.left +
+            padding.right
 
         if (totalWidth > containerBounds.width) {
             this.shape.setDim(totalWidth, containerBounds.height)
         }
     }
 
-    private applyColumnLayout(gap: number, padding: number, alignment: string): void {
-        let currentY = padding
+    private applyColumnLayout(): void {
+        const { padding, alignment, gap } = this.layoutConstraints
+
+        let currentY = padding.top
         const containerBounds = this.shape.getDim()
         const containerWidth = containerBounds.width
 
@@ -127,15 +132,15 @@ class ContainerNode extends SceneNode {
                     xPos = (containerWidth - childBounds.width) / 2
                     break
                 case 'end':
-                    xPos = containerWidth - childBounds.width - padding
+                    xPos = containerWidth - childBounds.width - padding.right
                     break
                 case 'stretch':
-                    xPos = padding
-                    child.setDimension(containerWidth - padding * 2, childBounds.height)
+                    xPos = padding.left
+                    child.setDimension(containerWidth - padding.left - padding.right, childBounds.height)
                     break
                 case 'start':
                 default:
-                    xPos = padding
+                    xPos = padding.left
                     break
             }
 
@@ -152,17 +157,19 @@ class ContainerNode extends SceneNode {
                 if (!child.hasShape()) return sum
                 return sum + child.getDim().height + (index > 0 ? gap : 0)
             }, 0) +
-            padding * 2
+            padding.top +
+            padding.bottom
 
         if (totalHeight > containerBounds.height) {
             this.shape.setDim(containerBounds.width, totalHeight)
         }
     }
 
-    private applyGridLayout(gap: number, padding: number): void {
+    private applyGridLayout(): void {
+        const { padding, gap } = this.layoutConstraints
         // Simple grid layout - calculate columns based on container width
         const containerBounds = this.shape.getDim()
-        const availableWidth = containerBounds.width - padding * 2
+        const availableWidth = containerBounds.width - padding.left - padding.right
         const childWidth = this.children.length > 0 && this.children[0].hasShape() ? this.children[0].getDim().width : 100
         const cols = Math.floor((availableWidth + gap) / (childWidth + gap))
 
@@ -172,8 +179,8 @@ class ContainerNode extends SceneNode {
             const row = Math.floor(index / cols)
             const col = index % cols
 
-            const xPos = padding + col * (childWidth + gap)
-            const yPos = padding + row * (child.getDim().height + gap)
+            const xPos = padding.left + col * (childWidth + gap)
+            const yPos = padding.top + row * (child.getDim().height + gap)
 
             child.setPosition(xPos, yPos)
         })
@@ -218,7 +225,7 @@ class ContainerNode extends SceneNode {
         const bounds = this.shape!.getDim()
 
         // Draw dashed border to indicate container
-        strokePaint.setColor(this.resource.canvasKit.Color(100, 150, 255, 0.6))
+        strokePaint.setColor(this.resource.canvasKit.Color(220, 150, 255, 1.0))
         strokePaint.setStrokeWidth(1)
         strokePaint.setPathEffect(this.resource.canvasKit.PathEffect.MakeDash([3, 3], 0))
 
@@ -227,8 +234,79 @@ class ContainerNode extends SceneNode {
 
         // Reset path effect
         strokePaint.setPathEffect(null)
+        this.drawPaddingAndGap(canvas, bounds)
     }
 
+    private drawPaddingAndGap(canvas: Canvas, bounds: { width: number; height: number }): void {
+        const { padding, gap = 0 } = this.layoutConstraints
+
+        if (!padding) return
+
+        const fillPaint = this.resource.paint
+
+        // Draw padding areas with orange color
+        fillPaint.setColor(this.resource.canvasKit.Color(255, 200, 100, 0.3))
+        // Top padding
+        const topRect = this.resource.canvasKit.XYWHRect(0, 0, bounds.width, padding.top)
+        canvas.drawRect(topRect, fillPaint)
+
+        // Bottom padding
+        const bottomRect = this.resource.canvasKit.XYWHRect(0, bounds.height - padding.bottom, bounds.width, padding.bottom)
+        canvas.drawRect(bottomRect, fillPaint)
+
+        // Left padding
+        const leftRect = this.resource.canvasKit.XYWHRect(0, padding.top, padding.left, bounds.height - padding.top - padding.bottom)
+        canvas.drawRect(leftRect, fillPaint)
+
+        // Right padding
+        const rightRect = this.resource.canvasKit.XYWHRect(
+            bounds.width - padding.right,
+            padding.top,
+            padding.right,
+            bounds.height - padding.top - padding.bottom
+        )
+        canvas.drawRect(rightRect, fillPaint)
+
+        // Draw gap indicators with blue color
+        if (gap > 0 && this.children.length > 1) {
+            fillPaint.setColor(this.resource.canvasKit.Color(100, 200, 255, 0.4))
+            this.drawGapAreas(canvas, gap, fillPaint)
+        }
+    }
+
+    private drawGapAreas(canvas: Canvas, gap: number, fillPaint: Paint): void {
+        const { type, padding } = this.layoutConstraints
+
+        for (let i = 0; i < this.children.length - 1; i++) {
+            const currentChild = this.children[i]
+            const nextChild = this.children[i + 1]
+
+            if (!currentChild.hasShape() || !nextChild.hasShape()) continue
+
+            const currentBounds = currentChild.getDim()
+            const currentPos = currentChild.getCoord()
+            const container = this.shape.getDim()
+
+            let gapRect: any
+
+            if (type === 'row') {
+                // Horizontal gap
+                gapRect = this.resource.canvasKit.XYWHRect(
+                    currentPos.x + currentBounds.width,
+                    currentPos.y,
+                    gap,
+                    container.height - padding.bottom - padding.top
+                )
+            } else if (type === 'column') {
+                // Vertical gap
+                gapRect = this.resource.canvasKit.XYWHRect(currentPos.x, currentPos.y + currentBounds.height, currentBounds.width, gap)
+            }
+
+            if (gapRect) {
+                canvas.drawRect(gapRect, fillPaint)
+            }
+        }
+    }
     destroy() {
         if (this.shape) {
             this.parent?.removeChildNode(this)

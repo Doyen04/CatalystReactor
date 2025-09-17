@@ -36,13 +36,13 @@ class GroupTool extends Tool {
     private getLayoutConstraints(shapeType: ContainerType): LayoutConstraints {
         switch (shapeType) {
             case 'row':
-                return { type: 'row', gap: 10, padding: 10, alignment: 'start' }
+                return { type: 'row', gap: 10, padding: { top: 10, bottom: 10, left: 10, right: 10 }, alignment: 'start' }
             case 'column':
-                return { type: 'column', gap: 10, padding: 10, alignment: 'start' }
+                return { type: 'column', gap: 10, padding: { top: 10, bottom: 10, left: 10, right: 10 }, alignment: 'start' }
             case 'grid':
-                return { type: 'grid', gap: 10, padding: 10 }
+                return { type: 'grid', gap: 10, padding: { top: 10, bottom: 10, left: 10, right: 10 } }
             case 'frame':
-                return { type: 'frame', padding: 10 }
+                return { type: 'frame', padding: { top: 10, bottom: 10, left: 10, right: 10 } }
             default:
                 return null
         }

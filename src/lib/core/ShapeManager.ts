@@ -5,12 +5,12 @@ import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import throttle from '@lib/helper/throttle'
 import Handle from '@lib/modifiers/Handles'
 import SceneNode from '@lib/node/Scene'
+import ContainerNode from '@lib/node/ContainerNode'
 
 class ShapeManager {
     private scene: SceneNode | null = null
     private shapeModifier: ShapeModifier | null
     private throttledUpdate: (properties: Properties) => void
-    private selected: boolean = false
 
     constructor(shapeModifier: ShapeModifier) {
         this.scene = null
@@ -56,7 +56,11 @@ class ShapeManager {
 
     finishDrag() {
         if (!this.scene) return
-        this.selected = false
+        const parent = this.scene.getParent()
+        if (parent instanceof ContainerNode) {
+            parent.applyLayout()
+        }
+
         this.shapeModifier.handleRemoveModiferHandle()
 
         this.shapeModifier.update()
@@ -88,16 +92,11 @@ class ShapeManager {
         return this.scene != null
     }
 
-    hasSelection(): boolean {
-        return this.selected
-    }
-
     attachNode(scene: SceneNode) {
         if (!scene) return
 
         this.scene = scene
         this.shapeModifier.attachShape(scene)
-        this.selected = true
         // Optionally sync initial props:
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
@@ -108,7 +107,6 @@ class ShapeManager {
 
         this.scene?.cleanUp()
         this.scene = null
-        this.selected = false
         this.shapeModifier.detachShape()
         useSceneStore.getState().clearProperties()
     }
@@ -147,17 +145,13 @@ class ShapeManager {
 
     collide(x: number, y: number): boolean {
         if (!this.scene) {
-            this.selected = false
             return false
         }
-
         const handle = this.shapeModifier.selectModifier(x, y)
 
         if (handle) {
-            this.selected = true
             return true
         } else {
-            this.selected = false
             return false
         }
     }

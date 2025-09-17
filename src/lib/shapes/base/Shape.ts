@@ -33,8 +33,6 @@ interface Arguments {
 }
 
 abstract class Shape {
-    protected IWidth: number
-    protected IHeight: number
     protected aspectRatio: number = 1
     protected maintainAspectRatio: boolean = false
     protected shapeType: ShapeType
