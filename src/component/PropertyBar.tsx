@@ -109,7 +109,7 @@ function PropertyBar() {
     if (!currentShapeProperties) {
         return (
             <div className="propertybar">
-                <div className="propertybar-header">header</div>
+                <div className="propertybar-header"> {JSON.stringify(currentShapeProperties)} </div>
                 <div className="propertybar-body">No shape selected</div>
             </div>
         )

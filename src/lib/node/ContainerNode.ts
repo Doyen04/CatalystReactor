@@ -20,7 +20,7 @@ class ContainerNode extends SceneNode {
     override addChildNode(child: SceneNode): void {
         child.setParent(this)
         this.children.push(child)
-        this.applyLayout()
+        // this.applyLayout()
     }
 
     override removeChildNode(child: SceneNode): void {
@@ -60,56 +60,54 @@ class ContainerNode extends SceneNode {
     }
 
     private applyRowLayout(gap: number, padding: number, alignment: string): void {
-        const currentX = padding
+        let currentX = padding
         const containerBounds = this.shape.getDim()
         const containerHeight = containerBounds.height
 
-        console.log(currentX, containerBounds, containerHeight, alignment)
+        this.children.forEach((child, index) => {
+            if (!child.hasShape()) return
 
-        // this.children.forEach((child, index) => {
-        //     if (!child.hasShape()) return
+            const childBounds = child.getDim()
+            let yPos: number
 
-        //     const childBounds = child.getDim()
-        //     let yPos: number
+            // Calculate Y position based on alignment
+            switch (alignment) {
+                case 'center':
+                    yPos = (containerHeight - childBounds.height) / 2
+                    break
+                case 'end':
+                    yPos = containerHeight - childBounds.height - padding
+                    break
+                case 'stretch':
+                    yPos = padding
+                    child.setDimension(childBounds.width, containerHeight - padding * 2)
+                    break
+                case 'start':
+                default:
+                    yPos = padding
+                    break
+            }
 
-        //     // Calculate Y position based on alignment
-        //     switch (alignment) {
-        //         case 'center':
-        //             yPos = (containerHeight - childBounds.height) / 2
-        //             break
-        //         case 'end':
-        //             yPos = containerHeight - childBounds.height - padding
-        //             break
-        //         case 'stretch':
-        //             yPos = padding
-        //             child.setDimension(childBounds.width, containerHeight - padding * 2)
-        //             break
-        //         case 'start':
-        //         default:
-        //             yPos = padding
-        //             break
-        //     }
+            // Set child position
 
-        //     // Set child position
+            console.log(child, 'child', currentX, yPos)
+            child.setPosition(currentX, yPos)
 
-        //     console.log(child, 'child', currentX, yPos)
-        //     child.setPosition(currentX, yPos)
+            // Move to next position
+            currentX += childBounds.width + (index < this.children.length - 1 ? gap : 0)
+        })
 
-        //     // Move to next position
-        //     currentX += childBounds.width + (index < this.children.length - 1 ? gap : 0)
-        // })
+        // Auto-resize container width if needed
+        const totalWidth =
+            this.children.reduce((sum, child, index) => {
+                if (!child.hasShape()) return sum
+                return sum + child.getDim().width + (index > 0 ? gap : 0)
+            }, 0) +
+            padding * 2
 
-        // // Auto-resize container width if needed
-        // const totalWidth =
-        //     this.children.reduce((sum, child, index) => {
-        //         if (!child.hasShape()) return sum
-        //         return sum + child.getDim().width + (index > 0 ? gap : 0)
-        //     }, 0) +
-        //     padding * 2
-
-        // if (totalWidth > containerBounds.width) {
-        //     this.shape.setDim(totalWidth, containerBounds.height)
-        // }
+        if (totalWidth > containerBounds.width) {
+            this.shape.setDim(totalWidth, containerBounds.height)
+        }
     }
 
     private applyColumnLayout(gap: number, padding: number, alignment: string): void {

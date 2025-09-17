@@ -16,6 +16,8 @@ class SelectTool extends Tool {
     }
 
     override handlePointerDown(e: MouseEvent) {
+        console.log('pointer down')
+
         super.handlePointerDown(e)
         this.shapeManager.handleMouseDown(this.dragStart, e)
         this.handleClickCount(e)
@@ -60,9 +62,9 @@ class SelectTool extends Tool {
 
         if (selected || scene === currentSelection) {
             return
+        } else {
+            this.shapeManager.detachShape()
         }
-
-        this.shapeManager.detachShape()
 
         if (scene) {
             this.shapeManager.attachNode(scene)
@@ -169,7 +171,7 @@ class SelectTool extends Tool {
         this.hoveredScene.setHovered(true)
     }
 
-    override handlePointerDrag(e: MouseEvent): void {
+    handlePointerDrag(e: MouseEvent): void {
         if (!this.dragStart) {
             console.log('mousecoord is null')
             return
@@ -179,9 +181,10 @@ class SelectTool extends Tool {
     }
 
     override handlePointerUp() {
-        console.log('up')
-
-        this.shapeManager.finishDrag()
+        console.log('up', this.isDragging)
+        if (this.isDragging) {
+            this.shapeManager.finishDrag()
+        }
         this.isPointerDown = false
         this.dragStart = null
         this.isDragging = false

@@ -18,7 +18,6 @@ class ShapeTool extends Tool {
         const scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
-        console.log(x, y, 'scene', scene)
 
         const shape = ShapeFactory.createShape(this.shapeType, {
             x: x,
@@ -39,10 +38,14 @@ class ShapeTool extends Tool {
     }
     override handlePointerUp(e: MouseEvent): void {
         this.shapeManager.handleTinyShapes()
+        if (this.isDragging) {
+            this.shapeManager.finishDrag()
+        }
         super.handlePointerUp?.(e)
     }
 
-    override handlePointerDrag(e: MouseEvent): void {
+    handlePointerDrag(e: MouseEvent): void {
+        this.isDragging = true
         this.shapeManager.drawShape(this.dragStart, e)
     }
 

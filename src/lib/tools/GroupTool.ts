@@ -56,11 +56,14 @@ class GroupTool extends Tool {
 
     override handlePointerUp(e: MouseEvent): void {
         this.shapeManager.handleTinyShapes()
+        if (this.isDragging) {
+            this.shapeManager.finishDrag()
+        }
         super.handlePointerUp?.(e)
     }
-    override handlePointerDrag(e: MouseEvent): void {
-        this.shapeManager.drawShape(this.dragStart, e)
+    handlePointerDrag(e: MouseEvent): void {
         this.isDragging = true
+        this.shapeManager.drawShape(this.dragStart, e)
     }
 
     setShape(shape: ContainerType) {

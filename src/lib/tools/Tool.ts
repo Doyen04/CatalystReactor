@@ -41,7 +41,6 @@ abstract class Tool {
     }
 
     abstract handlePointerMove(e: MouseEvent): void 
-    abstract handlePointerDrag(e: MouseEvent): void
 
     handlePointerDown(e: MouseEvent): void {
         this.dragStart = { x: e.offsetX, y: e.offsetY }

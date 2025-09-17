@@ -204,7 +204,7 @@ class ShapeModifier {
         const { position } = this.initialShapeData
         const newX = position.x + (e.offsetX - dragStart.x)
         const newY = position.y + (e.offsetY - dragStart.y)
-
+        
         this.scene.setPosition(newX, newY)
     }
 

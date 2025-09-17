@@ -22,8 +22,8 @@ class ShapeManager {
         if (!this.scene) return
 
         this.scene.drawOnDrag(dragStart, e)
-        this.shapeModifier.update()
 
+        this.shapeModifier.update()
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
@@ -49,6 +49,20 @@ class ShapeManager {
 
     moveScene(dx: number, dy: number) {
         this.scene.move(dx, dy)
+
+        this.shapeModifier.update()
+        const props = this.scene?.getProperties()
+        this.throttledUpdate(props)
+    }
+
+    finishDrag() {
+        if (!this.scene) return
+        this.selected = false
+        this.shapeModifier.handleRemoveModiferHandle()
+
+        this.shapeModifier.update()
+        const props = this.scene?.getProperties()
+        this.throttledUpdate(props)
     }
 
     handleTinyShapes(): void {
@@ -91,6 +105,8 @@ class ShapeManager {
     }
 
     detachShape() {
+        console.log('cleaning up')
+
         this.scene?.cleanUp()
         this.scene = null
         this.shapeModifier.detachShape()
@@ -104,6 +120,7 @@ class ShapeManager {
             ...prop,
             [key]: value,
         })
+
         this.shapeModifier.update()
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
@@ -128,13 +145,6 @@ class ShapeManager {
         }
     }
 
-    finishDrag() {
-        if (!this.scene) return
-        this.selected = false
-        this.shapeModifier.handleRemoveModiferHandle()
-        this.shapeModifier.update()
-    }
-
     collide(x: number, y: number): boolean {
         if (!this.scene) {
             this.selected = false
@@ -147,9 +157,10 @@ class ShapeManager {
         if (handle) {
             this.selected = true
             return true
+        } else {
+            this.selected = false
+            return false
         }
-        this.selected = this.scene.isCollide(x, y) ? true : false
-        return this.selected
     }
 
     // Additional methods: move, resize, updateBorderRadius, etc.

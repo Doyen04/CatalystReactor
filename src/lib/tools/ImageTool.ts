@@ -1,4 +1,3 @@
-import { Coord } from '@lib/types/shapes'
 import Tool from './Tool'
 import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
@@ -93,7 +92,7 @@ class ImageTool extends Tool {
         return (Array.isArray(this.imageData) && this.imageData.length == 0) || this.imageData == null
     }
 
-    override handlePointerDown(dragStart: Coord, e: MouseEvent) {
+    override handlePointerDown(e: MouseEvent) {
         if (this.isImageDataEmpty()) {
             console.warn('No images available. Please select images first.')
             return
@@ -121,18 +120,27 @@ class ImageTool extends Tool {
             this.shapeManager.attachNode(shapeNode)
         }
     }
-    override handlePointerUp(dragStart: Coord, e: MouseEvent): void {
+    override handlePointerUp(e: MouseEvent): void {
         if (this.isImageDataEmpty()) {
             this.preloadedImages.clear()
             console.log('Image placement completed, clearing image store')
-            super.handlePointerUp(dragStart, e)
+            super.handlePointerUp(e)
+        }
+        if (this.isDragging) {
+            this.shapeManager.finishDrag()
         }
         this.shapeManager.handleTinyShapes()
     }
-    override handlePointerDrag(dragStart: Coord, e: MouseEvent): void {
-        if (this.isLoading) return
 
-        this.shapeManager.drawShape(dragStart, e)
+    override handlePointerMove(e: MouseEvent): void {
+        if (this.isPointerDown) {
+            this.handlePointerDrag(e)
+        }
+    }
+    handlePointerDrag(e: MouseEvent): void {
+        if (this.isLoading) return
+        this.isDragging = true
+        this.shapeManager.drawShape(this.dragStart, e)
     }
 
     override toolChange(): void {
