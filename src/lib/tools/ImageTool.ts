@@ -93,6 +93,8 @@ class ImageTool extends Tool {
     }
 
     override handlePointerDown(e: MouseEvent) {
+        super.handlePointerDown(e)
+        
         if (this.isImageDataEmpty()) {
             console.warn('No images available. Please select images first.')
             return
@@ -133,6 +135,8 @@ class ImageTool extends Tool {
     }
 
     override handlePointerMove(e: MouseEvent): void {
+        console.log(this.isDragging, this.isPointerDown)
+
         if (this.isPointerDown) {
             this.handlePointerDrag(e)
         }

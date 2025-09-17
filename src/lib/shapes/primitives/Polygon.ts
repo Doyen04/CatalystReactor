@@ -56,37 +56,6 @@ class Polygon extends Shape {
         this.calculateBoundingRect()
     }
 
-    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
-        const deltaX = mx - dragStart.x
-        const deltaY = my - dragStart.y
-
-        const willFlipX = deltaX < 0
-        const willFlipY = deltaY < 0
-
-        this.transform.scaleX = willFlipX ? -1 : 1
-        this.transform.scaleY = willFlipY ? -1 : 1
-
-        const newRadiusX = Math.abs(deltaX) / 2
-        const newRadiusY = Math.abs(deltaY) / 2
-
-        if (shiftKey) {
-            const maxRadius = Math.max(newRadiusX, newRadiusY)
-            this.radiusX = this.radiusY = maxRadius
-
-            this.transform.x = deltaX >= 0 ? dragStart.x : dragStart.x - maxRadius
-            this.transform.y = deltaY >= 0 ? dragStart.y : dragStart.y - maxRadius
-        } else {
-            this.radiusX = newRadiusX
-            this.radiusY = newRadiusY
-
-            this.transform.x = deltaX < 0 ? mx : dragStart.x
-            this.transform.y = deltaY < 0 ? my : dragStart.y
-        }
-
-        this.points = this.generateRegularPolygon()
-        this.calculateBoundingRect()
-    }
-
     setVertexCount(sides: number) {
         sides = clamp(sides, 3, 60)
         this.sides = { sides }

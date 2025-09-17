@@ -69,38 +69,6 @@ class Star extends Shape {
         this.calculateBoundingRect()
     }
 
-    override setSize(dragStart: Coord, mx: number, my: number, shiftKey: boolean): void {
-        const deltaX = mx - dragStart.x
-        const deltaY = my - dragStart.y
-
-        const willFlipX = deltaX < 0
-        const willFlipY = deltaY < 0
-
-        this.transform.scaleX = willFlipX ? -1 : 1
-        this.transform.scaleY = willFlipY ? -1 : 1
-
-        const newRadiusX = Math.abs(deltaX) / 2
-        const newRadiusY = Math.abs(deltaY) / 2
-
-        if (shiftKey) {
-            const maxRadius = Math.max(newRadiusX, newRadiusY)
-            this.radiusX = this.radiusY = maxRadius
-
-            this.transform.x = deltaX >= 0 ? dragStart.x : dragStart.x - maxRadius
-            this.transform.y = deltaY >= 0 ? dragStart.y : dragStart.y - maxRadius
-        } else {
-            // Free form star - use actual dimensions
-            this.radiusX = newRadiusX
-            this.radiusY = newRadiusY
-
-            this.transform.x = deltaX < 0 ? mx : dragStart.x
-            this.transform.y = deltaY < 0 ? my : dragStart.y
-        }
-
-        this.points = this.generateStarPoints()
-        this.calculateBoundingRect()
-    }
-
     setVertexCount(points: number): void {
         this.spikes = clamp(points, 3, 60)
 

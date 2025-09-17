@@ -10,7 +10,6 @@ import { BoundingRect, Coord, HandlePos, Properties, Size } from '@lib/types/sha
 import { Canvas } from 'canvaskit-wasm'
 
 abstract class SceneNode {
-    public zIndex: number = 0
     protected shape: Shape
     protected parent: SceneNode | null
     protected localMatrix: number[] | null
@@ -160,15 +159,6 @@ abstract class SceneNode {
         const { x: tx, y: ty } = this.worldToLocal(x, y)
 
         return this.shape.pointInShape(tx, ty)
-    }
-
-    setZIndex(zIndex: number): void {
-        this.zIndex = zIndex
-        // Trigger re-render if needed
-    }
-
-    getZIndex(): number {
-        return this.zIndex
     }
 
     getAbsoluteBoundingRect(): BoundingRect {

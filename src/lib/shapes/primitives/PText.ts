@@ -184,34 +184,6 @@ class PText extends Shape {
         this.calculateBoundingRect()
     }
 
-    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
-        const deltaX = mx - dragStart.x
-        const deltaY = my - dragStart.y
-
-        this.transform.x = Math.min(dragStart.x, mx)
-        this.transform.y = Math.min(dragStart.y, my)
-
-        const willFlipX = deltaX < 0
-        const willFlipY = deltaY < 0
-
-        const scaleX = willFlipX ? -1 : 1
-        const scaleY = willFlipY ? -1 : 1
-
-        this.transform.scaleX = scaleX
-        this.transform.scaleY = scaleY
-
-        if (shiftKey) {
-            const size = Math.max(Math.abs(deltaX), Math.abs(deltaY))
-            this.dimension.width = size
-            this.dimension.height = size
-        } else {
-            this.dimension.width = Math.abs(deltaX)
-            this.dimension.height = Math.abs(deltaY)
-        }
-
-        this.calculateBoundingRect()
-    }
-
     pointInShape(x: number, y: number): boolean {
         const w = this.dimension.width == 0 ? this.TWidth : this.dimension.width
         const h = this.dimension.height == 0 ? this.THeight : this.dimension.height

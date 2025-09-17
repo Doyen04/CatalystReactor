@@ -1,5 +1,5 @@
 import Rectangle from './Rect'
-import { Coord, ImageFill, SolidFill } from '@lib/types/shapes'
+import { ImageFill, SolidFill } from '@lib/types/shapes'
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 
 class PImage extends Rectangle {
@@ -23,56 +23,6 @@ class PImage extends Rectangle {
             const image = imageFill.cnvsImage
             this.aspectRatio = this.calculateAspectRatio(image.width(), image.height())
         }
-    }
-
-    override setSize(dragStart: Coord, mx: number, my: number, shiftKey: boolean): void {
-        const deltaX = mx - dragStart.x
-        const deltaY = my - dragStart.y
-
-        const willFlipX = deltaX < 0
-        const willFlipY = deltaY < 0
-
-        this.transform.scaleX = willFlipX ? -1 : 1
-        this.transform.scaleY = willFlipY ? -1 : 1
-
-        if (shiftKey || this.maintainAspectRatio) {
-            // When shift is held OR aspect ratio should be maintained
-            let newWidth: number
-            let newHeight: number
-
-            if (this.maintainAspectRatio && !shiftKey) {
-                // Maintain original image aspect ratio
-                const absX = Math.abs(deltaX)
-                const absY = Math.abs(deltaY)
-
-                // Use whichever gives us the larger size (following the mouse better)
-                if (absX / this.aspectRatio >= absY) {
-                    // Width change is dominant
-                    newWidth = absX
-                    newHeight = absX / this.aspectRatio
-                } else {
-                    // Height change is dominant
-                    newHeight = absY
-                    newWidth = absY * this.aspectRatio
-                }
-            } else {
-                // Shift key held - make square (1:1 aspect ratio)
-                const size = Math.max(Math.abs(deltaX), Math.abs(deltaY))
-                newWidth = size
-                newHeight = size
-            }
-
-            this.dimension.width = newWidth
-            this.dimension.height = newHeight
-        } else {
-            // Free resizing without aspect ratio constraint
-            this.dimension.width = Math.abs(deltaX)
-            this.dimension.height = Math.abs(deltaY)
-            this.transform.x = Math.min(dragStart.x, mx)
-            this.transform.y = Math.min(dragStart.y, my)
-        }
-
-        this.calculateBoundingRect()
     }
 
     private calculateAspectRatio(width: number, height: number): number {

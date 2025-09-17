@@ -55,39 +55,6 @@ class Oval extends Shape {
         this.arcSegment.endAngle = endAngle
     }
 
-    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
-        const deltaX = mx - dragStart.x
-        const deltaY = my - dragStart.y
-
-        const willFlipX = deltaX < 0
-        const willFlipY = deltaY < 0
-
-        const scaleX = willFlipX ? -1 : 1
-        const scaleY = willFlipY ? -1 : 1
-
-        this.transform.scaleX = scaleX
-        this.transform.scaleY = scaleY
-
-        if (shiftKey) {
-            // Circle mode - use the larger distance for perfect circle
-            const radius = Math.max(Math.abs(deltaX), Math.abs(deltaY))
-            this.radiusX = radius / 2
-            this.radiusY = radius / 2
-
-            this.transform.x = deltaX >= 0 ? dragStart.x : dragStart.x - radius
-            this.transform.y = deltaY >= 0 ? dragStart.y : dragStart.y - radius
-        } else {
-            // Oval mode
-            this.radiusX = Math.abs(deltaX) / 2
-            this.radiusY = Math.abs(deltaY) / 2
-
-            this.transform.x = deltaX < 0 ? mx : dragStart.x
-            this.transform.y = deltaY < 0 ? my : dragStart.y
-        }
-
-        this.calculateBoundingRect()
-    }
-
     override setProperties(prop: Properties): void {
         this.transform = prop.transform
         this.setDim(prop.size.width, prop.size.height)

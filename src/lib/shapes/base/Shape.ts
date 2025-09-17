@@ -73,7 +73,6 @@ abstract class Shape {
     abstract pointInShape(x: number, y: number): boolean
     abstract moveShape(mx: number, my: number): void
     abstract calculateBoundingRect(): void
-    abstract setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void
     abstract draw(canvas: Canvas): void
     abstract setDim(width: number, height: number): void
     abstract getDim(): { width: number; height: number }
@@ -81,10 +80,6 @@ abstract class Shape {
     abstract getProperties(): Properties
     abstract setProperties(prop: Properties): void
     abstract cleanUp(): void
-
-    getShapeType(): ShapeType {
-        return this.shapeType
-    }
 
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance()
@@ -95,6 +90,55 @@ abstract class Shape {
 
             return null
         }
+    }
+
+    setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
+        const deltaX = mx - dragStart.x
+        const deltaY = my - dragStart.y
+
+        const willFlipX = deltaX < 0
+        const willFlipY = deltaY < 0
+
+        this.transform.scaleX = willFlipX ? -1 : 1
+        this.transform.scaleY = willFlipY ? -1 : 1
+
+        if (shiftKey || this.maintainAspectRatio) {
+            let newWidth: number
+            let newHeight: number
+
+            if (this.maintainAspectRatio && !shiftKey) {
+                const absX = Math.abs(deltaX)
+                const absY = Math.abs(deltaY)
+
+                if (absX / this.aspectRatio >= absY) {
+                    newWidth = absX
+                    newHeight = absX / this.aspectRatio
+                } else {
+                    newHeight = absY
+                    newWidth = absY * this.aspectRatio
+                }
+            } else {
+                const size = Math.max(Math.abs(deltaX), Math.abs(deltaY))
+                newWidth = size
+                newHeight = size
+            }
+
+            this.setDim(newWidth, newHeight)
+
+            // ADD: Position update for proper flipping
+            this.transform.x = willFlipX ? dragStart.x - newWidth : dragStart.x
+            this.transform.y = willFlipY ? dragStart.y - newHeight : dragStart.y
+        } else {
+            this.setDim(Math.abs(deltaX), Math.abs(deltaY))
+            this.transform.x = Math.min(dragStart.x, mx)
+            this.transform.y = Math.min(dragStart.y, my)
+        }
+
+        this.calculateBoundingRect()
+    }
+
+    getShapeType(): ShapeType {
+        return this.shapeType
     }
 
     getRelativeBoundingRect(): BoundingRect {
