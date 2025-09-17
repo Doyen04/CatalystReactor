@@ -204,7 +204,7 @@ class ShapeModifier {
         const { position } = this.initialShapeData
         const newX = position.x + (e.offsetX - dragStart.x)
         const newY = position.y + (e.offsetY - dragStart.y)
-        
+
         this.scene.setPosition(newX, newY)
     }
 
@@ -243,6 +243,7 @@ class ShapeModifier {
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
         if (!this.scene) return
+        console.log('down and storing', this.scene)
 
         this.storeShapeInitialShapeData()
         this.handleModifierDown(dragStart, e)
@@ -254,6 +255,10 @@ class ShapeModifier {
 
     detachShape() {
         this.scene = null
+        this.handles = []
+        this.isHovered = false
+        this.selectedModifierHandle = null
+        this.initialShapeData = null
     }
     setHover(bool: boolean) {
         // EventQueue.trigger(Render)

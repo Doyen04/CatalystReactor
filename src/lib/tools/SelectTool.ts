@@ -19,7 +19,23 @@ class SelectTool extends Tool {
         console.log('pointer down')
 
         super.handlePointerDown(e)
+        const selected = this.shapeManager.collide(e.offsetX, e.offsetY)
+
+        const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
+        const currentSelection = this.shapeManager.currentScene
+
+        if (selected || scene === currentSelection) {
+            this.shapeManager.handleMouseDown(this.dragStart, e)
+            return
+        } else {
+            this.shapeManager.detachShape()
+        }
+
+        if (scene) {
+            this.shapeManager.attachNode(scene)
+        }
         this.shapeManager.handleMouseDown(this.dragStart, e)
+
         this.handleClickCount(e)
     }
 
@@ -53,22 +69,7 @@ class SelectTool extends Tool {
     }
 
     private handleSingleClick(e: MouseEvent) {
-        console.log('click triggered')
-
-        const selected = this.shapeManager.collide(e.offsetX, e.offsetY)
-
-        const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
-        const currentSelection = this.shapeManager.currentScene
-
-        if (selected || scene === currentSelection) {
-            return
-        } else {
-            this.shapeManager.detachShape()
-        }
-
-        if (scene) {
-            this.shapeManager.attachNode(scene)
-        }
+        console.log('click triggered', e)
         // if (this.canEdit(scene.getScene()) && scene.pointInShape(e.offsetX, e.offsetY)) {
         //     scene.setCursorPosFromCoord(e.offsetX, e.offsetY)
         // }

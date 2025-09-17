@@ -30,7 +30,6 @@ class ShapeManager {
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
         this.shapeModifier.handleMouseDown(dragStart, e)
-        console.log('not used', dragStart, e)
     }
 
     drag(dragStart: Coord, e: MouseEvent) {
@@ -109,6 +108,7 @@ class ShapeManager {
 
         this.scene?.cleanUp()
         this.scene = null
+        this.selected = false
         this.shapeModifier.detachShape()
         useSceneStore.getState().clearProperties()
     }
@@ -152,7 +152,6 @@ class ShapeManager {
         }
 
         const handle = this.shapeModifier.selectModifier(x, y)
-        console.log('selected handle:', handle)
 
         if (handle) {
             this.selected = true
