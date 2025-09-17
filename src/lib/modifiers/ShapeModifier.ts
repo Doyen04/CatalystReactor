@@ -193,11 +193,19 @@ class ShapeModifier {
         this.updateResizerPositions()
     }
 
-    drag(dragStart: Coord, e: MouseEvent) {
+    dragHandle(dragStart: Coord, e: MouseEvent) {
         this.selectedModifierHandle.isDragging = true
         if (this.selectedModifierHandle.type === 'size') this.isHovered = false
 
         this.handleModifierDrag(dragStart, e)
+    }
+
+    dragShape(dragStart: Coord, e: MouseEvent) {
+        const { position } = this.initialShapeData
+        const newX = position.x + (e.offsetX - dragStart.x)
+        const newY = position.y + (e.offsetY - dragStart.y)
+
+        this.scene.setPosition(newX, newY)
     }
 
     updateResizerPositions() {

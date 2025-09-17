@@ -18,7 +18,7 @@ class SceneManager {
     }
 
     getCollidedScene(x: number, y: number): SceneNode | null {
-        const flattened = this.flattenScene() //work on this
+        const flattened = this.flattenScene().reverse() //work on this
 
         for (const node of flattened) {
             if (node && node.isCollide(x, y)) {
@@ -32,10 +32,10 @@ class SceneManager {
         const flattened: SceneNode[] = []
 
         const traverse = (node: SceneNode) => {
+            flattened.push(node)
             if (Object.hasOwn(node, 'children') && 'children' in node && Array.isArray(node.children)) {
                 node.children.forEach(child => traverse(child))
             }
-            flattened.push(node)
         }
         this.scene.children.forEach(child => traverse(child))
         return flattened
