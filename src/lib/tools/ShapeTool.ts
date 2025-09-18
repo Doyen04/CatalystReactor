@@ -15,7 +15,8 @@ class ShapeTool extends Tool {
 
     override handlePointerDown(e: MouseEvent) {
         super.handlePointerDown(e)
-        const scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        if (!scene) scene = this.sceneManager.getRootContainer()
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 

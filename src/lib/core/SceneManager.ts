@@ -48,16 +48,29 @@ class SceneManager {
         return scenes
     }
 
+    getAllContainerNode() {
+        const scenes: SceneNode[] = []
+        this.scene.children.forEach(node => {
+            if (Object.hasOwn(node, 'children') && 'children' in node && Array.isArray(node.children)) {
+                scenes.push(node)
+            }
+        })
+        return scenes
+    }
+
+    getRootContainer() {
+        return this.scene
+    }
+
     getContainerNodeUnderMouse(x: number, y: number): SceneNode {
-        const scene = this.getCollidedScene(x, y)
+        const flattened = this.getAllContainerNode().reverse() //work on this
 
-        if (!scene) return this.scene
-
-        if (scene instanceof ContainerNode) {
-            return scene
-        } else {
-            return scene?.getParent()
+        for (const node of flattened) {
+            if (node && node.isCollide(x, y)) {
+                return node
+            }
         }
+        return null
     }
 
     draw(skCnvs: Canvas) {

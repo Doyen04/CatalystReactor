@@ -181,8 +181,33 @@ class SelectTool extends Tool {
         this.isDragging = true
     }
 
-    override handlePointerUp() {
+    repositionShape(e: MouseEvent) {
+        let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        const root = this.sceneManager.getRootContainer()
+        const current = this.shapeManager.currentScene
+        const parent = current.getParent()
+
+        if (!current) return
+
+        if (!scene) scene = root
+
+        const coord = current.getAbsoluteBoundingRect()
+        console.log(parent, 'ondrag', scene)
+        if (current == scene) {
+            return
+        }
+
+        const localCoord = scene.worldToLocal(coord.left, coord.top)
+
+        parent.removeChildNode(current)
+
+        current.setPosition(localCoord.x, localCoord.y)
+        scene.addChildNode(current)
+    }
+
+    override handlePointerUp(e: MouseEvent) {
         console.log('up', this.isDragging)
+        this.repositionShape(e)
         if (this.isDragging) {
             this.shapeManager.finishDrag()
         }

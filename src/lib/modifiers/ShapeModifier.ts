@@ -243,7 +243,6 @@ class ShapeModifier {
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
         if (!this.scene) return
-        console.log('down and storing', this.scene)
 
         this.storeShapeInitialShapeData()
         this.handleModifierDown(dragStart, e)

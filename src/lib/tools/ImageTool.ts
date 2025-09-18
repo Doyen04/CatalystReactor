@@ -94,7 +94,7 @@ class ImageTool extends Tool {
 
     override handlePointerDown(e: MouseEvent) {
         super.handlePointerDown(e)
-        
+
         if (this.isImageDataEmpty()) {
             console.warn('No images available. Please select images first.')
             return
@@ -111,7 +111,9 @@ class ImageTool extends Tool {
             return
         }
 
-        const scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        if (!scene) scene = this.sceneManager.getRootContainer()
+
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
         const shape = ShapeFactory.createShape('img', { x, y }, preloadedImage)

@@ -17,7 +17,8 @@ class GroupTool extends Tool {
 
     override handlePointerDown(e: MouseEvent) {
         super.handlePointerDown(e)
-        const scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        if (!scene) scene = this.sceneManager.getRootContainer()
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
@@ -80,8 +81,8 @@ class GroupTool extends Tool {
 
         // Move contained nodes to be children of the container
         containedNodes.forEach(node => {
-            const coord = node.getCoord()
-            const localCoord = this.currentContainer.worldToLocal(coord.x, coord.y)
+            const coord = node.getAbsoluteBoundingRect()
+            const localCoord = this.currentContainer.worldToLocal(coord.left, coord.top)
             const parent = node.getParent()
 
             // Remove from current parent
