@@ -137,6 +137,7 @@ class SText extends Shape {
     setTextPaint(fill: number[] | string, stroke?: number[] | string) {
         if (!this.resource) return
         const cnvsKit = this.resource
+        console.log(fill, stroke)
 
         const fillcolor = Array.isArray(fill) ? fill : cnvsKit.canvasKit.parseColorString(fill)
         cnvsKit.paint.setColor(fillcolor)
@@ -155,7 +156,7 @@ class SText extends Shape {
             console.log('No CanvasKit resources')
             return
         }
-        const { fill: fillShape, stroke } = this.setTextPaint(this.bStyle.fill, this.bStyle.stroke)
+        const { fill: fillShape, stroke } = this.setTextPaint(this.bStyle.fill, this.bStyle.stroke.fill)
         const rect = this.resource.canvasKit.LTRBRect(
             this.transform.x - this.padding,
             this.transform.y - this.padding,
