@@ -122,21 +122,20 @@ class ImageTool extends Tool {
             this.shapeManager.attachNode(shapeNode)
         }
     }
+
     override handlePointerUp(e: MouseEvent): void {
         if (this.isImageDataEmpty()) {
             this.preloadedImages.clear()
             console.log('Image placement completed, clearing image store')
-            super.handlePointerUp(e)
         }
+        this.shapeManager.handleTinyShapes()
         if (this.isDragging) {
             this.shapeManager.finishDrag()
         }
-        this.shapeManager.handleTinyShapes()
+        super.handlePointerUp(e)
     }
 
     override handlePointerMove(e: MouseEvent): void {
-        console.log(this.isDragging, this.isPointerDown)
-
         if (this.isPointerDown) {
             this.handlePointerDrag(e)
         }
