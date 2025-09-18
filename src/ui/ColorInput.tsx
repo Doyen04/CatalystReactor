@@ -4,7 +4,7 @@ import { FileImage, Paintbrush2, Zap } from 'lucide-react'
 import React, { forwardRef, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import BackgroundImagePicker from './backgroundImagePicker'
-import ColorPicker from './ColorPicker'
+import ColorPicker from './ColorComponent'
 import GradientPicker from './GradientPicker'
 import Input from './Input'
 
@@ -109,19 +109,25 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
                             <div className="flex items-center gap-1 p-2 w-full h-9 border-b-1 border-t-1 border-b-[#e6e6e6] border-t-[#e6e6e6]">
                                 <button
                                     onClick={() => setActiveTab('solid')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'solid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+                                    className={`p-1 rounded hover:bg-gray-100 ${
+                                        activeTab === 'solid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                                    }`}
                                 >
                                     <Paintbrush2 className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('gradient')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'gradient' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+                                    className={`p-1 rounded hover:bg-gray-100 ${
+                                        activeTab === 'gradient' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                                    }`}
                                 >
                                     <Zap className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('image')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'image' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+                                    className={`p-1 rounded hover:bg-gray-100 ${
+                                        activeTab === 'image' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                                    }`}
                                 >
                                     <FileImage className="w-4 h-4" />
                                 </button>

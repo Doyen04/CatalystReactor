@@ -2,7 +2,7 @@ import { SolidFill } from '@lib/types/shapes'
 import React, { forwardRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { colorValue } from '@/util/getBackgroundFill'
-import ColorPicker from './ColorPicker'
+import ColorPicker from './ColorComponent'
 
 interface SimpleColorInputProps extends Omit<React.HtmlHTMLAttributes<HTMLDivElement>, 'onChange'> {
     fill: string
