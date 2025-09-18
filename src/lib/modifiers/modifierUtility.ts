@@ -26,7 +26,7 @@ function tranformPoint(matrix: number[], x: number, y: number) {
 }
 
 export function updateShapeRadii(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
-    const { left, right, top, bottom } = scene.getRelativeBoundingRect()
+    const { left, right, top, bottom } = scene.getLocalBoundingRect()
     const { x, y } = tranformPoint(initialShapeData.inverseWorldTransform, e.offsetX, e.offsetY)
 
     let cornerX: number,

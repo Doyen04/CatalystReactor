@@ -8,9 +8,11 @@ import { ContainerType, LayoutConstraints } from '@lib/node/nodeTypes'
 
 class GroupTool extends Tool {
     shapeType: ContainerType
+    currentContainer: ContainerNode | null
     constructor(shape: ContainerType, sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
         super(sceneManager, shapeManager, cnvs)
         this.shapeType = shape
+        this.currentContainer = null
     }
 
     override handlePointerDown(e: MouseEvent) {
@@ -26,26 +28,71 @@ class GroupTool extends Tool {
 
         if (shape) {
             const layoutConstraints = this.getLayoutConstraints(this.shapeType)
-            const shapenode: SceneNode = new ContainerNode(shape, layoutConstraints)
+            const shapenode = new ContainerNode(shape, layoutConstraints)
 
             scene.addChildNode(shapenode)
             this.shapeManager.attachNode(shapenode)
+            this.currentContainer = shapenode
         }
     }
 
     private getLayoutConstraints(shapeType: ContainerType): LayoutConstraints {
+        const padding = { top: 10, bottom: 10, left: 10, right: 10 }
         switch (shapeType) {
             case 'row':
-                return { type: 'row', gap: 10, padding: { top: 10, bottom: 10, left: 10, right: 10 }, alignment: 'start' }
+                return { type: 'row', gap: 10, padding: padding, mainAlign: 'start', crossAlign: 'start' }
             case 'column':
-                return { type: 'column', gap: 10, padding: { top: 10, bottom: 10, left: 10, right: 10 }, alignment: 'start' }
+                return { type: 'column', gap: 10, padding: padding, mainAlign: 'start', crossAlign: 'start' }
             case 'grid':
-                return { type: 'grid', gap: 10, padding: { top: 10, bottom: 10, left: 10, right: 10 } }
+                return { type: 'grid', gridRowGap: 10, gridColumnGap: 10, padding: padding }
             case 'frame':
-                return { type: 'frame', padding: { top: 10, bottom: 10, left: 10, right: 10 } }
+                return { type: 'frame', padding: padding }
             default:
                 return null
         }
+    }
+
+    private fullyContains(container: SceneNode, shape: SceneNode): boolean {
+        const containerCoord = container.getAbsoluteBoundingRect()
+        const shapeCoord = shape.getAbsoluteBoundingRect()
+        return (
+            shapeCoord.left >= containerCoord.left &&
+            shapeCoord.top >= containerCoord.top &&
+            shapeCoord.right <= containerCoord.right &&
+            shapeCoord.bottom <= containerCoord.bottom
+        )
+    }
+
+    private captureContainedShapes(): void {
+        if (!this.currentContainer) return
+
+        // Find all nodes that are fully contained within the group
+        const containedNodes: SceneNode[] = []
+        const allScenes = this.sceneManager.flattenScene()
+
+        allScenes.forEach(scene => {
+            if (scene !== this.currentContainer && scene) {
+                if (this.fullyContains(this.currentContainer, scene)) {
+                    containedNodes.push(scene)
+                }
+            }
+        })
+
+        // Move contained nodes to be children of the container
+        containedNodes.forEach(node => {
+            const coord = node.getCoord()
+            const localCoord = this.currentContainer.worldToLocal(coord.x, coord.y)
+            const parent = node.getParent()
+
+            // Remove from current parent
+            parent.removeChildNode(node)
+
+            // Update position to be relative to container
+            node.setPosition(localCoord.x, localCoord.y)
+
+            // Add as child to container
+            this.currentContainer!.addChildNode(node)
+        })
     }
 
     override handlePointerMove(e: MouseEvent): void {
@@ -56,11 +103,15 @@ class GroupTool extends Tool {
 
     override handlePointerUp(e: MouseEvent): void {
         this.shapeManager.handleTinyShapes()
+        this.captureContainedShapes()
+        this.currentContainer.applyLayout()
         if (this.isDragging) {
             this.shapeManager.finishDrag()
         }
+        this.currentContainer = null
         super.handlePointerUp?.(e)
     }
+
     handlePointerDrag(e: MouseEvent): void {
         this.isDragging = true
         this.shapeManager.drawShape(this.dragStart, e)

@@ -239,10 +239,10 @@ abstract class SceneNode {
         return this.shape ? this.shape.getModifierHandles() : null
     }
 
-    getRelativeBoundingRect(): BoundingRect | null {
+    getLocalBoundingRect(): BoundingRect | null {
         if (!this.shape) return null
 
-        return this.shape.getRelativeBoundingRect()
+        return this.shape.getLocalBoundingRect()
     }
 
     getCenterCoord(): { x: number; y: number } | null {

@@ -353,7 +353,7 @@ export interface IShape {
     type?: ShapeType
 
     getShapeType(): ShapeType
-    getRelativeBoundingRect(): BoundingRect
+    getLocalBoundingRect(): BoundingRect
     getRotationAnchorPoint(): Coord
     createCanvasKitImage(image: ArrayBuffer | null): void
     // Methods that all shapes should implement

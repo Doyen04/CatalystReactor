@@ -139,7 +139,7 @@ abstract class Shape {
         return this.shapeType
     }
 
-    getRelativeBoundingRect(): BoundingRect {
+    getLocalBoundingRect(): BoundingRect {
         return structuredClone(this.boundingRect)
     }
 

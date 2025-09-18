@@ -1,8 +1,8 @@
 import { Canvas, Paint } from 'canvaskit-wasm'
-// import { IShape } from '@lib/types/shapes'
 import SceneNode from './Scene'
 import type Shape from '@lib/shapes/base/Shape'
-import { LayoutConstraints } from './nodeTypes'
+import { FlexLayout, LayoutConstraints } from './nodeTypes'
+import { applyColumnLayout, applyGridLayout, applyRowLayout } from './LayoutEngine'
 
 class ContainerNode extends SceneNode {
     children: SceneNode[]
@@ -37,6 +37,10 @@ class ContainerNode extends SceneNode {
         this.applyLayout()
     }
 
+    getLayoutConstraints() {
+        return this.layoutConstraints
+    }
+
     applyLayout(): void {
         if (!this.shape || this.children.length === 0) return
 
@@ -44,146 +48,19 @@ class ContainerNode extends SceneNode {
 
         switch (type) {
             case 'row':
-                this.applyRowLayout()
+                applyRowLayout(this.shape, this.children, this.layoutConstraints)
                 break
             case 'column':
-                this.applyColumnLayout()
+                applyColumnLayout(this.shape, this.children, this.layoutConstraints)
                 break
             case 'grid':
-                this.applyGridLayout()
+                applyGridLayout(this.shape, this.children, this.layoutConstraints)
                 break
             case 'frame':
             default:
                 // No layout constraints - children position themselves
                 break
         }
-    }
-
-    private applyRowLayout(): void {
-        const { padding, alignment, gap } = this.layoutConstraints
-
-        let currentX = padding.left
-        const containerBounds = this.shape.getDim()
-        const containerHeight = containerBounds.height
-
-        this.children.forEach((child, index) => {
-            if (!child.hasShape()) return
-
-            const childBounds = child.getDim()
-            let yPos: number
-
-            // Calculate Y position based on alignment
-            switch (alignment) {
-                case 'center':
-                    yPos = (containerHeight - childBounds.height) / 2
-                    break
-                case 'end':
-                    yPos = containerHeight - childBounds.height - padding.right
-                    break
-                case 'stretch':
-                    yPos = padding.top
-                    child.setDimension(childBounds.width, containerHeight - padding.top - padding.bottom)
-                    break
-                case 'start':
-                default:
-                    yPos = padding.top
-                    break
-            }
-
-            // Set child position
-
-            console.log(child, 'child', currentX, yPos)
-            child.setPosition(currentX, yPos)
-
-            // Move to next position
-            currentX += childBounds.width + (index < this.children.length - 1 ? gap : 0)
-        })
-
-        // Auto-resize container width if needed
-        const totalWidth =
-            this.children.reduce((sum, child, index) => {
-                if (!child.hasShape()) return sum
-                return sum + child.getDim().width + (index > 0 ? gap : 0)
-            }, 0) +
-            padding.left +
-            padding.right
-
-        if (totalWidth > containerBounds.width) {
-            this.shape.setDim(totalWidth, containerBounds.height)
-        }
-    }
-
-    private applyColumnLayout(): void {
-        const { padding, alignment, gap } = this.layoutConstraints
-
-        let currentY = padding.top
-        const containerBounds = this.shape.getDim()
-        const containerWidth = containerBounds.width
-
-        this.children.forEach((child, index) => {
-            if (!child.hasShape()) return
-
-            const childBounds = child.getDim()
-            let xPos: number
-
-            // Calculate X position based on alignment
-            switch (alignment) {
-                case 'center':
-                    xPos = (containerWidth - childBounds.width) / 2
-                    break
-                case 'end':
-                    xPos = containerWidth - childBounds.width - padding.right
-                    break
-                case 'stretch':
-                    xPos = padding.left
-                    child.setDimension(containerWidth - padding.left - padding.right, childBounds.height)
-                    break
-                case 'start':
-                default:
-                    xPos = padding.left
-                    break
-            }
-
-            // Set child position
-            child.setPosition(xPos, currentY)
-
-            // Move to next position
-            currentY += childBounds.height + (index < this.children.length - 1 ? gap : 0)
-        })
-
-        // Auto-resize container height if needed
-        const totalHeight =
-            this.children.reduce((sum, child, index) => {
-                if (!child.hasShape()) return sum
-                return sum + child.getDim().height + (index > 0 ? gap : 0)
-            }, 0) +
-            padding.top +
-            padding.bottom
-
-        if (totalHeight > containerBounds.height) {
-            this.shape.setDim(containerBounds.width, totalHeight)
-        }
-    }
-
-    private applyGridLayout(): void {
-        const { padding, gap } = this.layoutConstraints
-        // Simple grid layout - calculate columns based on container width
-        const containerBounds = this.shape.getDim()
-        const availableWidth = containerBounds.width - padding.left - padding.right
-        const childWidth = this.children.length > 0 && this.children[0].hasShape() ? this.children[0].getDim().width : 100
-        const cols = Math.floor((availableWidth + gap) / (childWidth + gap))
-
-        this.children.forEach((child, index) => {
-            if (!child.hasShape()) return
-
-            const row = Math.floor(index / cols)
-            const col = index % cols
-
-            const xPos = padding.left + col * (childWidth + gap)
-            const yPos = padding.top + row * (child.getDim().height + gap)
-
-            child.setPosition(xPos, yPos)
-        })
     }
 
     override updateWorldMatrix(parentWorld?: number[]) {
@@ -238,7 +115,7 @@ class ContainerNode extends SceneNode {
     }
 
     private drawPaddingAndGap(canvas: Canvas, bounds: { width: number; height: number }): void {
-        const { padding, gap = 0 } = this.layoutConstraints
+        const { padding, gap = 0 } = this.layoutConstraints as FlexLayout
 
         if (!padding) return
 
