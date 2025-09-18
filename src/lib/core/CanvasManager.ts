@@ -4,10 +4,9 @@ import InputManager from './InputManager'
 import SceneManager from './SceneManager'
 import Renderer from './Renderer'
 import ToolManager from './ToolManager'
-
-import { ToolType } from '@lib/types/shapeTypes'
 import ShapeManager from './ShapeManager'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
+import { ToolType } from '@lib/tools/toolTypes'
 // import ModifierManager from './ModifierManager';
 
 class CanvasManager {

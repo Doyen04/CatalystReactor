@@ -35,6 +35,7 @@ const SimpleColorInput = forwardRef<HTMLDivElement, SimpleColorInputProps>(({ on
                     >
                         <ColorPicker
                             value={{ type: 'solid', color: fill } as SolidFill}
+                            opacity={1}
                             isOpen={isOpen}
                             onColorChange={color => {
                                 onChange(colorValue(color.color))

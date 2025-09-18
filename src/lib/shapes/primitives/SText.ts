@@ -15,10 +15,16 @@ class SText extends Shape {
     private dimension: Size
     private font: Font
     private padding: number
+    private bStyle
 
     constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
-        super({ x, y, ...shapeProps })
-        this.style = { fill: '#0000ff', strokeColor: '#0000ff', strokeWidth: 0 }
+        super({ x, y, type: 'text', ...shapeProps })
+
+        this.bStyle = {
+            fill: '#0000ff',
+            stroke: { fill: '#0000ff', width: 0 },
+        }
+
         this.text = text || ''
         this.dimension = { width: 0, height: 0 }
         this.padding = 2
@@ -78,6 +84,13 @@ class SText extends Shape {
         return this.text
     }
 
+    getCenterCoord() {
+        return {
+            x: this.getDim().width / 2,
+            y: this.getDim().height / 2,
+        }
+    }
+
     override getDim(): { width: number; height: number } {
         return {
             width: this.dimension.width + this.padding * 2,
@@ -94,7 +107,7 @@ class SText extends Shape {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    override getModifierHandles(fill: string | number[], strokeColor: string | number[]): Handle[] {
+    override getModifierHandles(): Handle[] {
         return []
     }
 
@@ -121,7 +134,7 @@ class SText extends Shape {
         }
     }
 
-    setTextPaint(fill: string | number[], stroke?: string | number[]) {
+    setTextPaint(fill: number[] | string, stroke?: number[] | string) {
         if (!this.resource) return
         const cnvsKit = this.resource
 
@@ -142,7 +155,7 @@ class SText extends Shape {
             console.log('No CanvasKit resources')
             return
         }
-        const { fill: fillShape, stroke } = this.setTextPaint(this.style.fill, this.style.strokeColor)
+        const { fill: fillShape, stroke } = this.setTextPaint(this.bStyle.fill, this.bStyle.stroke)
         const rect = this.resource.canvasKit.LTRBRect(
             this.transform.x - this.padding,
             this.transform.y - this.padding,
