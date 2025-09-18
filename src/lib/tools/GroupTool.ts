@@ -68,7 +68,7 @@ class GroupTool extends Tool {
 
         // Find all nodes that are fully contained within the group
         const containedNodes: SceneNode[] = []
-        const allScenes = this.sceneManager.flattenScene()
+        const allScenes = this.sceneManager.getAllScene()
 
         allScenes.forEach(scene => {
             if (scene !== this.currentContainer && scene) {

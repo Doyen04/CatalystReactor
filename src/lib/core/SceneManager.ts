@@ -41,6 +41,13 @@ class SceneManager {
         return flattened
     }
 
+    getAllScene(): SceneNode[] {
+        const scenes: SceneNode[] = []
+        this.scene.children.forEach(child => scenes.push(child))
+
+        return scenes
+    }
+
     getContainerNodeUnderMouse(x: number, y: number): SceneNode {
         const scene = this.getCollidedScene(x, y)
 
