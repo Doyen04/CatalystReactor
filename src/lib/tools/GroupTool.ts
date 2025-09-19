@@ -22,7 +22,7 @@ class GroupTool extends Tool {
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-        const shape = ShapeFactory.createShape('rect', {
+        const shape = ShapeFactory.createShape('plainRect', {
             x: x,
             y: y,
         })

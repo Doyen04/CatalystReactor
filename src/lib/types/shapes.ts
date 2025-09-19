@@ -332,7 +332,7 @@ export interface Coord {
 }
 export const CornerPos: HandlePos[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
-export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img'
+export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img' | 'plainRect'
 export type HandlePos =
     | 'top-left'
     | 'top-right'

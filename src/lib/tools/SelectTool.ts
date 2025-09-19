@@ -187,7 +187,7 @@ class SelectTool extends Tool {
         const current = this.shapeManager.currentScene
         if (!current) return
         const parent = current.getParent()
-
+        if (parent == scene) return
         if (!scene) scene = root
 
         const coord = current.getAbsoluteBoundingRect()

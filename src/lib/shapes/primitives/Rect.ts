@@ -1,14 +1,13 @@
 import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Rect } from 'canvaskit-wasm'
-import { BorderRadius, Coord, CornerPos, HandlePos, Properties, Size } from '@lib/types/shapes'
-import Shape from '../base/Shape'
+import { BorderRadius, CornerPos, HandlePos, Properties } from '@lib/types/shapes'
+import SimpleRect from './SimpleRect'
 
-class Rectangle extends Shape {
-    dimension: Size
+class Rectangle extends SimpleRect {
     bdradius: BorderRadius
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super({ x, y, type: 'rect', ...shapeProps })
+        super(x, y, { type: 'rect', ...shapeProps })
         this.dimension = { width: 0, height: 0 }
 
         this.bdradius = {
@@ -18,13 +17,6 @@ class Rectangle extends Shape {
             'bottom-right': 0,
             locked: false,
         }
-        this.calculateBoundingRect()
-    }
-
-    override moveShape(dx: number, dy: number): void {
-        this.transform.x += dx
-        this.transform.y += dy
-
         this.calculateBoundingRect()
     }
 
@@ -47,21 +39,6 @@ class Rectangle extends Shape {
             'bottom-right': radius,
             locked: true,
         }
-    }
-
-    override setCoord(x: number, y: number): void {
-        this.transform.x = x
-        this.transform.y = y
-
-        this.calculateBoundingRect()
-    }
-
-    //move to shape
-    override setDim(width: number, height: number): void {
-        this.dimension.width = width
-        this.dimension.height = height
-
-        this.calculateBoundingRect()
     }
 
     // protected flippedRadii = () => {
@@ -107,11 +84,6 @@ class Rectangle extends Shape {
         this.calculateBoundingRect()
     }
 
-    override getCenterCoord(): Coord {
-        const { width, height } = this.dimension
-        return { x: width / 2, y: height / 2 }
-    }
-
     getBorderRadius() {
         const { width, height } = this.dimension
         const max = Math.min(width, height)
@@ -151,13 +123,6 @@ class Rectangle extends Shape {
         return { ...radii, locked: this.bdradius.locked }
     }
 
-    override getDim(): { width: number; height: number } {
-        return {
-            width: Math.floor(this.dimension.width),
-            height: Math.floor(this.dimension.height),
-        }
-    }
-
     override getProperties(): Properties {
         return {
             transform: { ...this.transform },
@@ -168,12 +133,7 @@ class Rectangle extends Shape {
     }
 
     override getModifierHandles(): Handle[] {
-        const handles = super.getSizeModifierHandles()
-
-        super.getAngleModifierHandles().forEach(handle => {
-            handles.push(handle)
-        })
-
+        const handles = super.getModifierHandles()
         CornerPos.forEach(pos => {
             handles.push(new Handle(0, 0, pos, 'radius'))
         })
@@ -183,10 +143,8 @@ class Rectangle extends Shape {
     override getModifierHandlesPos(handle: Handle): { x: number; y: number } {
         if (handle.type === 'radius') {
             return this.getRadiusModiferHandlesPos(handle)
-        } else if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle)
-        } else if (handle.type == 'angle') {
-            return super.getAngleModifierHandlesPos(handle)
+        } else if (handle.type === 'size' || handle.type === 'angle') {
+            return super.getModifierHandlesPos(handle)
         }
         return { x: 0, y: 0 }
     }
@@ -226,15 +184,6 @@ class Rectangle extends Shape {
         return { x, y }
     }
 
-    override calculateBoundingRect(): void {
-        this.boundingRect = {
-            top: 0,
-            left: 0,
-            bottom: this.dimension.height,
-            right: this.dimension.width,
-        }
-    }
-
     hasRadius(): boolean {
         return (
             this.bdradius['top-left'] > 0 || this.bdradius['top-right'] > 0 || this.bdradius['bottom-left'] > 0 || this.bdradius['bottom-right'] > 0
@@ -269,7 +218,7 @@ class Rectangle extends Shape {
         }
     }
 
-    private drawHoverEffect(canvas: Canvas, rect: Rect): void {
+    protected drawHoverEffect(canvas: Canvas, rect: Rect): void {
         if (!this.resource) return
 
         const hoverPaint = this.resource.strokePaint

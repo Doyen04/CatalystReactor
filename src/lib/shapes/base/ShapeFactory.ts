@@ -8,6 +8,7 @@ import PImage from '../primitives/Image'
 
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 import type Shape from './Shape'
+import SimpleRect from '../primitives/SimpleRect'
 
 export default class ShapeFactory {
     static createShape(type: ShapeType, options: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer }): Shape {
@@ -16,6 +17,9 @@ export default class ShapeFactory {
         switch (type) {
             case 'rect':
                 shape = new Rectangle(options.x, options.y)
+                break
+            case 'plainRect':
+                shape = new SimpleRect(options.x, options.y)
                 break
             case 'oval':
                 shape = new Oval(options.x, options.y)
