@@ -185,9 +185,8 @@ class SelectTool extends Tool {
         let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
         const root = this.sceneManager.getRootContainer()
         const current = this.shapeManager.currentScene
-        const parent = current.getParent()
-
         if (!current) return
+        const parent = current.getParent()
 
         if (!scene) scene = root
 
