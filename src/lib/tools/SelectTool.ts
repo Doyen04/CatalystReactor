@@ -3,6 +3,7 @@ import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
 import Handle from '@lib/modifiers/Handles'
 import SceneNode from '@lib/node/Scene'
+import ResizeCursor from './ResizeCursor'
 
 class SelectTool extends Tool {
     private hoveredScene: SceneNode | null = null
@@ -88,7 +89,7 @@ class SelectTool extends Tool {
         // }
     }
 
-    setCursorForHandle(handle: Handle) {
+    setCursorForHandle(handle: Handle, rad: number) {
         if (!handle) {
             const cursor = 'default'
             if (this.cnvsElm) {
@@ -98,47 +99,66 @@ class SelectTool extends Tool {
         }
 
         let cursor = 'default'
+        const degrees = (rad * 180) / Math.PI
         if (handle.type == 'size') {
+            let baseAngle = 0
+
             switch (handle.pos) {
                 case 'top-left':
-                    cursor = 'nwse-resize'
+                    baseAngle = 45 // Northwest
                     break
                 case 'top-right':
-                    cursor = 'nesw-resize'
+                    baseAngle = -45 // Northeast
                     break
                 case 'bottom-left':
-                    cursor = 'nesw-resize'
+                    baseAngle = 135 // Southwest
                     break
                 case 'bottom-right':
-                    cursor = 'nwse-resize'
+                    baseAngle = -135 // Southeast
                     break
                 case 'top':
-                    cursor = 'ns-resize'
+                    baseAngle = 90 // North
                     break
                 case 'bottom':
-                    cursor = 'ns-resize'
+                    baseAngle = -90 // South
                     break
                 case 'left':
-                    cursor = 'ew-resize'
+                    baseAngle = 180 // West
                     break
                 case 'right':
-                    cursor = 'ew-resize'
+                    baseAngle = -180 // East
                     break
                 default:
                     break
             }
+
+            // Apply rotation to the base angle
+            const finalAngle = baseAngle + degrees
+            cursor = ResizeCursor.createCursor(finalAngle)
         } else if (handle.type === 'angle') {
+            let baseAngle = 0
+
             switch (handle.pos) {
                 case 'top-left':
-                case 'bottom-left':
-                case 'bottom-right':
+                    baseAngle = -135 // Northwest
+                    break
                 case 'top-right':
-                    cursor = 'move'
+                    baseAngle = -45 // Northeast
+                    break
+                case 'bottom-left':
+                    baseAngle = 135 // Southwest
+                    break
+                case 'bottom-right':
+                    baseAngle = 45 // Southeast
                     break
                 default:
                     break
             }
+            // Apply rotation to the base angle
+            const finalAngle = baseAngle + degrees
+            cursor = ResizeCursor.createRotationCursorCSS(finalAngle)
         }
+
         // Set the cursor on the canvas element
         if (this.cnvsElm) {
             this.cnvsElm.style.cursor = cursor
@@ -155,7 +175,8 @@ class SelectTool extends Tool {
 
     moveHandler(e: MouseEvent) {
         const handle = this.shapeManager.handleHover(e.offsetX, e.offsetY)
-        this.setCursorForHandle(handle)
+        const cScene = this.shapeManager.currentScene?.getRotationAngle() || 0
+        this.setCursorForHandle(handle, cScene)
 
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
         this.setHoveredShape(scene)
@@ -185,10 +206,12 @@ class SelectTool extends Tool {
         let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
         const root = this.sceneManager.getRootContainer()
         const current = this.shapeManager.currentScene
+
         if (!current) return
         const parent = current.getParent()
-        if (parent == scene) return
+
         if (!scene) scene = root
+        if (parent === scene) return
 
         const coord = current.getAbsoluteBoundingRect()
         console.log(parent, 'ondrag', scene)

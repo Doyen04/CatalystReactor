@@ -92,8 +92,8 @@ abstract class SceneNode {
         const Matrix = this.resource.canvasKit.Matrix
         const transformedPoint = Matrix.mapPoints(this.worldMatrix, [dx, dy])
         return {
-            x: transformedPoint[0],
-            y: transformedPoint[1],
+            x: Math.floor(transformedPoint[0]),
+            y: Math.floor(transformedPoint[1]),
         }
     }
 
@@ -102,8 +102,8 @@ abstract class SceneNode {
         const inverseMatrix = Matrix.invert(this.parent.worldMatrix)
         const transformedPoint = Matrix.mapPoints(inverseMatrix, [x, y])
         return {
-            x: transformedPoint[0],
-            y: transformedPoint[1],
+            x: Math.floor(transformedPoint[0]),
+            y: Math.floor(transformedPoint[1]),
         }
     }
 
@@ -113,8 +113,8 @@ abstract class SceneNode {
 
         const transformedPoint = Matrix.mapPoints(inverseMatrix, [x, y])
         return {
-            x: transformedPoint[0],
-            y: transformedPoint[1],
+            x: Math.floor(transformedPoint[0]),
+            y: Math.floor(transformedPoint[1]),
         }
     }
 
@@ -186,11 +186,6 @@ abstract class SceneNode {
         const bottom = Math.max(...ys)
 
         return { left, top, right, bottom }
-    }
-
-    getAngle(): number {
-        const rotation = this.shape.getRotationAngle()
-        return rotation || 0
     }
 
     getParent(): SceneNode | null {
