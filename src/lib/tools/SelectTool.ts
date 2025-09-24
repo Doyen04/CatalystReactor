@@ -100,6 +100,7 @@ class SelectTool extends Tool {
 
         let cursor = 'default'
         const degrees = (rad * 180) / Math.PI
+        // check this
         if (handle.type == 'size') {
             let baseAngle = 0
 
@@ -213,13 +214,14 @@ class SelectTool extends Tool {
         if (!scene) scene = root
         if (parent === scene) return
 
-        const coord = current.getAbsoluteBoundingRect()
-        console.log(parent, 'ondrag', scene)
+        let coord = current.getCoord()
+        coord = parent.localToWorld(coord.x, coord.y)
+
         if (current == scene) {
             return
         }
 
-        const localCoord = scene.worldToLocal(coord.left, coord.top)
+        const localCoord = scene.worldToLocal(coord.x, coord.y)
 
         parent.removeChildNode(current)
 

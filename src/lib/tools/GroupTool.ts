@@ -8,11 +8,11 @@ import { ContainerType, LayoutConstraints } from '@lib/node/nodeTypes'
 
 class GroupTool extends Tool {
     shapeType: ContainerType
-    currentContainer: ContainerNode | null
+    // currentContainer: ContainerNode | null
     constructor(shape: ContainerType, sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
         super(sceneManager, shapeManager, cnvs)
         this.shapeType = shape
-        this.currentContainer = null
+        // this.currentContainer = null
     }
 
     override handlePointerDown(e: MouseEvent) {
@@ -33,7 +33,7 @@ class GroupTool extends Tool {
 
             scene.addChildNode(shapenode)
             this.shapeManager.attachNode(shapenode)
-            this.currentContainer = shapenode
+            // this.currentContainer = shapenode
         }
     }
 
@@ -65,15 +65,16 @@ class GroupTool extends Tool {
     }
 
     private captureContainedShapes(): void {
-        if (!this.currentContainer) return
+        const currentContainer = this.shapeManager.currentScene
+        if (!currentContainer) return
 
         // Find all nodes that are fully contained within the group
         const containedNodes: SceneNode[] = []
         const allScenes = this.sceneManager.getAllScene()
 
         allScenes.forEach(scene => {
-            if (scene !== this.currentContainer && scene) {
-                if (this.fullyContains(this.currentContainer, scene)) {
+            if (scene !== currentContainer && scene) {
+                if (this.fullyContains(currentContainer, scene)) {
                     containedNodes.push(scene)
                 }
             }
@@ -81,9 +82,10 @@ class GroupTool extends Tool {
 
         // Move contained nodes to be children of the container
         containedNodes.forEach(node => {
-            const coord = node.getAbsoluteBoundingRect()
-            const localCoord = this.currentContainer.worldToLocal(coord.left, coord.top)
             const parent = node.getParent()
+            let coord = node.getCoord()
+            coord = parent.localToWorld(coord.x, coord.y)
+            const localCoord = currentContainer.worldToLocal(coord.x, coord.y)
 
             // Remove from current parent
             parent.removeChildNode(node)
@@ -92,7 +94,7 @@ class GroupTool extends Tool {
             node.setPosition(localCoord.x, localCoord.y)
 
             // Add as child to container
-            this.currentContainer!.addChildNode(node)
+            currentContainer!.addChildNode(node)
         })
     }
 
@@ -105,11 +107,9 @@ class GroupTool extends Tool {
     override handlePointerUp(e: MouseEvent): void {
         this.shapeManager.handleTinyShapes()
         this.captureContainedShapes()
-        this.currentContainer.applyLayout()
         if (this.isDragging) {
             this.shapeManager.finishDrag()
         }
-        this.currentContainer = null
         super.handlePointerUp?.(e)
     }
 

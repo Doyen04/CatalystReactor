@@ -57,6 +57,9 @@ class ShapeManager {
     finishDrag() {
         if (!this.scene) return
         const parent = this.scene.getParent()
+        if (this.scene instanceof ContainerNode) {
+            this.scene.applyLayout()
+        }
         if (parent instanceof ContainerNode) {
             parent.applyLayout()
         }

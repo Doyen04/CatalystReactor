@@ -240,6 +240,7 @@ class ContainerNode extends SceneNode {
             }
         }
     }
+    
     destroy() {
         if (this.shape) {
             this.parent?.removeChildNode(this)

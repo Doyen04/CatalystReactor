@@ -188,6 +188,10 @@ abstract class SceneNode {
         return { left, top, right, bottom }
     }
 
+    getAbsoluteCoord() {
+        return this.localToWorld(0, 0)
+    }
+
     getParent(): SceneNode | null {
         return this.parent
     }
