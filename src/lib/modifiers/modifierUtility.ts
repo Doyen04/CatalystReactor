@@ -207,7 +207,7 @@ export function updateOvalRatio(handle: Handle, e: MouseEvent, scene: SceneNode,
     const deltaX = localCurrent.x - radiusX
     const deltaY = localCurrent.y - radiusY
 
-    //parametric deg
+    // //parametric deg
     let handleAngle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
     handleAngle = normalizeAngle(handleAngle)
 

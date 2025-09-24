@@ -315,9 +315,10 @@ abstract class SceneNode {
     }
 
     setRatio(ratio: number): void {
-        if (this.shape instanceof Oval) {
+        if (this.shape instanceof Oval || this.shape instanceof Star) {
             return this.shape.setRatio(ratio)
         } else {
+            console.warn('not implemented')
             return null
             // throw new Error('not implemented')
         }
