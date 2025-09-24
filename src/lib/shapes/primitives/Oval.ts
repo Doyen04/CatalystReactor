@@ -9,7 +9,7 @@ class Oval extends Shape {
     private radiusX: number
     private radiusY: number
     private arcSegment: ArcSegment
-    private isLargeArc: boolean
+    private arcDirection: 'ccw' | 'cw'
     private startCrossed: boolean | null = false
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
@@ -17,7 +17,7 @@ class Oval extends Shape {
         this.arcSegment = { startAngle: 0, endAngle: 2 * Math.PI, ratio: 0 }
         this.radiusX = 0
         this.radiusY = 0
-        this.isLargeArc = true
+        this.arcDirection = 'cw'
         this.calculateBoundingRect()
     }
 
@@ -125,7 +125,7 @@ class Oval extends Shape {
         const innerRadiusX = this.radiusX * this.arcSegment.ratio
         const innerRadiusY = this.radiusY * this.arcSegment.ratio
 
-        const handleAngle = handle.isDragging ? handle.handleRatioAngle : (this.arcSegment.startAngle + this.arcSegment.endAngle) / 2
+        const handleAngle = handle.isDragging ? handle.handleRatioAngle : this.arcSegment.startAngle + this.getSweep() / 2
 
         const handleX = this.radiusX + innerRadiusX * Math.cos(handleAngle)
         const handleY = this.radiusY + innerRadiusY * Math.sin(handleAngle)
@@ -168,7 +168,10 @@ class Oval extends Shape {
     }
 
     getSweep() {
-        const sweep = normalizeAngle(this.arcSegment.endAngle - this.arcSegment.startAngle)
+        let sweep = this.arcSegment.endAngle - this.arcSegment.startAngle
+        if (this.arcDirection === 'cw') {
+            sweep = normalizeAngle(sweep)
+        }
 
         return sweep
     }

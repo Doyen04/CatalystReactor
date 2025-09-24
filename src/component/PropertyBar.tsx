@@ -8,7 +8,7 @@ import Section from '@ui/Section'
 import LockButton from '@ui/LockedButton'
 import BorderRadius from '@ui/BorderRadius'
 import BorderRadiusAll from '@ui/BorderRadiusAll'
-import { AngleIcon } from '@ui/ArcSegment'
+// import { AngleIcon } from '@ui/ArcSegment'
 import ColorInput from '@ui/ColorInput'
 
 function PropertyBar() {
@@ -159,13 +159,13 @@ function PropertyBar() {
                     <Section title="Arc-Segment" childClass="gap-0">
                         <Input
                             type="number"
-                            icon={<AngleIcon startAngle={arcSegment.startAngle} endAngle={arcSegment.endAngle} ratio={arcSegment.ratio} />}
+                            title="Start"
                             value={arcSegment.startAngle}
                             onChange={value => handlePropertyChange('startAngle', value)}
                         />
                         <Input
                             type="number"
-                            title="End Angle"
+                            title="End"
                             value={arcSegment.endAngle}
                             onChange={value => handlePropertyChange('endAngle', value)}
                         />
