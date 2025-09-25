@@ -244,33 +244,34 @@ export function updateShapeArc(handle: Handle, e: MouseEvent, scene: SceneNode, 
 }
 
 function updateShapeArcStart(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+    const localCurrent = tranformPoint(initialShapeData.inverseWorldTransform, e.offsetX, e.offsetY)
+
     const { width, height } = scene.getDim()
     const radiusX = width / 2
     const radiusY = height / 2
-    const { x: cx, y: cy } = { x: radiusX, y: radiusY }
-
-    const localCurrent = tranformPoint(initialShapeData.inverseWorldTransform, e.offsetX, e.offsetY)
+    const cx = radiusX
+    const cy = radiusY
 
     const deltaX = localCurrent.x - cx
     const deltaY = localCurrent.y - cy
-    const { start, end } = scene.getArcAngles()
 
-    //parametric deg
-    const angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
+    let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
+    angle = normalizeAngle(angle)
 
-    // Normalize angle to 0-2π range
-    const delta = angle - start
+    const { start: currentStart, end: currentEnd } = scene.getArcAngles()
+    const SWEEP_LIMIT = 2 * Math.PI - 1e-4
+
+    if (handle.dragSweep === undefined) {
+        const initialSweep = currentEnd - currentStart
+        handle.dragSweep = clamp(initialSweep, -SWEEP_LIMIT, SWEEP_LIMIT)
+    }
+
+    const sweep = handle.dragSweep
+    const newStart = angle
+    const newEnd = newStart + sweep
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
-
-    const newStart = normalizeAngle(start + delta)
-    const newEnd = normalizeAngle(end + delta)
-    const sweep = newEnd - newStart
-
-    handle.dragPrevPointer = normalizeAngle(start + sweep)
-    handle.dragLastDiff = normalizeAngle(sweep)
-    handle.dragDirection = sweep >= 0 ? 1 : -1
 
     scene.setArc(newStart, newEnd)
 }
@@ -281,18 +282,17 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
     const { width, height } = scene.getDim()
     const radiusX = width / 2
     const radiusY = height / 2
-    const { x: cx, y: cy } = { x: radiusX, y: radiusY }
+    const cx = radiusX
+    const cy = radiusY
 
     const deltaX = localCurrent.x - cx
     const deltaY = localCurrent.y - cy
 
     const { start } = initialShapeData.arcAngle
 
-    // Parametric angle
     let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
     angle = normalizeAngle(angle)
 
-    // Initialize drag state if not present
     if (!handle.dragDirection) {
         const currentSweep = normalizeAngle(scene.getArcAngles().end - start)
         handle.dragDirection = currentSweep >= 0 ? 1 : -1
@@ -304,35 +304,30 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
     const diffCW = normalizeAngle(pointerAngle - start)
     const prevDiff = handle.dragLastDiff
 
-    // Calculate pointer movement
     let pointerDelta = pointerAngle - handle.dragPrevPointer
     if (pointerDelta > Math.PI) pointerDelta -= 2 * Math.PI
     if (pointerDelta < -Math.PI) pointerDelta += 2 * Math.PI
 
-    // Direction change detection
     if (pointerDelta > 0 && diffCW < prevDiff) {
         handle.dragDirection *= -1
     } else if (pointerDelta < 0 && diffCW > prevDiff) {
         handle.dragDirection *= -1
     }
 
-    // Update tracking variables
     handle.dragLastDiff = diffCW
     handle.dragPrevPointer = pointerAngle
 
-    // Calculate sweep based on direction
     const sweepCandidate = handle.dragDirection >= 0 ? diffCW : diffCW - 2 * Math.PI
     const SWEEP_LIMIT = 2 * Math.PI - 1e-4
-    const clampedSweep = Math.max(-SWEEP_LIMIT, Math.min(SWEEP_LIMIT, sweepCandidate))
+    const clampedSweep = clamp(sweepCandidate, -SWEEP_LIMIT, SWEEP_LIMIT)
 
-    const newEnd = normalizeAngle(start + clampedSweep)
+    const newEnd = start + clampedSweep
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
 
     scene.setArc(start, newEnd)
 }
-
 // ...existing code...
 export function updateShapeVertices(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const GAP = 10 // defined distance for both x and y

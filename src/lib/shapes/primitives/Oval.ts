@@ -168,19 +168,8 @@ class Oval extends Shape {
     }
 
     getSweep() {
-        let sweep = this.arcSegment.endAngle - this.arcSegment.startAngle
+        const sweep = this.arcSegment.endAngle - this.arcSegment.startAngle
         // console.log(this.determineArcDirection(this.arcSegment.startAngle, this.arcSegment.endAngle))
-
-        if (this.arcDirection === 'cw') {
-            if (sweep < 0) {
-                sweep = sweep + 2 * Math.PI
-            }
-        } else {
-            if (sweep > 0) {
-                sweep = sweep - 2 * Math.PI
-            }
-            // sweep = normalizeAngle(sweep)
-        }
 
         return sweep
     }
