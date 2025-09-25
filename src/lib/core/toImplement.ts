@@ -1,208 +1,136 @@
-// export function safeSetBorderRadius(shape: IShape, radius: number, position: HandlePos): boolean {
-//     if (hasRadius(shape)) {
-//         shape.setBorderRadius(radius, position)
-//         return true
-//     }
-//     console.warn(`Shape ${shape.getShapeType()} does not support border radius`)
-//     return false
+// export interface SnapPoint {
+//     x: number
+//     y: number
+//     type: 'corner' | 'edge' | 'center' | 'grid'
+//     source?: string // ID of the shape that created this snap point
 // }
 
-// export function safeSetArc(shape: IShape, start: number, end: number): boolean {
-//     if (isArcShape(shape)) {
-//         shape.setArc(start, end)
-//         return true
-//     }
-//     console.warn(`Shape ${shape.getShapeType()} does not support arc angles`)
-//     return false
+// export interface SnapResult {
+//     snapped: boolean
+//     x: number
+//     y: number
+//     snapPoints: SnapPoint[]
+//     guides: { x?: number; y?: number }[]
 // }
 
-// export function safeSetVertexCount(shape: IShape, count: number): boolean {
-//     if (isPolygonal(shape)) {
-//         shape.setVertexCount(count)
-//         return true
-//     }
-//     console.warn(`Shape ${shape.getShapeType()} does not support vertex count`)
-//     return false
-// }
-// import { IArcShape } from '@lib/types/capabilities'
+// export class SnapManager {
+//     private snapDistance: number = 5 // pixels
+//     private gridSize: number = 10
+//     private enableGrid: boolean = true
+//     private enableShapes: boolean = true
 
-// class Circle extends Shape implements IArcShape {
-//     // ...existing code...
+//     snap(targetX: number, targetY: number, shapes: Rectangle[], excludeId?: string): SnapResult {
+//         let bestSnapX = targetX
+//         let bestSnapY = targetY
+//         let snappedX = false
+//         let snappedY = false
+//         const activeGuides: { x?: number; y?: number }[] = []
+//         const snapPoints: SnapPoint[] = []
 
-//     isArc(): boolean {
-//         return this.arcAngles.start !== 0 || this.arcAngles.end !== 360
-//     }
+//         // Grid snapping
+//         if (this.enableGrid) {
+//             const gridX = Math.round(targetX / this.gridSize) * this.gridSize
+//             const gridY = Math.round(targetY / this.gridSize) * this.gridSize
 
-//     getArcAngles(): { start: number; end: number } {
-//         return this.arcAngles
-//     }
+//             if (Math.abs(targetX - gridX) <= this.snapDistance) {
+//                 bestSnapX = gridX
+//                 snappedX = true
+//                 snapPoints.push({ x: gridX, y: targetY, type: 'grid' })
+//             }
 
-//     setArc(start: number, end: number): void {
-//         this.arcAngles = { start, end }
-//     }
+//             if (Math.abs(targetY - gridY) <= this.snapDistance) {
+//                 bestSnapY = gridY
+//                 snappedY = true
+//                 snapPoints.push({ x: targetX, y: gridY, type: 'grid' })
+//             }
+//         }
 
-//     // Circle doesn't implement radius or polygon methods
-// }
-// import { IRadiusable } from '@lib/types/capabilities'
+//         // Shape snapping
+//         if (this.enableShapes) {
+//             for (const shape of shapes) {
+//                 if (shape.id === excludeId) continue
 
-// class Rectangle extends Shape implements IRadiusable {
-//     // ...existing code...
+//                 const shapeSnapPoints = this.getShapeSnapPoints(shape)
+//                 for (const point of shapeSnapPoints) {
+//                     if (Math.abs(targetX - point.x) <= this.snapDistance) {
+//                         bestSnapX = point.x
+//                         snappedX = true
+//                         activeGuides.push({ x: point.x })
+//                         snapPoints.push(point)
+//                     }
 
-//     setBorderRadius(newRadius: number, pos: HandlePos) {
-//         // Implementation specific to rectangles
-//     }
+//                     if (Math.abs(targetY - point.y) <= this.snapDistance) {
+//                         bestSnapY = point.y
+//                         snappedY = true
+//                         activeGuides.push({ y: point.y })
+//                         snapPoints.push(point)
+//                     }
+//                 }
+//             }
+//         }
 
-//     getBorderRadius(): BorderRadius {
-//         return this.bdradius
-//     }
-
-//     // Rectangle doesn't implement arc or polygon methods
-// }
-// import { isArcShape, isPolygonal, hasRadius, isRatioAdjustable } from '@lib/utils/shapeCapabilities'
-
-// abstract class SceneNode {
-//     // ...existing core methods...
-
-//     // Arc-specific methods
-//     getArcAngles(): { start: number; end: number } | null {
-//         if (!this.shape || !isArcShape(this.shape)) return null
-//         return this.shape.getArcAngles()
-//     }
-
-//     isArc(): boolean {
-//         if (!this.shape || !isArcShape(this.shape)) return false
-//         return this.shape.isArc()
-//     }
-
-//     setArc(start: number, end: number): void {
-//         if (this.shape && isArcShape(this.shape)) {
-//             this.shape.setArc(start, end)
-//             this.canComputeMatrix = true
+//         return {
+//             snapped: snappedX || snappedY,
+//             x: bestSnapX,
+//             y: bestSnapY,
+//             snapPoints,
+//             guides: activeGuides,
 //         }
 //     }
 
-//     // Polygon-specific methods
-//     getVertexCount(): number | null {
-//         if (!this.shape || !isPolygonal(this.shape)) return null
-//         return this.shape.getVertexCount()
+//     private getShapeSnapPoints(shape: Rectangle): SnapPoint[] {
+//         const bounds = shape.getBounds()
+//         return [
+//             // Corners
+//             { x: bounds.left, y: bounds.top, type: 'corner', source: shape.id },
+//             { x: bounds.right, y: bounds.top, type: 'corner', source: shape.id },
+//             { x: bounds.left, y: bounds.bottom, type: 'corner', source: shape.id },
+//             { x: bounds.right, y: bounds.bottom, type: 'corner', source: shape.id },
+//             // Centers
+//             { x: bounds.centerX, y: bounds.centerY, type: 'center', source: shape.id },
+//             // Edge midpoints
+//             { x: bounds.centerX, y: bounds.top, type: 'edge', source: shape.id },
+//             { x: bounds.centerX, y: bounds.bottom, type: 'edge', source: shape.id },
+//             { x: bounds.left, y: bounds.centerY, type: 'edge', source: shape.id },
+//             { x: bounds.right, y: bounds.centerY, type: 'edge', source: shape.id },
+//         ]
 //     }
-
-//     setVertexCount(count: number): void {
-//         if (this.shape && isPolygonal(this.shape)) {
-//             this.shape.setVertexCount(count)
-//             this.canComputeMatrix = true
-//         }
-//     }
-
-//     getVertex(prev: number, vertex: number): { x: number; y: number } | null {
-//         if (!this.shape || !isPolygonal(this.shape)) return null
-//         return this.shape.getVertex(prev, vertex)
-//     }
-
-//     // Radius-specific methods
-//     setBorderRadius(radius: number, position: HandlePos): void {
-//         if (this.shape && hasRadius(this.shape)) {
-//             this.shape.setBorderRadius(radius, position)
-//             this.canComputeMatrix = true
-//         }
-//     }
-
-//     // Ratio-specific methods
-//     setRatio(ratio: number): void {
-//         if (this.shape && isRatioAdjustable(this.shape)) {
-//             this.shape.setRatio(ratio)
-//             this.canComputeMatrix = true
-//         }
-//     }
-
-//     // ...existing methods...
-// }
-// import { IShape } from '@lib/types/shapes'
-// import { IArcShape, IPolygonal, IRadiusable, IRatioAdjustable } from '@lib/types/capabilities'
-
-// export function isArcShape(shape: IShape): shape is IShape & IArcShape {
-//     return 'isArc' in shape && typeof (shape as any).isArc === 'function'
 // }
 
-// export function isPolygonal(shape: IShape): shape is IShape & IPolygonal {
-//     return 'getVertexCount' in shape && typeof (shape as any).getVertexCount === 'function'
-// }
 
-// export function hasRadius(shape: IShape): shape is IShape & IRadiusable {
-//     return 'setBorderRadius' in shape && typeof (shape as any).setBorderRadius === 'function'
-// }
+// function onPointerMove(e) {
+//                     if (!dragging) return;
+//                     const p = canvasPointFromEvent(e);
+//                     let a = normalizeAngle(-angleFromPoint(p));
+//                     if (e.shiftKey) {
+//                         const snap = (15 * Math.PI) / 180;
+//                         a = Math.round(a / snap) * snap;
+//                     }
+//                     if (dragging === 'start') {
+//                         start = normalizeAngle(a);
+//                         dragPrevPointer = normalizeAngle(start + sweep);
+//                         dragLastDiff = normalizeAngle(sweep);
+//                         dragDirection = sweep >= 0 ? 1 : -1;
+//                     } else if (dragging === 'end') {
+//                         const pointerAngle = a;
+//                         const diffCW = normalizeAngle(pointerAngle - start);
+//                         const prevDiff = dragLastDiff;
 
-// export function isRatioAdjustable(shape: IShape): shape is IShape & IRatioAdjustable {
-//     return 'setRatio' in shape && typeof (shape as any).setRatio === 'function'
-// }
+//                         let pointerDelta = pointerAngle - dragPrevPointer;
+//                         if (pointerDelta > Math.PI) pointerDelta -= TWO_PI;
+//                         if (pointerDelta < -Math.PI) pointerDelta += TWO_PI;
 
-// export function supportsCapability<T>(shape: IShape, capability: keyof T): shape is IShape & T {
-//     return capability in shape && typeof (shape as any)[capability] === 'function'
-// }
-// import { ITransformable, IModifiable, IResizable, ICollisionDetectable, IRenderable, IConfigurable } from './capabilities'
+//                         if (pointerDelta > 0 && diffCW < prevDiff) {
+//                             dragDirection *= -1;
+//                         } else if (pointerDelta < 0 && diffCW > prevDiff) {
+//                             dragDirection *= -1;
+//                         }
 
-// export interface IShape extends ITransformable, IModifiable, IResizable, ICollisionDetectable, IRenderable, IConfigurable {
-//     // Core required methods
-//     getCenterCoord(): Coord
-//     drawDefault(): void
-//     calculateBoundingRect(): void
-//     destroy(): void
-// }
-// export interface ITransformable {
-//     getCoord(): Coord
-//     setCoord(x: number, y: number): void
-//     moveShape(dx: number, dy: number): void
-//     getDim(): Size
-//     setDim(width: number, height: number): void
-//     getScale(): { x: number; y: number }
-//     setScale(x: number, y: number): void
-//     getRotationAngle(): number
-//     setAngle(angle: number): void
-//     getRotationAnchorPoint(): { x: number; y: number }
-// }
+//                         dragLastDiff = diffCW;
+//                         dragPrevPointer = pointerAngle;
 
-// export interface IModifiable {
-//     getModifierHandles(): Handle[]
-//     getModifierHandlesPos(handle: Handle): { x: number; y: number }
-// }
-
-// export interface IResizable {
-//     setSize(dragStart: Coord, mx: number, my: number, shiftKey: boolean): void
-// }
-
-// export interface IRadiusable {
-//     setBorderRadius(radius: number, position: HandlePos): void
-//     getBorderRadius(): BorderRadius
-// }
-
-// export interface IArcShape {
-//     isArc(): boolean
-//     getArcAngles(): { start: number; end: number }
-//     setArc(start: number, end: number): void
-// }
-
-// export interface IPolygonal {
-//     getVertexCount(): number
-//     setVertexCount(count: number): void
-//     getVertex(prev: number, vertex: number): { x: number; y: number }
-// }
-
-// export interface IRatioAdjustable {
-//     setRatio(ratio: number): void
-// }
-
-// export interface ICollisionDetectable {
-//     pointInShape(x: number, y: number): boolean
-//     getRelativeBoundingRect(): BoundingRect
-// }
-
-// export interface IRenderable {
-//     draw(canvas: Canvas): void
-//     setHovered(hovered: boolean): void
-// }
-
-// export interface IConfigurable {
-//     getProperties(): Properties
-//     setProperties(properties: Properties): void
-//     getShapeType(): string
-// }
+//                         const sweepCandidate = dragDirection >= 0 ? diffCW : diffCW - TWO_PI;
+//                         sweep = clampSweep(sweepCandidate);
+//                     }
+//                     draw();
+//                 }
