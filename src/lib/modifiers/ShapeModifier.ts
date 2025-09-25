@@ -95,6 +95,7 @@ class ShapeModifier {
         console.log('finished dragging handle')
         this.initialShapeData = null
         if (this.selectedModifierHandle) {
+            this.selectedModifierHandle.reset()
             this.selectedModifierHandle.isDragging = false
             this.selectedModifierHandle = null
         }
