@@ -170,7 +170,6 @@ class Oval extends Shape {
     getSweep() {
         const sweep = this.arcSegment.endAngle - this.arcSegment.startAngle
         // console.log(this.determineArcDirection(this.arcSegment.startAngle, this.arcSegment.endAngle))
-
         return sweep
     }
 
