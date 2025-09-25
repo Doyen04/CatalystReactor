@@ -328,7 +328,7 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
 
     scene.setArc(start, newEnd)
 }
-// ...existing code...
+
 export function updateShapeVertices(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const GAP = 10 // defined distance for both x and y
     const count = scene.getVertexCount()
