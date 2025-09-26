@@ -265,7 +265,7 @@ function updateShapeArcStart(handle: Handle, e: MouseEvent, scene: SceneNode, in
     const baseSweep = arcState.dragSweep ?? sweep
 
     const newStart = angle
-    const newEnd = normalizeAngle(newStart + baseSweep)
+    const newEnd = newStart + baseSweep
 
     const currentState = ensureArcEndState(scene.getArcHandleState(), newEnd, newStart, baseSweep)
     scene.setArcHandleState(currentState)
@@ -273,29 +273,38 @@ function updateShapeArcStart(handle: Handle, e: MouseEvent, scene: SceneNode, in
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
 
-    scene.setArc(newStart, newEnd)
+    scene.setArc(normalizeAngle(newStart), normalizeAngle(newEnd))
 }
 
 const resolveArcEndSweep = (state: ArcHandleState, pointerAngle: number, anchorAngle: number): { state: ArcHandleState } => {
     const diffCW = normalizeAngle(pointerAngle - anchorAngle)
     const TWO_PI = 2 * Math.PI
-    const prevDiff = state.dragLastDiff ?? diffCW
+    const prevDiff = state.dragSweep ?? state.dragLastDiff ?? diffCW
+    const SWEEP_LIMIT = 2 * Math.PI - 1e-4
+
+    anchorAngle = state.dragSweep ? pointerAngle - state.dragSweep : anchorAngle
 
     let pointerDelta = pointerAngle - (state.dragPrevPointer ?? pointerAngle)
     if (pointerDelta > Math.PI) pointerDelta -= TWO_PI
     if (pointerDelta < -Math.PI) pointerDelta += TWO_PI
 
     let dragDirection = state.dragDirection ?? 1
+    console.log(dragDirection, 'dragdirection')
+
     if (pointerDelta > 0 && diffCW < prevDiff) {
         dragDirection = -dragDirection
     } else if (pointerDelta < 0 && diffCW > prevDiff) {
         dragDirection = -dragDirection
     }
+    const sweepCandidate = state.dragDirection >= 0 ? diffCW : diffCW - TWO_PI
+    const sweep = clamp(sweepCandidate, -SWEEP_LIMIT, SWEEP_LIMIT)
+
     const nextState: ArcHandleState = {
         ...state,
         dragDirection,
         dragLastDiff: diffCW,
         dragPrevPointer: pointerAngle,
+        dragSweep: sweep,
     }
     return { state: nextState }
 }
@@ -330,22 +339,22 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
     angle = normalizeAngle(angle)
     const pointerAngle = angle
 
-    const SWEEP_LIMIT = 2 * Math.PI - 1e-4
-    const initialSweep = clamp(initialShapeData.arcAngle.end - start, -SWEEP_LIMIT, SWEEP_LIMIT)
-    const sweep = angle - start
+    const arcState = scene.getArcHandleState() ?? {}
+    console.log(arcState, 'arcstate')
 
-    const currentState = ensureArcEndState(scene.getArcHandleState(), pointerAngle, start, initialSweep)
+    const baseSweep = arcState.dragSweep ?? angle - start
+
+    const currentState = ensureArcEndState(scene.getArcHandleState(), pointerAngle, start, baseSweep)
+    console.log(baseSweep, currentState)
 
     const { state: nextState } = resolveArcEndSweep(currentState, pointerAngle, start)
 
     scene.setArcHandleState(nextState)
 
-    const newEnd = normalizeAngle(start + sweep)
-
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
 
-    scene.setArc(start, newEnd)
+    scene.setArc(start, angle)
 }
 
 export function updateShapeVertices(e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {

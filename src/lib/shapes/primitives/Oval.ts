@@ -1,7 +1,7 @@
 import Handle from '@/lib/modifiers/Handles'
 import Shape from '../base/Shape'
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
-import {ArcHandleState, ArcSegment, Coord, Properties } from '@lib/types/shapes'
+import { ArcHandleState, ArcSegment, Coord, Properties } from '@lib/types/shapes'
 import clamp from '@lib/helper/clamp'
 import { normalizeAngle } from '@lib/helper/normalise'
 
@@ -177,7 +177,6 @@ class Oval extends Shape {
         const sweepCandidate = this.arcHandleState.dragDirection >= 0 ? diffCW : diffCW - TWO_PI
         const sweep = clamp(sweepCandidate, -SWEEP_LIMIT, SWEEP_LIMIT)
         // const sweep = normalizeAngle(diffCW) * this.arcHandleState['arc-end'].dragDirection
-        console.log(this.arcHandleState.dragDirection, diffCW, sweepCandidate, 'direction')
 
         return sweep
     }
