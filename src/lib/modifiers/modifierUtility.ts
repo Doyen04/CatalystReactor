@@ -274,13 +274,13 @@ function updateShapeArcStart(handle: Handle, e: MouseEvent, scene: SceneNode, in
 const resolveArcEndSweep = (state: ArcHandleState, pointerAngle: number, anchorAngle: number): { state: ArcHandleState; sweep: number } => {
     const diffCW = normalizeAngle(pointerAngle - anchorAngle)
     const TWO_PI = 2 * Math.PI
-    const prevDiff = state.dragLastDiff ?? diffCW
+    const prevDiff = state.dragLastDiff
     const SWEEP_LIMIT = TWO_PI - 1e-4
 
-    let pointerDelta = pointerAngle - (state.dragPrevPointer ?? pointerAngle)
+    let pointerDelta = pointerAngle - state.dragPrevPointer
     if (pointerDelta > Math.PI) pointerDelta -= TWO_PI
     if (pointerDelta < -Math.PI) pointerDelta += TWO_PI
-   
+
     let dragDirection = state.dragDirection ?? 1
 
     if (pointerDelta > 0 && diffCW < prevDiff) {
