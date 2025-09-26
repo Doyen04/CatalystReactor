@@ -14,10 +14,6 @@ export default class Handle {
     isDragging: boolean = false
     handleRatioFromCenter: number | null = null
     handleRatioAngle: number | null = null
-    dragDirection?: number
-    dragLastDiff?: number
-    dragPrevPointer?: number
-    dragSweep?: number
 
     constructor(x: number, y: number, pos: HandlePos, type: HandleType, size = 6) {
         this.x = x
@@ -112,9 +108,5 @@ export default class Handle {
         this.isDragging = false
         this.handleRatioAngle = 0
         this.handleRatioFromCenter = 0
-        this.dragDirection = undefined
-        this.dragLastDiff = undefined
-        this.dragPrevPointer = undefined
-        this.dragSweep = undefined
     }
 }

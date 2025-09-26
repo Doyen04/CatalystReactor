@@ -6,7 +6,7 @@ import Polygon from '@lib/shapes/primitives/Polygon'
 import PText from '@lib/shapes/primitives/PText'
 import Rectangle from '@lib/shapes/primitives/Rect'
 import Star from '@lib/shapes/primitives/Star'
-import { BoundingRect, Coord, HandlePos, Properties, Size } from '@lib/types/shapes'
+import { ArcHandleState, BoundingRect, Coord, HandlePos, Properties, Size } from '@lib/types/shapes'
 import { Canvas } from 'canvaskit-wasm'
 
 abstract class SceneNode {
@@ -311,6 +311,25 @@ abstract class SceneNode {
         } else {
             return null
             // throw new Error('not implemented')
+        }
+    }
+
+    getArcHandleState(): ArcHandleState | null {
+        if (this.shape instanceof Oval) {
+            return this.shape.getArcHandleState()
+        }
+        return null
+    }
+    getSweep(): number | null {
+        if (this.shape instanceof Oval) {
+            return this.shape.getSweep()
+        }
+        return null
+    }
+
+    setArcHandleState(state: Partial<ArcHandleState>, replace = false): void {
+        if (this.shape instanceof Oval) {
+            this.shape.setArcHandleState(state, replace)
         }
     }
 

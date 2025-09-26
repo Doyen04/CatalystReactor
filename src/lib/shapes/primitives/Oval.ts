@@ -1,7 +1,7 @@
 import Handle from '@/lib/modifiers/Handles'
 import Shape from '../base/Shape'
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
-import { ArcSegment, Coord, Properties } from '@lib/types/shapes'
+import {ArcHandleState, ArcSegment, Coord, Properties } from '@lib/types/shapes'
 import clamp from '@lib/helper/clamp'
 import { normalizeAngle } from '@lib/helper/normalise'
 
@@ -11,6 +11,7 @@ class Oval extends Shape {
     private arcSegment: ArcSegment
     private arcDirection: 'ccw' | 'cw'
     private startCrossed: boolean | null = false
+    private arcHandleState: ArcHandleState
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, type: 'oval', ...shapeProps })
@@ -18,6 +19,7 @@ class Oval extends Shape {
         this.radiusX = 0
         this.radiusY = 0
         this.arcDirection = 'cw'
+        this.arcHandleState = {}
         this.calculateBoundingRect()
     }
 
@@ -168,9 +170,24 @@ class Oval extends Shape {
     }
 
     getSweep() {
-        const sweep = this.arcSegment.endAngle - this.arcSegment.startAngle
-        // console.log(this.determineArcDirection(this.arcSegment.startAngle, this.arcSegment.endAngle))
+        const diffCW = normalizeAngle(this.arcSegment.endAngle - this.arcSegment.startAngle)
+        const SWEEP_LIMIT = 2 * Math.PI - 1e-4
+        const TWO_PI = 2 * Math.PI
+
+        const sweepCandidate = this.arcHandleState.dragDirection >= 0 ? diffCW : diffCW - TWO_PI
+        const sweep = clamp(sweepCandidate, -SWEEP_LIMIT, SWEEP_LIMIT)
+        // const sweep = normalizeAngle(diffCW) * this.arcHandleState['arc-end'].dragDirection
+        console.log(this.arcHandleState.dragDirection, diffCW, sweepCandidate, 'direction')
+
         return sweep
+    }
+
+    getArcHandleState(): ArcHandleState | null {
+        return this.arcHandleState
+    }
+
+    setArcHandleState(state: Partial<ArcHandleState>, replace = false): void {
+        this.arcHandleState = replace ? { ...state } : { ...this.arcHandleState, ...state }
     }
 
     toDegree(rad: number) {

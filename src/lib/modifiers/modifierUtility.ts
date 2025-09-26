@@ -1,7 +1,7 @@
 import clamp from '@lib/helper/clamp'
 import { getOppositeHandle, getHandleLocalPoint } from '@lib/helper/handleUtil'
 import SceneNode from '@lib/node/Scene'
-import { Coord } from '@lib/types/shapes'
+import { ArcHandleState, Coord } from '@lib/types/shapes'
 import { ShapeData } from './modifier'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import Handle from './Handles'
@@ -258,22 +258,58 @@ function updateShapeArcStart(handle: Handle, e: MouseEvent, scene: SceneNode, in
     let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
     angle = normalizeAngle(angle)
 
-    const { start: currentStart, end: currentEnd } = scene.getArcAngles()
-    const SWEEP_LIMIT = 2 * Math.PI - 1e-4
+    const sweep = scene.getSweep()
 
-    if (handle.dragSweep === undefined) {
-        const initialSweep = currentEnd - currentStart
-        handle.dragSweep = clamp(initialSweep, -SWEEP_LIMIT, SWEEP_LIMIT)
-    }
+    const arcState = scene.getArcHandleState() ?? {}
 
-    const sweep = handle.dragSweep
+    const baseSweep = arcState.dragSweep ?? sweep
+
     const newStart = angle
-    const newEnd = newStart + sweep
+    const newEnd = normalizeAngle(newStart + baseSweep)
+
+    const currentState = ensureArcEndState(scene.getArcHandleState(), newEnd, newStart, baseSweep)
+    scene.setArcHandleState(currentState)
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
 
     scene.setArc(newStart, newEnd)
+}
+
+const resolveArcEndSweep = (state: ArcHandleState, pointerAngle: number, anchorAngle: number): { state: ArcHandleState } => {
+    const diffCW = normalizeAngle(pointerAngle - anchorAngle)
+    const TWO_PI = 2 * Math.PI
+    const prevDiff = state.dragLastDiff ?? diffCW
+
+    let pointerDelta = pointerAngle - (state.dragPrevPointer ?? pointerAngle)
+    if (pointerDelta > Math.PI) pointerDelta -= TWO_PI
+    if (pointerDelta < -Math.PI) pointerDelta += TWO_PI
+
+    let dragDirection = state.dragDirection ?? 1
+    if (pointerDelta > 0 && diffCW < prevDiff) {
+        dragDirection = -dragDirection
+    } else if (pointerDelta < 0 && diffCW > prevDiff) {
+        dragDirection = -dragDirection
+    }
+    const nextState: ArcHandleState = {
+        ...state,
+        dragDirection,
+        dragLastDiff: diffCW,
+        dragPrevPointer: pointerAngle,
+    }
+    return { state: nextState }
+}
+
+const ensureArcEndState = (state: ArcHandleState | null, pointerAngle: number, anchorAngle: number, initialSweep: number): ArcHandleState => {
+    if (state?.dragDirection !== undefined) {
+        return state
+    }
+    return {
+        ...(state ?? {}),
+        dragDirection: initialSweep >= 0 ? 1 : -1,
+        dragLastDiff: normalizeAngle(pointerAngle - anchorAngle),
+        dragPrevPointer: pointerAngle,
+    }
 }
 
 function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
@@ -292,36 +328,19 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
 
     let angle = Math.atan2(radiusX * deltaY, radiusY * deltaX)
     angle = normalizeAngle(angle)
-
-    if (!handle.dragDirection) {
-        const currentSweep = normalizeAngle(scene.getArcAngles().end - start)
-        handle.dragDirection = currentSweep >= 0 ? 1 : -1
-        handle.dragLastDiff = normalizeAngle(angle - start)
-        handle.dragPrevPointer = angle
-    }
-
     const pointerAngle = angle
-    const diffCW = normalizeAngle(pointerAngle - start)
-    const prevDiff = handle.dragLastDiff
 
-    let pointerDelta = pointerAngle - handle.dragPrevPointer
-    if (pointerDelta > Math.PI) pointerDelta -= 2 * Math.PI
-    if (pointerDelta < -Math.PI) pointerDelta += 2 * Math.PI
-
-    if (pointerDelta > 0 && diffCW < prevDiff) {
-        handle.dragDirection *= -1
-    } else if (pointerDelta < 0 && diffCW > prevDiff) {
-        handle.dragDirection *= -1
-    }
-
-    handle.dragLastDiff = diffCW
-    handle.dragPrevPointer = pointerAngle
-
-    const sweepCandidate = handle.dragDirection >= 0 ? diffCW : diffCW - 2 * Math.PI
     const SWEEP_LIMIT = 2 * Math.PI - 1e-4
-    const clampedSweep = clamp(sweepCandidate, -SWEEP_LIMIT, SWEEP_LIMIT)
+    const initialSweep = clamp(initialShapeData.arcAngle.end - start, -SWEEP_LIMIT, SWEEP_LIMIT)
+    const sweep = angle - start
 
-    const newEnd = start + clampedSweep
+    const currentState = ensureArcEndState(scene.getArcHandleState(), pointerAngle, start, initialSweep)
+
+    const { state: nextState } = resolveArcEndSweep(currentState, pointerAngle, start)
+
+    scene.setArcHandleState(nextState)
+
+    const newEnd = normalizeAngle(start + sweep)
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
