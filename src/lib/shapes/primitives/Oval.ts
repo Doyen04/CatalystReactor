@@ -15,7 +15,7 @@ class Oval extends Shape {
 
     constructor(x: number, y: number, { ...shapeProps } = {}) {
         super({ x, y, type: 'oval', ...shapeProps })
-        this.arcSegment = { startAngle: 0, endAngle: 2 * Math.PI, ratio: 0 }
+        this.arcSegment = { startAngle: 0, sweep: 2 * Math.PI, ratio: 0 }
         this.radiusX = 0
         this.radiusY = 0
         this.arcDirection = 'cw'
@@ -52,9 +52,9 @@ class Oval extends Shape {
         this.calculateBoundingRect()
     }
 
-    setArc(startAngle: number, endAngle: number) {
+    setArc(startAngle: number, sweep: number) {
         this.arcSegment.startAngle = startAngle
-        this.arcSegment.endAngle = endAngle
+        this.arcSegment.sweep = sweep
     }
 
     override setProperties(prop: Properties): void {
@@ -77,10 +77,10 @@ class Oval extends Shape {
         }
     }
 
-    getArcAngles(): { start: number; end: number } {
+    getArcAngles(): { start: number; sweep: number } {
         return {
             start: this.arcSegment.startAngle,
-            end: this.arcSegment.endAngle,
+            sweep: this.arcSegment.sweep,
         }
     }
 
@@ -157,7 +157,7 @@ class Oval extends Shape {
             ry = this.arcSegment.ratio === 0 ? outerRy * 0.8 : (outerRy + innerRy) / 2
         }
 
-        const theta = handle.pos === 'arc-end' ? this.arcSegment.endAngle : this.arcSegment.startAngle
+        const theta = handle.pos === 'arc-end' ? this.arcSegment.startAngle + this.arcSegment.sweep : this.arcSegment.startAngle
 
         // Compute handle's center point along ellipse, then offset by handle size
         const handleCenterX = this.radiusX + rx * Math.cos(theta)
@@ -170,13 +170,7 @@ class Oval extends Shape {
     }
 
     getSweep() {
-        const diffCW = normalizeAngle(this.arcSegment.endAngle - this.arcSegment.startAngle)
-        const SWEEP_LIMIT = 2 * Math.PI - 1e-4
-        const TWO_PI = 2 * Math.PI
-
-        const sweepCandidate = this.arcHandleState.dragDirection >= 0 ? diffCW : diffCW - TWO_PI
-        const sweep = clamp(sweepCandidate, -SWEEP_LIMIT, SWEEP_LIMIT)
-        // const sweep = normalizeAngle(diffCW) * this.arcHandleState['arc-end'].dragDirection
+        const sweep = this.arcSegment.sweep
 
         return sweep
     }
@@ -219,7 +213,7 @@ class Oval extends Shape {
     }
 
     isArc(): boolean {
-        return Math.abs(this.arcSegment.endAngle - this.arcSegment.startAngle) < 2 * Math.PI
+        return Math.abs(this.arcSegment.sweep) < 2 * Math.PI
     }
 
     isTorus(): boolean {
@@ -310,8 +304,8 @@ class Oval extends Shape {
         const innerStartX = this.radiusX + this.radiusX * this.arcSegment.ratio * Math.cos(this.arcSegment.startAngle)
         const innerStartY = this.radiusY + this.radiusY * this.arcSegment.ratio * Math.sin(this.arcSegment.startAngle)
 
-        const outerEndX = this.radiusX + this.radiusX * Math.cos(this.arcSegment.endAngle)
-        const outerEndY = this.radiusY + this.radiusY * Math.sin(this.arcSegment.endAngle)
+        const outerEndX = this.radiusX + this.radiusX * Math.cos(this.arcSegment.startAngle + this.arcSegment.sweep)
+        const outerEndY = this.radiusY + this.radiusY * Math.sin(this.arcSegment.startAngle + this.arcSegment.sweep)
 
         path.moveTo(innerStartX, innerStartY)
         path.arcToOval(innerRect, startDegrees, sweepDegrees, false)

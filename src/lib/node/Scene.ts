@@ -250,7 +250,7 @@ abstract class SceneNode {
         return this.shape.getCenterCoord()
     }
 
-    getArcAngles(): { start: number; end: number } | null {
+    getArcAngles(): { start: number; sweep: number } | null {
         if (!this.shape) return null
         if (this.shape instanceof Oval) {
             return this.shape.getArcAngles()

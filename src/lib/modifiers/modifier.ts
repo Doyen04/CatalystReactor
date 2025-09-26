@@ -10,5 +10,5 @@ export interface ShapeData {
     localTransform: number[]
     worldTransform: number[]
     initialMouseAngle?: number
-    arcAngle?: { start: number; end: number }
+    arcAngle?: { start: number; sweep: number }
 }

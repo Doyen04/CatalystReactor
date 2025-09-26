@@ -166,7 +166,7 @@ function PropertyBar() {
                         <Input
                             type="number"
                             title="End"
-                            value={arcSegment.endAngle}
+                            value={arcSegment.sweep}
                             onChange={value => handlePropertyChange('endAngle', value)}
                         />
                         <Input type="number" title="Ratio" value={arcSegment.ratio} onChange={value => handlePropertyChange('ratio', value)} />

@@ -296,7 +296,7 @@ export interface BorderRadius {
 }
 export interface ArcSegment {
     startAngle: number
-    endAngle: number
+    sweep: number
     ratio: number
 }
 
@@ -351,7 +351,6 @@ export type ArcHandleState = {
     dragDirection?: number
     dragLastDiff?: number
     dragPrevPointer?: number
-    dragSweep?: number
 }
 
 export type HandleType = 'size' | 'angle' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio'
