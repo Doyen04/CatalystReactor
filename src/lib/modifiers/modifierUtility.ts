@@ -291,7 +291,7 @@ const resolveArcEndSweep = (state: ArcHandleState, pointerAngle: number, anchorA
         dragDirection *= -1
     }
 
-    const sweepCandidate = dragDirection >= 0 ? diffCW - TWO_PI : diffCW
+    const sweepCandidate = dragDirection >= 0 ? diffCW : diffCW - TWO_PI
     const sweep = clamp(sweepCandidate, -SWEEP_LIMIT, SWEEP_LIMIT)
 
     const nextState: ArcHandleState = {

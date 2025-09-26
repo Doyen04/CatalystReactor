@@ -19,7 +19,11 @@ class Oval extends Shape {
         this.radiusX = 0
         this.radiusY = 0
         this.arcDirection = 'cw'
-        this.arcHandleState = {}
+        this.arcHandleState = {
+            dragDirection: this.arcSegment.sweep >= 0 ? 1 : -1,
+            dragLastDiff: normalizeAngle(this.arcSegment.sweep),
+            dragPrevPointer: normalizeAngle(this.arcSegment.startAngle + this.arcSegment.sweep),
+        }
         this.calculateBoundingRect()
     }
 
