@@ -258,12 +258,11 @@ function updateShapeArcStart(handle: Handle, e: MouseEvent, scene: SceneNode, in
     const angle = normalizeAngle(Math.atan2(radiusX * deltaY, radiusY * deltaX))
 
     const oldSweep = initialShapeData.arcAngle.sweep
-    const arcState = scene.getArcHandleState() ?? {}
 
     const newStart = normalizeAngle(angle)
 
-    const currentState = ensureArcEndState(arcState, oldSweep, newStart)
-    scene.setArcHandleState(currentState)
+    const currentState = ensureArcEndState(null, oldSweep, newStart)
+    scene.setArcHandleState(currentState, true)
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
@@ -292,7 +291,7 @@ const resolveArcEndSweep = (state: ArcHandleState, pointerAngle: number, anchorA
         dragDirection *= -1
     }
 
-    const sweepCandidate = dragDirection >= 0 ? diffCW : diffCW - TWO_PI
+    const sweepCandidate = dragDirection >= 0 ? diffCW - TWO_PI : diffCW
     const sweep = clamp(sweepCandidate, -SWEEP_LIMIT, SWEEP_LIMIT)
 
     const nextState: ArcHandleState = {
