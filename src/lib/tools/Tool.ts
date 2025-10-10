@@ -39,6 +39,11 @@ abstract class Tool {
         this.dragStart = null
         this.isDragging = false
     }
+    resetPointerData() {
+        this.isPointerDown = false
+        this.isDragging = false
+        this.dragStart = null
+    }
 
     abstract handlePointerMove(e: MouseEvent): void 
 

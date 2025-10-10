@@ -94,6 +94,8 @@ class ImageTool extends Tool {
 
     override handlePointerDown(e: MouseEvent) {
         super.handlePointerDown(e)
+        console.log(this.isImageDataEmpty(), 'checking data', this.isLoading, 'loading status', this.isDragging, 'dragging status');
+
 
         if (this.isImageDataEmpty()) {
             console.warn('No images available. Please select images first.')
@@ -126,15 +128,17 @@ class ImageTool extends Tool {
     }
 
     override handlePointerUp(e: MouseEvent): void {
+       
         if (this.isImageDataEmpty()) {
             this.preloadedImages.clear()
             console.log('Image placement completed, clearing image store')
+            super.handlePointerUp(e)
         }
         this.shapeManager.handleTinyShapes()
         if (this.isDragging) {
             this.shapeManager.finishDrag()
         }
-        super.handlePointerUp(e)
+        super.resetPointerData()
     }
 
     override handlePointerMove(e: MouseEvent): void {
