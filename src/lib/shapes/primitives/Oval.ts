@@ -174,7 +174,8 @@ class Oval extends Shape {
     }
 
     getSweep() {
-        const sweep = this.arcSegment.sweep
+        const TWO_PI = 2 * Math.PI
+        const sweep = (this.arcHandleState.dragDirection * -1) >= 0 ? normalizeAngle(this.arcSegment.sweep) : normalizeAngle(this.arcSegment.sweep) - TWO_PI
 
         return sweep
     }
@@ -191,21 +192,21 @@ class Oval extends Shape {
         return rad * (180 / Math.PI)
     }
 
-    checkCrossing(prevAngle, currAngle) {
-        // Normalize angles
-        const prev = normalizeAngle(prevAngle)
-        const curr = normalizeAngle(currAngle)
-        const bound = normalizeAngle(this.arcSegment.startAngle)
-        const diff = curr - prev
-        const diffBound = curr - bound
+    // checkCrossing(prevAngle, currAngle) {
+    //     // Normalize angles
+    //     const prev = normalizeAngle(prevAngle)
+    //     const curr = normalizeAngle(currAngle)
+    //     const bound = normalizeAngle(this.arcSegment.startAngle)
+    //     const diff = curr - prev
+    //     const diffBound = curr - bound
 
-        const diffDeg = this.toDegree(diff - diffBound)
+    //     const diffDeg = this.toDegree(diff - diffBound)
 
-        if (diffDeg == 0) {
-            if (curr < Math.PI) this.startCrossed = true //use big arc
-            if (curr > Math.PI) this.startCrossed = true //normal
-        }
-    }
+    //     if (diffDeg == 0) {
+    //         if (curr < Math.PI) this.startCrossed = true //use big arc
+    //         if (curr > Math.PI) this.startCrossed = true //normal
+    //     }
+    // }
 
     override calculateBoundingRect(): void {
         this.boundingRect = {
@@ -333,11 +334,8 @@ class Oval extends Shape {
         return normalizedDistance <= 1
     }
 
-    rotate(r: number) {
-        this.transform.rotation = r
-    }
-    override cleanUp(): void {}
-    override destroy(): void {}
+    override cleanUp(): void { }
+    override destroy(): void { }
 }
 
 export default Oval

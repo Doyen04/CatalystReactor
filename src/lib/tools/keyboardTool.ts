@@ -12,7 +12,6 @@ class KeyboardTool {
         this.shapeManager = shapeManager
     }
     handleKeyDown(e: KeyboardEvent) {
-        console.log(e.type, 'inside keyboard')
 
         switch (e.key) {
             case 'Delete':
@@ -44,7 +43,7 @@ class KeyboardTool {
     }
 
     handleKeyUp(e: KeyboardEvent) {
-        console.log(e, 'keyup')
+        // console.log(e, 'keyup')
     }
 
     private handleTextKey(e: KeyboardEvent) {

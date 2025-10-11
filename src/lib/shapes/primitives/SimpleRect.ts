@@ -48,8 +48,8 @@ class SimpleRect extends Shape {
 
     override getDim(): { width: number; height: number } {
         return {
-            width: Math.floor(this.dimension.width),
-            height: Math.floor(this.dimension.height),
+            width: Math.round(this.dimension.width),
+            height: Math.round(this.dimension.height),
         }
     }
 

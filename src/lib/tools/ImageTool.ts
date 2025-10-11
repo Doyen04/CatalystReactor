@@ -23,9 +23,11 @@ class ImageTool extends Tool {
         const openFilePicker = FilePicker({
             accept: 'image/*',
             multiple: true,
-            onFileSelect: file => this.handleFileSelect(file),
+            onFileSelect: async file => { await this.handleFileSelect(file) },
         })
         openFilePicker()
+
+        console.log('File is fffffff picker opened');
     }
 
     handleFileSelect = async (files: FileList) => {
@@ -61,7 +63,11 @@ class ImageTool extends Tool {
 
         try {
             for (const imageBuffer of this.imageData) {
-                const canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(imageBuffer.imageBuffer)
+                //uses createImageBitmap for better performance and because makeimage blocks the main thread
+                const blob = new Blob([imageBuffer.imageBuffer]);
+                const imageBitmap = await createImageBitmap(blob);
+                const canvasKitImage = await this.resource.canvasKit.MakeImageFromCanvasImageSource(imageBitmap);
+                // const canvasKitImage = this.resource.canvasKit.MakeImageFromEncoded(imageBuffer.imageBuffer)
 
                 if (canvasKitImage) {
                     this.preloadedImages.set(imageBuffer.name, canvasKitImage)
@@ -93,8 +99,8 @@ class ImageTool extends Tool {
     }
 
     override handlePointerDown(e: MouseEvent) {
-        super.handlePointerDown(e)
         console.log(this.isImageDataEmpty(), 'checking data', this.isLoading, 'loading status', this.isDragging, 'dragging status');
+        super.handlePointerDown(e)
 
 
         if (this.isImageDataEmpty()) {
@@ -128,7 +134,7 @@ class ImageTool extends Tool {
     }
 
     override handlePointerUp(e: MouseEvent): void {
-       
+
         if (this.isImageDataEmpty()) {
             this.preloadedImages.clear()
             console.log('Image placement completed, clearing image store')

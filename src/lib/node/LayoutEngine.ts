@@ -243,12 +243,12 @@ export function applyGridLayout(shape: Shape, children: SceneNode[], layoutConst
 
         if (gridAutoFlow === 'column') {
             // Fill columns first
-            col = Math.floor(index / rows)
+            col = Math.round(index / rows)
             row = index % rows
         } else {
             // Fill rows first (default)
             col = index % columns
-            row = Math.floor(index / columns)
+            row = Math.round(index / columns)
         }
 
         // Calculate position

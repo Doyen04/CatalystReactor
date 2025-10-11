@@ -34,9 +34,9 @@ abstract class SceneNode {
     }
 
     updateScene(attrib: { position: Coord; scale: Coord; dimension: Size }) {
-        this.setPosition(Math.floor(attrib.position.x), Math.floor(attrib.position.y))
+        this.setPosition(Math.round(attrib.position.x), Math.round(attrib.position.y))
         this.setScale(attrib.scale.x, attrib.scale.y)
-        this.setDimension(Math.floor(Math.abs(attrib.dimension.width)), Math.floor(Math.abs(attrib.dimension.height)))
+        this.setDimension(Math.round(Math.abs(attrib.dimension.width)), Math.round(Math.abs(attrib.dimension.height)))
     }
 
     setDimension(width: number, height: number): void {
@@ -92,8 +92,8 @@ abstract class SceneNode {
         const Matrix = this.resource.canvasKit.Matrix
         const transformedPoint = Matrix.mapPoints(this.worldMatrix, [dx, dy])
         return {
-            x: Math.floor(transformedPoint[0]),
-            y: Math.floor(transformedPoint[1]),
+            x: Math.round(transformedPoint[0]),
+            y: Math.round(transformedPoint[1]),
         }
     }
 
@@ -102,8 +102,8 @@ abstract class SceneNode {
         const inverseMatrix = Matrix.invert(this.parent.worldMatrix)
         const transformedPoint = Matrix.mapPoints(inverseMatrix, [x, y])
         return {
-            x: Math.floor(transformedPoint[0]),
-            y: Math.floor(transformedPoint[1]),
+            x: Math.round(transformedPoint[0]),
+            y: Math.round(transformedPoint[1]),
         }
     }
 
@@ -113,8 +113,8 @@ abstract class SceneNode {
 
         const transformedPoint = Matrix.mapPoints(inverseMatrix, [x, y])
         return {
-            x: Math.floor(transformedPoint[0]),
-            y: Math.floor(transformedPoint[1]),
+            x: Math.round(transformedPoint[0]),
+            y: Math.round(transformedPoint[1]),
         }
     }
 
@@ -380,12 +380,6 @@ abstract class SceneNode {
     addChildNode(child: SceneNode): void {
         console.log('implement addChildNode', child)
         // Implementation for adding a child node
-    }
-
-    checkCrossing(prev: number, curr: number) {
-        if (this.shape instanceof Oval) {
-            return this.shape.checkCrossing(prev, curr)
-        }
     }
 
     toDegree(rad: number) {

@@ -109,16 +109,16 @@ abstract class Shape {
                 const absY = Math.abs(deltaY)
 
                 if (absX / this.aspectRatio >= absY) {
-                    newWidth = absX
-                    newHeight = absX / this.aspectRatio
+                    newWidth = Math.round(absX)
+                    newHeight = Math.round(absX / this.aspectRatio)
                 } else {
-                    newHeight = absY
-                    newWidth = absY * this.aspectRatio
+                    newHeight = Math.round(absY)
+                    newWidth = Math.round(absY * this.aspectRatio)
                 }
             } else {
                 const size = Math.max(Math.abs(deltaX), Math.abs(deltaY))
-                newWidth = size
-                newHeight = size
+                newWidth = Math.round(size)
+                newHeight = Math.round(size)
             }
 
             this.setDim(newWidth, newHeight)
@@ -437,9 +437,11 @@ abstract class Shape {
         // Calculate centering offset for fill/fit modes
         const scaleX = scale
         const scaleY = scale
+        console.log(scaleX, scaleY, offsetX, offsetY, 'scale and offset values');
+        
         const finalMatrix = ck.Matrix.multiply(ck.Matrix.translated(offsetX, offsetY), ck.Matrix.scaled(scaleX, scaleY))
 
-        return canvasKitImage.makeShaderOptions(tileMode, tileMode, ck.FilterMode.Linear, ck.MipmapMode.None, finalMatrix)
+        return canvasKitImage.makeShaderOptions(tileMode, tileMode, ck.FilterMode.Linear, ck.MipmapMode.Linear, finalMatrix)
     }
 
     createCanvasKitImage(backgroundImage: ArrayBuffer): CanvasKitImage | null {

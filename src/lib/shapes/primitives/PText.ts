@@ -143,7 +143,7 @@ class PText extends Shape {
         this.textStyle = {
             textColor: [0, 0, 0, 1],
             textAlign: this.resource.canvasKit.TextAlign.Left,
-            fontSize: 12,
+            fontSize: 18,
             fontWeight: 500,
             fontFamily: ['Inter', 'sans-serif'],
             lineHeight: 1.2,
@@ -151,7 +151,7 @@ class PText extends Shape {
         }
     }
 
-    private setStyles(textStyle: TextStyleProp): [TextStyle, ParagraphStyle] {
+    private setStyles(textStyle: TextStyleProp): { textStyle: TextStyle, paragraphStyle: ParagraphStyle } {
         const canvasKit = this.resource.canvasKit
 
         if (!canvasKit) return
@@ -173,7 +173,7 @@ class PText extends Shape {
         this.resource.paragraphStyle.textStyle = this.resource.textStyle
         this.resource.paragraphStyle.textAlign = canvasKit.TextAlign.Left //replace this
 
-        return [this.resource.textStyle, this.resource.paragraphStyle]
+        return { textStyle: this.resource.textStyle, paragraphStyle: this.resource.paragraphStyle }
     }
 
     override moveShape(mx: number, my: number): void {
@@ -286,7 +286,7 @@ class PText extends Shape {
 
             return
         }
-        const [textStyle, paragraphStyle] = this.setStyles(this.textStyle)
+        const { paragraphStyle } = this.setStyles(this.textStyle)
         this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.resource.fontMgr)
     }
 
@@ -295,7 +295,7 @@ class PText extends Shape {
             console.log('no resources amd builder')
             return
         }
-        const [textStyle, paragraphStyle] = this.setStyles(this.textStyle)
+        const { textStyle } = this.setStyles(this.textStyle)
 
         this.builder.reset()
 
@@ -315,14 +315,14 @@ class PText extends Shape {
                 const selectionStyle = this.getTextStyle
                 selectionStyle.backgroundColor = this.resource.canvasKit.Color(0, 0, 255)
 
-                const [textStyle, paragraphStyle] = this.setStyles(selectionStyle)
+                const { textStyle } = this.setStyles(selectionStyle)
 
                 this.builder.pushStyle(textStyle)
                 this.builder.addText(this.text.substring(start, end))
                 this.builder.pop()
             }
             if (end < this.text.length) {
-                const [textStyle, paragraphStyle] = this.setStyles(this.textStyle)
+                const { textStyle } = this.setStyles(this.textStyle)
                 this.builder.pushStyle(textStyle)
                 this.builder.addText(this.text.substring(end))
                 this.builder.pop()

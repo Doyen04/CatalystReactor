@@ -77,7 +77,9 @@ class TextCursor {
         const CK = this.resource.canvasKit
 
         const lineMetrics = paragraph.getLineMetrics()
-        const { current } = this.findCurrentAboveBelowLine(lineMetrics)
+        console.log(lineMetrics, this.cursorIndex,);
+
+        const { current, below } = this.findCurrentAboveBelowLine(lineMetrics)
 
         if (!current) return [0, 0, 2, fontSize * lineHeight]
         const height = current.height
@@ -87,7 +89,9 @@ class TextCursor {
         }
 
         if (text[this.cursorIndex - 1] === '\n') {
-            if (current) {
+            if (below.width == 0) {
+                return [0, below.baseline - below.ascent, 2, height]
+            }else{
                 return [0, current.baseline - current.ascent, 2, height]
             }
         }
@@ -132,71 +136,143 @@ class TextCursor {
 
             // TODO: Implement up/down for multi-line text forward and backard boes not work if wrap
         }
-
         this.calculateCursorCoord(text, fontSize, lineHeight, paragraph)
     }
 
+
     private findCurrentAboveBelowLine(lineMetrics: LineMetrics[]): {
-        current: LineMetrics | null
-        above: LineMetrics | null
-        below: LineMetrics | null
+        current: LineMetrics | null; above: LineMetrics | null; below: LineMetrics | null;
     } {
-        const totalLines = lineMetrics.length
-        let currentLine = 0
+        const totalLines = lineMetrics.length;
+        const cursorIndex = this.cursorIndex;
+
+        if (totalLines === 0) {
+            return { current: null, above: null, below: null };
+        }
 
         for (let i = 0; i < totalLines; i++) {
-            const m = lineMetrics[i]
-            if (this.cursorIndex >= m.startIndex && this.cursorIndex <= m.endIndex) {
-                currentLine = i
-                //removed break because canvaskit end and start are the same
+            const line = lineMetrics[i];
+            const isFirstLine = i === 0;
+            const isLastLine = i === totalLines - 1;
+
+            // Before this line starts => previous line (or first if none)
+            if (cursorIndex < line.startIndex) {
+                const prevIdx = Math.max(0, i - 1);
+                return {
+                    current: lineMetrics[prevIdx],
+                    above: prevIdx - 1 >= 0 ? lineMetrics[prevIdx - 1] : null,
+                    below: line,
+                };
+            }
+
+            // At line start
+            if (cursorIndex === line.startIndex) {
+                return {
+                    current: line,
+                    above: !isFirstLine ? lineMetrics[i - 1] : null,
+                    below: !isLastLine ? lineMetrics[i + 1] : null,
+                };
+            }
+
+            // Inside line
+            if (cursorIndex > line.startIndex && cursorIndex < line.endIndex) {
+                return {
+                    current: line,
+                    above: !isFirstLine ? lineMetrics[i - 1] : null,
+                    below: !isLastLine ? lineMetrics[i + 1] : null,
+                };
+            }
+
+            // At line end
+            if (cursorIndex === line.endIndex) {
+                if (line.isHardBreak || isLastLine) {
+                    // stay on this line
+                    return {
+                        current: line,
+                        above: !isFirstLine ? lineMetrics[i - 1] : null,
+                        below: !isLastLine ? lineMetrics[i + 1] : null,
+                    };
+                } else {
+                    // soft wrap -> move to next visual line
+                    const nextIdx = Math.min(i + 1, totalLines - 1);
+                    return {
+                        current: lineMetrics[nextIdx],
+                        above: line,
+                        below: nextIdx + 1 < totalLines ? lineMetrics[nextIdx + 1] : null,
+                    };
+                }
             }
         }
 
-        // Determine above and below lines
-        const prevLine = currentLine > 0 ? lineMetrics[currentLine - 1] : null
-        const nextLine = currentLine < totalLines - 1 ? lineMetrics[currentLine + 1] : null
-
+        // Cursor beyond last known index -> clamp to last line
+        const lastIdx = totalLines - 1;
         return {
-            current: lineMetrics[currentLine],
-            above: prevLine,
-            below: nextLine,
-        }
+            current: lineMetrics[lastIdx],
+            above: lastIdx - 1 >= 0 ? lineMetrics[lastIdx - 1] : null,
+            below: null,
+        };
     }
 
-    private findBestIndexInLine(line: LineMetrics, targetX: number, paragraph: Paragraph): number {
-        const CK = this.resource.canvasKit
 
-        let bestIndex = line.startIndex
-        const endIndex = Math.min(line.endExcludingWhitespaces, line.startIndex + 200) // Limit for performance
+    private findBestIndexInLine(
+        line: LineMetrics,
+        targetX: number,
+        paragraph: Paragraph
+    ): number {
+        const CK = this.resource.canvasKit;
+        let bestIndex = line.startIndex;
+
+        // For performance, clamp search length
+        const endIndex = line.endExcludingWhitespaces;
 
         for (let i = line.startIndex; i <= endIndex; i++) {
-            const rects = paragraph.getRectsForRange(i, i + 1, CK.RectHeightStyle.IncludeLineSpacingMiddle, CK.RectWidthStyle.Tight)
+            const rects = paragraph.getRectsForRange(
+                i,
+                i + 1,
+                CK.RectHeightStyle.IncludeLineSpacingMiddle,
+                CK.RectWidthStyle.Tight
+            );
 
             if (rects.length > 0) {
-                const charX = rects[0].rect[0] // left edge of character
-                const charRight = rects[0].rect[2] // right edge of character
+                const charLeft = rects[0].rect[0];
+                const charRight = rects[0].rect[2];
+                const charMid = (charLeft + charRight) / 2;
 
-                if (targetX >= charX && targetX <= charRight) {
-                    const charMidpoint = (charX + charRight) / 2
-                    return targetX <= charMidpoint ? i : i + 1
+                // If target is inside this character's box
+                if (targetX >= charLeft && targetX <= charRight) {
+                    // Decide to place cursor before or after the character
+                    return targetX <= charMid ? i : i + 1;
                 }
+
+                // If cursor is to the right of this char, move bestIndex forward
                 if (targetX > charRight) {
-                    bestIndex = i + 1 // Position after this character
+                    bestIndex = i + 1;
                 } else {
-                    break
+                    // We've gone past the target
+                    break;
                 }
             } else {
-                // No rect for this character, might be end of line
-                break
+                // No rect — probably end of line or newline character
+                break;
             }
         }
-        // Ensure we don't go beyond line boundaries
-        return Math.min(bestIndex, line.endExcludingWhitespaces + 1)
+
+        // ✅ clamp depending on line break type
+        if (line.isHardBreak) {
+            // Stop at newline boundary — cursor shouldn't go past the line’s endIndex
+            return Math.min(bestIndex, line.endIndex);
+        } else {
+            // For wrapped lines, cursor can move to the *position after last char*
+            return Math.min(bestIndex, line.endIndex - 1);
+        }
     }
+
 
     private moveCursorUp(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): number {
         const metrics = paragraph.getLineMetrics()
-        const { above } = this.findCurrentAboveBelowLine(metrics)
+        const { current, above } = this.findCurrentAboveBelowLine(metrics)
+        console.log(above, 'above', current);
+
         if (above == null) return this.cursorIndex
 
         const coord = this.calculateCursorRect(text, fontSize, lineHeight, paragraph)
@@ -206,7 +282,9 @@ class TextCursor {
 
     private moveCursorDown(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): number {
         const lines = paragraph.getLineMetrics()
-        const { below } = this.findCurrentAboveBelowLine(lines)
+        const { below, current } = this.findCurrentAboveBelowLine(lines)
+        console.log(below, 'below', current);
+
         if (below == null) return this.cursorIndex
 
         const coord = this.calculateCursorRect(text, fontSize, lineHeight, paragraph)

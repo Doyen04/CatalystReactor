@@ -155,7 +155,7 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
     const posY = (fixedWorld ? fixedWorld.y : initialShapeData.position.y) - offset.y
 
     scene.updateScene({
-        position: { x: Math.floor(posX), y: Math.floor(posY) },
+        position: { x: Math.round(posX), y: Math.round(posY) },
         scale: { x: desiredScaleX, y: desiredScaleY },
         dimension: { width: absW, height: absH },
     })
@@ -291,7 +291,7 @@ const resolveArcEndSweep = (state: ArcHandleState, pointerAngle: number, anchorA
         dragDirection *= -1
     }
 
-    const sweepCandidate = dragDirection >= 0 ? diffCW : diffCW - TWO_PI
+    const sweepCandidate = (dragDirection) >= 0 ? diffCW : diffCW - TWO_PI
     const sweep = clamp(sweepCandidate, -SWEEP_LIMIT, SWEEP_LIMIT)
 
     const nextState: ArcHandleState = {
@@ -340,6 +340,8 @@ function updateShapeArcEnd(handle: Handle, e: MouseEvent, scene: SceneNode, init
 
     const ratio = calculateRatioFromMousePosition({ x: localCurrent.x, y: localCurrent.y }, radiusX, radiusY, width, height)
     handle.handleRatioFromCenter = ratio
+
+    console.log(nextState, 'direction');
 
     scene.setArc(start, newSweep)
 }
