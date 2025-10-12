@@ -20,6 +20,13 @@ class SelectTool extends Tool {
         console.log('pointer down')
 
         super.handlePointerDown(e)
+
+        this.selectionHandler(e)
+
+        this.handleClickCount(e)
+    }
+
+    selectionHandler(e: MouseEvent) {
         const selected = this.shapeManager.collide(e.offsetX, e.offsetY)
 
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
@@ -36,8 +43,6 @@ class SelectTool extends Tool {
             this.shapeManager.attachNode(scene)
         }
         this.shapeManager.handleMouseDown(this.dragStart, e)
-
-        this.handleClickCount(e)
     }
 
     private handleClickCount(e: MouseEvent) {
@@ -71,22 +76,27 @@ class SelectTool extends Tool {
 
     private handleSingleClick(e: MouseEvent) {
         console.log('click triggered', e)
-        // if (this.canEdit(scene.getScene()) && scene.pointInShape(e.offsetX, e.offsetY)) {
-        //     scene.setCursorPosFromCoord(e.offsetX, e.offsetY)
-        // }
+        if (this.shapeManager.hasScene()) {
+            const scene = this.shapeManager.currentScene
+            
+            if (scene.canEdit() && scene.isCollide(e.offsetX, e.offsetY)) {
+                scene.setCursorPosFromCoord(e.offsetX, e.offsetY)
+            }
+        }
     }
 
     private handleDoubleClick(e: MouseEvent) {
         console.log('Double click detected', e)
 
-        // if (this.shapeManager.hasShape()) {
-        //     const shape = this.shapeManager.currentShape
-
-        //     if (shape.pointInShape(e.offsetX, e.offsetY)) {
-        //         shape.startEditing()
-        //         shape.selectAll()
-        //     }
-        // }
+        if (this.shapeManager.hasScene()) {
+            const scene = this.shapeManager.currentScene
+            
+            if (scene.isCollide(e.offsetX, e.offsetY)) {
+                scene.startEditing()
+                scene.selectAll()
+               
+            }
+        }
     }
 
     setCursorForHandle(handle: Handle, rad: number) {

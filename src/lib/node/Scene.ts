@@ -389,12 +389,31 @@ abstract class SceneNode {
     }
 
     canEdit() {
-        return this.shape && this.shape instanceof PText
+        if (this.shape instanceof PText) {
+            return this.shape.canEdit()
+        } else {
+            return false
+        }
     }
 
     insertText(char: string, shiftKey: boolean) {
         if (this.shape instanceof PText) {
             this.shape.insertText(char, shiftKey)
+        }
+    }
+    startEditing() {
+        if (this.shape instanceof PText) {
+            this.shape.startEditing()
+        }
+    }
+    selectAll() {
+        if (this.shape instanceof PText) {
+            this.shape.selectAll()
+        }
+    }
+    setCursorPosFromCoord(x: number, y: number) {
+        if (this.shape instanceof PText) {
+            this.shape.setCursorPosFromCoord(x, y)
         }
     }
     deleteText(direc: 'forward' | 'backward') {

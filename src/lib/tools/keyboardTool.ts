@@ -43,7 +43,7 @@ class KeyboardTool {
     }
 
     handleKeyUp(e: KeyboardEvent) {
-        // console.log(e, 'keyup')
+        console.log(e, 'keyup')
     }
 
     private handleTextKey(e: KeyboardEvent) {

@@ -77,9 +77,8 @@ class TextCursor {
         const CK = this.resource.canvasKit
 
         const lineMetrics = paragraph.getLineMetrics()
-        console.log(lineMetrics, this.cursorIndex,);
 
-        const { current, below } = this.findCurrentAboveBelowLine(lineMetrics)
+        const { current } = this.findCurrentAboveBelowLine(lineMetrics)
 
         if (!current) return [0, 0, 2, fontSize * lineHeight]
         const height = current.height
@@ -89,11 +88,7 @@ class TextCursor {
         }
 
         if (text[this.cursorIndex - 1] === '\n') {
-            if (below.width == 0) {
-                return [0, below.baseline - below.ascent, 2, height]
-            }else{
-                return [0, current.baseline - current.ascent, 2, height]
-            }
+            return [0, current.baseline - current.ascent, 2, height]
         }
 
         let startIndex = 0
@@ -139,72 +134,31 @@ class TextCursor {
         this.calculateCursorCoord(text, fontSize, lineHeight, paragraph)
     }
 
-
     private findCurrentAboveBelowLine(lineMetrics: LineMetrics[]): {
         current: LineMetrics | null; above: LineMetrics | null; below: LineMetrics | null;
     } {
-        const totalLines = lineMetrics.length;
-        const cursorIndex = this.cursorIndex;
+        const totalLines = lineMetrics.length
+        const cursorIndex = this.cursorIndex
 
-        if (totalLines === 0) {
-            return { current: null, above: null, below: null };
+        if (totalLines == 0) {
+            return { current: null, above: null, below: null }
         }
 
-        for (let i = 0; i < totalLines; i++) {
-            const line = lineMetrics[i];
-            const isFirstLine = i === 0;
-            const isLastLine = i === totalLines - 1;
+        for (let index = totalLines - 1; index >= 0; index--) {
+            const line = lineMetrics[index];
+            const isFirstLine = index === 0;
+            const isLastLine = index === totalLines - 1;
 
-            // Before this line starts => previous line (or first if none)
-            if (cursorIndex < line.startIndex) {
-                const prevIdx = Math.max(0, i - 1);
-                return {
-                    current: lineMetrics[prevIdx],
-                    above: prevIdx - 1 >= 0 ? lineMetrics[prevIdx - 1] : null,
-                    below: line,
-                };
-            }
-
-            // At line start
-            if (cursorIndex === line.startIndex) {
+            if (cursorIndex >= line.startIndex && cursorIndex <= line.endIndex) {
                 return {
                     current: line,
-                    above: !isFirstLine ? lineMetrics[i - 1] : null,
-                    below: !isLastLine ? lineMetrics[i + 1] : null,
-                };
-            }
-
-            // Inside line
-            if (cursorIndex > line.startIndex && cursorIndex < line.endIndex) {
-                return {
-                    current: line,
-                    above: !isFirstLine ? lineMetrics[i - 1] : null,
-                    below: !isLastLine ? lineMetrics[i + 1] : null,
-                };
-            }
-
-            // At line end
-            if (cursorIndex === line.endIndex) {
-                if (line.isHardBreak || isLastLine) {
-                    // stay on this line
-                    return {
-                        current: line,
-                        above: !isFirstLine ? lineMetrics[i - 1] : null,
-                        below: !isLastLine ? lineMetrics[i + 1] : null,
-                    };
-                } else {
-                    // soft wrap -> move to next visual line
-                    const nextIdx = Math.min(i + 1, totalLines - 1);
-                    return {
-                        current: lineMetrics[nextIdx],
-                        above: line,
-                        below: nextIdx + 1 < totalLines ? lineMetrics[nextIdx + 1] : null,
-                    };
+                    above: !isFirstLine ? lineMetrics[index - 1] : null,
+                    below: !isLastLine ? lineMetrics[index + 1] : null
                 }
             }
+
         }
 
-        // Cursor beyond last known index -> clamp to last line
         const lastIdx = totalLines - 1;
         return {
             current: lineMetrics[lastIdx],
@@ -212,7 +166,6 @@ class TextCursor {
             below: null,
         };
     }
-
 
     private findBestIndexInLine(
         line: LineMetrics,
@@ -270,9 +223,8 @@ class TextCursor {
 
     private moveCursorUp(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): number {
         const metrics = paragraph.getLineMetrics()
-        const { current, above } = this.findCurrentAboveBelowLine(metrics)
-        console.log(above, 'above', current);
-
+        const { above } = this.findCurrentAboveBelowLine(metrics)
+       
         if (above == null) return this.cursorIndex
 
         const coord = this.calculateCursorRect(text, fontSize, lineHeight, paragraph)
@@ -282,8 +234,7 @@ class TextCursor {
 
     private moveCursorDown(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): number {
         const lines = paragraph.getLineMetrics()
-        const { below, current } = this.findCurrentAboveBelowLine(lines)
-        console.log(below, 'below', current);
+        const { below } = this.findCurrentAboveBelowLine(lines)
 
         if (below == null) return this.cursorIndex
 

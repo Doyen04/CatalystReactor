@@ -158,7 +158,6 @@ class PText extends Shape {
 
         const textColor = Array.isArray(textStyle.textColor) ? textStyle.textColor : canvasKit.parseColorString(textStyle.textColor)
 
-        this.textStyle.textAlign = canvasKit.TextAlign.Left //remove this
         // Create text style
         this.resource.textStyle.color = textColor // Black text
         this.resource.textStyle.fontSize = textStyle.fontSize
@@ -171,7 +170,7 @@ class PText extends Shape {
 
         // Create paragraph style
         this.resource.paragraphStyle.textStyle = this.resource.textStyle
-        this.resource.paragraphStyle.textAlign = canvasKit.TextAlign.Left //replace this
+        this.resource.paragraphStyle.textAlign = textStyle.textAlign //replace this
 
         return { textStyle: this.resource.textStyle, paragraphStyle: this.resource.paragraphStyle }
     }
@@ -237,7 +236,7 @@ class PText extends Shape {
         this.setUpParagraph()
     }
 
-    insertText(char: string, shiftKey: boolean): void {
+    insertText(char: string, shiftKey?: boolean): void {
         if (this.hasSelection) {
             this.deleteSelection()
         }
@@ -253,7 +252,10 @@ class PText extends Shape {
     }
 
     deleteText(direction: 'forward' | 'backward'): void {
-        if (direction === 'backward' && this.cursor.cursorPosIndex > 0) {
+        if (this.hasSelection) {
+            this.deleteSelection()
+        }
+        else if (direction === 'backward' && this.cursor.cursorPosIndex > 0) {
             this.text = this.text.slice(0, this.cursor.cursorPosIndex - 1) + this.text.slice(this.cursor.cursorPosIndex)
             this.cursor.updateCursorPosIndex(-1)
         } else if (direction === 'forward' && this.cursor.cursorPosIndex < this.text.length) {
@@ -362,7 +364,8 @@ class PText extends Shape {
         this.setUpParagraph()
     }
 
-    override cleanUp(): void {
+    override cleanUp(): void {console.log('CLEANUP');
+    
         this.cursor.stopCursorBlink()
         this.diableEditing()
     }
