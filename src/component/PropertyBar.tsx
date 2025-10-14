@@ -16,7 +16,7 @@ function PropertyBar() {
     const { shapeManager } = useCanvasManagerStore()
 
     const handlePropertyChange = (key: string, value: number) => {
-        const { transform, size, style, borderRadius, sides, spikesRatio } = currentShapeProperties
+        const { transform, size, style, borderRadius, sides, spikesRatio,textStyle } = currentShapeProperties
 
         const propertyMap = [
             { prop: transform, name: 'transform' },
@@ -26,6 +26,7 @@ function PropertyBar() {
             { prop: arcSegment, name: 'arcSegment' },
             { prop: sides, name: 'sides' },
             { prop: spikesRatio, name: 'spikesRatio' },
+            { prop: textStyle, name: 'textStyle' as keyof Properties },
         ]
 
         for (const { prop, name } of propertyMap) {

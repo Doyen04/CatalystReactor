@@ -1,5 +1,5 @@
 import type Handle from '@lib/modifiers/Handles'
-import type { Canvas, Image as CanvasKitImage } from 'canvaskit-wasm'
+import type { Canvas, Image as CanvasKitImage, Color } from 'canvaskit-wasm'
 import { ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, ArrowUpLeft, ArrowUpRight, Circle } from 'lucide-react'
 
 export const PRESET_LINEAR_GRADIENTS = [
@@ -309,6 +309,17 @@ export interface SpikesRatio {
     ratio: number
 }
 
+export interface PTextStyle {
+    textColor: string | number[]
+    fontSize: number
+    fontWeight: number
+    fontFamily: string[]
+    lineHeight: number
+    textAlign: 'left' | 'right' | 'center' | 'justify'
+    textSpacing?: number
+    backgroundColor?: Color | null
+}
+
 export interface Properties {
     transform: Transform
     size: Size
@@ -317,6 +328,7 @@ export interface Properties {
     arcSegment?: ArcSegment
     sides?: Sides
     spikesRatio?: SpikesRatio
+    textStyle?: PTextStyle
 }
 
 export interface BoundingRect {

@@ -1,25 +1,14 @@
 import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
-import { Canvas, Color, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
+import { Canvas, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
 import Handle from '@lib/modifiers/Handles'
-import { Coord, Properties, Size } from '@lib/types/shapes'
+import { Coord, Properties, PTextStyle, Size } from '@lib/types/shapes'
 
 //TODO:optimise this guy  make sure resources is done in canvaskitresources and all font is loaded there then use style to target it
 
-interface TextStyleProp {
-    textColor: string | number[]
-    fontSize: number
-    fontWeight: number
-    fontFamily: string[]
-    lineHeight: number
-    textAlign: any | null
-    textSpacing?: number
-    backgroundColor?: Color | null
-}
-
 class PText extends Shape {
     private text: string = ''
-    private textStyle: TextStyleProp
+    private textStyle: PTextStyle
     private dimension: Size
     private TWidth: number = 0
     private THeight: number = 0
@@ -55,7 +44,7 @@ class PText extends Shape {
         return this.isEdit
     }
 
-    get getTextStyle(): TextStyleProp {
+    get getTextStyle(): PTextStyle {
         return { ...this.textStyle }
     }
 
@@ -98,12 +87,20 @@ class PText extends Shape {
             transform: this.transform,
             size: this.dimension,
             style: this.style,
+            textStyle: this.textStyle,
         }
     }
     setProperties(prop: Properties): void {
         this.transform = prop.transform
         this.dimension = prop.size
         this.style = prop.style
+        this.textStyle = prop.textStyle
+        
+        this.setUpParagraph()
+        this.calculateTextDim()
+        this.calculateBoundingRect()
+        this.cursor.setCoord(this.transform.x, this.transform.y)
+        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
     }
     setFontSize(size: number): void {
         this.textStyle.fontSize = size
@@ -142,22 +139,27 @@ class PText extends Shape {
         }
         this.textStyle = {
             textColor: [0, 0, 0, 1],
-            textAlign: this.resource.canvasKit.TextAlign.Left,
+            textAlign: 'left',
             fontSize: 18,
             fontWeight: 500,
-            fontFamily: ['Inter', 'sans-serif'],
+            fontFamily: ['Antonio', 'sans-serif'],
             lineHeight: 1.2,
             backgroundColor: this.resource.canvasKit.TRANSPARENT,
         }
     }
 
-    private setStyles(textStyle: TextStyleProp): { textStyle: TextStyle, paragraphStyle: ParagraphStyle } {
+    private setStyles(textStyle: PTextStyle): { textStyle: TextStyle, paragraphStyle: ParagraphStyle } {
         const canvasKit = this.resource.canvasKit
 
         if (!canvasKit) return
 
         const textColor = Array.isArray(textStyle.textColor) ? textStyle.textColor : canvasKit.parseColorString(textStyle.textColor)
-
+        const textAlign = {
+            left: canvasKit.TextAlign.Left,
+            right: canvasKit.TextAlign.Right,
+            center: canvasKit.TextAlign.Center,
+            justify: canvasKit.TextAlign.Justify,
+        }
         // Create text style
         this.resource.textStyle.color = textColor // Black text
         this.resource.textStyle.fontSize = textStyle.fontSize
@@ -170,7 +172,7 @@ class PText extends Shape {
 
         // Create paragraph style
         this.resource.paragraphStyle.textStyle = this.resource.textStyle
-        this.resource.paragraphStyle.textAlign = textStyle.textAlign //replace this
+        this.resource.paragraphStyle.textAlign = textAlign[textStyle.textAlign] //replace this
 
         return { textStyle: this.resource.textStyle, paragraphStyle: this.resource.paragraphStyle }
     }
@@ -302,6 +304,7 @@ class PText extends Shape {
         this.builder.reset()
 
         if (!this.hasSelection) {
+        
             this.builder.pushStyle(textStyle)
             this.builder.addText(this.text)
             this.builder.pop()

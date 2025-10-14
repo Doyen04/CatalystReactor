@@ -1,10 +1,13 @@
 // CanvasKitResources.ts
 
 import type { CanvasKit, Paint, ParagraphStyle, TextStyle, FontMgr, Path } from 'canvaskit-wasm'
+import fontMap from '@/lib/core/fonts.json'
 
 export class CanvasKitResources {
     private static instance: CanvasKitResources
     private static cnvsFontData: ArrayBuffer[] = []
+    private static fontsLoaded: boolean = false
+    private static fontLoadPromise: Promise<void> | null = null
 
     private cnvsPaint: Paint
     private cnvsStrokePaint: Paint
@@ -13,6 +16,7 @@ export class CanvasKitResources {
     private cnvsFontMgr: FontMgr | null
     private cnvsCanvasKit: CanvasKit
     private cnvsPath: Path
+    
 
     private constructor(canvasKit: CanvasKit) {
         this.cnvsCanvasKit = canvasKit
@@ -82,6 +86,7 @@ export class CanvasKitResources {
         })
 
         if (CanvasKitResources.cnvsFontData.length > 0) {
+            console.log(CanvasKitResources.cnvsFontData.length, 'fonts loaded');
             this.cnvsFontMgr = this.cnvsCanvasKit.FontMgr.FromData(...CanvasKitResources.cnvsFontData)
         } else {
             console.log('no fonts')
@@ -89,16 +94,50 @@ export class CanvasKitResources {
     }
 
     static async loadInterFont() {
-        if (this.cnvsFontData.length != 0) return
+        if (this.fontsLoaded || this.cnvsFontData.length > 0) return
+        // If a load is in-flight, await it
+        if (this.fontLoadPromise) {
+            await this.fontLoadPromise
+            return
+        }
 
-        const loadFont = await Promise.all([
-            fetch('/fonts/Inter-VariableFont_opsz,wght.ttf'),
-            fetch('/fonts/Inter-Italic-VariableFont_opsz,wght.ttf'),
-        ])
+        this.fontLoadPromise = (async () => {
+            const families = Object.keys(fontMap)
+            console.log('loading fonts', families,)
 
-        const [normalData, italicData] = await Promise.all([loadFont[0].arrayBuffer(), loadFont[1].arrayBuffer()])
+            const SecondFont = []
+            for (const family of families) {
+                const urls = fontMap[family]
+                if (urls) {
+                    const fontPromises = urls.map(url => fetch(url).then(res => {
+                        if (!res.ok) throw new Error(`Failed to load font: ${url}`);
+                        return res.arrayBuffer();
+                    }))
+                    SecondFont.push(...fontPromises)
+                }
+            }
+            const fontResults = await Promise.allSettled(SecondFont)
 
-        CanvasKitResources.cnvsFontData = [normalData, italicData]
+            const fonts = fontResults.filter(result => result.status === 'fulfilled')
+                .map(result => result.value);
+            console.log(fonts.length, 'additional fonts loaded');
+
+
+            const loadFont = await Promise.all([
+                fetch('/fonts/Inter-VariableFont_opsz,wght.ttf'),
+                fetch('/fonts/Inter-Italic-VariableFont_opsz,wght.ttf'),
+            ])
+
+            const [normalData, italicData] = await Promise.all([loadFont[0].arrayBuffer(), loadFont[1].arrayBuffer()])
+
+            CanvasKitResources.cnvsFontData = [normalData, italicData, ...fonts]
+            CanvasKitResources.fontsLoaded = true
+        })()
+        try {
+            await CanvasKitResources.fontLoadPromise
+        } finally {
+            CanvasKitResources.fontLoadPromise = null
+        }
         // Create a new FontMgr instance
     }
 
