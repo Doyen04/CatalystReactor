@@ -192,22 +192,6 @@ class Oval extends Shape {
         return rad * (180 / Math.PI)
     }
 
-    // checkCrossing(prevAngle, currAngle) {
-    //     // Normalize angles
-    //     const prev = normalizeAngle(prevAngle)
-    //     const curr = normalizeAngle(currAngle)
-    //     const bound = normalizeAngle(this.arcSegment.startAngle)
-    //     const diff = curr - prev
-    //     const diffBound = curr - bound
-
-    //     const diffDeg = this.toDegree(diff - diffBound)
-
-    //     if (diffDeg == 0) {
-    //         if (curr < Math.PI) this.startCrossed = true //use big arc
-    //         if (curr > Math.PI) this.startCrossed = true //normal
-    //     }
-    // }
-
     override calculateBoundingRect(): void {
         this.boundingRect = {
             top: 0,

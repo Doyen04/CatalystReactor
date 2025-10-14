@@ -2,7 +2,7 @@ import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
 import { Canvas, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
 import Handle from '@lib/modifiers/Handles'
-import { Coord, Properties, PTextStyle, Size } from '@lib/types/shapes'
+import { Coord, Properties, PTextStyle, Size, SolidFill } from '@lib/types/shapes'
 
 //TODO:optimise this guy  make sure resources is done in canvaskitresources and all font is loaded there then use style to target it
 
@@ -42,10 +42,6 @@ class PText extends Shape {
     }
     canEdit(): boolean {
         return this.isEdit
-    }
-
-    get getTextStyle(): PTextStyle {
-        return { ...this.textStyle }
     }
 
     getText(): string {
@@ -95,7 +91,7 @@ class PText extends Shape {
         this.dimension = prop.size
         this.style = prop.style
         this.textStyle = prop.textStyle
-        
+
         this.setUpParagraph()
         this.calculateTextDim()
         this.calculateBoundingRect()
@@ -110,7 +106,7 @@ class PText extends Shape {
     }
 
     setFontFamily(fontFamily: string): void {
-        this.textStyle.fontFamily.unshift(fontFamily)
+        this.textStyle.fontFamilies.unshift(fontFamily)
 
         //work on this
         this.calculateBoundingRect() //i tink it is not comp
@@ -138,22 +134,21 @@ class PText extends Shape {
             console.log('no canvas kit resources')
         }
         this.textStyle = {
-            textColor: [0, 0, 0, 1],
+            textFill: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
             textAlign: 'left',
             fontSize: 18,
             fontWeight: 500,
-            fontFamily: ['Antonio', 'sans-serif'],
+            fontFamilies: ['Antonio', 'sans-serif'],
             lineHeight: 1.2,
-            backgroundColor: this.resource.canvasKit.TRANSPARENT,
+            backgroundColor: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
         }
     }
 
-    private setStyles(textStyle: PTextStyle): { textStyle: TextStyle, paragraphStyle: ParagraphStyle } {
+    private getParagraphStyle(): ParagraphStyle {
         const canvasKit = this.resource.canvasKit
 
         if (!canvasKit) return
 
-        const textColor = Array.isArray(textStyle.textColor) ? textStyle.textColor : canvasKit.parseColorString(textStyle.textColor)
         const textAlign = {
             left: canvasKit.TextAlign.Left,
             right: canvasKit.TextAlign.Right,
@@ -161,20 +156,38 @@ class PText extends Shape {
             justify: canvasKit.TextAlign.Justify,
         }
         // Create text style
-        this.resource.textStyle.color = textColor // Black text
-        this.resource.textStyle.fontSize = textStyle.fontSize
-        this.resource.textStyle.fontFamilies = textStyle.fontFamily
-        this.resource.textStyle.backgroundColor = textStyle.backgroundColor
+        this.resource.textStyle.color = [0, 0, 0, 1] // Black text
+        this.resource.textStyle.fontSize = 12
+        this.resource.textStyle.fontFamilies = ['Antonio', 'sans-serif']
+        this.resource.textStyle.backgroundColor = [0, 0, 0, 0]
         this.resource.textStyle.fontVariations = [
-            { axis: 'wght', value: textStyle.fontWeight },
-            { axis: 'opsz', value: textStyle.fontSize },
+            { axis: 'wght', value: 400 },
+            { axis: 'opsz', value: 12 },
         ]
 
         // Create paragraph style
         this.resource.paragraphStyle.textStyle = this.resource.textStyle
-        this.resource.paragraphStyle.textAlign = textAlign[textStyle.textAlign] //replace this
+        this.resource.paragraphStyle.textAlign = textAlign.left //replace this
 
-        return { textStyle: this.resource.textStyle, paragraphStyle: this.resource.paragraphStyle }
+        return this.resource.paragraphStyle
+    }
+
+    private getTextStyleFromSpan(textStyle: PTextStyle): TextStyle {
+        const canvasKit = this.resource.canvasKit
+        if (!canvasKit) return
+        const textFill = textStyle.textFill.color as SolidFill
+        const backgroundColor = textStyle.backgroundColor.color as SolidFill
+
+        const value = Array.isArray(textFill.color) ? textFill.color : this.resource.canvasKit.parseColorString(textFill.color)
+        const backgroundValue = Array.isArray(backgroundColor.color) ? backgroundColor.color : this.resource.canvasKit.parseColorString(backgroundColor.color)
+
+        this.resource.textStyle.color = value
+        this.resource.textStyle.fontSize = textStyle.fontSize
+        this.resource.textStyle.fontFamilies = textStyle.fontFamilies
+        this.resource.textStyle.backgroundColor = backgroundValue
+        this.resource.textStyle.fontVariations = textStyle.fontVariations
+
+        return this.resource.textStyle
     }
 
     override moveShape(mx: number, my: number): void {
@@ -290,7 +303,7 @@ class PText extends Shape {
 
             return
         }
-        const { paragraphStyle } = this.setStyles(this.textStyle)
+        const paragraphStyle = this.getParagraphStyle()
         this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.resource.fontMgr)
     }
 
@@ -299,12 +312,12 @@ class PText extends Shape {
             console.log('no resources amd builder')
             return
         }
-        const { textStyle } = this.setStyles(this.textStyle)
+        const textStyle = this.getTextStyleFromSpan(this.textStyle)
 
         this.builder.reset()
 
         if (!this.hasSelection) {
-        
+
             this.builder.pushStyle(textStyle)
             this.builder.addText(this.text)
             this.builder.pop()
@@ -317,17 +330,16 @@ class PText extends Shape {
                 this.builder.pop()
             }
             if (start < end) {
-                const selectionStyle = this.getTextStyle
+                const selectionStyle = this.getTextStyleFromSpan(this.textStyle)
+
                 selectionStyle.backgroundColor = this.resource.canvasKit.Color(0, 0, 255)
 
-                const { textStyle } = this.setStyles(selectionStyle)
-
-                this.builder.pushStyle(textStyle)
+                this.builder.pushStyle(selectionStyle)
                 this.builder.addText(this.text.substring(start, end))
                 this.builder.pop()
             }
             if (end < this.text.length) {
-                const { textStyle } = this.setStyles(this.textStyle)
+                const textStyle = this.getTextStyleFromSpan(this.textStyle)
                 this.builder.pushStyle(textStyle)
                 this.builder.addText(this.text.substring(end))
                 this.builder.pop()
@@ -367,8 +379,9 @@ class PText extends Shape {
         this.setUpParagraph()
     }
 
-    override cleanUp(): void {console.log('CLEANUP');
-    
+    override cleanUp(): void {
+        console.log('CLEANUP');
+
         this.cursor.stopCursorBlink()
         this.diableEditing()
     }

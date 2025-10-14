@@ -1,5 +1,4 @@
-import type Handle from '@lib/modifiers/Handles'
-import type { Canvas, Image as CanvasKitImage, Color } from 'canvaskit-wasm'
+import type { Image as CanvasKitImage, TextFontVariations } from 'canvaskit-wasm'
 import { ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, ArrowUpLeft, ArrowUpRight, Circle } from 'lucide-react'
 
 export const PRESET_LINEAR_GRADIENTS = [
@@ -267,23 +266,24 @@ export interface SolidFill {
     color: string | number[]
 }
 
+export type PaintStyle = SolidFill | GradientFill | ImageFill | PatternFill
+
 export interface Stroke {
-    fill: Fill
+    color: PaintStyle
+    opacity: number
     width: number
     lineCap?: 'butt' | 'round' | 'square'
     lineJoin?: 'miter' | 'round' | 'bevel'
     dashArray?: number[]
 }
 
-export type FillStyle = SolidFill | GradientFill | ImageFill | PatternFill
-
-export interface Fill {
-    color: FillStyle
+export interface Paint {
+    color: PaintStyle
     opacity: number
 }
 
 export interface Style {
-    fill: Fill
+    fill: Paint
     stroke: Stroke
 }
 
@@ -310,14 +310,16 @@ export interface SpikesRatio {
 }
 
 export interface PTextStyle {
-    textColor: string | number[]
+    textFill: Paint;
+    textStroke?: Stroke;
     fontSize: number
     fontWeight: number
-    fontFamily: string[]
+    fontFamilies: string[]
     lineHeight: number
     textAlign: 'left' | 'right' | 'center' | 'justify'
     textSpacing?: number
-    backgroundColor?: Color | null
+    backgroundColor?: Paint
+    fontVariations?: TextFontVariations[]
 }
 
 export interface Properties {
@@ -366,67 +368,3 @@ export type ArcHandleState = {
 }
 
 export type HandleType = 'size' | 'angle' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio'
-
-export interface IShape {
-    id?: string
-    type?: ShapeType
-
-    getShapeType(): ShapeType
-    getLocalBoundingRect(): BoundingRect
-    getRotationAnchorPoint(): Coord
-    createCanvasKitImage(image: ArrayBuffer | null): void
-    // Methods that all shapes should implement
-    getModifierHandles(): Handle[]
-    getSizeModifierHandlesPos(handle: Handle): Coord
-    getModifierHandlesPos(handle: Handle): Coord
-
-    drawDefault(): void
-    getRotationAngle(): number
-    getScale(): { x: number; y: number }
-    getProperties(): Properties
-    setProperties(prop: Properties): void
-    setScale(x: number, y: number): void
-    pointInShape(x: number, y: number): boolean
-    moveShape(mx: number, my: number): void
-    calculateBoundingRect(): void
-    setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void
-    draw(canvas: Canvas): void
-    setDim(width: number, height: number): void
-    getDim(): { width: number; height: number }
-    getCoord(): { x: number; y: number }
-    setAngle(angle: number): void
-    setCoord(x: number, y: number): void
-    setAnchorPoint(anchor: Coord): void
-    setHovered?(B: boolean): void
-    setRadius?(r: number): void
-    destroy?(): void
-    isArc?(): boolean
-    getArcAngles?(): { start: number; end: number }
-    setRatio?(r: number): void
-    getCenterCoord?(): { x: number; y: number }
-    setBorderRadius?(r: number, pos: HandlePos): void
-    diableEditing?(): void
-    startEditing?(): void
-    setArc?(startAngle: number, endAngle: number): void
-    canEdit?(): boolean
-    selectAll?(): void
-    insertText?(char: string, shiftKey: boolean): void
-    setCursorPosFromCoord?(x: number, y: number): void
-    deleteText?(direction: 'forward' | 'backward'): void
-    moveCursor?(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean): void
-    setVertexCount?(num: number): void
-    getVertexCount?(): number
-    getVertex?(sides: number, index: number, startAngle?: number): { x: number; y: number }
-    setStrokeColor(stroke: string | number[]): void
-    setFill(stroke: string | number[]): void
-    cleanUp(): void
-}
-
-export interface IShapeModifier {
-    setShape(shape: IShape): void
-    getShape(): IShape | null
-    hasShape(): boolean
-    draw(canvas: Canvas): void
-    selectModifier(x: number, y: number): void
-    setIsHovered(bool: boolean): void
-}

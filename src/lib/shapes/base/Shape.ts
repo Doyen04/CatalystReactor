@@ -7,7 +7,7 @@ import {
     BoundingRect,
     Coord,
     CornerPos,
-    FillStyle,
+    PaintStyle,
     ImageFill,
     LinearGradient,
     Properties,
@@ -58,7 +58,7 @@ abstract class Shape {
         const stroke: SolidFill = { type: 'solid', color: strokeColor }
         this.style = {
             fill: { color: fill, opacity: 1 },
-            stroke: { fill: { color: stroke, opacity: 1 }, width: strokeWidth },
+            stroke: { color: stroke, opacity: 1 , width: strokeWidth },
         }
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 }
         this.isHover = false
@@ -293,7 +293,7 @@ abstract class Shape {
     }
 
     //better management for canvaskit resources
-    private setPaint(fill: FillStyle): Color | Shader | null {
+    private setPaint(fill: PaintStyle): Color | Shader | null {
         if (!this.resource) return
         switch (fill.type) {
             case 'solid': {
@@ -358,7 +358,7 @@ abstract class Shape {
 
     protected initPaints(): { stroke: Paint; fill: Paint } {
         const fillShader = this.setPaint(this.style.fill.color)
-        const strokeShader = this.setPaint(this.style.stroke.fill.color)
+        const strokeShader = this.setPaint(this.style.stroke.color)
 
         if (this.isColor(fillShader)) {
             this.resource.paint.setColor(fillShader as Color)
@@ -372,7 +372,7 @@ abstract class Shape {
         } else if (this.isShader(strokeShader)) {
             this.resource.strokePaint.setShader(strokeShader as Shader)
         }
-        this.resource.strokePaint.setAlphaf(this.style.stroke.fill.opacity)
+        this.resource.strokePaint.setAlphaf(this.style.stroke.opacity)
 
         this.resource.strokePaint.setStrokeWidth(this.style.stroke.width)
         return { stroke: this.resource.strokePaint, fill: this.resource.paint }
