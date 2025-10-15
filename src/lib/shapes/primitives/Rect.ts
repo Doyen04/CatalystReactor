@@ -193,7 +193,9 @@ class Rectangle extends SimpleRect {
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        const { fill, stroke } = this.initPaints(this.style.fill.color, this.style.stroke.color)
+        const fill = this.paintManager.initFillPaint(this.style.fill, this.getDim())
+        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim(), this.style.stroke.width)
+
 
         const rect = this.resource.canvasKit.XYWHRect(0, 0, this.dimension.width, this.dimension.height)
 
@@ -212,7 +214,7 @@ class Rectangle extends SimpleRect {
             canvas.drawRect(rect, stroke)
         }
 
-        this.resetPaint()
+        this.paintManager.resetPaint()
         if (this.isHover) {
             this.drawHoverEffect(canvas, rect)
         }
@@ -275,8 +277,8 @@ class Rectangle extends SimpleRect {
         return x >= 0 && x <= this.dimension.width && y >= 0 && y <= this.dimension.height
     }
 
-    override cleanUp(): void {}
-    override destroy(): void {}
+    override cleanUp(): void { }
+    override destroy(): void { }
 }
 
 export default Rectangle

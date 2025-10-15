@@ -9,7 +9,6 @@ import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import { ToolType } from '@lib/tools/toolTypes'
 import PaintManager from './PaintManager'
 import container from './DependencyManager'
-// import ModifierManager from './ModifierManager';
 
 class CanvasManager {
     inputManager: InputManager
@@ -27,7 +26,7 @@ class CanvasManager {
         // this.skCnvs = null
         this.paintManager = new PaintManager()
         container.register('paintManager', this.paintManager)
-        
+
         this.shapeModifier = new ShapeModifier()
         container.register('shapeModifier', this.shapeModifier)
 

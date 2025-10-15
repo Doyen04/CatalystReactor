@@ -212,7 +212,8 @@ class Oval extends Shape {
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        const { fill, stroke } = this.initPaints(this.style.fill.color, this.style.stroke.color)
+        const fill = this.paintManager.initFillPaint(this.style.fill, this.getDim())
+        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim(), this.style.stroke.width)
         const { width, height } = this.getDim()
 
         const rect = this.resource.canvasKit.XYWHRect(0, 0, width, height)
@@ -228,7 +229,7 @@ class Oval extends Shape {
             canvas.drawOval(rect, stroke)
         }
 
-        this.resetPaint()
+        this.paintManager.resetPaint()
         if (this.isHover) {
             this.drawHoverEffect(canvas, rect)
         }

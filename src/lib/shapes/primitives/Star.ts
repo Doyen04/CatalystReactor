@@ -213,7 +213,8 @@ class Star extends Shape {
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        const { fill, stroke } = this.initPaints(this.style.fill.color, this.style.stroke.color)
+        const fill = this.paintManager.initFillPaint(this.style.fill, this.getDim())
+        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim(), this.style.stroke.width)
 
         const path = new this.resource.canvasKit.Path()
         if (this.bRadius > 0) {
@@ -227,7 +228,7 @@ class Star extends Shape {
 
         path.delete() // Clean up path object
 
-        this.resetPaint()
+        this.paintManager.resetPaint()
         if (this.isHover) {
             this.drawHoverEffect(canvas)
         }
@@ -324,8 +325,8 @@ class Star extends Shape {
 
         return inside
     }
-    override cleanUp(): void {}
-    override destroy(): void {}
+    override cleanUp(): void { }
+    override destroy(): void { }
 }
 
 export default Star

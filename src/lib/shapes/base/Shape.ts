@@ -7,19 +7,13 @@ import {
     BoundingRect,
     Coord,
     CornerPos,
-    PaintStyle,
-    ImageFill,
-    LinearGradient,
     Properties,
-    RadialGradient,
-    ScaleMode,
     ShapeType,
-    Size,
     SolidFill,
     Style,
     Transform,
 } from '@lib/types/shapes'
-import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from 'canvaskit-wasm'
+import type { Canvas } from 'canvaskit-wasm'
 import PaintManager from '@lib/core/PaintManager'
 import container from '@lib/core/DependencyManager'
 
@@ -241,14 +235,6 @@ abstract class Shape {
         this.setCoord(this.transform.x - defSize / 2, this.transform.y - defSize / 2)
     }
 
-    protected isShader(obj): boolean {
-        return obj != null && typeof obj === 'object' && obj.constructor?.name === 'Shader'
-    }
-
-    protected isColor(fill): boolean {
-        return fill instanceof Float32Array
-    }
-
     getRotationAngle(): number {
         return this.transform.rotation || 0
     }
@@ -297,170 +283,7 @@ abstract class Shape {
     }
 
     //better management for canvaskit resources
-    private setPaint(fill: PaintStyle): Color | Shader | null {
-        if (!this.resource) return
-        switch (fill.type) {
-            case 'solid': {
-                const solid = fill as SolidFill
-                const value = Array.isArray(solid.color) ? new Float32Array(solid.color) : this.resource.canvasKit.parseColorString(solid.color)
-                return value
-            }
-            case 'linear': {
-                const gradient = fill as LinearGradient
-                const size = this.getDim()
 
-                const x1 = (gradient.x1 / 100) * size.width
-                const y1 = (gradient.y1 / 100) * size.height
-                const x2 = (gradient.x2 / 100) * size.width
-                const y2 = (gradient.y2 / 100) * size.height
-
-                const shader = this.resource.canvasKit.Shader.MakeLinearGradient(
-                    [x1, y1],
-                    [x2, y2],
-                    gradient.stops.map(stop => this.resource.canvasKit.parseColorString(stop.color)),
-                    gradient.stops.map(stop => stop.offset),
-                    this.resource.canvasKit.TileMode.Clamp
-                )
-                return shader
-            }
-            case 'radial': {
-                const gradient = fill as RadialGradient
-                const size = this.getDim()
-
-                // Calculate center point
-                const centerX = (gradient.cx / 100) * size.width
-                const centerY = (gradient.cy / 100) * size.height
-
-                // Calculate radius as percentage of the larger dimension
-                const maxDimension = Math.max(size.width, size.height)
-                const radius = (gradient.radius / 100) * maxDimension
-
-                const shader = this.resource.canvasKit.Shader.MakeRadialGradient(
-                    [centerX, centerY],
-                    radius,
-                    gradient.stops.map(stop => this.resource.canvasKit.parseColorString(stop.color)),
-                    gradient.stops.map(stop => stop.offset),
-                    this.resource.canvasKit.TileMode.Clamp
-                )
-                return shader
-            }
-            case 'image': {
-                const imageFill = fill as ImageFill
-                if (!imageFill.cnvsImage && imageFill.imageData) {
-                    const image = this.createCanvasKitImage(imageFill.imageData)
-                    imageFill.cnvsImage = image
-                }
-                const size = this.getDim()
-                const shader = this.makeImageShader(size, imageFill.cnvsImage, imageFill.scaleMode)
-                return shader
-            }
-            case 'pattern':
-                // Similar to image but with pattern-specific handling
-                break
-            default:
-                console.warn(`Unknown fill type: ${fill}`);
-                return this.resource.canvasKit.parseColorString('#000')
-        }
-    }
-
-    protected initPaints(fill: PaintStyle, stroke: PaintStyle): { stroke: Paint; fill: Paint } {
-        const fillShader = this.setPaint(fill)
-        const strokeShader = this.setPaint(stroke)
-
-        if (this.isColor(fillShader)) {
-            this.paintManager.paint.setColor(fillShader as Color)
-        } else if (this.isShader(fillShader)) {
-            this.paintManager.paint.setShader(fillShader as Shader)
-        }
-        this.paintManager.paint.setAlphaf(this.style.fill.opacity)
-
-        if (this.isColor(strokeShader)) {
-            this.paintManager.stroke.setColor(strokeShader as Color)
-        } else if (this.isShader(strokeShader)) {
-            this.paintManager.stroke.setShader(strokeShader as Shader)
-        }
-        this.paintManager.stroke.setAlphaf(this.style.stroke.opacity)
-
-        this.paintManager.stroke.setStrokeWidth(this.style.stroke.width)
-        return { stroke: this.paintManager.stroke, fill: this.paintManager.paint }
-    }
-
-    protected resetPaint() {
-        this.paintManager.paint.setShader(null)
-        this.paintManager.stroke.setShader(null)
-
-        this.paintManager.paint.setAlphaf(1.0)
-        this.paintManager.stroke.setAlphaf(1.0)
-    }
-
-    makeImageShader(dim: Size, canvasKitImage: CanvasKitImage, scaleMode: ScaleMode = 'fill'): Shader {
-        if (!this.resource?.canvasKit) return null
-        const ck = this.resource.canvasKit
-
-        const imageWidth = canvasKitImage.width()
-        const imageHeight = canvasKitImage.height()
-
-        let scale: number
-        let tileMode = ck.TileMode.Clamp
-        let offsetX = 0
-        let offsetY = 0
-        let scaledWidth = 0
-        let scaledHeight = 0
-
-        switch (scaleMode) {
-            case 'fill':
-                scale = Math.max(dim.width / imageWidth, dim.height / imageHeight)
-                scaledWidth = imageWidth * scale
-                scaledHeight = imageHeight * scale
-
-                offsetX = (dim.width - scaledWidth) / 2
-                offsetY = (dim.height - scaledHeight) / 2
-                break
-            case 'fit':
-                scale = Math.min(dim.width / imageWidth, dim.height / imageHeight)
-                scaledWidth = imageWidth * scale
-                scaledHeight = imageHeight * scale
-
-                offsetX = (dim.width - scaledWidth) / 2
-                offsetY = (dim.height - scaledHeight) / 2
-                tileMode = ck.TileMode.Decal
-                break
-            case 'tile':
-                scale = 1
-                tileMode = ck.TileMode.Repeat
-                break
-            case 'stretch':
-                return canvasKitImage.makeShaderOptions(
-                    ck.TileMode.Clamp,
-                    ck.TileMode.Clamp,
-                    ck.FilterMode.Linear,
-                    ck.MipmapMode.None,
-                    ck.Matrix.scaled(dim.width / imageWidth, dim.height / imageHeight)
-                )
-            default:
-                scale = Math.max(dim.width / imageWidth, dim.height / imageHeight)
-        }
-
-        // Calculate centering offset for fill/fit modes
-        const scaleX = scale
-        const scaleY = scale
-        console.log(scaleX, scaleY, offsetX, offsetY, 'scale and offset values');
-
-        const finalMatrix = ck.Matrix.multiply(ck.Matrix.translated(offsetX, offsetY), ck.Matrix.scaled(scaleX, scaleY))
-
-        return canvasKitImage.makeShaderOptions(tileMode, tileMode, ck.FilterMode.Linear, ck.MipmapMode.Linear, finalMatrix)
-    }
-
-    createCanvasKitImage(backgroundImage: ArrayBuffer): CanvasKitImage | null {
-        if (!backgroundImage || !this.resource?.canvasKit) return null
-
-        const cnvsimg = this.resource.canvasKit.MakeImageFromEncoded(backgroundImage)
-        if (!cnvsimg) {
-            console.error('Failed to create CanvasKit image from encoded data')
-            return
-        }
-        return cnvsimg
-    }
     abstract destroy(): void
 }
 export default Shape
