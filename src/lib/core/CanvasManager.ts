@@ -25,21 +25,26 @@ class CanvasManager {
 
     constructor(canvas: HTMLCanvasElement) {
         // this.skCnvs = null
-        this.shapeModifier = new ShapeModifier()
         this.paintManager = new PaintManager()
-        this.shapeManager = new ShapeManager()
-        this.sceneManager = new SceneManager()
-        this.renderer = new Renderer(canvas)
-        this.inputManager = new InputManager(canvas)
-        this.toolManager = new ToolManager(canvas)
-
-        container.register('inputManager', this.inputManager)
-        container.register('toolManager', this.toolManager)
-        container.register('sceneManager', this.sceneManager)
-        container.register('shapeManager', this.shapeManager)
         container.register('paintManager', this.paintManager)
+        
+        this.shapeModifier = new ShapeModifier()
         container.register('shapeModifier', this.shapeModifier)
+
+        this.shapeManager = new ShapeManager()
+        container.register('shapeManager', this.shapeManager)
+
+        this.sceneManager = new SceneManager()
+        container.register('sceneManager', this.sceneManager)
+
+        this.renderer = new Renderer(canvas)
         container.register('renderer', this.renderer)
+
+        this.inputManager = new InputManager(canvas)
+        container.register('inputManager', this.inputManager)
+
+        this.toolManager = new ToolManager(canvas)
+        container.register('toolManager', this.toolManager)
         // Input handling state
         this.undoStack = []
         this.redoStack = []

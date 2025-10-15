@@ -268,19 +268,18 @@ export interface SolidFill {
 
 export type PaintStyle = SolidFill | GradientFill | ImageFill | PatternFill
 
-export interface Stroke {
+export interface ColorProps  {
     color: PaintStyle
     opacity: number
+}
+
+export interface Stroke extends ColorProps {
     width: number
     lineCap?: 'butt' | 'round' | 'square'
     lineJoin?: 'miter' | 'round' | 'bevel'
     dashArray?: number[]
 }
-
-export interface Fill {
-    color: PaintStyle
-    opacity: number
-}
+export type Fill = ColorProps
 
 export interface Style {
     fill: Fill

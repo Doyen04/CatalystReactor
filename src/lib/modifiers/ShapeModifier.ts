@@ -14,6 +14,8 @@ import {
     updateShapeArc,
     updateShapeVertices,
 } from './modifierUtility'
+import container from '@lib/core/DependencyManager'
+import PaintManager from '@lib/core/PaintManager'
 
 // const { UpdateModifierHandlesPos } = EventTypes
 
@@ -27,10 +29,12 @@ class ShapeModifier {
     private selectedModifierHandle: Handle | null
     private initialShapeData: ShapeData | null = null
     private font: SText
+    private paintManager:PaintManager
 
     constructor() {
         this.scene = null
         this.strokeColor = '#00f'
+        this.paintManager = container.resolve('paintManager')
         this.strokeWidth = 1
         this.handles = []
         this.isHovered = false
@@ -236,10 +240,10 @@ class ShapeModifier {
 
         const strokeColor = Array.isArray(this.strokeColor) ? this.strokeColor : this.resource.canvasKit.parseColorString(this.strokeColor)
 
-        this.resource.strokePaint.setColor(strokeColor)
-        this.resource.strokePaint.setStrokeWidth(this.strokeWidth)
+        this.paintManager.stroke.setColor(strokeColor)
+        this.paintManager.stroke.setStrokeWidth(this.strokeWidth)
 
-        this.resource.paint.setColor(fillColor)
+        this.paintManager.paint.setColor(fillColor)
     }
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
@@ -298,7 +302,7 @@ class ShapeModifier {
 
         const rect = this.resource.canvasKit.XYWHRect(0, 0, dimen.width, dimen.height)
 
-        canvas.drawRect(rect, this.resource.strokePaint)
+        canvas.drawRect(rect, this.paintManager.stroke)
 
         this.handles.forEach(handle => {
             if (handle.type === 'size') {

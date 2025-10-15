@@ -1,6 +1,6 @@
 import React from 'react'
 import { useSceneStore } from '@hooks/sceneStore'
-import { Fill, Properties } from '@lib/types/shapes'
+import { ColorProps, Properties } from '@lib/types/shapes'
 import Input from '@ui/Input'
 import { useCanvasManagerStore } from '@hooks/useCanvasManager'
 import { Hexagon } from 'lucide-react'
@@ -82,7 +82,7 @@ function PropertyBar() {
         shapeManager?.updateProperty('borderRadius', newBorderRadius)
     }
 
-    const handleColorChange = (key: string, value: Fill) => {
+    const handleColorChange = (key: string, value: ColorProps) => {
         const { style } = currentShapeProperties
         if (!style) return
 
@@ -98,7 +98,8 @@ function PropertyBar() {
                 ...style,
                 stroke: {
                     ...style.stroke,
-                    fill: value,
+                    color: value.color,
+                    opacity: value.opacity,
                 },
             }
         }
@@ -123,8 +124,8 @@ function PropertyBar() {
     const arcSegment = currentShapeProperties?.arcSegment
     const sides = currentShapeProperties?.sides
     const spikesRatio = currentShapeProperties?.spikesRatio
-    const textStyle = currentShapeProperties?.textStyle
-    const fontOptions = Array.from(new Set([...(textStyle?.fontFamily ?? []), ...FONT_FAMILIES]))
+    // const textStyle = currentShapeProperties?.textStyle
+    // const fontOptions = Array.from(new Set([...(textStyle?.fontFamily ?? []), ...FONT_FAMILIES]))
 
     return (
         <div className="propertybar">
@@ -147,7 +148,7 @@ function PropertyBar() {
                 {style && (
                     <Section title="Style">
                         <ColorInput fill={style.fill} onChange={fill => handleColorChange('fill', fill)} />
-                        <ColorInput fill={style.stroke.fill} onChange={strokeColor => handleColorChange('strokeColor', strokeColor)} />
+                        <ColorInput fill={{ color: style.stroke.color, opacity: style.stroke.opacity } as ColorProps} onChange={strokeColor => handleColorChange('strokeColor', strokeColor)} />
                     </Section>
                 )}
 
@@ -236,68 +237,7 @@ function PropertyBar() {
                     </Section>
                 )}
 
-                {textStyle && (
-                    <Section title="Text">
-                        
-                        <Input
-                            type="number"
-                            title="Size"
-                            value={textStyle.fontSize}
-                            onChange={value => handlePropertyChange('fontSize', value)}
-                        />
-                        <Input
-                            type="number"
-                            title="Weight"
-                            value={textStyle.fontWeight}
-                            onChange={value => handlePropertyChange('fontWeight', value)}
-                        />
-                        <Input
-                            type="number"
-                            title="Line H"
-                            value={textStyle.lineHeight}
-                            onChange={value => handlePropertyChange('lineHeight', value)}
-                        />
-                        <Input
-                            type="number"
-                            title="Spacing"
-                            value={textStyle.textSpacing ?? 0}
-                            onChange={value => handlePropertyChange('textSpacing', value)}
-                        />
-                        <div className="flex items-center gap-2">
-                            <label className="text-xs">Font</label>
-                            <select
-                                multiple
-                                className="border rounded px-2 py-1 text-sm"
-                                value={textStyle.fontFamily || []}
-                                onChange={e =>
-                                    handlePropertyChange(
-                                        'fontFamily',
-                                        Array.from(e.target.selectedOptions).map(o => o.value)
-                                    )
-                                }
-                            >
-                                {fontOptions.map(font => (
-                                    <option key={font} value={font} style={{ fontFamily: font }}>
-                                        {font}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <label className="text-xs">Align</label>
-                            <select
-                                className="border rounded px-2 py-1 text-sm"
-                                value={textStyle.textAlign}
-                                onChange={e => handlePropertyChange('textAlign', e.target.value)}
-                            >
-                                <option value="left">left</option>
-                                <option value="center">center</option>
-                                <option value="right">right</option>
-                                <option value="justify">justify</option>
-                            </select>
-                        </div>
-                    </Section>
-                )}
+                
             </div>
         </div>
     )

@@ -11,7 +11,7 @@ class PImage extends Rectangle {
         const stroke: SolidFill = { type: 'solid', color: '#000' }
         this.style = {
             fill: { color: fill, opacity: 1 },
-            stroke: { fill: { color: stroke, opacity: 1 }, width: 1 },
+            stroke: { color: stroke, opacity: 1, width: 1 },
         }
         this.maintainAspectRatio = true
         this.setupImage()
@@ -43,7 +43,7 @@ class PImage extends Rectangle {
         const simplifiedHeight = this.dimension.height / gcd
         return `${simplifiedWidth}:${simplifiedHeight}`
     }
-    override cleanUp(): void {}
+    override cleanUp(): void { }
     override destroy(): void {
         this.aspectRatio = null
         this.maintainAspectRatio = null

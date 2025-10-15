@@ -2,6 +2,8 @@
 import type { Canvas } from 'canvaskit-wasm'
 import { HandlePos, HandleType } from '@lib/types/shapes'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
+import PaintManager from '@lib/core/PaintManager'
+import container from '@lib/core/DependencyManager'
 
 export default class Handle {
     x: number
@@ -10,12 +12,15 @@ export default class Handle {
     type: HandleType
     pos: HandlePos
     stroke: string | number[]
+    private paintManager: PaintManager
+
     fill: string | number[]
     isDragging: boolean = false
     handleRatioFromCenter: number | null = null
     handleRatioAngle: number | null = null
 
     constructor(x: number, y: number, pos: HandlePos, type: HandleType, size = 6) {
+        this.paintManager = container.resolve('paintManager')
         this.x = x
         this.y = y
         this.pos = pos
@@ -73,12 +78,12 @@ export default class Handle {
         const fill = Array.isArray(this.fill) ? this.fill : cnvsKit.canvasKit.parseColorString(this.fill)
         const strokeColor = Array.isArray(this.stroke) ? this.stroke : cnvsKit.canvasKit.parseColorString(this.stroke)
 
-        cnvsKit.paint.setColor(fill)
+        this.paintManager.paint.setColor(fill)
 
-        cnvsKit.strokePaint.setColor(strokeColor)
-        cnvsKit.strokePaint.setStrokeWidth(1)
+        this.paintManager.stroke.setColor(strokeColor)
+        this.paintManager.stroke.setStrokeWidth(1)
 
-        return { fill: this.resource.paint, stroke: this.resource.strokePaint }
+        return { fill: this.paintManager.paint, stroke: this.paintManager.stroke }
     }
 
     drawRect(canvas: Canvas) {
