@@ -12,7 +12,7 @@ class ImageTool extends Tool {
     private imageData: { imageBuffer: ArrayBuffer; name: string }[] | null
     private preloadedImages: Map<string, CanvasKitImage> = new Map()
 
-    constructor( cnvs: HTMLCanvasElement) {
+    constructor(cnvs: HTMLCanvasElement) {
         super(cnvs)
         console.log('image tool')
         this.imageData = null
@@ -79,7 +79,7 @@ class ImageTool extends Tool {
         }
     }
 
-    private getPreloadedImage(): { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer } | null {
+    private getPreloadedImage(): { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer, name: string } | null {
         if (!this.imageData) return null
 
         const [currentImage, ...rest] = this.imageData
@@ -89,7 +89,7 @@ class ImageTool extends Tool {
         }
         this.imageData = rest
         const imag = this.preloadedImages.get(currentImage.name)
-        return imag ? { CanvasKitImage: imag, imageBuffer: currentImage.imageBuffer } : null
+        return imag ? { CanvasKitImage: imag, imageBuffer: currentImage.imageBuffer, name: currentImage.name } : null
     }
 
     isImageDataEmpty() {

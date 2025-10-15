@@ -11,7 +11,7 @@ import type Shape from './Shape'
 import SimpleRect from '../primitives/SimpleRect'
 
 export default class ShapeFactory {
-    static createShape(type: ShapeType, options: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer }): Shape {
+    static createShape(type: ShapeType, options: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer, name:string }): Shape {
         let shape: Shape
 
         switch (type) {

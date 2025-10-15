@@ -130,7 +130,7 @@ export function extractFillValue(fill: PaintStyle): {
         case 'pattern':
             fill = fill as ImageFill
             return {
-                value: fill.imageData,
+                value: fill.imageData.imageBuffer,
             }
 
         case 'linear':

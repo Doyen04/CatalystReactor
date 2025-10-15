@@ -4,10 +4,11 @@ import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 
 class PImage extends Rectangle {
     imageLoaded: boolean
-    constructor(x: number, y: number, imageElem: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer }) {
+    constructor(x: number, y: number, imageElem: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer, name:string }) {
         super(x, y, { type: 'img' })
 
-        const fill: ImageFill = { type: 'image', imageData: imageElem.imageBuffer, cnvsImage: imageElem.CanvasKitImage, scaleMode: 'fit' }
+        this.paintManager.imageCache.set(imageElem.name, imageElem.CanvasKitImage)
+        const fill: ImageFill = { type: 'image', imageData: { imageBuffer: imageElem.imageBuffer, name:imageElem.name },scaleMode: 'fit' }
         const stroke: SolidFill = { type: 'solid', color: '#000' }
         this.style = {
             fill: { color: fill, opacity: 1 },
@@ -19,8 +20,9 @@ class PImage extends Rectangle {
     }
     setupImage() {
         const imageFill = this.style.fill.color as ImageFill
-        if (imageFill.cnvsImage) {
-            const image = imageFill.cnvsImage
+        const cnvsImage = this.paintManager.imageCache.get(imageFill.imageData.name)
+        if (cnvsImage) {
+            const image = cnvsImage
             this.aspectRatio = this.calculateAspectRatio(image.width(), image.height())
         }
     }

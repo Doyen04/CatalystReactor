@@ -249,15 +249,13 @@ export interface RadialGradient {
 
 export interface ImageFill {
     type: 'image'
-    imageData?: ArrayBuffer
-    cnvsImage?: CanvasKitImage
+    imageData?: { imageBuffer: ArrayBuffer, name: string }
     scaleMode: ScaleMode
 }
 
 export interface PatternFill {
     type: 'pattern'
-    imageData?: ArrayBuffer
-    cnvsImage?: CanvasKitImage
+    imageData?: { imageBuffer: ArrayBuffer, name: string }
     repeat: 'repeat' | 'repeat-x' | 'repeat-y' | 'no-repeat'
 }
 
@@ -268,7 +266,7 @@ export interface SolidFill {
 
 export type PaintStyle = SolidFill | GradientFill | ImageFill | PatternFill
 
-export interface ColorProps  {
+export interface ColorProps {
     color: PaintStyle
     opacity: number
 }

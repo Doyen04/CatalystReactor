@@ -1,14 +1,19 @@
-import type { Color, Paint, Shader, Image as CanvasKitImage } from "canvaskit-wasm"
+import type { Color, Shader, Image as CanvasKitImage, Paint } from "canvaskit-wasm"
 import CanvasKitResources from "./CanvasKitResource"
 import { SolidFill, LinearGradient, RadialGradient, ImageFill, Size, ScaleMode, PaintStyle, ColorProps } from "@lib/types/shapes"
+import { PCache } from "./Cache"
 
 class PaintManager {
     private fillPaint: Paint
     private strokePaint: Paint
-    private cache: Map<string, unknown>
+    private paintCache: PCache<Paint>
+    shaderCache: PCache<Shader>
+    imageCache: PCache<CanvasKitImage>
 
     constructor() {
-        this.cache = new Map()
+        this.paintCache = new PCache<Paint>()
+        this.shaderCache = new PCache<Shader>()
+        this.imageCache = new PCache<CanvasKitImage>()
         this.setUpPaint()
     }
 
@@ -16,31 +21,6 @@ class PaintManager {
         const r = CanvasKitResources.getInstance()
         if (!r) console.warn('CanvasKit resource is null')
         return r
-    }
-
-    get(key: string): unknown {
-        if (!this.cache.has(key)) return undefined
-        const value = this.cache.get(key)!
-        this.cache.delete(key)
-        this.cache.set(key, value)
-        return value
-    }
-
-    set(key: string, value: unknown): void {
-        if (this.cache.has(key)) this.cache.delete(key)
-        this.cache.set(key, value)
-    }
-
-    has(key: string): boolean {
-        return this.cache.has(key)
-    }
-
-    delete(key: string): void {
-        this.cache.delete(key)
-    }
-
-    clear(): void {
-        this.cache.clear()
     }
 
     private setUpPaint(): void {
@@ -59,19 +39,14 @@ class PaintManager {
         this.strokePaint.setAntiAlias(true)
     }
 
-    get paint() {
-        return this.fillPaint
-    }
-    get stroke() {
-        return this.strokePaint
+    private round(n: number, p = 3) {
+        const f = Math.pow(10, p)
+        return Math.round(n * f) / f
     }
 
-    protected isShader(obj): boolean {
-        return obj != null && typeof obj === 'object' && obj.constructor?.name === 'Shader'
-    }
-
-    protected isColor(fill): boolean {
-        return fill instanceof Float32Array
+    private normColorKey(input: string | number[]) {
+        if (Array.isArray(input)) return input.join(',')
+        return input.trim().toLowerCase()
     }
 
     setPaint(fill: PaintStyle, size: Size): Color | Shader | null {
@@ -90,6 +65,11 @@ class PaintManager {
                 const x2 = (gradient.x2 / 100) * size.width
                 const y2 = (gradient.y2 / 100) * size.height
 
+                const stops = gradient.stops.map(s => `${this.normColorKey(s.color)}@${this.round(s.offset)}`).join('|')
+                const key = `linear:${x1},${y1},${x2},${y2}|${stops}`
+                const cached = this.shaderCache.get(key)
+                if (cached) return cached
+
                 const shader = this.resource.canvasKit.Shader.MakeLinearGradient(
                     [x1, y1],
                     [x2, y2],
@@ -97,6 +77,8 @@ class PaintManager {
                     gradient.stops.map(stop => stop.offset),
                     this.resource.canvasKit.TileMode.Clamp
                 )
+
+                this.shaderCache.set(key, shader)
                 return shader
             }
             case 'radial': {
@@ -110,6 +92,11 @@ class PaintManager {
                 const maxDimension = Math.max(size.width, size.height)
                 const radius = (gradient.radius / 100) * maxDimension
 
+                const stops = gradient.stops.map(s => `${this.normColorKey(s.color)}@${this.round(s.offset)}`).join('|')
+                const key = `radial:${centerX},${centerY},${radius}|${stops}`
+                const cached = this.shaderCache.get(key)
+                if (cached) return cached
+
                 const shader = this.resource.canvasKit.Shader.MakeRadialGradient(
                     [centerX, centerY],
                     radius,
@@ -117,16 +104,27 @@ class PaintManager {
                     gradient.stops.map(stop => stop.offset),
                     this.resource.canvasKit.TileMode.Clamp
                 )
+
+                this.shaderCache.set(key, shader)
                 return shader
             }
             case 'image': {
-                const imageFill = fill as ImageFill
-                if (!imageFill.cnvsImage && imageFill.imageData) {
-                    const image = this.createCanvasKitImage(imageFill.imageData)
-                    imageFill.cnvsImage = image
+                const { imageData, scaleMode } = fill as ImageFill
+                const { name, imageBuffer } = imageData
+
+                let image = this.imageCache.get(name)
+                const shaderKey = `${name}${scaleMode}`
+                let shader = this.shaderCache.get(shaderKey)
+
+                if (!image && imageBuffer) {
+                    image = this.createCanvasKitImage(imageBuffer)
+                    this.imageCache.set(name, image)
                 }
 
-                const shader = this.makeImageShader(size, imageFill.cnvsImage, imageFill.scaleMode)
+                if (shader) return shader
+
+                shader = this.makeImageShader(size, image!, scaleMode)
+                this.shaderCache.set(shaderKey, shader)
                 return shader
             }
             case 'pattern':
@@ -162,6 +160,41 @@ class PaintManager {
 
         this.stroke.setStrokeWidth(width)
         return this.stroke
+    }
+
+    initNewFillPaint(fill: ColorProps, size: Size): Paint {
+        const res = this.resource
+        if (!res) return null
+
+        const paint = new res.canvasKit.Paint()
+        const fillShader = this.setPaint(fill.color, size)
+
+        if (this.isColor(fillShader)) {
+            paint.setColor(fillShader as Color)
+        } else if (this.isShader(fillShader)) {
+            paint.setShader(fillShader as Shader)
+        }
+        paint.setAlphaf(fill.opacity)
+
+        return paint
+    }
+
+    initNewStrokePaint(stroke: ColorProps, size: Size, width: number): Paint {
+        const res = this.resource
+        if (!res) return null
+
+        const paint = new res.canvasKit.Paint()
+        paint.setStyle(res.canvasKit.PaintStyle.Stroke)
+        const fillShader = this.setPaint(stroke.color, size)
+
+        if (this.isColor(fillShader)) {
+            paint.setColor(fillShader as Color)
+        } else if (this.isShader(fillShader)) {
+            paint.setShader(fillShader as Shader)
+        }
+        paint.setAlphaf(stroke.opacity)
+        paint.setStrokeWidth(width)
+        return paint
     }
 
     resetPaint() {
@@ -238,6 +271,21 @@ class PaintManager {
             return
         }
         return cnvsimg
+    }
+
+    get paint() {
+        return this.fillPaint
+    }
+    get stroke() {
+        return this.strokePaint
+    }
+
+    protected isShader(obj): boolean {
+        return obj != null && typeof obj === 'object' && obj.constructor?.name === 'Shader'
+    }
+
+    protected isColor(fill): boolean {
+        return fill instanceof Float32Array
     }
 
     public destroy() {

@@ -17,14 +17,14 @@ interface BackgroundImagePickerProps {
 const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, imageUrl, setImageUrl, onImageChange, isOpen, className }) => {
     // const img = value?.type == 'image' ? value : DEFAULT_LINEAR_GRADIENT;
     const [currentScaleMode, setScaleMode] = useState<ScaleMode>(value.scaleMode ?? 'fill')
-    const [currentImage, setCurrentImage] = useState<ArrayBuffer | null>(value.imageData ?? null)
+    const [currentImageData, setCurrentImageData] = useState<{ imageBuffer: ArrayBuffer, name: string } | null>(value.imageData ?? null)
 
     useEffect(() => {
         if (value.scaleMode) {
             setScaleMode(value.scaleMode)
         }
         if (value.imageData) {
-            setCurrentImage(value.imageData)
+            setCurrentImageData(value.imageData)
         }
         if (!value.imageData) {
             console.log('rendered 5', 9999)
@@ -33,31 +33,37 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, im
 
     const handleFileSelect = async (files: FileList) => {
         if (files && files.length > 0) {
-            if (imageUrl) URL.revokeObjectURL(imageUrl)
-            const fileData = Array.from(files).map(file => ({
-                url: URL.createObjectURL(file),
-                name: file.name,
-            }))
-            const images = await loadImage(fileData)
+            try {
+                if (imageUrl) URL.revokeObjectURL(imageUrl)
 
-            setImageUrl(fileData[0].url)
-            setCurrentImage(images[0].imageBuffer)
-            const imageFill: ImageFill = {
-                type: 'image',
-                imageData: images[0].imageBuffer,
-                scaleMode: currentScaleMode,
+                const fileData = Array.from(files).map(file => ({
+                    url: URL.createObjectURL(file),
+                    name: file.name,
+                }))
+
+                const images = await loadImage(fileData)
+
+                setImageUrl(fileData[0].url)
+                setCurrentImageData(images[0])
+                const imageFill: ImageFill = {
+                    type: 'image',
+                    imageData:images[0],
+                    scaleMode: currentScaleMode,
+                }
+                onImageChange(imageFill)
+                console.log(isOpen)
+            } catch (error) {
+                console.error('Error loading images:', error)
             }
-            onImageChange(imageFill)
-            console.log(isOpen)
         }
     }
 
     const handleScaleModeChange = (newScaleMode: ScaleMode) => {
         setScaleMode(newScaleMode)
-        if (currentImage) {
+        if (currentImageData) {
             const imageFill: ImageFill = {
                 type: 'image',
-                imageData: currentImage,
+                imageData: currentImageData,
                 scaleMode: newScaleMode,
             }
             onImageChange(imageFill)
