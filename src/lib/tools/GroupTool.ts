@@ -1,7 +1,5 @@
 import Tool from './Tool'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
-import SceneManager from '@lib/core/SceneManager'
-import ShapeManager from '@lib/core/ShapeManager'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 import { ContainerType, LayoutConstraints } from '@lib/node/nodeTypes'
@@ -9,8 +7,8 @@ import { ContainerType, LayoutConstraints } from '@lib/node/nodeTypes'
 class GroupTool extends Tool {
     shapeType: ContainerType
     // currentContainer: ContainerNode | null
-    constructor(shape: ContainerType, sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
-        super(sceneManager, shapeManager, cnvs)
+    constructor(shape: ContainerType, cnvs: HTMLCanvasElement) {
+        super( cnvs)
         this.shapeType = shape
         // this.currentContainer = null
     }

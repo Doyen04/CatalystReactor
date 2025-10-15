@@ -139,15 +139,15 @@ class SText extends Shape {
         const cnvsKit = this.resource
 
         const fillcolor = Array.isArray(fill) ? fill : cnvsKit.canvasKit.parseColorString(fill)
-        cnvsKit.paint.setColor(fillcolor)
+        this.paintManager.paint.setColor(fillcolor)
 
         if (stroke) {
             const strokeColor = Array.isArray(stroke) ? stroke : cnvsKit.canvasKit.parseColorString(stroke)
-            cnvsKit.strokePaint.setColor(strokeColor)
-            cnvsKit.strokePaint.setStrokeWidth(1)
+            this.paintManager.stroke.setColor(strokeColor)
+            this.paintManager.stroke.setStrokeWidth(1)
         }
 
-        return { fill: this.resource.paint, stroke: this.resource.strokePaint }
+        return { fill: this.paintManager.paint, stroke: this.paintManager.stroke }
     }
 
     draw(canvas: Canvas): void {

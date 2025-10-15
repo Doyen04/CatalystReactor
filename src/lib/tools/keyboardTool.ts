@@ -1,12 +1,13 @@
 import { isPrintableCharUnicode } from '@/util/textUtil'
+import container from '@lib/core/DependencyManager'
 import ShapeManager from '@lib/core/ShapeManager'
 import SceneNode from '@lib/node/Scene'
 
 class KeyboardTool {
     private shapeManager: ShapeManager | null = null
 
-    constructor(shapeManager: ShapeManager) {
-        this.shapeManager = shapeManager
+    constructor() {
+        this.shapeManager = container.resolve('shapeManager')
     }
     setCurrentTool(shapeManager: ShapeManager) {
         this.shapeManager = shapeManager

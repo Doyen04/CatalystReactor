@@ -1,15 +1,13 @@
 import { ShapeType } from '@lib/types/shapes'
 import Tool from './Tool'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
-import SceneManager from '@lib/core/SceneManager'
-import ShapeManager from '@lib/core/ShapeManager'
 import ShapeNode from '@lib/node/ShapeNode'
 import SceneNode from '@lib/node/Scene'
 
 class ShapeTool extends Tool {
     shapeType: ShapeType
-    constructor(shape: ShapeType, sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
-        super(sceneManager, shapeManager, cnvs)
+    constructor(shape: ShapeType, cnvs: HTMLCanvasElement) {
+        super(cnvs)
         this.shapeType = shape
     }
 

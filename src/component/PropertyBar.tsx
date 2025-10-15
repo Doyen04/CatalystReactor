@@ -1,6 +1,6 @@
 import React from 'react'
 import { useSceneStore } from '@hooks/sceneStore'
-import { Paint, Properties } from '@lib/types/shapes'
+import { Fill, Properties } from '@lib/types/shapes'
 import Input from '@ui/Input'
 import { useCanvasManagerStore } from '@hooks/useCanvasManager'
 import { Hexagon } from 'lucide-react'
@@ -82,7 +82,7 @@ function PropertyBar() {
         shapeManager?.updateProperty('borderRadius', newBorderRadius)
     }
 
-    const handleColorChange = (key: string, value: Paint) => {
+    const handleColorChange = (key: string, value: Fill) => {
         const { style } = currentShapeProperties
         if (!style) return
 

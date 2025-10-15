@@ -1,5 +1,6 @@
 import { useToolStore } from '@hooks/useTool'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
+import container from '@lib/core/DependencyManager'
 import SceneManager from '@lib/core/SceneManager'
 import ShapeManager from '@lib/core/ShapeManager'
 import { Coord } from '@lib/types/shapes'
@@ -12,9 +13,9 @@ abstract class Tool {
     protected isDragging: boolean
     protected dragStart: Coord
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
-        this.sceneManager = sceneManager
-        this.shapeManager = shapeManager
+    constructor(cnvs: HTMLCanvasElement) {
+        this.sceneManager = container.resolve('sceneManager')
+        this.shapeManager = container.resolve('shapeManager')
         this.cnvsElm = cnvs
         this.isPointerDown = false
         this.isDragging = false

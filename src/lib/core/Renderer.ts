@@ -2,6 +2,8 @@ import { Canvas, Surface } from 'canvaskit-wasm'
 import EventQueue, { EventTypes } from './EventQueue'
 import SceneManager from './SceneManager'
 import CanvasKitResources from './CanvasKitResource'
+import container from './DependencyManager'
+import PaintManager from './PaintManager'
 
 const { CreateSurface, Render } = EventTypes
 
@@ -18,12 +20,14 @@ class Renderer {
     private fpsInterval = 1000 / 60
     private animationId: number
     private canrender: boolean = false
+    private paintManager: PaintManager
 
-    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager) {
+    constructor(canvasEl: HTMLCanvasElement) {
         this.canvasEl = canvasEl
-        this.sceneManager = sceneManager
+        this.sceneManager = container.resolve('sceneManager')
         this.surf = null
         this.animationId = null
+        this.paintManager = container.resolve('paintManager')
 
         this.setUpEvent()
 
@@ -169,8 +173,8 @@ class Renderer {
         skCnvs.scale(this.dpr, this.dpr)
 
         const rect = this.resource.canvasKit.LTRBRect(10, 10, 250, 100)
-        skCnvs!.drawRect(rect, this.resource.paint!)
-        skCnvs!.drawRect(rect, this.resource.strokePaint!)
+        skCnvs!.drawRect(rect, this.paintManager.paint!)
+        skCnvs!.drawRect(rect, this.paintManager.stroke!)
 
         this.sceneManager.draw(skCnvs)
 

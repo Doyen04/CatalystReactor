@@ -1,5 +1,5 @@
 import { getDisplayTextFromFill, extractFillValue, imageValue, arrayBufferToDataUrl, getBackgroundStyleFromFillValue } from '@/util/getBackgroundFill'
-import { Paint, FillType, GradientFill, ImageFill, SolidFill } from '@lib/types/shapes'
+import { Fill, FillType, GradientFill, ImageFill, SolidFill } from '@lib/types/shapes'
 import { FileImage, Paintbrush2, Zap } from 'lucide-react'
 import React, { forwardRef, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
@@ -9,9 +9,9 @@ import GradientPicker from './GradientPicker'
 import Input from './Input'
 
 interface ColorInputProps extends Omit<React.HtmlHTMLAttributes<HTMLDivElement>, 'onChange'> {
-    fill: Paint
+    fill: Fill
     showTab?: boolean
-    onChange: (value: Paint) => void
+    onChange: (value: Fill) => void
 }
 
 const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true, onChange, className, fill, ...props }, ref) => {

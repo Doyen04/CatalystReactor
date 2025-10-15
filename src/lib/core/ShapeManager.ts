@@ -6,15 +6,16 @@ import throttle from '@lib/helper/throttle'
 import Handle from '@lib/modifiers/Handles'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
+import container from './DependencyManager'
 
 class ShapeManager {
     private scene: SceneNode | null = null
     private shapeModifier: ShapeModifier | null
     private throttledUpdate: (properties: Properties) => void
 
-    constructor(shapeModifier: ShapeModifier) {
+    constructor() {
         this.scene = null
-        this.shapeModifier = shapeModifier
+        this.shapeModifier = container.resolve('shapeModifier')
         this.throttledUpdate = throttle(useSceneStore.getState().setCurrentShapeProperties)
     }
 

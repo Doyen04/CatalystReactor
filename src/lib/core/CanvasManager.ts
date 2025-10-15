@@ -7,6 +7,8 @@ import ToolManager from './ToolManager'
 import ShapeManager from './ShapeManager'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import { ToolType } from '@lib/tools/toolTypes'
+import PaintManager from './PaintManager'
+import container from './DependencyManager'
 // import ModifierManager from './ModifierManager';
 
 class CanvasManager {
@@ -16,6 +18,7 @@ class CanvasManager {
     toolManager: ToolManager
     shapeManager: ShapeManager
     shapeModifier: ShapeModifier
+    paintManager: PaintManager
 
     undoStack: never[]
     redoStack: never[]
@@ -23,12 +26,20 @@ class CanvasManager {
     constructor(canvas: HTMLCanvasElement) {
         // this.skCnvs = null
         this.shapeModifier = new ShapeModifier()
-        this.shapeManager = new ShapeManager(this.shapeModifier)
-        this.sceneManager = new SceneManager(this.shapeModifier)
-        this.renderer = new Renderer(canvas, this.sceneManager)
+        this.paintManager = new PaintManager()
+        this.shapeManager = new ShapeManager()
+        this.sceneManager = new SceneManager()
+        this.renderer = new Renderer(canvas)
         this.inputManager = new InputManager(canvas)
-        this.toolManager = new ToolManager(this.sceneManager, this.shapeManager, canvas)
+        this.toolManager = new ToolManager(canvas)
 
+        container.register('inputManager', this.inputManager)
+        container.register('toolManager', this.toolManager)
+        container.register('sceneManager', this.sceneManager)
+        container.register('shapeManager', this.shapeManager)
+        container.register('paintManager', this.paintManager)
+        container.register('shapeModifier', this.shapeModifier)
+        container.register('renderer', this.renderer)
         // Input handling state
         this.undoStack = []
         this.redoStack = []
@@ -99,10 +110,15 @@ class CanvasManager {
             this.toolManager.destroy()
             this.toolManager = null
         }
+        container.clear()
+        if (this.paintManager) {
+            this.paintManager.destroy()
+            this.paintManager = null
+        }
         EventQueue.removeAllEvent()
     }
 
-    render() {}
+    render() { }
 }
 
 export default CanvasManager

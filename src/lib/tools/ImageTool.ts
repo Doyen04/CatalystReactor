@@ -1,6 +1,4 @@
 import Tool from './Tool'
-import SceneManager from '@lib/core/SceneManager'
-import ShapeManager from '@lib/core/ShapeManager'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
@@ -14,8 +12,8 @@ class ImageTool extends Tool {
     private imageData: { imageBuffer: ArrayBuffer; name: string }[] | null
     private preloadedImages: Map<string, CanvasKitImage> = new Map()
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
-        super(sceneManager, shapeManager, cnvs)
+    constructor( cnvs: HTMLCanvasElement) {
+        super(cnvs)
         console.log('image tool')
         this.imageData = null
         this.isLoading = true

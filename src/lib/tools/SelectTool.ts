@@ -1,6 +1,4 @@
 import Tool from './Tool'
-import SceneManager from '@lib/core/SceneManager'
-import ShapeManager from '@lib/core/ShapeManager'
 import Handle from '@lib/modifiers/Handles'
 import SceneNode from '@lib/node/Scene'
 import ResizeCursor from './ResizeCursor'
@@ -12,8 +10,8 @@ class SelectTool extends Tool {
     private lastClickTime: number = 0
     private doubleClickDelay: number = 300 // milliseconds
 
-    constructor(sceneManager: SceneManager, shapeManager: ShapeManager, cnvs: HTMLCanvasElement) {
-        super(sceneManager, shapeManager, cnvs)
+    constructor(cnvs: HTMLCanvasElement) {
+        super(cnvs)
     }
 
     override handlePointerDown(e: MouseEvent) {
@@ -78,7 +76,7 @@ class SelectTool extends Tool {
         console.log('click triggered', e)
         if (this.shapeManager.hasScene()) {
             const scene = this.shapeManager.currentScene
-            
+
             if (scene.canEdit() && scene.isCollide(e.offsetX, e.offsetY)) {
                 scene.setCursorPosFromCoord(e.offsetX, e.offsetY)
             }
@@ -90,11 +88,11 @@ class SelectTool extends Tool {
 
         if (this.shapeManager.hasScene()) {
             const scene = this.shapeManager.currentScene
-            
+
             if (scene.isCollide(e.offsetX, e.offsetY)) {
                 scene.startEditing()
                 scene.selectAll()
-               
+
             }
         }
     }

@@ -277,13 +277,13 @@ export interface Stroke {
     dashArray?: number[]
 }
 
-export interface Paint {
+export interface Fill {
     color: PaintStyle
     opacity: number
 }
 
 export interface Style {
-    fill: Paint
+    fill: Fill
     stroke: Stroke
 }
 
@@ -310,7 +310,7 @@ export interface SpikesRatio {
 }
 
 export interface PTextStyle {
-    textFill: Paint;
+    textFill: Fill;
     textStroke?: Stroke;
     fontSize: number
     fontWeight: number
@@ -318,7 +318,8 @@ export interface PTextStyle {
     lineHeight: number
     textAlign: 'left' | 'right' | 'center' | 'justify'
     textSpacing?: number
-    backgroundColor?: Paint
+    backgroundColor?: Fill
+    backgroundStroke?: Stroke
     fontVariations?: TextFontVariations[]
 }
 

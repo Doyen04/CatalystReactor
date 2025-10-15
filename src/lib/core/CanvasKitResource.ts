@@ -1,6 +1,6 @@
 // CanvasKitResources.ts
 
-import type { CanvasKit, Paint, ParagraphStyle, TextStyle, FontMgr, Path } from 'canvaskit-wasm'
+import type { CanvasKit, ParagraphStyle, TextStyle, FontMgr, Path } from 'canvaskit-wasm'
 import fontMap from '@/lib/core/fonts.json'
 
 export class CanvasKitResources {
@@ -9,8 +9,6 @@ export class CanvasKitResources {
     private static fontsLoaded: boolean = false
     private static fontLoadPromise: Promise<void> | null = null
 
-    private cnvsPaint: Paint
-    private cnvsStrokePaint: Paint
     private cnvsTextStyle: TextStyle
     private cnvsParagraphStyle: ParagraphStyle
     private cnvsFontMgr: FontMgr | null
@@ -21,34 +19,12 @@ export class CanvasKitResources {
     private constructor(canvasKit: CanvasKit) {
         this.cnvsCanvasKit = canvasKit
         this.cnvsPath = new canvasKit.Path()
-        this.setUpPaints()
     }
 
-    setUpPaints() {
-        if (!this.cnvsCanvasKit) {
-            console.error('no canvas kit in canvaskitresourse')
-            return
-        }
-        this.cnvsPaint = new this.cnvsCanvasKit.Paint()
-        this.cnvsPaint.setColor(this.cnvsCanvasKit.Color(60, 0, 0, 0.3))
-        this.cnvsPaint.setStyle(this.cnvsCanvasKit.PaintStyle.Fill)
-        this.cnvsPaint.setAntiAlias(true)
-
-        this.cnvsStrokePaint = new this.cnvsCanvasKit.Paint()
-        this.cnvsStrokePaint.setColor(this.cnvsCanvasKit.Color(0, 255, 0, 1))
-        this.cnvsStrokePaint.setStyle(this.cnvsCanvasKit.PaintStyle.Stroke)
-        this.cnvsStrokePaint.setStrokeWidth(2)
-        this.cnvsStrokePaint.setAntiAlias(true)
-    }
     get path() {
         return this.cnvsPath
     }
-    get paint() {
-        return this.cnvsPaint
-    }
-    get strokePaint() {
-        return this.cnvsStrokePaint
-    }
+   
     get textStyle() {
         return this.cnvsTextStyle
     }
@@ -158,13 +134,7 @@ export class CanvasKitResources {
     }
 
     public dispose() {
-        this.cnvsPaint.delete()
-        this.cnvsStrokePaint.delete()
         this.cnvsFontMgr.delete()
-        this.cnvsPaint.delete()
-
-        this.cnvsPaint = null
-        this.cnvsStrokePaint = null
         this.cnvsTextStyle = null
         this.cnvsFontMgr = null
         CanvasKitResources.cnvsFontData = []

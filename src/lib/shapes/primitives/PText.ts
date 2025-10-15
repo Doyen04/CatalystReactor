@@ -1,6 +1,6 @@
 import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
-import { Canvas, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
+import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
 import Handle from '@lib/modifiers/Handles'
 import { Coord, Properties, PTextStyle, Size, SolidFill } from '@lib/types/shapes'
 
@@ -172,22 +172,18 @@ class PText extends Shape {
         return this.resource.paragraphStyle
     }
 
-    private getTextStyleFromSpan(textStyle: PTextStyle): TextStyle {
+    private getTextStyleFromSpan(textStyle: PTextStyle): { stroke: Paint; fill: Paint, backgroundColor: Paint, backgroundStroke: Paint, textStyle: TextStyle } {
         const canvasKit = this.resource.canvasKit
         if (!canvasKit) return
-        const textFill = textStyle.textFill.color as SolidFill
-        const backgroundColor = textStyle.backgroundColor.color as SolidFill
 
-        const value = Array.isArray(textFill.color) ? textFill.color : this.resource.canvasKit.parseColorString(textFill.color)
-        const backgroundValue = Array.isArray(backgroundColor.color) ? backgroundColor.color : this.resource.canvasKit.parseColorString(backgroundColor.color)
+        const { fill, stroke } = this.initPaints(textStyle.textFill.color, textStyle.textStroke.color)// be mindful it might not work due to reseting of shaders and stroke
+        const { fill: backgroundFill, stroke: backgroundStroke } = this.initPaints(textStyle.backgroundColor.color, textStyle.backgroundStroke.color)
 
-        this.resource.textStyle.color = value
         this.resource.textStyle.fontSize = textStyle.fontSize
         this.resource.textStyle.fontFamilies = textStyle.fontFamilies
-        this.resource.textStyle.backgroundColor = backgroundValue
         this.resource.textStyle.fontVariations = textStyle.fontVariations
 
-        return this.resource.textStyle
+        return { fill: fill, stroke: stroke, backgroundColor: backgroundFill, backgroundStroke: backgroundStroke, textStyle: this.resource.textStyle }
     }
 
     override moveShape(mx: number, my: number): void {
@@ -312,35 +308,46 @@ class PText extends Shape {
             console.log('no resources amd builder')
             return
         }
-        const textStyle = this.getTextStyleFromSpan(this.textStyle)
 
         this.builder.reset()
 
         if (!this.hasSelection) {
 
-            this.builder.pushStyle(textStyle)
+            const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
+            const background = this.resource.canvasKit.TRANSPARENT
+            backgroundColor.setColor(background)// fix this later
+
+            this.builder.pushPaintStyle(textStyle, fill, this.resource.paint)
             this.builder.addText(this.text)
             this.builder.pop()
         } else {
             const start = Math.min(this.selectionStart, this.selectionEnd)
             const end = Math.max(this.selectionStart, this.selectionEnd)
             if (start > 0) {
-                this.builder.pushStyle(textStyle)
+                const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
+                const background = this.resource.canvasKit.TRANSPARENT
+                backgroundColor.setColor(background)// fix this later
+
+                this.builder.pushPaintStyle(textStyle, fill, this.resource.paint)
                 this.builder.addText(this.text.substring(0, start))
                 this.builder.pop()
             }
             if (start < end) {
-                const selectionStyle = this.getTextStyleFromSpan(this.textStyle)
+                const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
 
-                selectionStyle.backgroundColor = this.resource.canvasKit.Color(0, 0, 255)
+                const background = this.resource.canvasKit.Color(0, 0, 255)
+                backgroundColor.setColor(background)// fix this later
 
-                this.builder.pushStyle(selectionStyle)
+                this.builder.pushPaintStyle(textStyle, fill, this.resource.paint)
                 this.builder.addText(this.text.substring(start, end))
                 this.builder.pop()
             }
             if (end < this.text.length) {
-                const textStyle = this.getTextStyleFromSpan(this.textStyle)
-                this.builder.pushStyle(textStyle)
+                const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
+                const background = this.resource.canvasKit.TRANSPARENT
+                backgroundColor.setColor(background)// fix this later
+
+                this.builder.pushPaintStyle(textStyle, fill, this.resource.paint)
                 this.builder.addText(this.text.substring(end))
                 this.builder.pop()
             }

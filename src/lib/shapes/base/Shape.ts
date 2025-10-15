@@ -20,6 +20,8 @@ import {
     Transform,
 } from '@lib/types/shapes'
 import type { Canvas, Image as CanvasKitImage, Color, Paint, Shader } from 'canvaskit-wasm'
+import PaintManager from '@lib/core/PaintManager'
+import container from '@lib/core/DependencyManager'
 
 interface Arguments {
     x: number
@@ -41,6 +43,7 @@ abstract class Shape {
     protected boundingRect: BoundingRect
     protected isHover: boolean
     protected rotationAnchorPosition: Coord
+    protected paintManager: PaintManager
 
     constructor({ x, y, type, rotation = 0, scale = 1, _fill = '#fff', strokeWidth = 1, strokeColor = '#000' }: Arguments) {
         if (new.target === Shape) throw new Error('Shape is abstract; extend it!')
@@ -58,11 +61,12 @@ abstract class Shape {
         const stroke: SolidFill = { type: 'solid', color: strokeColor }
         this.style = {
             fill: { color: fill, opacity: 1 },
-            stroke: { color: stroke, opacity: 1 , width: strokeWidth },
+            stroke: { color: stroke, opacity: 1, width: strokeWidth },
         }
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 }
         this.isHover = false
         this.shapeType = type
+        this.paintManager = container.resolve<PaintManager>("paintManager");
     }
 
     abstract getCenterCoord(): Coord
@@ -353,37 +357,40 @@ abstract class Shape {
             case 'pattern':
                 // Similar to image but with pattern-specific handling
                 break
+            default:
+                console.warn(`Unknown fill type: ${fill}`);
+                return this.resource.canvasKit.parseColorString('#000')
         }
     }
 
-    protected initPaints(): { stroke: Paint; fill: Paint } {
-        const fillShader = this.setPaint(this.style.fill.color)
-        const strokeShader = this.setPaint(this.style.stroke.color)
+    protected initPaints(fill: PaintStyle, stroke: PaintStyle): { stroke: Paint; fill: Paint } {
+        const fillShader = this.setPaint(fill)
+        const strokeShader = this.setPaint(stroke)
 
         if (this.isColor(fillShader)) {
-            this.resource.paint.setColor(fillShader as Color)
+            this.paintManager.paint.setColor(fillShader as Color)
         } else if (this.isShader(fillShader)) {
-            this.resource.paint.setShader(fillShader as Shader)
+            this.paintManager.paint.setShader(fillShader as Shader)
         }
-        this.resource.paint.setAlphaf(this.style.fill.opacity)
+        this.paintManager.paint.setAlphaf(this.style.fill.opacity)
 
         if (this.isColor(strokeShader)) {
-            this.resource.strokePaint.setColor(strokeShader as Color)
+            this.paintManager.stroke.setColor(strokeShader as Color)
         } else if (this.isShader(strokeShader)) {
-            this.resource.strokePaint.setShader(strokeShader as Shader)
+            this.paintManager.stroke.setShader(strokeShader as Shader)
         }
-        this.resource.strokePaint.setAlphaf(this.style.stroke.opacity)
+        this.paintManager.stroke.setAlphaf(this.style.stroke.opacity)
 
-        this.resource.strokePaint.setStrokeWidth(this.style.stroke.width)
-        return { stroke: this.resource.strokePaint, fill: this.resource.paint }
+        this.paintManager.stroke.setStrokeWidth(this.style.stroke.width)
+        return { stroke: this.paintManager.stroke, fill: this.paintManager.paint }
     }
 
     protected resetPaint() {
-        this.resource.paint.setShader(null)
-        this.resource.strokePaint.setShader(null)
+        this.paintManager.paint.setShader(null)
+        this.paintManager.stroke.setShader(null)
 
-        this.resource.paint.setAlphaf(1.0)
-        this.resource.strokePaint.setAlphaf(1.0)
+        this.paintManager.paint.setAlphaf(1.0)
+        this.paintManager.stroke.setAlphaf(1.0)
     }
 
     makeImageShader(dim: Size, canvasKitImage: CanvasKitImage, scaleMode: ScaleMode = 'fill'): Shader {
@@ -438,7 +445,7 @@ abstract class Shape {
         const scaleX = scale
         const scaleY = scale
         console.log(scaleX, scaleY, offsetX, offsetY, 'scale and offset values');
-        
+
         const finalMatrix = ck.Matrix.multiply(ck.Matrix.translated(offsetX, offsetY), ck.Matrix.scaled(scaleX, scaleY))
 
         return canvasKitImage.makeShaderOptions(tileMode, tileMode, ck.FilterMode.Linear, ck.MipmapMode.Linear, finalMatrix)

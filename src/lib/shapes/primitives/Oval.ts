@@ -212,7 +212,7 @@ class Oval extends Shape {
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        const { fill, stroke } = this.initPaints()
+        const { fill, stroke } = this.initPaints(this.style.fill.color, this.style.stroke.color)
         const { width, height } = this.getDim()
 
         const rect = this.resource.canvasKit.XYWHRect(0, 0, width, height)
@@ -237,7 +237,7 @@ class Oval extends Shape {
     private drawHoverEffect(canvas: Canvas, rect: Rect): void {
         if (!this.resource) return
 
-        const hoverPaint = this.resource.strokePaint
+        const hoverPaint = this.paintManager.stroke
         hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1)) // Blue with transparency
         hoverPaint.setStrokeWidth(2)
 

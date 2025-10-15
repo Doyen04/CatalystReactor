@@ -1,15 +1,16 @@
-import { Canvas } from 'canvaskit-wasm'
+import type { Canvas } from 'canvaskit-wasm'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
+import container from './DependencyManager'
 
 class SceneManager {
     private scene: ContainerNode
     private shapeModifier: ShapeModifier
 
-    constructor(shapeModifier: ShapeModifier) {
+    constructor() {
         this.scene = new ContainerNode(null, null)
-        this.shapeModifier = shapeModifier
+        this.shapeModifier = container.resolve('shapeModifier')
         //remember to add a shape created event
     }
 
