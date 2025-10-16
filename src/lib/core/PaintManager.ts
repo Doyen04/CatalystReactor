@@ -110,21 +110,24 @@ class PaintManager {
             }
             case 'image': {
                 const { imageData, scaleMode } = fill as ImageFill
-                const { name, imageBuffer } = imageData
 
-                let image = this.imageCache.get(name)
-                const shaderKey = `${name}${scaleMode}`
-                let shader = this.shaderCache.get(shaderKey)
+                let cnvsImage = this.imageCache.get(imageData.name)
 
-                if (!image && imageBuffer) {
-                    image = this.createCanvasKitImage(imageBuffer)
-                    this.imageCache.set(name, image)
+                if (!cnvsImage && imageData.imageBuffer) {
+                    cnvsImage = this.createCanvasKitImage(imageData.imageBuffer)
+                    this.imageCache.set(imageData.name, cnvsImage)
+                    console.warn('no canvaskit');
                 }
 
-                if (shader) return shader
+                const shaderKey = `${imageData.name}:${scaleMode}:${Math.round(size.width)}x${Math.round(size.height)}`
+                // 
+                //size is first zero then real size was gotten amking the sader invalid
+                const storedShader = this.shaderCache.get(shaderKey)
+                if (storedShader) return storedShader
 
-                shader = this.makeImageShader(size, image!, scaleMode)
-                this.shaderCache.set(shaderKey, shader)
+                const shader = this.makeImageShader(size, cnvsImage, scaleMode)
+
+                if (shader) this.shaderCache.set(shaderKey, shader)
                 return shader
             }
             case 'pattern':

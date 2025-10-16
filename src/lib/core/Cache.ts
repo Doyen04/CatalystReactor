@@ -5,8 +5,8 @@ export interface Deletable {
 export class PCache<T extends Deletable> {
     private cache = new Map<string, T>()
 
-    get(key: string): T | undefined {
-        if (!this.cache.has(key)) return undefined
+    get(key: string): T | null {
+        if (!this.cache.has(key)) return null
 
         const value = this.cache.get(key)!
         // Move key to the end to mark it as recently used
@@ -40,6 +40,11 @@ export class PCache<T extends Deletable> {
         } catch {console.warn('deletion not implemented on cache value');
         }
         return this.cache.delete(key)
+    }
+
+    log(){
+        console.log(this.cache);
+        
     }
 
     clear(): void {

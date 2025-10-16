@@ -61,6 +61,7 @@ class ImageTool extends Tool {
 
         try {
             for (const imageBuffer of this.imageData) {
+                //try using store 
                 //uses createImageBitmap for better performance and because makeimage blocks the main thread
                 const blob = new Blob([imageBuffer.imageBuffer]);
                 const imageBitmap = await createImageBitmap(blob);
@@ -97,7 +98,6 @@ class ImageTool extends Tool {
     }
 
     override handlePointerDown(e: MouseEvent) {
-        console.log(this.isImageDataEmpty(), 'checking data', this.isLoading, 'loading status', this.isDragging, 'dragging status');
         super.handlePointerDown(e)
 
 
