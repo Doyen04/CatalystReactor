@@ -3,15 +3,19 @@ import SceneNode from './Scene'
 import type Shape from '@lib/shapes/base/Shape'
 import { FlexLayout, GridLayout, LayoutConstraints } from './nodeTypes'
 import { applyColumnLayout, applyGridLayout, applyRowLayout } from './LayoutEngine'
+import PaintManager from '@lib/core/PaintManager'
+import container from '@lib/core/DependencyManager'
 
 class ContainerNode extends SceneNode {
     children: SceneNode[]
     layoutConstraints: LayoutConstraints
+    paintManager: PaintManager
 
     constructor(shape: Shape | null, layoutConstraints: LayoutConstraints) {
         super()
         this.shape = shape
         this.children = []
+        this.paintManager = container.resolve<PaintManager>('paintManager')
         this.parent = null
         this.layoutConstraints = layoutConstraints
         this.setUpMatrix()
@@ -101,7 +105,7 @@ class ContainerNode extends SceneNode {
         if (!padding) return
         const bounds = this.shape.getDim()
 
-        const fillPaint = this.resource.paint
+        const fillPaint = this.paintManager.paint
 
         // Draw padding areas with orange color
         fillPaint.setColor(this.resource.canvasKit.Color(255, 200, 100, 0.3))

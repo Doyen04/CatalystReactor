@@ -1,5 +1,7 @@
 // TextCursor.ts
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
+import container from '@lib/core/DependencyManager'
+import PaintManager from '@lib/core/PaintManager'
 import type { Canvas, LineMetrics, Paragraph } from 'canvaskit-wasm'
 
 class TextCursor {
@@ -12,6 +14,7 @@ class TextCursor {
     private blinkInterval: ReturnType<typeof setTimeout>
     private blinkSpeed: number = 500 // ms
     private cursorIndex: number
+    paintManager:PaintManager
 
     constructor(initialX: number, initialY: number, initialHeight: number) {
         this.x = initialX
@@ -19,6 +22,7 @@ class TextCursor {
         this.textX = 0
         this.textY = 0
         this.height = initialHeight
+        this.paintManager = container.resolve<PaintManager>('paintManager')
         this.cursorIndex = 0
 
         this.startCursorBlink()
@@ -54,8 +58,8 @@ class TextCursor {
             return
         }
 
-        this.resource.strokePaint.setColor(this.resource.canvasKit.BLACK)
-        this.resource.strokePaint.setStrokeWidth(2)
+        this.paintManager.stroke.setColor(this.resource.canvasKit.BLACK)
+        this.paintManager.stroke.setStrokeWidth(2)
     }
 
     setCursorPositionFromCoord(paragraph: Paragraph, text: string, fontSize: number, lineHeight: number, x: number, y: number) {
@@ -276,7 +280,7 @@ class TextCursor {
         }
         this.setPaint()
 
-        canvas.drawLine(this.textX, this.textY, this.textX, this.textY + this.height, this.resource.strokePaint)
+        canvas.drawLine(this.textX, this.textY, this.textX, this.textY + this.height, this.paintManager.stroke)
     }
 
     destroy(): void {
