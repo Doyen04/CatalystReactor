@@ -1,6 +1,6 @@
 import type { Color, Shader, Image as CanvasKitImage, Paint } from "canvaskit-wasm"
 import CanvasKitResources from "./CanvasKitResource"
-import { SolidFill, LinearGradient, RadialGradient, ImageFill, Size, ScaleMode, PaintStyle, ColorProps } from "@lib/types/shapes"
+import { SolidFill, LinearGradient, RadialGradient, ImageFill, Size, ScaleMode, PaintStyle, ColorProps, Stroke } from "@lib/types/shapes"
 import { PCache } from "./Cache"
 
 class PaintManager {
@@ -65,10 +65,10 @@ class PaintManager {
                 const x2 = (gradient.x2 / 100) * size.width
                 const y2 = (gradient.y2 / 100) * size.height
 
-                const stops = gradient.stops.map(s => `${this.normColorKey(s.color)}@${this.round(s.offset)}`).join('|')
-                const key = `linear:${x1},${y1},${x2},${y2}|${stops}`
-                const cached = this.shaderCache.get(key)
-                if (cached) return cached
+                // const stops = gradient.stops.map(s => `${this.normColorKey(s.color)}@${this.round(s.offset)}`).join('|')
+                // const key = `linear:${x1},${y1},${x2},${y2}|${stops}`
+                // const cached = this.shaderCache.get(key)
+                // if (cached) return cached
 
                 const shader = this.resource.canvasKit.Shader.MakeLinearGradient(
                     [x1, y1],
@@ -78,7 +78,7 @@ class PaintManager {
                     this.resource.canvasKit.TileMode.Clamp
                 )
 
-                this.shaderCache.set(key, shader)
+                // this.shaderCache.set(key, shader)
                 return shader
             }
             case 'radial': {
@@ -92,20 +92,20 @@ class PaintManager {
                 const maxDimension = Math.max(size.width, size.height)
                 const radius = (gradient.radius / 100) * maxDimension
 
-                const stops = gradient.stops.map(s => `${this.normColorKey(s.color)}@${this.round(s.offset)}`).join('|')
-                const key = `radial:${centerX},${centerY},${radius}|${stops}`
-                const cached = this.shaderCache.get(key)
-                if (cached) return cached
+                // const stops = gradient.stops.map(s => `${this.normColorKey(s.color)}@${this.round(s.offset)}`).join('|')
+                // const key = `radial:${centerX},${centerY},${radius}|${stops}`
+                // const cached = this.shaderCache.get(key)
+                // if (cached) return cached
 
                 const shader = this.resource.canvasKit.Shader.MakeRadialGradient(
-                    [centerX, centerY],
+                    [centerX, centerY], 
                     radius,
                     gradient.stops.map(stop => this.resource.canvasKit.parseColorString(stop.color)),
                     gradient.stops.map(stop => stop.offset),
                     this.resource.canvasKit.TileMode.Clamp
                 )
 
-                this.shaderCache.set(key, shader)
+                // this.shaderCache.set(key, shader)
                 return shader
             }
             case 'image': {
@@ -116,18 +116,20 @@ class PaintManager {
                 if (!cnvsImage && imageData.imageBuffer) {
                     cnvsImage = this.createCanvasKitImage(imageData.imageBuffer)
                     this.imageCache.set(imageData.name, cnvsImage)
-                    console.warn('no canvaskit');
                 }
 
-                const shaderKey = `${imageData.name}:${scaleMode}:${Math.round(size.width)}x${Math.round(size.height)}`
-                // 
-                //size is first zero then real size was gotten amking the sader invalid
-                const storedShader = this.shaderCache.get(shaderKey)
-                if (storedShader) return storedShader
+                // const shaderKey = `${imageData.name}:${scaleMode}:${Math.round(size.width)}x${Math.round(size.height)}`
+
+                // // //size is first zero then real size was gotten making the shader invalid
+                // const storedShader = this.shaderCache.get(shaderKey)
+                // this.shaderCache.log()
+                // if (storedShader) return storedShader
+
+                // if (!size || !cnvsImage || (size.width === 0 && size.height === 0)) return null
 
                 const shader = this.makeImageShader(size, cnvsImage, scaleMode)
 
-                if (shader) this.shaderCache.set(shaderKey, shader)
+                // if (shader) this.shaderCache.set(shaderKey, shader)
                 return shader
             }
             case 'pattern':
@@ -152,7 +154,7 @@ class PaintManager {
         return this.paint
     }
 
-    initStrokePaint(stroke: ColorProps, size: Size, width: number): Paint {
+    initStrokePaint(stroke: Stroke, size: Size): Paint {
         const strokeShader = this.setPaint(stroke.color, size)
         if (this.isColor(strokeShader)) {
             this.stroke.setColor(strokeShader as Color)
@@ -161,7 +163,7 @@ class PaintManager {
         }
         this.stroke.setAlphaf(stroke.opacity)
 
-        this.stroke.setStrokeWidth(width)
+        this.stroke.setStrokeWidth(stroke.width)
         return this.stroke
     }
 
@@ -182,7 +184,7 @@ class PaintManager {
         return paint
     }
 
-    initNewStrokePaint(stroke: ColorProps, size: Size, width: number): Paint {
+    initNewStrokePaint(stroke: Stroke, size: Size): Paint {
         const res = this.resource
         if (!res) return null
 
@@ -196,7 +198,7 @@ class PaintManager {
             paint.setShader(fillShader as Shader)
         }
         paint.setAlphaf(stroke.opacity)
-        paint.setStrokeWidth(width)
+        paint.setStrokeWidth(stroke.width)
         return paint
     }
 

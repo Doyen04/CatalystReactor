@@ -213,7 +213,7 @@ class Oval extends Shape {
         if (!this.resource) return
 
         const fill = this.paintManager.initFillPaint(this.style.fill, this.getDim())
-        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim(), this.style.stroke.width)
+        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim())
         const { width, height } = this.getDim()
 
         const rect = this.resource.canvasKit.XYWHRect(0, 0, width, height)
