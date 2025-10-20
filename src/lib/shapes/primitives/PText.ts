@@ -176,10 +176,10 @@ class PText extends Shape {
         const canvasKit = this.resource.canvasKit
         if (!canvasKit) return
 
-        const fill = this.paintManager.initNewFillPaint(textStyle.textFill, this.getDim())
-        const stroke = this.paintManager.initNewStrokePaint(textStyle.textStroke, this.getDim())
-        const backgroundFill = this.paintManager.initNewFillPaint(textStyle.backgroundColor, this.getDim())
-        const backgroundStroke = this.paintManager.initNewStrokePaint(textStyle.backgroundStroke, this.getDim())
+        const fill = textStyle.textFill ? this.paintManager.initNewFillPaint(textStyle.textFill, this.getDim()) : null
+        const stroke = textStyle.textStroke ? this.paintManager.initNewStrokePaint(textStyle.textStroke, this.getDim()) : null
+        const backgroundFill = textStyle.backgroundColor ? this.paintManager.initNewFillPaint(textStyle.backgroundColor, this.getDim()) : null
+        const backgroundStroke = textStyle.backgroundStroke ? this.paintManager.initNewStrokePaint(textStyle.backgroundStroke, this.getDim()) : null
 
         this.resource.textStyle.fontSize = textStyle.fontSize
         this.resource.textStyle.fontFamilies = textStyle.fontFamilies
@@ -319,7 +319,7 @@ class PText extends Shape {
             const background = this.resource.canvasKit.TRANSPARENT
             backgroundColor.setColor(background)// fix this later
 
-            this.builder.pushPaintStyle(textStyle, fill, this.paintManager.paint)
+            this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
             this.builder.addText(this.text)
             this.builder.pop()
         } else {
@@ -330,7 +330,7 @@ class PText extends Shape {
                 const background = this.resource.canvasKit.TRANSPARENT
                 backgroundColor.setColor(background)// fix this later
 
-                this.builder.pushPaintStyle(textStyle, fill, this.paintManager.paint)
+                this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
                 this.builder.addText(this.text.substring(0, start))
                 this.builder.pop()
             }
@@ -340,7 +340,7 @@ class PText extends Shape {
                 const background = this.resource.canvasKit.Color(0, 0, 255)
                 backgroundColor.setColor(background)// fix this later
 
-                this.builder.pushPaintStyle(textStyle, fill, this.paintManager.paint)
+                this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
                 this.builder.addText(this.text.substring(start, end))
                 this.builder.pop()
             }
@@ -349,7 +349,7 @@ class PText extends Shape {
                 const background = this.resource.canvasKit.TRANSPARENT
                 backgroundColor.setColor(background)// fix this later
 
-                this.builder.pushPaintStyle(textStyle, fill, this.paintManager.paint)
+                this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
                 this.builder.addText(this.text.substring(end))
                 this.builder.pop()
             }
