@@ -167,41 +167,28 @@ class PaintManager {
         return this.stroke
     }
 
-    initNewFillPaint(fill: ColorProps, size: Size): Paint {
+    makeNewPaint(props: ColorProps | Stroke, size: Size, isStroke = false): Paint {
         const res = this.resource
-        if (!res) return null
+        if (!res || !props) return null
 
         const paint = new res.canvasKit.Paint()
-        const fillShader = this.setPaint(fill.color, size)
-
-        if (this.isColor(fillShader)) {
-            paint.setColor(fillShader as Color)
-        } else if (this.isShader(fillShader)) {
-            paint.setShader(fillShader as Shader)
+        if (isStroke) {
+            paint.setStyle(res.canvasKit.PaintStyle.Stroke)
         }
-        paint.setAlphaf(fill.opacity)
 
+        const src = this.setPaint(props.color, size)
+        if (this.isColor(src)) {
+            paint.setColor(src as Color)
+        } else if (this.isShader(src)) {
+            paint.setShader(src as Shader)
+        }
+
+        paint.setAlphaf(props.opacity)
+        if (isStroke) {
+            paint.setStrokeWidth((props as Stroke).width)
+        }
         return paint
     }
-
-    initNewStrokePaint(stroke: Stroke, size: Size): Paint {
-        const res = this.resource
-        if (!res) return null
-
-        const paint = new res.canvasKit.Paint()
-        paint.setStyle(res.canvasKit.PaintStyle.Stroke)
-        const fillShader = this.setPaint(stroke.color, size)
-
-        if (this.isColor(fillShader)) {
-            paint.setColor(fillShader as Color)
-        } else if (this.isShader(fillShader)) {
-            paint.setShader(fillShader as Shader)
-        }
-        paint.setAlphaf(stroke.opacity)
-        paint.setStrokeWidth(stroke.width)
-        return paint
-    }
-
     resetPaint() {
         this.paint.setShader(null)
         this.stroke.setShader(null)

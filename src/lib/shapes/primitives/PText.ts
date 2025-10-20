@@ -176,10 +176,10 @@ class PText extends Shape {
         const canvasKit = this.resource.canvasKit
         if (!canvasKit) return
 
-        const fill = textStyle.textFill ? this.paintManager.initNewFillPaint(textStyle.textFill, this.getDim()) : null
-        const stroke = textStyle.textStroke ? this.paintManager.initNewStrokePaint(textStyle.textStroke, this.getDim()) : null
-        const backgroundFill = textStyle.backgroundColor ? this.paintManager.initNewFillPaint(textStyle.backgroundColor, this.getDim()) : null
-        const backgroundStroke = textStyle.backgroundStroke ? this.paintManager.initNewStrokePaint(textStyle.backgroundStroke, this.getDim()) : null
+        const fill = this.paintManager.makeNewPaint(textStyle.textFill, this.getDim())
+        const stroke = this.paintManager.makeNewPaint(textStyle.textStroke, this.getDim(), true)
+        const backgroundFill = this.paintManager.makeNewPaint(textStyle.backgroundColor, this.getDim())
+        const backgroundStroke = this.paintManager.makeNewPaint(textStyle.backgroundStroke, this.getDim(), true)
 
         this.resource.textStyle.fontSize = textStyle.fontSize
         this.resource.textStyle.fontFamilies = textStyle.fontFamilies
