@@ -2,7 +2,7 @@ import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
 import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
 import Handle from '@lib/modifiers/Handles'
-import { Coord, Properties, PTextStyle, Size, SolidFill } from '@lib/types/shapes'
+import { Coord, Properties, PTextStyle, Size } from '@lib/types/shapes'
 
 //TODO:optimise this guy  make sure resources is done in canvaskitresources and all font is loaded there then use style to target it
 

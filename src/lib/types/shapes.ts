@@ -1,4 +1,4 @@
-import type { Image as CanvasKitImage, TextFontVariations } from 'canvaskit-wasm'
+import type { TextFontVariations } from 'canvaskit-wasm'
 import { ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, ArrowUpLeft, ArrowUpRight, Circle } from 'lucide-react'
 
 export const PRESET_LINEAR_GRADIENTS = [
@@ -318,6 +318,15 @@ export interface PTextStyle {
     backgroundColor?: Fill
     backgroundStroke?: Stroke
     fontVariations?: TextFontVariations[]
+}
+
+export interface PTextSpan {
+    text: string;                    
+    style: PTextStyle;               
+    start?: number;                  
+    end?: number;                    
+    children?: PTextSpan[];          
+    metadata?: Record<string, unknown>;  
 }
 
 export interface Properties {
