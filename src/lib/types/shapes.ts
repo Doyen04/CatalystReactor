@@ -321,10 +321,9 @@ export interface PTextStyle {
 }
 
 export interface PTextSpan {
-    text: string;                    
-    style: PTextStyle;               
-    start?: number;                  
-    end?: number;                    
+    text: string;                                  
+    start: number;                  
+    end: number;                    
     children?: PTextSpan[];          
     metadata?: Record<string, unknown>;  
 }
