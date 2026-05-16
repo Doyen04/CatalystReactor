@@ -323,7 +323,8 @@ export interface PTextStyle {
 export interface PTextSpan {
     text: string;                                  
     start: number;                  
-    end: number;                    
+    end: number;  
+    styleId: string[]                  
     children?: PTextSpan[];          
     metadata?: Record<string, unknown>;  
 }
@@ -353,6 +354,7 @@ export interface Coord {
 export const CornerPos: HandlePos[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img' | 'plainRect'
+
 export type HandlePos =
     | 'top-left'
     | 'top-right'

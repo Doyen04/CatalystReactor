@@ -1,12 +1,10 @@
 import { PTextSpan, PTextStyle } from "@lib/types/shapes"
 
 class TextEditor {
-    // Fast lookup for spans by id
+    // Spans by id
     private textSpan: Map<string, PTextSpan>;
-    // Style definitions by style id
+    // Per-span styles (key == span id)
     private styles: Map<string, PTextStyle>;
-    // Span id -> style id
-    private spanStyle: Map<string, string>;
     // Real-world ordering of text
     private indexMap: { id: string, start: number, end: number }[];
     private defaultStyle: PTextStyle;
@@ -23,21 +21,18 @@ class TextEditor {
         }
         this.textSpan = new Map()
         this.styles = new Map()
-        this.spanStyle = new Map()
         this.indexMap = []
-        this.styles.set('default', this.defaultStyle)
     }
 
     // Public API
 
-    setText(text: string, styleId: string = 'default') {
+    setText(text: string, style?: Partial<PTextStyle>) {
         this.clear()
-        if (!this.styles.has(styleId)) this.styles.set(styleId, this.defaultStyle)
         const id = this.genId('span')
         const span: PTextSpan = { text, start: 0, end: text.length }
         this.textSpan.set(id, span)
         this.indexMap.push({ id, start: 0, end: text.length })
-        this.spanStyle.set(id, styleId)
+        this.styles.set(id, this.mergeStyle(this.defaultStyle, style))
         return id
     }
 
@@ -49,27 +44,26 @@ class TextEditor {
         return this.indexMap.length ? this.indexMap[this.indexMap.length - 1].end : 0
     }
 
-    insertText(offset: number, text: string, styleId?: string) {
+    insertText(offset: number, text: string, style?: Partial<PTextStyle>) {
         offset = this.clamp(offset, 0, this.getLength())
-        const styleToUse = styleId ?? this.styleIdAt(offset) ?? 'default'
-        if (!this.styles.has(styleToUse)) this.styles.set(styleToUse, this.defaultStyle)
 
+        // If appending, use style provided or inherit from last span
         if (offset === this.getLength()) {
-            // append
             const id = this.genId('span')
             const start = offset
             const end = start + text.length
             const span: PTextSpan = { text, start, end }
             this.textSpan.set(id, span)
-            this.spanStyle.set(id, styleToUse)
+            const inherit = this.lastSpanStyle() ?? this.defaultStyle
+            this.styles.set(id, this.mergeStyle(inherit, style))
             this.indexMap.push({ id, start, end })
             return id
         }
 
-        // Split at insertion boundary to avoid mid-span insertion
+        // Create insertion boundary
         this.splitAt(offset)
 
-        // Find insertion index (span that starts at offset)
+        // Insert new span at boundary
         const insertIdx = this.indexMap.findIndex(e => e.start === offset)
         const id = this.genId('span')
         const entryBefore = this.indexMap[insertIdx - 1]
@@ -77,15 +71,16 @@ class TextEditor {
         const end = start + text.length
         const span: PTextSpan = { text, start, end }
         this.textSpan.set(id, span)
-        this.spanStyle.set(id, styleToUse)
 
-        // Insert into indexMap
+        // Inherit style from neighbor at offset if not provided
+        const baseStyle = this.getStyleAt(offset) ?? this.defaultStyle
+        this.styles.set(id, this.mergeStyle(baseStyle, style))
+
+        // Insert and shift
         this.indexMap.splice(insertIdx, 0, { id, start, end })
-
-        // Shift subsequent ranges
         this.shiftFrom(insertIdx + 1, text.length)
 
-        // Merge with neighbors if same style
+        // Merge with neighbors if style matches
         this.tryMergeAround(Math.max(0, insertIdx - 1))
         return id
     }
@@ -96,17 +91,17 @@ class TextEditor {
         end = this.clamp(end, 0, len)
         if (start >= end) return
 
-        // Create clean boundaries
+        // Clean boundaries
         this.splitAt(end)
         this.splitAt(start)
 
-        // Remove all spans fully inside [start, end)
+        // Remove spans fully inside [start, end)
         let i = 0
         while (i < this.indexMap.length) {
             const e = this.indexMap[i]
             if (e.start >= start && e.end <= end) {
                 this.textSpan.delete(e.id)
-                this.spanStyle.delete(e.id)
+                this.styles.delete(e.id)
                 this.indexMap.splice(i, 1)
             } else {
                 i++
@@ -116,16 +111,13 @@ class TextEditor {
         // Shift subsequent
         const removed = end - start
         const shiftIdx = this.indexMap.findIndex(e => e.start >= end)
-        if (shiftIdx !== -1) {
-            this.shiftFrom(shiftIdx, -removed)
-        }
+        if (shiftIdx !== -1) this.shiftFrom(shiftIdx, -removed)
 
-        // Fix start/end for the last span before 'end' if it touches start<end
+        // Clip the last span before start
         const beforeIdx = this.lastIndexBefore(start)
         if (beforeIdx !== -1) {
             const e = this.indexMap[beforeIdx]
             const span = this.textSpan.get(e.id)!
-            // Clip to start
             const keepLen = start - e.start
             span.text = span.text.slice(0, keepLen)
             span.end = start
@@ -136,51 +128,34 @@ class TextEditor {
         this.tryMergeAround(Math.max(0, beforeIdx - 1))
     }
 
-    applyStyle(rangeStart: number, rangeEnd: number, style: string | Partial<PTextStyle>) {
+    applyStyle(rangeStart: number, rangeEnd: number, style: Partial<PTextStyle>) {
         const len = this.getLength()
         rangeStart = this.clamp(rangeStart, 0, len)
         rangeEnd = this.clamp(rangeEnd, 0, len)
         if (rangeStart >= rangeEnd) return
 
-        let styleId: string
-        if (typeof style === 'string') {
-            styleId = style
-            if (!this.styles.has(styleId)) throw new Error(`Unknown style id: ${styleId}`)
-        } else {
-            styleId = this.genId('style')
-            this.styles.set(styleId, { ...this.defaultStyle, ...style })
-        }
-
-        // Create boundaries at range edges
+        // Boundaries
         this.splitAt(rangeStart)
         this.splitAt(rangeEnd)
 
-        // Apply to covered spans
+        // Update styles for covered spans
         for (const e of this.indexMap) {
             if (e.start >= rangeStart && e.end <= rangeEnd) {
-                this.spanStyle.set(e.id, styleId)
+                const prev = this.styles.get(e.id) ?? this.defaultStyle
+                this.styles.set(e.id, this.mergeStyle(prev, style))
             }
         }
 
-        // Merge adjacent spans where possible
+        // Merge adjacent spans
         const startIdx = this.indexMap.findIndex(e => e.start === rangeStart)
         this.tryMergeAround(Math.max(0, startIdx - 1))
     }
 
-    defineStyle(styleId: string, style: PTextStyle) {
-        this.styles.set(styleId, style)
-    }
-
-    getStyle(styleId: string): PTextStyle | undefined {
-        return this.styles.get(styleId)
-    }
-
-    getStyledRuns(): Array<{ text: string, start: number, end: number, style: PTextStyle, styleId: string }> {
+    getStyledRuns(): Array<{ text: string, start: number, end: number, style: PTextStyle, spanId: string }> {
         return this.indexMap.map(e => {
             const span = this.textSpan.get(e.id)!
-            const styleId = this.spanStyle.get(e.id) ?? 'default'
-            const style = this.styles.get(styleId) ?? this.defaultStyle
-            return { text: span.text, start: e.start, end: e.end, style, styleId }
+            const style = this.styles.get(e.id) ?? this.defaultStyle
+            return { text: span.text, start: e.start, end: e.end, style, spanId: e.id }
         })
     }
 
@@ -188,18 +163,21 @@ class TextEditor {
         return this.indexMap
     }
 
+    getSpanStyle(spanId: string): PTextStyle | undefined {
+        return this.styles.get(spanId)
+    }
+
     // Internal helpers
 
     private clear() {
         this.textSpan.clear()
-        this.spanStyle.clear()
+        this.styles.clear()
         this.indexMap = []
     }
 
     private genId(prefix: string) {
         this.idSeq += 1
         return `${prefix}_${this.idSeq}`
-        // ...existing code...
     }
 
     private clamp(n: number, min: number, max: number) {
@@ -226,14 +204,17 @@ class TextEditor {
         }
     }
 
-    private styleIdAt(offset: number): string | undefined {
-        if (this.indexMap.length === 0) return undefined
-        if (offset === this.getLength()) {
-            const last = this.indexMap[this.indexMap.length - 1]
-            return this.spanStyle.get(last.id)
-        }
+    private lastSpanStyle(): PTextStyle | undefined {
+        if (!this.indexMap.length) return undefined
+        const last = this.indexMap[this.indexMap.length - 1]
+        return this.styles.get(last.id)
+    }
+
+    private getStyleAt(offset: number): PTextStyle | undefined {
+        if (!this.indexMap.length) return undefined
+        if (offset === this.getLength()) return this.lastSpanStyle()
         const e = this.findEntry(offset)
-        return e ? this.spanStyle.get(e.id) : undefined
+        return e ? (this.styles.get(e.id) ?? this.defaultStyle) : undefined
     }
 
     private findEntry(offset: number): { id: string, start: number, end: number } | undefined {
@@ -265,14 +246,12 @@ class TextEditor {
         leftSpan.text = leftSpan.text.slice(0, leftLen)
         leftSpan.end = offset
 
-        // Insert right span next to left
+        // Insert right span next to left and copy style
         const idx = this.indexMap.findIndex(e => e.id === entry.id)
         this.textSpan.set(rightId, rightSpan)
-        const styleId = this.spanStyle.get(leftId) ?? 'default'
-        this.spanStyle.set(rightId, styleId)
+        const leftStyle = this.styles.get(leftId) ?? this.defaultStyle
+        this.styles.set(rightId, this.cloneStyle(leftStyle))
         this.indexMap.splice(idx + 1, 0, { id: rightId, start: rightStart, end: rightEnd })
-
-        // Ensure following spans keep positions (no net shift here)
     }
 
     private tryMergeAround(fromIdx: number) {
@@ -281,9 +260,9 @@ class TextEditor {
         while (i < this.indexMap.length - 1) {
             const a = this.indexMap[i]
             const b = this.indexMap[i + 1]
-            const aStyle = this.spanStyle.get(a.id)
-            const bStyle = this.spanStyle.get(b.id)
-            if (aStyle === bStyle) {
+            const aStyle = this.styles.get(a.id) ?? this.defaultStyle
+            const bStyle = this.styles.get(b.id) ?? this.defaultStyle
+            if (this.isStyleEqual(aStyle, bStyle)) {
                 // Merge b into a
                 const aSpan = this.textSpan.get(a.id)!
                 const bSpan = this.textSpan.get(b.id)!
@@ -293,13 +272,42 @@ class TextEditor {
 
                 // Remove b
                 this.textSpan.delete(b.id)
-                this.spanStyle.delete(b.id)
+                this.styles.delete(b.id)
                 this.indexMap.splice(i + 1, 1)
                 // Continue without increment to check further merges
             } else {
                 i++
             }
         }
+    }
+
+    private mergeStyle(base: PTextStyle, patch?: Partial<PTextStyle>): PTextStyle {
+        if (!patch) return this.cloneStyle(base)
+        // Merge nested fills/strokes shallowly; adjust as needed
+        return {
+            ...base,
+            ...patch,
+            textFill: patch.textFill ? { ...base.textFill, ...patch.textFill } : base.textFill,
+            textStroke: patch.textStroke ? { ...(base.textStroke ?? {}), ...patch.textStroke } : base.textStroke,
+            backgroundColor: patch.backgroundColor
+                ? { ...(base.backgroundColor ?? {}), ...patch.backgroundColor }
+                : base.backgroundColor,
+            backgroundStroke: patch.backgroundStroke
+                ? { ...(base.backgroundStroke ?? {}), ...patch.backgroundStroke }
+                : base.backgroundStroke,
+            fontFamilies: patch.fontFamilies ?? base.fontFamilies,
+            fontVariations: patch.fontVariations ?? base.fontVariations,
+        }
+    }
+
+    private cloneStyle(s: PTextStyle): PTextStyle {
+        // Cheap deep clone
+        return JSON.parse(JSON.stringify(s))
+    }
+
+    private isStyleEqual(a: PTextStyle, b: PTextStyle): boolean {
+        // Simple structural equality for now
+        return JSON.stringify(a) === JSON.stringify(b)
     }
 }
 
