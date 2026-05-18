@@ -1,44 +1,143 @@
-# CatalystReactor – Copilot Instructions
+# CatalystReactor - Copilot Instructions
 
-## Architecture & Flow
-- React shell (`src/App.tsx`) only mounts `SideBar`, `Canvas`, and `PropertyBar`; the real editor state lives in the CanvasKit core under `src/lib`.
-- `Canvas.tsx` lazy-loads `canvaskit-wasm`, calls `CanvasKitResources.loadInterFont()`/`initialize()`, then instantiates `CanvasManager` once the `<canvas>` ref is ready.
-- `CanvasManager` wires every subsystem (PaintManager, ShapeModifier, ShapeManager, SceneManager, Renderer, InputManager, ToolManager) into the global `DependencyManager` container so tools can resolve shared singletons.
-- DOM pointer/keyboard events are captured by `InputManager` and fanned out through the custom `EventQueue` (`PointerDown/Move/Up`, `KeyDown/Up`, `ToolChange`, `Render`, etc.). Unsubscribe before re-subscribing to avoid duplicate handlers.
-- `ToolManager` swaps concrete tools (`SelectTool`, `ShapeTool`, `GroupTool`, `ImageTool`, keyboard helpers) and rebinds EventQueue listeners each time `setCurrentTool` runs.
-- `Renderer` owns the CanvasKit Surface (prefers WebGL, falls back to GL v1) and drives a 60fps loop; it scales for `devicePixelRatio`, clears the canvas, asks `SceneManager.draw()` to render, and flushes.
+## Purpose
 
-## Scene Graph & State
-- `SceneManager` maintains a root `ContainerNode`; `flattenScene()` walks nested containers to find hit targets, so ordering matters when you add nodes.
-- `ContainerNode` handles layout (row/column/grid/frame) via `node/LayoutEngine.ts`; when adding new constraints update both the engine and the debug overlays in `ContainerNode.drawPaddingAndGap`.
-- Shapes live inside `SceneNode` subclasses (`ShapeNode`, containers). Transforms use CanvasKit matrices (`localMatrix`, `worldMatrix`)—always call `updateWorldMatrix` after changing scale/rotation/position.
-- `ShapeManager` tracks the currently attached `SceneNode`, forwards drag/resize events to `ShapeModifier`, enforces a 5px minimum size, and throttles property updates into the Zustand `useSceneStore`.
-- Property editing: `PropertyBar` -> `useSceneStore.updateProperty` -> `shapeManager.updateProperty` -> `SceneNode.setProperties`. Any new property must round-trip through this chain.
+- This repository is a React + CanvasKit interactive editor.
+- UI composition is intentionally thin; editor behavior is in `src/lib` managers, nodes, tools, and shapes.
 
-## Tools & Interaction
-- Tools extend `lib/tools/Tool.ts`, pull `sceneManager`/`shapeManager` out of the container, and implement `handlePointerMove`. Remember `Tool.handlePointerUp` resets to the default select tool.
-- `ShapeTool` creates shapes via `ShapeFactory` and inserts them into whichever container the pointer is over; `handlePointerDrag` delegates size changes to `ShapeManager.drawShape`.
-- Adding a new tool requires: implement the subclass, export it from `src/lib/tools`, register it in `ToolManager.setCurrentTool`, and expose it via `ToolBar`/`Button` with a matching `ToolType` string.
+## Runtime Architecture
 
-## Rendering Assets & Paint
-- `CanvasKitResources` caches `CanvasKit`, fonts (`lib/core/fonts.json` plus `public/fonts/Inter*.ttf`), shared `TextStyle`, and a reference `Path`. Always call `dispose()` when unmounting to release font managers.
-- `PaintManager` centralises CanvasKit `Paint` creation plus shader/image caching (`lib/core/Cache.ts`); reuse it instead of instantiating paints inside shapes or modifiers.
-- Image/gradient fills are described in `lib/types/shapes.ts`; helpers in `PaintManager.setPaint` convert those shape props into CanvasKit colors or shaders.
+- App shell in `src/App.tsx` mounts `SideBar`, `Canvas`, and `PropertyBar` (plus a simple header).
+- `src/component/Canvas.tsx` is the bootstrapping boundary:
+    - Loads CanvasKit wasm via `canvaskit-wasm/bin/canvaskit.wasm?url`.
+    - Loads fonts through `CanvasKitResources.loadInterFont()`.
+    - Initializes singleton `CanvasKitResources`.
+    - Creates one `CanvasManager` per mounted canvas and stores it in Zustand (`useCanvasManagerStore`).
+- `CanvasManager` registers core services in `DependencyManager` in this order:
+    - `paintManager` -> `shapeModifier` -> `shapeManager` -> `sceneManager` -> `renderer` -> `inputManager` -> `toolManager`
+- Service resolution for tools/managers relies on this container setup. If you add a new shared subsystem, register it here.
 
-## React Stores & UI Conventions
-- `useToolStore` (Zustand) owns toolbar state, defaulting to the select tool. The UI lets each group remember its last choice via `selectedByGroup`.
-- `useCanvasManagerStore` exposes the live `CanvasManager`/`shapeManager` to React components (e.g., `PropertyBar`); always null-check in hooks because the canvas tears down and recreates managers.
-- CSS/utility classes use plain CSS plus `tailwind-merge` to compose styles; no Tailwind runtime is configured yet even though dependencies exist.
+## Event and Input Flow
 
-## Build & Debug Workflow
-- Install deps with `npm install` (Node 18+), run `npm run dev` (Vite) for local development, `npm run build` (tsc -b then `vite build`), and `npm run lint` for ESLint.
-- CanvasKit’s wasm binary is bundled via `canvaskit-wasm/bin/canvaskit.wasm?url`; keep that import intact or Vite will not fetch the wasm correctly.
-- Fonts load over the network; editor startup will hang if a font URL 404s, so validate new entries in `fonts.json` and commit matching assets under `public/fonts` when required.
-- Use the diagrams in `public/system_component.png` and `public/system_events.svg` for a mental model of subsystem boundaries before making cross-cutting changes.
+- Native events are captured by `InputManager` and re-emitted through synchronous `EventQueue` events:
+    - Pointer: `pointer:down`, `pointer:move`, `pointer:up`
+    - Keyboard: `key:down`, `key:up`
+    - Surface/render orchestration: `create:surface`, `render:scene`
+    - Tool lifecycle: `tool:change`
+- `ToolManager` subscribes current tool handlers and keyboard handler to these events.
+- `setCurrentTool` creates a fresh tool instance and emits `ToolChange`; this resets pointer state naturally per tool switch.
+- `ToolManager.setUpEvent()` always unsubscribes then re-subscribes. Keep this idempotent behavior when modifying event plumbing.
 
-## Patterns & Gotchas
-- Prefer TS path aliases from `tsconfig.json` (`@lib/*`, `@hooks/*`, `@ui/*`, etc.) for imports; relative paths make Vite’s resolver miss shared code.
-- When adding new managers/services, register them with `DependencyManager` so tools and modifiers can `resolve` them instead of new-ing their own copies.
-- Clean up CanvasKit objects (`Paint`, `Surface`, `FontMgr`, etc.) inside the relevant `.destroy()` methods and call them from `CanvasManager.destroy()`; otherwise hot reloads leak GPU resources.
-- `EventQueue` is synchronous; expensive handlers (e.g., layout recomputation) should throttle/debounce or they will block pointer move events.
-- `SceneNode.getProperties()` must stay in sync with property panel expectations—run through `PropertyBar` when changing the shape model to avoid missing controls.
+## Scene Graph and Transform Rules
+
+- Root scene is a `ContainerNode` with no shape (`new ContainerNode(null, null)`) and child nodes hold visible scene content.
+- Hit-testing:
+    - `SceneManager.flattenScene()` traverses descendants.
+    - Collision checks are performed on reversed flattened order for topmost pick behavior.
+- Transform system:
+    - Every `SceneNode` stores `localMatrix` and `worldMatrix`.
+    - Shape mutations mark `canComputeMatrix = true`; matrices are recomputed during `updateWorldMatrix()`.
+    - Draw routines use local matrix concat (`canvas.concat(localMatrix)`) and parent propagation builds world matrices.
+- Coordinate conversions (`worldToLocal`, `worldToParentLocal`, `localToWorld`) are used heavily in tool logic. Preserve these when refactoring drag/drop or container reparenting behavior.
+
+## Layout Containers
+
+- Container layouts are implemented by `ContainerNode.applyLayout()` using `LayoutEngine` helpers:
+    - Flex-like: row/column (`gap`, `mainAlign`, `crossAlign`, `padding`)
+    - Grid: `gridRowGap`, `gridColumnGap`, templates, auto flow
+    - Frame: free positioning
+- `ContainerNode.drawPaddingAndGap()` draws debug overlays for padding/gaps. If layout semantics change, update both layout math and debug visualization.
+- Group creation (`GroupTool`) creates a plain rectangular shape node and attaches layout constraints based on container type.
+
+## Tooling Behavior
+
+- Base class is `src/lib/tools/Tool.ts`.
+- All tools resolve `sceneManager` and `shapeManager` from `DependencyManager`.
+- Default tool reset behavior: base `Tool.handlePointerUp()` sets Zustand tool to default select.
+- Current concrete tools:
+    - `SelectTool`: selection, modifier drag/resize/rotate, hover cursor updates, text double-click editing, container reparent-on-drop.
+    - `ShapeTool`: creates geometric/text nodes via `ShapeFactory` and sizes on drag.
+    - `GroupTool`: creates row/column/grid/frame containers and captures contained shapes after pointer up.
+    - `ImageTool`: opens file picker immediately on tool creation, preloads selected images, places one image per click/drag until queue is empty.
+    - `KeyboardTool`: text editing keys and arrow-key movement for selected shape.
+
+## Shape and Property Pipeline
+
+- Shape creation goes through `ShapeFactory.createShape` with `ShapeType` values.
+- Scene attachment and modifier ownership are managed by `ShapeManager.attachNode`/`detachShape`.
+- Property panel loop:
+    - UI edits in `PropertyBar`
+    - Local store update via `useSceneStore.updateProperty`
+    - Runtime update via `shapeManager.updateProperty`
+    - `SceneNode.setProperties` delegates to shape implementation
+- `ShapeManager` throttles property sync back to store for drag operations and modifier updates.
+- Any new editable shape property must be wired through:
+    - shape `getProperties` / `setProperties`
+    - `Properties` typing in `src/lib/types/shapes.ts`
+    - `PropertyBar` controls and handlers
+    - manager update path above
+
+## Rendering and Resource Lifecycle
+
+- `Renderer` creates a CanvasKit surface, preferring WebGL and falling back to GL v1 options.
+- Render loop targets 60 FPS and flushes each frame.
+- Scene drawing currently includes an additional debug rectangle in `Renderer.render`; preserve or remove intentionally when changing render output.
+- `CanvasKitResources` owns shared CanvasKit objects (font manager, styles, path, canvasKit instance); call `dispose()` on teardown.
+- `PaintManager` centralizes fill/stroke paint, gradient/image shader creation, and caches.
+
+## Stores and UI State
+
+- `useToolStore`:
+    - active tool
+    - default tool (`select`)
+    - per-group remembered tool (`selectedByGroup`)
+- `useCanvasManagerStore`:
+    - active `canvasManager`
+    - exposed `shapeManager` for React-side editing
+- `useSceneStore`:
+    - selected node properties
+    - mutable property editing model for `PropertyBar`
+
+## Build and Workflow Commands
+
+- Install: `npm install`
+- Dev server: `npm run dev`
+- Build: `npm run build`
+- Lint: `npm run lint`
+- Tech stack: React 19, Vite 6, TypeScript, CanvasKit, Zustand.
+
+## Import and Code Style Conventions
+
+- Prefer TS path aliases (`@lib`, `@hooks`, `@ui`, `@/`) instead of long relative paths.
+- Keep manager/tool wiring explicit and centralized; do not instantiate independent manager copies inside tools/components.
+- Keep comments focused and brief. Avoid obvious narration comments.
+
+## High-Impact Gotchas (Current Code)
+
+- Event listeners in `InputManager` use `.bind(this)` inline for add/remove, which can break removal symmetry. If editing input lifecycle, convert to stable bound handlers to avoid leaked listeners.
+- `EventQueue.unSubscribeAll(event)` removes all handlers for that event globally. Use carefully because one module can clear another module's listeners.
+- `ShapeNode.destroy()` and `ContainerNode.destroy()` call parent destruction paths; changing deletion flow without care can cascade destruct unexpectedly.
+- `ToolManager` imports `Tool` from `SelectTool` rather than base `Tool.ts`; fix carefully if touching type declarations there.
+- `SceneNode.resource` expects `CanvasKitResources` initialized; manager/tool code that runs before canvas boot will fail.
+
+## When Adding Features
+
+- New tool:
+    - Add tool class under `src/lib/tools`.
+    - Support it in `ToolManager.setCurrentTool`.
+    - Add UI entry in `ToolBar`/button groups.
+    - Ensure `ToolType` union includes the new key.
+- New shape:
+    - Implement primitive under `src/lib/shapes/primitives`.
+    - Register in `ShapeFactory`.
+    - Verify modifier behavior and property panel integration.
+- New shared service:
+    - Register in `CanvasManager`.
+    - Resolve from `DependencyManager` where needed.
+    - Clean up in `destroy()` path.
+
+## Copilot Expectations for This Repo
+
+- Favor minimal, targeted edits over broad rewrites.
+- Preserve existing architecture (container + event bus + manager graph) unless a task explicitly asks for redesign.
+- Validate changes through the real runtime chain (tool -> manager -> scene -> render), not just type checks.
