@@ -23,13 +23,15 @@ class CanvasManager {
     redoStack: never[]
 
     constructor(canvas: HTMLCanvasElement) {
-        // this.skCnvs = null
+        // Phase 1: Create instances that have no container dependencies
         this.paintManager = new PaintManager()
-        container.register('paintManager', this.paintManager)
-
         this.shapeModifier = new ShapeModifier()
+
+        // Phase 2: Register them so downstream constructors can resolve
+        container.register('paintManager', this.paintManager)
         container.register('shapeModifier', this.shapeModifier)
 
+        // Phase 3: Create instances that depend on the above
         this.shapeManager = new ShapeManager()
         container.register('shapeManager', this.shapeManager)
 
@@ -44,11 +46,9 @@ class CanvasManager {
 
         this.toolManager = new ToolManager(canvas)
         container.register('toolManager', this.toolManager)
-        // Input handling state
+
         this.undoStack = []
         this.redoStack = []
-
-        EventQueue.getEventNames()
     }
 
     setTool(tool: string): void {

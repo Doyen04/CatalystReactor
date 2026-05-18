@@ -38,13 +38,17 @@ class Renderer {
         this.addEvent()
     }
 
+    // Stable bound references for targeted unsubscribe
+    private boundSetUpRendering = this.setUpRendering.bind(this)
+    private boundSetCanRender = this.setCanRender.bind(this)
+
     removeEvent() {
-        EventQueue.unSubscribeAll(CreateSurface)
-        EventQueue.unSubscribeAll(Render)
+        EventQueue.unsubscribe(CreateSurface, this.boundSetUpRendering)
+        EventQueue.unsubscribe(Render, this.boundSetCanRender)
     }
     addEvent() {
-        EventQueue.subscribe(CreateSurface, this.setUpRendering.bind(this))
-        EventQueue.subscribe(Render, this.setCanRender.bind(this))
+        EventQueue.subscribe(CreateSurface, this.boundSetUpRendering)
+        EventQueue.subscribe(Render, this.boundSetCanRender)
     }
     setCanRender() {
         this.canrender = true

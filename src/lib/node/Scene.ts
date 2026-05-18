@@ -1,11 +1,6 @@
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import Handle from '@lib/modifiers/Handles'
 import type Shape from '@lib/shapes/base/Shape'
-import Oval from '@lib/shapes/primitives/Oval'
-import Polygon from '@lib/shapes/primitives/Polygon'
-import PText from '@lib/shapes/primitives/PText'
-import Rectangle from '@lib/shapes/primitives/Rect'
-import Star from '@lib/shapes/primitives/Star'
 import { ArcHandleState, BoundingRect, Coord, HandlePos, Properties, Size } from '@lib/types/shapes'
 import { Canvas } from 'canvaskit-wasm'
 
@@ -250,106 +245,57 @@ abstract class SceneNode {
         return this.shape.getCenterCoord()
     }
 
+    // ── Delegated shape-specific methods (no instanceof needed) ──────────
+    // The Shape base class provides default no-op implementations.
+    // Concrete shapes override only the methods they support.
+
     getArcAngles(): { start: number; sweep: number } | null {
-        if (!this.shape) return null
-        if (this.shape instanceof Oval) {
-            return this.shape.getArcAngles()
-        } else {
-            return null
-            // throw new Error('not implemented')
-        }
+        return this.shape?.getArcAngles() ?? null
     }
 
     getVertexCount(): number | null {
-        if (!this.shape) return null
-        if (this.shape instanceof Star || this.shape instanceof Polygon) {
-            return this.shape.getVertexCount()
-        } else {
-            return null
-            // throw new Error('not implemented')
-        }
+        return this.shape?.getVertexCount() ?? null
     }
 
     getShapeType(): string | null {
         if (!this.shape) return null
-
         return this.shape.getShapeType()
     }
 
     getVertex(prev: number, vertex: number): { x: number; y: number } | null {
-        if (!this.shape) return null
-        if (this.shape instanceof Star || this.shape instanceof Polygon) {
-            return this.shape.getVertex(prev, vertex)
-        } else {
-            return null
-            // throw new Error('not implemented')
-        }
+        return this.shape?.getVertex(prev, vertex) ?? null
     }
 
     isArc(): boolean {
-        if (!this.shape) return false
-        if (this.shape instanceof Oval) {
-            return this.shape.isArc()
-        } else {
-            return null
-            // throw new Error('not implemented')
-        }
+        return this.shape?.isArc() ?? false
     }
 
     setVertexCount(count: number): void {
-        if (this.shape instanceof Star || this.shape instanceof Polygon) {
-            return this.shape.setVertexCount(count)
-        } else {
-            return null
-            // throw new Error('not implemented')
-        }
+        this.shape?.setVertexCount(count)
     }
 
     setArc(start: number, end: number): void {
-        if (this.shape instanceof Oval) {
-            return this.shape.setArc(start, end)
-        } else {
-            return null
-            // throw new Error('not implemented')
-        }
+        this.shape?.setArc(start, end)
     }
 
     getArcHandleState(): ArcHandleState | null {
-        if (this.shape instanceof Oval) {
-            return this.shape.getArcHandleState()
-        }
-        return null
+        return this.shape?.getArcHandleState() ?? null
     }
+
     getSweep(): number | null {
-        if (this.shape instanceof Oval) {
-            return this.shape.getSweep()
-        }
-        return null
+        return this.shape?.getSweep() ?? null
     }
 
     setArcHandleState(state: Partial<ArcHandleState>, replace = false): void {
-        if (this.shape instanceof Oval) {
-            this.shape.setArcHandleState(state, replace)
-        }
+        this.shape?.setArcHandleState(state, replace)
     }
 
     setRatio(ratio: number): void {
-        if (this.shape instanceof Oval || this.shape instanceof Star) {
-            return this.shape.setRatio(ratio)
-        } else {
-            console.warn('not implemented')
-            return null
-            // throw new Error('not implemented')
-        }
+        this.shape?.setRatio(ratio)
     }
 
     setBorderRadius(radius: number, position: HandlePos): void {
-        if (this.shape instanceof Star || this.shape instanceof Polygon || this.shape instanceof Rectangle) {
-            return this.shape.setBorderRadius(radius, position)
-        } else {
-            return null
-            // throw new Error('not implemented')
-        }
+        this.shape?.setBorderRadius(radius, position)
     }
 
     setProperties(properties: Properties): void {
@@ -374,58 +320,42 @@ abstract class SceneNode {
 
     removeChildNode(child: SceneNode): void {
         console.log('implement removeChildNode', child)
-        // Implementation for removing a child node
     }
 
     addChildNode(child: SceneNode): void {
         console.log('implement addChildNode', child)
-        // Implementation for adding a child node
     }
 
     toDegree(rad: number) {
-        if (this.shape instanceof Oval) {
-            return this.shape.toDegree(rad)
-        }
+        return this.shape?.toDegree(rad)
     }
 
-    canEdit() {
-        if (this.shape instanceof PText) {
-            return this.shape.canEdit()
-        } else {
-            return false
-        }
+    canEdit(): boolean {
+        return this.shape?.canEdit() ?? false
     }
 
     insertText(char: string, shiftKey: boolean) {
-        if (this.shape instanceof PText) {
-            this.shape.insertText(char, shiftKey)
-        }
+        this.shape?.insertText(char, shiftKey)
     }
+
     startEditing() {
-        if (this.shape instanceof PText) {
-            this.shape.startEditing()
-        }
+        this.shape?.startEditing()
     }
+
     selectAll() {
-        if (this.shape instanceof PText) {
-            this.shape.selectAll()
-        }
+        this.shape?.selectAll()
     }
+
     setCursorPosFromCoord(x: number, y: number) {
-        if (this.shape instanceof PText) {
-            this.shape.setCursorPosFromCoord(x, y)
-        }
+        this.shape?.setCursorPosFromCoord(x, y)
     }
+
     deleteText(direc: 'forward' | 'backward') {
-        if (this.shape instanceof PText) {
-            this.shape.deleteText(direc)
-        }
+        this.shape?.deleteText(direc)
     }
+
     moveCursor(direc: 'right' | 'left' | 'up' | 'down', shiftKey: boolean) {
-        if (this.shape instanceof PText) {
-            this.shape.moveCursor(direc, shiftKey)
-        }
-        console.log(direc, shiftKey)
+        this.shape?.moveCursor(direc, shiftKey)
     }
 
     cleanUp() {
@@ -437,3 +367,4 @@ abstract class SceneNode {
 }
 
 export default SceneNode
+

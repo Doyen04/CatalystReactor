@@ -134,13 +134,16 @@ export class CanvasKitResources {
     }
 
     public dispose() {
-        this.cnvsFontMgr.delete()
+        if (this.cnvsFontMgr) {
+            this.cnvsFontMgr.delete()
+        }
         this.cnvsTextStyle = null
         this.cnvsFontMgr = null
         CanvasKitResources.cnvsFontData = []
+        CanvasKitResources.fontsLoaded = false
+        CanvasKitResources.fontLoadPromise = null
         CanvasKitResources.instance = null
         console.log('deleting all canvaskit object')
-        // Note: ParagraphStyle may not need explicit delete depending on usage.
     }
 }
 

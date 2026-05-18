@@ -22,7 +22,7 @@ class TextCursor {
         this.textX = 0
         this.textY = 0
         this.height = initialHeight
-        this.paintManager = container.resolve<PaintManager>('paintManager')
+        this.paintManager = container.resolve('paintManager')
         this.cursorIndex = 0
 
         this.startCursorBlink()

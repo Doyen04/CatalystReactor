@@ -34,13 +34,13 @@ class ShapeNode extends SceneNode {
     }
 
     override destroy() {
+        if (this.parent) {
+            this.parent.removeChildNode(this)
+            this.parent = null
+        }
         if (this.shape) {
             this.shape.destroy()
             this.shape = null
-        }
-        if (this.parent) {
-            this.parent.destroy()
-            this.parent = null
         }
         this.localMatrix = null
         this.worldMatrix = null

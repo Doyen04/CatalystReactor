@@ -12,11 +12,11 @@ import BorderRadiusAll from '@ui/BorderRadiusAll'
 import ColorInput from '@ui/ColorInput'
 
 function PropertyBar() {
-    const { currentShapeProperties, updateProperty } = useSceneStore()
+    const { currentShapeProperties } = useSceneStore()
     const { shapeManager } = useCanvasManagerStore()
 
     const handlePropertyChange = (key: string, value: number) => {
-        const { transform, size, style, borderRadius, sides, spikesRatio,textStyle } = currentShapeProperties
+        const { transform, size, style, borderRadius, arcSegment, sides, spikesRatio, textStyle } = currentShapeProperties
 
         const propertyMap = [
             { prop: transform, name: 'transform' },
@@ -33,13 +33,6 @@ function PropertyBar() {
             if (!prop) continue
 
             if (key == 'radii' && borderRadius && borderRadius.locked && typeof value == 'number') {
-                updateProperty('borderRadius', {
-                    'top-left': value,
-                    'top-right': value,
-                    'bottom-left': value,
-                    'bottom-right': value,
-                    locked: true,
-                })
                 shapeManager?.updateProperty('borderRadius', {
                     'top-left': value,
                     'top-right': value,
@@ -48,13 +41,10 @@ function PropertyBar() {
                     locked: true,
                 })
             } else if (key in prop) {
-                updateProperty(name, { ...prop, [key]: value })
-                if (shapeManager) {
-                    shapeManager.updateProperty(name as keyof Properties, {
-                        ...prop,
-                        [key]: value,
-                    })
-                }
+                shapeManager?.updateProperty(name as keyof Properties, {
+                    ...prop,
+                    [key]: value,
+                })
                 break
             }
         }
@@ -78,7 +68,6 @@ function PropertyBar() {
             newBorderRadius = { ...borderRadius, locked: false }
         }
 
-        updateProperty('borderRadius', newBorderRadius)
         shapeManager?.updateProperty('borderRadius', newBorderRadius)
     }
 
@@ -104,7 +93,6 @@ function PropertyBar() {
             }
         }
 
-        updateProperty('style', newStyle)
         shapeManager?.updateProperty('style', newStyle)
     }
 

@@ -8,63 +8,58 @@ class InputManager {
     constructor(cnvs: HTMLCanvasElement) {
         this.canvasEl = cnvs
 
-        // Bind events
         this.setUpEvent()
     }
+
     setUpEvent() {
         this.removeEventListeners()
         this.addEventListeners()
     }
+
     addEventListeners() {
-        this.canvasEl.addEventListener('mousedown', this.onPointerDown.bind(this))
-        this.canvasEl.addEventListener('mousemove', this.onPointerMove.bind(this))
-        this.canvasEl.addEventListener('mouseup', this.onPointerUp.bind(this))
-        this.canvasEl.addEventListener('keydown', this.onKeyDown.bind(this))
-        this.canvasEl.addEventListener('keyup', this.onKeyUp.bind(this))
-        window.addEventListener('resize', this.resize.bind(this))
+        this.canvasEl.addEventListener('mousedown', this.onPointerDown)
+        this.canvasEl.addEventListener('mousemove', this.onPointerMove)
+        this.canvasEl.addEventListener('mouseup', this.onPointerUp)
+        this.canvasEl.addEventListener('keydown', this.onKeyDown)
+        this.canvasEl.addEventListener('keyup', this.onKeyUp)
+        window.addEventListener('resize', this.onResize)
     }
 
-    onPointerDown(e: MouseEvent) {
-        console.log('down')
+    removeEventListeners() {
+        this.canvasEl.removeEventListener('mousedown', this.onPointerDown)
+        this.canvasEl.removeEventListener('mousemove', this.onPointerMove)
+        this.canvasEl.removeEventListener('mouseup', this.onPointerUp)
+        this.canvasEl.removeEventListener('keydown', this.onKeyDown)
+        this.canvasEl.removeEventListener('keyup', this.onKeyUp)
+        window.removeEventListener('resize', this.onResize)
+    }
+
+    // Arrow properties ensure a stable `this` reference without .bind()
+    private onPointerDown = (e: MouseEvent) => {
         this.canvasEl.focus()
         EventQueue.trigger(PointerDown, e)
     }
 
-    onPointerMove(e: MouseEvent) {
+    private onPointerMove = (e: MouseEvent) => {
         EventQueue.trigger(PointerMove, e)
     }
 
-    onPointerUp(e: MouseEvent) {
-        console.log('up')
+    private onPointerUp = (e: MouseEvent) => {
         EventQueue.trigger(PointerUp, e)
     }
 
-    onKeyDown(e: KeyboardEvent) {
-        console.log('e down')
-
+    private onKeyDown = (e: KeyboardEvent) => {
         EventQueue.trigger(KeyDown, e)
     }
 
-    onKeyUp(e: KeyboardEvent) {
-        console.log('e up')
-
+    private onKeyUp = (e: KeyboardEvent) => {
         EventQueue.trigger(KeyUp, e)
     }
 
-    resize(e?: Event): void {
-        console.log('resizing----5----', e)
-
+    private onResize = () => {
         EventQueue.trigger(CreateSurface)
     }
 
-    removeEventListeners() {
-        this.canvasEl.removeEventListener('mousedown', this.onPointerDown.bind(this))
-        this.canvasEl.removeEventListener('mousemove', this.onPointerMove.bind(this))
-        this.canvasEl.removeEventListener('mouseup', this.onPointerUp.bind(this))
-        window.removeEventListener('keydown', this.onPointerUp.bind(this))
-        window.removeEventListener('keyup', this.onKeyUp.bind(this))
-        window.removeEventListener('resize', this.resize.bind(this))
-    }
     destroy() {
         this.removeEventListeners()
         this.canvasEl = null
@@ -72,3 +67,4 @@ class InputManager {
 }
 
 export default InputManager
+

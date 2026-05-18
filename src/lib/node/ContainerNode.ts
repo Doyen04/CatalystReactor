@@ -15,7 +15,7 @@ class ContainerNode extends SceneNode {
         super()
         this.shape = shape
         this.children = []
-        this.paintManager = container.resolve<PaintManager>('paintManager')
+        this.paintManager = container.resolve('paintManager')
         this.parent = null
         this.layoutConstraints = layoutConstraints
         this.setUpMatrix()
@@ -246,23 +246,26 @@ class ContainerNode extends SceneNode {
     }
     
     destroy() {
+        // Detach from parent — never destroy the parent
+        if (this.parent) {
+            this.parent.removeChildNode(this)
+            this.parent = null
+        }
+
+        // Destroy own shape
         if (this.shape) {
-            this.parent?.removeChildNode(this)
             this.shape.destroy()
             this.shape = null
         }
-        if (this.children.length > 0) {
-            this.children.forEach(child => {
-                const parent = child.getParent()
-                parent?.removeChildNode(child)
-                child.destroy()
-            })
-            this.children = []
+
+        // Destroy children without re-triggering removeChildNode
+        // (we are clearing the array ourselves)
+        for (const child of this.children) {
+            child.setParent(null)
+            child.destroy()
         }
-        if (this.parent) {
-            this.parent.destroy()
-            this.parent = null
-        }
+        this.children = []
+
         this.localMatrix = null
         this.worldMatrix = null
     }

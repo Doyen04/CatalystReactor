@@ -14,6 +14,6 @@ export const useCanvasManagerStore = create<CanvasManagerState>(set => ({
     setCanvasManager: manager =>
         set({
             canvasManager: manager,
-            shapeManager: manager.shapeManager ?? null,
+            shapeManager: manager?.shapeManager ?? null,
         }),
 }))

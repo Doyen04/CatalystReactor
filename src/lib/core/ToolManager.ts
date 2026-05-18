@@ -1,6 +1,6 @@
 import SelectTool from '@/lib/tools/SelectTool'
 import ShapeTool from '@/lib/tools/ShapeTool'
-import Tool from '@/lib/tools/SelectTool'
+import Tool from '@/lib/tools/Tool'
 import EventQueue, { EventTypes } from './EventQueue'
 import ImageTool from '@lib/tools/ImageTool'
 import KeyboardTool from '@lib/tools/keyboardTool'
@@ -14,6 +14,13 @@ class ToolManager {
     keyboardTool: KeyboardTool
     cnvsElm: HTMLCanvasElement
 
+    // Store bound references so we can unsubscribe the exact same function
+    private boundPointerDown: (e: MouseEvent) => void
+    private boundPointerMove: (e: MouseEvent) => void
+    private boundPointerUp: (e: MouseEvent) => void
+    private boundKeyDown: (e: KeyboardEvent) => void
+    private boundKeyUp: (e: KeyboardEvent) => void
+
     constructor(cnvs: HTMLCanvasElement) {
         this.cnvsElm = cnvs
         this.currentTool = new SelectTool(this.cnvsElm)
@@ -22,7 +29,7 @@ class ToolManager {
     }
 
     setCurrentTool(tool: ToolType) {
-        let currentTool = null
+        let currentTool: Tool | null = null
         switch (tool) {
             case 'select':
                 currentTool = new SelectTool(this.cnvsElm)
@@ -44,8 +51,7 @@ class ToolManager {
                 currentTool = new ImageTool(this.cnvsElm)
                 break
             default:
-                console.warn('ttool not implemented')
-
+                console.warn('tool not implemented')
                 currentTool = null
                 break
         }
@@ -53,7 +59,7 @@ class ToolManager {
         this.setUpEvent()
     }
 
-    handleToolChange(tool: Tool) {
+    private handleToolChange = (tool: Tool) => {
         if (tool !== this.currentTool) {
             if (this.currentTool) this.currentTool.toolChange()
             this.currentTool = tool
@@ -64,22 +70,33 @@ class ToolManager {
         this.removeEvent()
         this.addEvent()
     }
+
     addEvent() {
-        EventQueue.subscribe(PointerDown, this.currentTool.handlePointerDown.bind(this.currentTool))
-        EventQueue.subscribe(PointerMove, this.currentTool.handlePointerMove.bind(this.currentTool))
-        EventQueue.subscribe(PointerUp, this.currentTool.handlePointerUp.bind(this.currentTool))
-        EventQueue.subscribe(KeyDown, this.keyboardTool.handleKeyDown.bind(this.keyboardTool))
-        EventQueue.subscribe(KeyUp, this.keyboardTool.handleKeyUp.bind(this.keyboardTool))
-        EventQueue.subscribe(ToolChange, this.handleToolChange.bind(this))
+        // Create and store bound references
+        this.boundPointerDown = this.currentTool.handlePointerDown.bind(this.currentTool)
+        this.boundPointerMove = this.currentTool.handlePointerMove.bind(this.currentTool)
+        this.boundPointerUp = this.currentTool.handlePointerUp.bind(this.currentTool)
+        this.boundKeyDown = this.keyboardTool.handleKeyDown.bind(this.keyboardTool)
+        this.boundKeyUp = this.keyboardTool.handleKeyUp.bind(this.keyboardTool)
+
+        EventQueue.subscribe(PointerDown, this.boundPointerDown)
+        EventQueue.subscribe(PointerMove, this.boundPointerMove)
+        EventQueue.subscribe(PointerUp, this.boundPointerUp)
+        EventQueue.subscribe(KeyDown, this.boundKeyDown)
+        EventQueue.subscribe(KeyUp, this.boundKeyUp)
+        EventQueue.subscribe(ToolChange, this.handleToolChange)
     }
+
     removeEvent() {
-        EventQueue.unSubscribeAll(PointerDown)
-        EventQueue.unSubscribeAll(PointerMove)
-        EventQueue.unSubscribeAll(PointerUp)
-        EventQueue.unSubscribeAll(KeyDown)
-        EventQueue.unSubscribeAll(KeyUp)
-        EventQueue.unSubscribeAll(ToolChange)
+        // Only remove our own handlers, not everyone else's
+        if (this.boundPointerDown) EventQueue.unsubscribe(PointerDown, this.boundPointerDown)
+        if (this.boundPointerMove) EventQueue.unsubscribe(PointerMove, this.boundPointerMove)
+        if (this.boundPointerUp) EventQueue.unsubscribe(PointerUp, this.boundPointerUp)
+        if (this.boundKeyDown) EventQueue.unsubscribe(KeyDown, this.boundKeyDown)
+        if (this.boundKeyUp) EventQueue.unsubscribe(KeyUp, this.boundKeyUp)
+        EventQueue.unsubscribe(ToolChange, this.handleToolChange)
     }
+
     destroy() {
         this.removeEvent()
         this.currentTool = null
@@ -87,3 +104,4 @@ class ToolManager {
 }
 
 export default ToolManager
+

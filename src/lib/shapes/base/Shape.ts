@@ -4,9 +4,11 @@
 import Handle from '@lib/modifiers/Handles'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import {
+    ArcHandleState,
     BoundingRect,
     Coord,
     CornerPos,
+    HandlePos,
     Properties,
     ShapeType,
     SolidFill,
@@ -60,7 +62,7 @@ abstract class Shape {
         this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 }
         this.isHover = false
         this.shapeType = type
-        this.paintManager = container.resolve<PaintManager>("paintManager");
+        this.paintManager = container.resolve("paintManager");
     }
 
     abstract getCenterCoord(): Coord
@@ -278,12 +280,43 @@ abstract class Shape {
     }
 
     setHovered(bool: boolean) {
-        // EventQueue.trigger(Render)
         this.isHover = bool
     }
 
-    //better management for canvaskit resources
+    // ── Virtual methods with default no-op implementations ───────────────
+    // Subclasses override only the methods they support.
+    // This eliminates instanceof checks in SceneNode.
+
+    // Arc (Oval)
+    getArcAngles(): { start: number; sweep: number } | null { return null }
+    isArc(): boolean { return false }
+    setArc(_start: number, _end: number): void { /* no-op */ }
+    getArcHandleState(): ArcHandleState | null { return null }
+    getSweep(): number | null { return null }
+    setArcHandleState(_state: Partial<ArcHandleState>, _replace?: boolean): void { /* no-op */ }
+    toDegree(_rad: number): number | undefined { return undefined }
+
+    // Vertices (Star, Polygon)
+    getVertexCount(): number | null { return null }
+    setVertexCount(_count: number): void { /* no-op */ }
+    getVertex(_prev: number, _vertex: number): { x: number; y: number } | null { return null }
+
+    // Ratio (Oval, Star)
+    setRatio(_ratio: number): void { /* no-op */ }
+
+    // Border radius (Rect, Star, Polygon)
+    setBorderRadius(_radius: number, _position: HandlePos): void { /* no-op */ }
+
+    // Text editing (PText)
+    canEdit(): boolean { return false }
+    insertText(_char: string, _shiftKey: boolean): void { /* no-op */ }
+    startEditing(): void { /* no-op */ }
+    selectAll(): void { /* no-op */ }
+    setCursorPosFromCoord(_x: number, _y: number): void { /* no-op */ }
+    deleteText(_direc: 'forward' | 'backward'): void { /* no-op */ }
+    moveCursor(_direc: 'right' | 'left' | 'up' | 'down', _shiftKey: boolean): void { /* no-op */ }
 
     abstract destroy(): void
 }
 export default Shape
+

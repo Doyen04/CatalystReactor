@@ -78,7 +78,7 @@ class EventBus {
     }
 
     getEventNames() {
-        this.handlers.forEach((value, key, map) => {
+        this.handlers.forEach((value, key) => {
             console.log(key, value)
         })
     }
@@ -87,6 +87,16 @@ class EventBus {
         this.handlers = new Map<EventTypes, Set<Function>>()
     }
 
+    /** Remove a specific handler from an event */
+    unsubscribe<T extends EventTypes>(event: T, handler: Handlers[T]) {
+        const set = this.handlers.get(event)
+        if (set) {
+            set.delete(handler)
+            if (set.size === 0) this.handlers.delete(event)
+        }
+    }
+
+    /** Remove ALL handlers for an event — use sparingly */
     unSubscribeAll(event: EventTypes) {
         this.handlers.delete(event)
     }
