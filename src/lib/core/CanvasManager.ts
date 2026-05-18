@@ -27,24 +27,21 @@ class CanvasManager {
         this.paintManager = new PaintManager()
         this.shapeModifier = new ShapeModifier()
 
-        // Phase 2: Register them so downstream constructors can resolve
+        // Phase 2: Create instances that depend on the above directly (Constructor Injection)
+        this.shapeManager = new ShapeManager(this.shapeModifier)
+        this.sceneManager = new SceneManager(this.shapeModifier)
+        this.renderer = new Renderer(canvas, this.sceneManager, this.paintManager)
+        this.inputManager = new InputManager(canvas)
+        this.toolManager = new ToolManager(canvas, this.inputManager)
+
+        // Phase 3: Register them for deeply nested components (like tools and shape nodes)
+        // to avoid prop drilling through the tree structure.
         container.register('paintManager', this.paintManager)
         container.register('shapeModifier', this.shapeModifier)
-
-        // Phase 3: Create instances that depend on the above
-        this.shapeManager = new ShapeManager()
         container.register('shapeManager', this.shapeManager)
-
-        this.sceneManager = new SceneManager()
         container.register('sceneManager', this.sceneManager)
-
-        this.renderer = new Renderer(canvas)
         container.register('renderer', this.renderer)
-
-        this.inputManager = new InputManager(canvas)
         container.register('inputManager', this.inputManager)
-
-        this.toolManager = new ToolManager(canvas, this.inputManager)
         container.register('toolManager', this.toolManager)
 
         this.undoStack = []

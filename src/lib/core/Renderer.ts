@@ -2,7 +2,6 @@ import { Canvas, Surface } from 'canvaskit-wasm'
 import EventQueue, { EventTypes } from './EventQueue'
 import SceneManager from './SceneManager'
 import CanvasKitResources from './CanvasKitResource'
-import container from './DependencyManager'
 import PaintManager from './PaintManager'
 
 const { CreateSurface, Render } = EventTypes
@@ -22,12 +21,12 @@ class Renderer {
     private canrender: boolean = false
     private paintManager: PaintManager
 
-    constructor(canvasEl: HTMLCanvasElement) {
+    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager, paintManager: PaintManager) {
         this.canvasEl = canvasEl
-        this.sceneManager = container.resolve('sceneManager')
+        this.sceneManager = sceneManager
         this.surf = null
         this.animationId = null
-        this.paintManager = container.resolve('paintManager')
+        this.paintManager = paintManager
 
         this.setUpEvent()
 
