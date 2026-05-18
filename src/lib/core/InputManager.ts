@@ -1,7 +1,3 @@
-import EventQueue, { EventTypes } from './EventQueue'
-
-const { CreateSurface } = EventTypes
-
 /** Callback signatures for direct input subscribers */
 export interface InputCallbacks {
     onPointerDown?: (e: MouseEvent) => void
@@ -9,6 +5,7 @@ export interface InputCallbacks {
     onPointerUp?: (e: MouseEvent) => void
     onKeyDown?: (e: KeyboardEvent) => void
     onKeyUp?: (e: KeyboardEvent) => void
+    onResize?: () => void
 }
 
 class InputManager {
@@ -23,7 +20,7 @@ class InputManager {
         this.setUpEvent()
     }
 
-    /** Register a direct input subscriber (e.g. ToolManager) */
+    /** Register a direct input subscriber (e.g. ToolManager, Renderer) */
     subscribe(callbacks: InputCallbacks): void {
         this.subscribers.add(callbacks)
     }
@@ -78,9 +75,8 @@ class InputManager {
         this.subscribers.forEach(sub => sub.onKeyUp?.(e))
     }
 
-    // Resize still goes through EventQueue since Renderer also subscribes to it
     private onResize = () => {
-        EventQueue.trigger(CreateSurface)
+        this.subscribers.forEach(sub => sub.onResize?.())
     }
 
     destroy() {

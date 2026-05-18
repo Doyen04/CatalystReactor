@@ -30,8 +30,8 @@ class CanvasManager {
         // Phase 2: Create instances that depend on the above directly (Constructor Injection)
         this.shapeManager = new ShapeManager(this.shapeModifier)
         this.sceneManager = new SceneManager(this.shapeModifier)
-        this.renderer = new Renderer(canvas, this.sceneManager, this.paintManager)
         this.inputManager = new InputManager(canvas)
+        this.renderer = new Renderer(canvas, this.sceneManager, this.paintManager, this.inputManager)
         this.toolManager = new ToolManager(canvas, this.inputManager)
 
         // Phase 3: Register them for deeply nested components (like tools and shape nodes)

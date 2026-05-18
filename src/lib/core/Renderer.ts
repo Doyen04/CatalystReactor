@@ -1,15 +1,15 @@
 import { Canvas, Surface } from 'canvaskit-wasm'
-import EventQueue, { EventTypes } from './EventQueue'
 import SceneManager from './SceneManager'
 import CanvasKitResources from './CanvasKitResource'
 import PaintManager from './PaintManager'
-
-const { CreateSurface, Render } = EventTypes
+import type InputManager from './InputManager'
+import type { InputCallbacks } from './InputManager'
 
 class Renderer {
     sceneManager: SceneManager
     surf: Surface | null
     canvasEl: HTMLCanvasElement
+    inputManager: InputManager
 
     dpr: number = window.devicePixelRatio || 1
     skCnvs: Canvas
@@ -21,12 +21,15 @@ class Renderer {
     private canrender: boolean = false
     private paintManager: PaintManager
 
-    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager, paintManager: PaintManager) {
+    private inputCallbacks?: InputCallbacks
+
+    constructor(canvasEl: HTMLCanvasElement, sceneManager: SceneManager, paintManager: PaintManager, inputManager: InputManager) {
         this.canvasEl = canvasEl
         this.sceneManager = sceneManager
         this.surf = null
         this.animationId = null
         this.paintManager = paintManager
+        this.inputManager = inputManager
 
         this.setUpEvent()
 
@@ -39,15 +42,18 @@ class Renderer {
 
     // Stable bound references for targeted unsubscribe
     private boundSetUpRendering = this.setUpRendering.bind(this)
-    private boundSetCanRender = this.setCanRender.bind(this)
 
     removeEvent() {
-        EventQueue.unsubscribe(CreateSurface, this.boundSetUpRendering)
-        EventQueue.unsubscribe(Render, this.boundSetCanRender)
+        if (this.inputCallbacks) {
+            this.inputManager.unsubscribe(this.inputCallbacks)
+            this.inputCallbacks = undefined
+        }
     }
     addEvent() {
-        EventQueue.subscribe(CreateSurface, this.boundSetUpRendering)
-        EventQueue.subscribe(Render, this.boundSetCanRender)
+        this.inputCallbacks = {
+            onResize: this.boundSetUpRendering,
+        }
+        this.inputManager.subscribe(this.inputCallbacks)
     }
     setCanRender() {
         this.canrender = true

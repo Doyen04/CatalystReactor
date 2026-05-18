@@ -1,15 +1,12 @@
 import SelectTool from '@/lib/tools/SelectTool'
 import ShapeTool from '@/lib/tools/ShapeTool'
 import Tool from '@/lib/tools/Tool'
-import EventQueue, { EventTypes } from './EventQueue'
 import ImageTool from '@lib/tools/ImageTool'
 import KeyboardTool from '@lib/tools/keyboardTool'
 import { ToolType } from '@lib/tools/toolTypes'
 import GroupTool from '@lib/tools/GroupTool'
 import type InputManager from './InputManager'
 import type { InputCallbacks } from './InputManager'
-
-const { ToolChange } = EventTypes
 
 class ToolManager {
     currentTool: Tool
@@ -54,7 +51,7 @@ class ToolManager {
                 currentTool = null
                 break
         }
-        if (currentTool) EventQueue.trigger(ToolChange, currentTool)
+        if (currentTool) this.handleToolChange(currentTool)
         this.setUpEvent()
     }
 
@@ -81,7 +78,6 @@ class ToolManager {
         }
 
         this.inputManager.subscribe(this.inputCallbacks)
-        EventQueue.subscribe(ToolChange, this.handleToolChange)
     }
 
     removeEvent() {
@@ -89,7 +85,6 @@ class ToolManager {
             this.inputManager.unsubscribe(this.inputCallbacks)
             this.inputCallbacks = undefined
         }
-        EventQueue.unsubscribe(ToolChange, this.handleToolChange)
     }
 
     destroy() {

@@ -265,7 +265,7 @@ class ShapeModifier {
         this.initialShapeData = null
     }
     setHover(bool: boolean) {
-        // EventQueue.trigger(Render)
+
         this.isHovered = bool
     }
     hovered(): boolean {
