@@ -24,24 +24,27 @@ class CanvasManager {
 
     constructor(canvas: HTMLCanvasElement) {
         // Phase 1: Create instances that have no container dependencies
+        // Phase 1: Core foundation (no dependencies)
         this.paintManager = new PaintManager()
-        this.shapeModifier = new ShapeModifier()
-
-        // Phase 2: Create instances that depend on the above directly (Constructor Injection)
-        this.shapeManager = new ShapeManager(this.shapeModifier)
-        this.sceneManager = new SceneManager(this.shapeModifier)
-        this.inputManager = new InputManager(canvas)
-        this.renderer = new Renderer(canvas, this.sceneManager, this.paintManager, this.inputManager)
-        this.toolManager = new ToolManager(canvas, this.inputManager)
-
-        // Phase 3: Register them for deeply nested components (like tools and shape nodes)
-        // to avoid prop drilling through the tree structure.
         container.register('paintManager', this.paintManager)
+
+        this.shapeModifier = new ShapeModifier()
         container.register('shapeModifier', this.shapeModifier)
+
+        // Phase 2: Managers requiring explicit orchestration injection
+        this.shapeManager = new ShapeManager(this.shapeModifier)
         container.register('shapeManager', this.shapeManager)
+
+        this.sceneManager = new SceneManager(this.shapeModifier)
         container.register('sceneManager', this.sceneManager)
-        container.register('renderer', this.renderer)
+
+        this.inputManager = new InputManager(canvas)
         container.register('inputManager', this.inputManager)
+
+        this.renderer = new Renderer(canvas, this.sceneManager, this.paintManager, this.inputManager)
+        container.register('renderer', this.renderer)
+
+        this.toolManager = new ToolManager(canvas, this.inputManager)
         container.register('toolManager', this.toolManager)
 
         this.undoStack = []
