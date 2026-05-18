@@ -1,14 +1,36 @@
 import EventQueue, { EventTypes } from './EventQueue'
 
-const { PointerDown, PointerMove, PointerUp, CreateSurface, KeyDown, KeyUp } = EventTypes
+const { CreateSurface } = EventTypes
+
+/** Callback signatures for direct input subscribers */
+export interface InputCallbacks {
+    onPointerDown?: (e: MouseEvent) => void
+    onPointerMove?: (e: MouseEvent) => void
+    onPointerUp?: (e: MouseEvent) => void
+    onKeyDown?: (e: KeyboardEvent) => void
+    onKeyUp?: (e: KeyboardEvent) => void
+}
 
 class InputManager {
     private canvasEl: HTMLCanvasElement
+
+    // Direct subscribers — replaces the EventQueue for 1:1 input routing
+    private subscribers: Set<InputCallbacks> = new Set()
 
     constructor(cnvs: HTMLCanvasElement) {
         this.canvasEl = cnvs
 
         this.setUpEvent()
+    }
+
+    /** Register a direct input subscriber (e.g. ToolManager) */
+    subscribe(callbacks: InputCallbacks): void {
+        this.subscribers.add(callbacks)
+    }
+
+    /** Remove a previously registered subscriber */
+    unsubscribe(callbacks: InputCallbacks): void {
+        this.subscribers.delete(callbacks)
     }
 
     setUpEvent() {
@@ -37,34 +59,37 @@ class InputManager {
     // Arrow properties ensure a stable `this` reference without .bind()
     private onPointerDown = (e: MouseEvent) => {
         this.canvasEl.focus()
-        EventQueue.trigger(PointerDown, e)
+        this.subscribers.forEach(sub => sub.onPointerDown?.(e))
     }
 
     private onPointerMove = (e: MouseEvent) => {
-        EventQueue.trigger(PointerMove, e)
+        this.subscribers.forEach(sub => sub.onPointerMove?.(e))
     }
 
     private onPointerUp = (e: MouseEvent) => {
-        EventQueue.trigger(PointerUp, e)
+        this.subscribers.forEach(sub => sub.onPointerUp?.(e))
     }
 
     private onKeyDown = (e: KeyboardEvent) => {
-        EventQueue.trigger(KeyDown, e)
+        this.subscribers.forEach(sub => sub.onKeyDown?.(e))
     }
 
     private onKeyUp = (e: KeyboardEvent) => {
-        EventQueue.trigger(KeyUp, e)
+        this.subscribers.forEach(sub => sub.onKeyUp?.(e))
     }
 
+    // Resize still goes through EventQueue since Renderer also subscribes to it
     private onResize = () => {
         EventQueue.trigger(CreateSurface)
     }
 
     destroy() {
         this.removeEventListeners()
+        this.subscribers.clear()
         this.canvasEl = null
     }
 }
 
 export default InputManager
+
 

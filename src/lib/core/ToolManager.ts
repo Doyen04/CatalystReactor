@@ -6,23 +6,22 @@ import ImageTool from '@lib/tools/ImageTool'
 import KeyboardTool from '@lib/tools/keyboardTool'
 import { ToolType } from '@lib/tools/toolTypes'
 import GroupTool from '@lib/tools/GroupTool'
+import type InputManager from './InputManager'
+import type { InputCallbacks } from './InputManager'
 
-const { PointerDown, PointerMove, PointerUp, KeyDown, KeyUp, ToolChange } = EventTypes
+const { ToolChange } = EventTypes
 
 class ToolManager {
     currentTool: Tool
     keyboardTool: KeyboardTool
     cnvsElm: HTMLCanvasElement
+    inputManager: InputManager
 
-    // Store bound references so we can unsubscribe the exact same function
-    private boundPointerDown: (e: MouseEvent) => void
-    private boundPointerMove: (e: MouseEvent) => void
-    private boundPointerUp: (e: MouseEvent) => void
-    private boundKeyDown: (e: KeyboardEvent) => void
-    private boundKeyUp: (e: KeyboardEvent) => void
+    private inputCallbacks?: InputCallbacks
 
-    constructor(cnvs: HTMLCanvasElement) {
+    constructor(cnvs: HTMLCanvasElement, inputManager: InputManager) {
         this.cnvsElm = cnvs
+        this.inputManager = inputManager
         this.currentTool = new SelectTool(this.cnvsElm)
         this.keyboardTool = new KeyboardTool()
         this.setUpEvent()
@@ -72,28 +71,24 @@ class ToolManager {
     }
 
     addEvent() {
-        // Create and store bound references
-        this.boundPointerDown = this.currentTool.handlePointerDown.bind(this.currentTool)
-        this.boundPointerMove = this.currentTool.handlePointerMove.bind(this.currentTool)
-        this.boundPointerUp = this.currentTool.handlePointerUp.bind(this.currentTool)
-        this.boundKeyDown = this.keyboardTool.handleKeyDown.bind(this.keyboardTool)
-        this.boundKeyUp = this.keyboardTool.handleKeyUp.bind(this.keyboardTool)
+        // Create an explicit callback object to subscribe directly to InputManager
+        this.inputCallbacks = {
+            onPointerDown: this.currentTool.handlePointerDown.bind(this.currentTool),
+            onPointerMove: this.currentTool.handlePointerMove.bind(this.currentTool),
+            onPointerUp: this.currentTool.handlePointerUp.bind(this.currentTool),
+            onKeyDown: this.keyboardTool.handleKeyDown.bind(this.keyboardTool),
+            onKeyUp: this.keyboardTool.handleKeyUp.bind(this.keyboardTool),
+        }
 
-        EventQueue.subscribe(PointerDown, this.boundPointerDown)
-        EventQueue.subscribe(PointerMove, this.boundPointerMove)
-        EventQueue.subscribe(PointerUp, this.boundPointerUp)
-        EventQueue.subscribe(KeyDown, this.boundKeyDown)
-        EventQueue.subscribe(KeyUp, this.boundKeyUp)
+        this.inputManager.subscribe(this.inputCallbacks)
         EventQueue.subscribe(ToolChange, this.handleToolChange)
     }
 
     removeEvent() {
-        // Only remove our own handlers, not everyone else's
-        if (this.boundPointerDown) EventQueue.unsubscribe(PointerDown, this.boundPointerDown)
-        if (this.boundPointerMove) EventQueue.unsubscribe(PointerMove, this.boundPointerMove)
-        if (this.boundPointerUp) EventQueue.unsubscribe(PointerUp, this.boundPointerUp)
-        if (this.boundKeyDown) EventQueue.unsubscribe(KeyDown, this.boundKeyDown)
-        if (this.boundKeyUp) EventQueue.unsubscribe(KeyUp, this.boundKeyUp)
+        if (this.inputCallbacks) {
+            this.inputManager.unsubscribe(this.inputCallbacks)
+            this.inputCallbacks = undefined
+        }
         EventQueue.unsubscribe(ToolChange, this.handleToolChange)
     }
 

@@ -44,7 +44,7 @@ class CanvasManager {
         this.inputManager = new InputManager(canvas)
         container.register('inputManager', this.inputManager)
 
-        this.toolManager = new ToolManager(canvas)
+        this.toolManager = new ToolManager(canvas, this.inputManager)
         container.register('toolManager', this.toolManager)
 
         this.undoStack = []

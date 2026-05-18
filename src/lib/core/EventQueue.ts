@@ -1,12 +1,6 @@
 import { Coord, ShapeType } from '@lib/types/shapes'
 
 enum EventTypes {
-    PointerDown = 'pointer:down', //
-    PointerUp = 'pointer:up', //
-    PointerMove = 'pointer:move', //
-    KeyDown = 'key:down', //
-    KeyUp = 'key:up', //
-
     CreateScene = 'create:scene', //
     // SceneCreated = 'scene:created',
     DrawScene = 'draw:shape', //
@@ -29,11 +23,6 @@ enum EventTypes {
 }
 
 type Handlers = {
-    [EventTypes.PointerDown]: (e: MouseEvent) => void
-    [EventTypes.PointerUp]: (e: MouseEvent) => void
-    [EventTypes.PointerMove]: (e: MouseEvent) => void
-    [EventTypes.KeyDown]: (e: KeyboardEvent) => void
-    [EventTypes.KeyUp]: (e: KeyboardEvent) => void
     [EventTypes.CreateScene]: (type: ShapeType, x: number, y: number) => void
     // [EventTypes.SceneCreated]: (Scene: SceneNode) => void;
     [EventTypes.DrawScene]: (dragStart: Coord, x: number, y: number, shiftKey: boolean) => void
