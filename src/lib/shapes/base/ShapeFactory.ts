@@ -75,7 +75,7 @@ export default class ShapeFactory {
         };
 
         // Add type-specific defaults
-        if (type === 'rect' || type === 'plainRect') {
+        if (type === 'rect' || type === 'plainRect' || type == 'img') {
             props.borderRadius = { 'top-left': 0, 'top-right': 0, 'bottom-left': 0, 'bottom-right': 0, locked: false };
         } else if (type === 'star') {
             props.spikesRatio = { spikes: 5, ratio: 0.5 };

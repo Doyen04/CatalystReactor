@@ -111,7 +111,9 @@ class Rectangle extends SimpleRect {
         if (base) return base
 
         const { width, height } = this.data.properties.size
-        const borderRadius = this.data.properties.borderRadius!
+        const borderRadius = this.data.properties.borderRadius
+        if (!borderRadius) return null
+
         const pad = 15
         let tl = Math.min(borderRadius['top-left'] as number, this.getMaxRadius()); tl = tl >= pad ? tl : pad
         let tr = Math.min(borderRadius['top-right'] as number, this.getMaxRadius()); tr = tr >= pad ? tr : pad
