@@ -5,86 +5,82 @@ import Handle from '@lib/modifiers/Handles'
 import clamp from '@lib/helper/clamp'
 import computeRoundedCorner from '@lib/helper/roundingUtil'
 import { arcPointAtFraction } from '@lib/helper/pointInArc'
+import { ShapeData } from '@lib/core/EngineStateStore'
 
 class Polygon extends Shape {
-    bRadius: number
-    sides: Sides
-    points: Coord[]
-    radiusX: number
-    radiusY: number
+    private points: Coord[] = []
 
-    constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super({ x, y, type: 'polygon', ...shapeProps })
-        this.bRadius = 0
-        this.sides = { sides: 5 }
-        this.radiusX = 0
-        this.radiusY = 0
+    constructor(data: ShapeData) {
+        super(data)
         this.points = this.generateRegularPolygon()
     }
 
-    override moveShape(dx: number, dy: number): void {
-        this.transform.x += dx
-        this.transform.y += dy
-
-        this.points = this.generateRegularPolygon()
-        this.calculateBoundingRect()
+    get radiusX(): number {
+        return this.data.properties.size.width / 2
     }
 
-    setBorderRadius(newRadius: number, pos: HandlePos) {
+    get radiusY(): number {
+        return this.data.properties.size.height / 2
+    }
+
+    get sides(): number {
+        return this.data.properties.sides?.sides || 5
+    }
+
+    get bRadius(): number {
+        return this.data.properties.borderRadius?.['top-left'] || 0
+    }
+
+    override setBorderRadius(newRadius: number, pos: HandlePos) {
         if (pos != 'top') return
 
         const { width, height } = this.getDim()
         const max = Math.min(width, height) / 2
         const newRad = Math.max(0, Math.min(newRadius, max))
 
-        this.bRadius = newRad
+        if (!this.data.properties.borderRadius) {
+            this.data.properties.borderRadius = {
+                'top-left': newRad,
+                'top-right': newRad,
+                'bottom-left': newRad,
+                'bottom-right': newRad,
+                locked: true
+            }
+        } else {
+            this.data.properties.borderRadius['top-left'] = newRad
+            this.data.properties.borderRadius.locked = true
+        }
     }
 
     override setDim(width: number, height: number) {
-        this.radiusX = width / 2
-        this.radiusY = height / 2
-
-        this.points = this.generateRegularPolygon()
-        this.calculateBoundingRect()
-    }
-
-    override setCoord(x: number, y: number): void {
-        this.transform.x = x
-        this.transform.y = y
-
-        this.points = this.generateRegularPolygon()
-        this.calculateBoundingRect()
-    }
-
-    setVertexCount(sides: number) {
-        sides = clamp(sides, 3, 60)
-        this.sides = { sides }
+        this.data.properties.size.width = width
+        this.data.properties.size.height = height
         this.points = this.generateRegularPolygon()
     }
 
-    override setProperties(prop: Properties): void {
-        this.transform = prop.transform
-        this.setDim(prop.size.width, prop.size.height)
-        this.style = prop.style
-        console.log(prop, 'inside poly')
-        this.setVertexCount(prop.sides.sides)
+    override setVertexCount(sides: number) {
+        const s = clamp(sides, 3, 60)
+        if (!this.data.properties.sides) {
+            this.data.properties.sides = { sides: s }
+        } else {
+            this.data.properties.sides.sides = s
+        }
+        this.points = this.generateRegularPolygon()
     }
 
     override getCenterCoord(): Coord {
         return { x: this.radiusX, y: this.radiusY }
     }
 
-    override getProperties(): Properties {
-        return {
-            transform: this.transform,
-            size: this.getDim(),
-            style: this.style,
-            sides: this.sides,
-        }
+    override getVertexCount(): number {
+        return this.sides
     }
 
-    getVertexCount(): number {
-        return this.sides.sides
+    override getDim(): { width: number; height: number } {
+        return { 
+            width: Math.round(this.data.properties.size.width), 
+            height: Math.round(this.data.properties.size.height) 
+        }
     }
 
     override getModifierHandles(): Handle[] {
@@ -127,14 +123,17 @@ class Polygon extends Shape {
 
     private getVerticesModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size
+        const sides = this.sides
+        const bRadius = this.bRadius
+
         if (this.points.length > 1) {
-            if (this.bRadius > 0) {
+            if (bRadius > 0) {
                 const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
                     'polygon',
                     1,
                     this.points,
-                    this.sides.sides,
-                    Math.min(this.bRadius, this.getMaxRadius())
+                    sides,
+                    Math.min(bRadius, this.getMaxRadius())
                 )
                 const { x: tangentX, y: tangentY } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
                 return { x: tangentX - size, y: tangentY - size }
@@ -146,11 +145,7 @@ class Polygon extends Shape {
         return { x: this.radiusX, y: this.radiusY }
     }
 
-    override getDim(): { width: number; height: number } {
-        return { width: this.radiusX * 2, height: this.radiusY * 2 }
-    }
-
-    getVertex(sides: number, index: number, startAngle = -Math.PI / 2) {
+    override getVertex(sides: number, index: number, startAngle = -Math.PI / 2) {
         const angleStep = (2 * Math.PI) / sides
         const angle = startAngle + index * angleStep
 
@@ -160,40 +155,27 @@ class Polygon extends Shape {
         return { x, y }
     }
 
-    getMaxRadius() {
-        return Math.min(this.radiusX, this.radiusY) * Math.cos(Math.PI / this.sides.sides)
+    override getMaxRadius() {
+        return Math.min(this.radiusX, this.radiusY) * Math.cos(Math.PI / this.sides)
     }
 
     private generateRegularPolygon(): Coord[] {
         const points: Coord[] = []
+        const sides = this.sides
 
-        for (let i = 0; i < this.sides.sides; i++) {
-            const point = this.getVertex(this.sides.sides, i)
+        for (let i = 0; i < sides; i++) {
+            const point = this.getVertex(sides, i)
             points.push(point)
         }
 
         return points
     }
 
-    override calculateBoundingRect(): void {
-        const left = 0
-        const top = 0
-        const right = this.radiusX * 2
-        const bottom = this.radiusY * 2
-
-        this.boundingRect = {
-            left: left,
-            top: top,
-            right: right,
-            bottom: bottom,
-        }
-    }
-
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        const fill = this.paintManager.initFillPaint(this.style.fill, this.getDim())
-        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim())
+        const fill = this.paintManager.initFillPaint(this.data.properties.style.fill, this.getDim())
+        const stroke = this.paintManager.initStrokePaint(this.data.properties.style.stroke, this.getDim())
 
         const path = new this.resource.canvasKit.Path()
 
@@ -215,7 +197,7 @@ class Polygon extends Shape {
         }
     }
 
-    private drawHoverEffect(canvas: Canvas): void {
+    protected drawHoverEffect(canvas: Canvas): void {
         if (!this.resource) return
         const { canvasKit } = this.resource
         const path = new canvasKit.Path()
@@ -236,6 +218,7 @@ class Polygon extends Shape {
     }
 
     private createRegularPolygon(path: Path) {
+        if (this.points.length === 0) return
         const { x: startX, y: startY } = this.points[0]
         path.moveTo(startX, startY)
         for (let i = 1; i < this.points.length; i++) {
@@ -246,13 +229,16 @@ class Polygon extends Shape {
     }
 
     private createRoundedPolygonPath(path: Path) {
+        const sidesCount = this.sides
+        const bRadius = this.bRadius
+
         for (let i = 0; i < this.points.length; i++) {
             const { startPoint, endPoint, controlPoint, currentRadius } = computeRoundedCorner(
                 'polygon',
                 i,
                 this.points,
-                this.sides.sides,
-                Math.min(this.bRadius, this.getMaxRadius())
+                sidesCount,
+                Math.min(bRadius, this.getMaxRadius())
             )
             if (i === 0) {
                 path.moveTo(startPoint.x, startPoint.y)
@@ -260,7 +246,6 @@ class Polygon extends Shape {
                 path.lineTo(startPoint.x, startPoint.y)
             }
 
-            // Arc from p1a → p1b
             path.arcToTangent(controlPoint.x, controlPoint.y, endPoint.x, endPoint.y, currentRadius)
         }
 

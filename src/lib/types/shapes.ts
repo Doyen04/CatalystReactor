@@ -324,7 +324,7 @@ export interface PTextSpan {
     text: string;                                  
     start: number;                  
     end: number;  
-    styleId: string[]                  
+    styleId?: string[]                  
     children?: PTextSpan[];          
     metadata?: Record<string, unknown>;  
 }
@@ -338,6 +338,7 @@ export interface Properties {
     sides?: Sides
     spikesRatio?: SpikesRatio
     textStyle?: PTextStyle
+    text?: string
 }
 
 export interface BoundingRect {

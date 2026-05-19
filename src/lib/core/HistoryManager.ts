@@ -1,0 +1,79 @@
+import EngineStateStore from './EngineStateStore'
+
+export interface Action {
+    type: string
+    undo(): void
+    redo(): void
+}
+
+export class UpdateShapeAction implements Action {
+    type = 'UPDATE_SHAPE'
+
+    constructor(
+        public readonly shapeId: string,
+        private readonly oldState: any, // snapshot of old properties
+        private readonly newState: any  // snapshot of new properties
+    ) {}
+
+    undo() {
+        const store = EngineStateStore.getInstance()
+        const shape = store.getShapeData(this.shapeId)
+        if (shape) {
+            shape.properties = structuredClone(this.oldState)
+            store.notify(this.shapeId)
+        }
+    }
+
+    redo() {
+        const store = EngineStateStore.getInstance()
+        const shape = store.getShapeData(this.shapeId)
+        if (shape) {
+            shape.properties = structuredClone(this.newState)
+            store.notify(this.shapeId)
+        }
+    }
+}
+
+class HistoryManager {
+    private static instance: HistoryManager
+    private undoStack: Action[] = []
+    private redoStack: Action[] = []
+
+    private constructor() {}
+
+    public static getInstance(): HistoryManager {
+        if (!HistoryManager.instance) {
+            HistoryManager.instance = new HistoryManager()
+        }
+        return HistoryManager.instance
+    }
+
+    public pushAction(action: Action) {
+        this.undoStack.push(action)
+        // Clear redo stack on a new action
+        this.redoStack = []
+    }
+
+    public undo() {
+        const action = this.undoStack.pop()
+        if (action) {
+            action.undo()
+            this.redoStack.push(action)
+        }
+    }
+
+    public redo() {
+        const action = this.redoStack.pop()
+        if (action) {
+            action.redo()
+            this.undoStack.push(action)
+        }
+    }
+    
+    public clear() {
+        this.undoStack = []
+        this.redoStack = []
+    }
+}
+
+export default HistoryManager

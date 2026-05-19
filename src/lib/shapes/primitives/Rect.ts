@@ -2,103 +2,50 @@ import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Rect } from 'canvaskit-wasm'
 import { BorderRadius, CornerPos, HandlePos, Properties } from '@lib/types/shapes'
 import SimpleRect from './SimpleRect'
+import { ShapeData } from '@lib/core/EngineStateStore'
 
 class Rectangle extends SimpleRect {
-    bdradius: BorderRadius
-
-    constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super(x, y, { type: 'rect', ...shapeProps })
-        this.dimension = { width: 0, height: 0 }
-
-        this.bdradius = {
-            'top-left': 0,
-            'top-right': 0,
-            'bottom-left': 0,
-            'bottom-right': 0,
-            locked: false,
-        }
-        this.calculateBoundingRect()
+    constructor(data: ShapeData) {
+        super(data)
     }
 
-    setBorderRadius(newRadius: number, pos: HandlePos) {
-        const max = Math.min(this.dimension.width, this.dimension.height) / 2
+    override setBorderRadius(newRadius: number, pos: HandlePos) {
+        const { width, height } = this.data.properties.size
+        const borderRadius = this.data.properties.borderRadius!
+        const max = Math.min(width, height) / 2
         const newRad = Math.max(0, Math.min(newRadius, max))
-        if (this.bdradius.locked) {
+        
+        if (borderRadius.locked) {
             this.setAllBorderRadius(newRad)
             return
         }
 
-        this.bdradius[pos] = newRad
+        borderRadius[pos] = newRad
     }
 
     private setAllBorderRadius(radius: number): void {
-        this.bdradius = {
-            'top-left': radius,
-            'top-right': radius,
-            'bottom-left': radius,
-            'bottom-right': radius,
-            locked: true,
-        }
-    }
-
-    // protected flippedRadii = () => {
-    //     let radii = structuredClone(this.bdradius)
-
-    //     if (this.transform.isFlippedX && this.transform.isFlippedY) {
-    //         // opposite corners
-    //         radii = {
-    //             'top-left': this.bdradius['bottom-right'],
-    //             'top-right': this.bdradius['bottom-left'],
-    //             'bottom-right': this.bdradius['top-left'],
-    //             'bottom-left': this.bdradius['top-right'],
-    //             locked: this.bdradius.locked,
-    //         }
-    //     } else if (this.transform.isFlippedX) {
-    //         // swap left/right
-    //         radii = {
-    //             'top-left': this.bdradius['top-right'],
-    //             'top-right': this.bdradius['top-left'],
-    //             'bottom-right': this.bdradius['bottom-left'],
-    //             'bottom-left': this.bdradius['bottom-right'],
-    //             locked: this.bdradius.locked,
-    //         }
-    //     } else if (this.transform.isFlippedY) {
-    //         // swap top/bottom
-    //         radii = {
-    //             'top-left': this.bdradius['bottom-left'],
-    //             'top-right': this.bdradius['bottom-right'],
-    //             'bottom-right': this.bdradius['top-right'],
-    //             'bottom-left': this.bdradius['top-left'],
-    //             locked: this.bdradius.locked,
-    //         }
-    //     }
-
-    //     return radii
-    // }
-
-    override setProperties(prop: Properties): void {
-        this.transform = prop.transform
-        this.dimension = prop.size
-        this.style = prop.style
-        this.bdradius = prop.borderRadius
-        this.calculateBoundingRect()
+        const borderRadius = this.data.properties.borderRadius!
+        borderRadius['top-left'] = radius
+        borderRadius['top-right'] = radius
+        borderRadius['bottom-left'] = radius
+        borderRadius['bottom-right'] = radius
+        borderRadius.locked = true
     }
 
     getBorderRadius() {
-        const { width, height } = this.dimension
+        const { width, height } = this.data.properties.size
         const max = Math.min(width, height)
-
-        const temp = this.bdradius
+        const borderRadius = this.data.properties.borderRadius!
 
         if (!this.hasRadius()) {
-            return { ...temp }
+            return { ...borderRadius }
         }
 
         const radii = {
-            'top-left': Math.min(temp['top-left'], max),
-            'top-right': Math.min(temp['top-right'], max),
-            'bottom-left': Math.min(temp['bottom-left'], max),
-            'bottom-right': Math.min(temp['bottom-right'], max),
+            'top-left': Math.min(borderRadius['top-left'], max),
+            'top-right': Math.min(borderRadius['top-right'], max),
+            'bottom-left': Math.min(borderRadius['bottom-left'], max),
+            'bottom-right': Math.min(borderRadius['bottom-right'], max),
         }
 
         const sums = {
@@ -120,16 +67,7 @@ class Rectangle extends SimpleRect {
         scaleRadii(sums.bottom, 'bottom-left', 'bottom-right')
         scaleRadii(sums.right, 'top-right', 'bottom-right')
 
-        return { ...radii, locked: this.bdradius.locked }
-    }
-
-    override getProperties(): Properties {
-        return {
-            transform: { ...this.transform },
-            size: { ...this.dimension },
-            style: { ...this.style },
-            borderRadius: { ...this.bdradius },
-        }
+        return { ...radii, locked: borderRadius.locked }
     }
 
     override getModifierHandles(): Handle[] {
@@ -149,13 +87,15 @@ class Rectangle extends SimpleRect {
         return { x: 0, y: 0 }
     }
 
-    getMaxRadius() {
-        return Math.min(this.dimension.width, this.dimension.height) / 2
+    override getMaxRadius() {
+        const { width, height } = this.data.properties.size
+        return Math.min(width, height) / 2
     }
 
-    //local coord
     getRadiusModiferHandlesPos(handle: Handle): { x: number; y: number } {
-        let r = this.bdradius[handle.pos]
+        const borderRadius = this.data.properties.borderRadius!
+        const { width, height } = this.data.properties.size
+        let r = borderRadius[handle.pos as keyof BorderRadius] as number
         r = Math.min(r, this.getMaxRadius())
         const padding = 15
         const size = handle.size
@@ -168,39 +108,44 @@ class Rectangle extends SimpleRect {
                 y = (handle.isDragging || r >= padding ? r : padding) - size
                 break
             case 'top-right':
-                x = this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size
+                x = width - (handle.isDragging || r >= padding ? r : padding) - size
                 y = (handle.isDragging || r >= padding ? r : padding) - size
                 break
             case 'bottom-left':
                 x = (handle.isDragging || r >= padding ? r : padding) - size
-                y = this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size
+                y = height - (handle.isDragging || r >= padding ? r : padding) - size
                 break
             case 'bottom-right':
-                x = this.dimension.width - (handle.isDragging || r >= padding ? r : padding) - size
-                y = this.dimension.height - (handle.isDragging || r >= padding ? r : padding) - size
+                x = width - (handle.isDragging || r >= padding ? r : padding) - size
+                y = height - (handle.isDragging || r >= padding ? r : padding) - size
                 break
+            default:
+                x = 0; y = 0;
         }
 
         return { x, y }
     }
 
     hasRadius(): boolean {
+        const borderRadius = this.data.properties.borderRadius!
         return (
-            this.bdradius['top-left'] > 0 || this.bdradius['top-right'] > 0 || this.bdradius['bottom-left'] > 0 || this.bdradius['bottom-right'] > 0
+            borderRadius['top-left'] > 0 || borderRadius['top-right'] > 0 || borderRadius['bottom-left'] > 0 || borderRadius['bottom-right'] > 0
         )
     }
 
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        const fill = this.paintManager.initFillPaint(this.style.fill, this.getDim())
-        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim())
+        const dim = this.getDim()
+        const properties = this.data.properties
+        const borderRadius = properties.borderRadius!
+        const fill = this.paintManager.initFillPaint(properties.style.fill, dim)
+        const stroke = this.paintManager.initStrokePaint(properties.style.stroke, dim)
 
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, dim.width, dim.height)
 
-        const rect = this.resource.canvasKit.XYWHRect(0, 0, this.dimension.width, this.dimension.height)
-
-        if (this.hasRadius() && this.bdradius.locked) {
-            const radius = this.bdradius['top-left']
+        if (this.hasRadius() && borderRadius.locked) {
+            const radius = borderRadius['top-left']
             const rrect = this.resource.canvasKit.RRectXY(rect, radius, radius)
             canvas.drawRRect(rrect, fill)
             canvas.drawRRect(rrect, stroke)
@@ -220,15 +165,16 @@ class Rectangle extends SimpleRect {
         }
     }
 
-    protected drawHoverEffect(canvas: Canvas, rect: Rect): void {
+    protected override drawHoverEffect(canvas: Canvas, rect: any): void {
         if (!this.resource) return
 
+        const borderRadius = this.data.properties.borderRadius!
         const hoverPaint = this.paintManager.stroke
         hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1)) // Blue with transparency
         hoverPaint.setStrokeWidth(2)
 
-        if (this.hasRadius() && this.bdradius.locked) {
-            const radius = this.bdradius['top-left']
+        if (this.hasRadius() && borderRadius.locked) {
+            const radius = borderRadius['top-left']
             const rrect = this.resource.canvasKit.RRectXY(rect, radius, radius)
             canvas.drawRRect(rrect, hoverPaint)
         } else if (this.hasRadius()) {
@@ -242,7 +188,8 @@ class Rectangle extends SimpleRect {
 
     protected makeCustomRRectPath() {
         const radii = this.getBorderRadius()
-        const [x, y, w, h] = [0, 0, this.dimension.width, this.dimension.height]
+        const { width, height } = this.data.properties.size
+        const [x, y, w, h] = [0, 0, width, height]
         const CanvasKit = this.resource?.canvasKit
 
         const p = new this.resource.canvasKit.Path()
@@ -274,7 +221,8 @@ class Rectangle extends SimpleRect {
     }
 
     override pointInShape(x: number, y: number): boolean {
-        return x >= 0 && x <= this.dimension.width && y >= 0 && y <= this.dimension.height
+        const { width, height } = this.data.properties.size
+        return x >= 0 && x <= width && y >= 0 && y <= height
     }
 
     override cleanUp(): void { }

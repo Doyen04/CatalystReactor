@@ -6,11 +6,14 @@ import throttle from '@lib/helper/throttle'
 import Handle from '@lib/modifiers/Handles'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
+import ShapeNode from '@lib/node/ShapeNode'
+import HistoryManager, { UpdateShapeAction } from './HistoryManager'
 
 class ShapeManager {
     private scene: SceneNode | null = null
     private shapeModifier: ShapeModifier | null
     private throttledUpdate: (properties: Properties) => void
+    private initialProps: Properties | null = null
 
     constructor(shapeModifier: ShapeModifier) {
         this.scene = null
@@ -29,6 +32,9 @@ class ShapeManager {
     }
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
+        if (this.scene) {
+            this.initialProps = structuredClone(this.scene.getProperties())
+        }
         this.shapeModifier.handleMouseDown(dragStart, e)
     }
 
@@ -42,20 +48,22 @@ class ShapeManager {
         }
 
         this.shapeModifier.update()
-        const props = this.scene?.getProperties()
+        const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
 
     moveScene(dx: number, dy: number) {
+        if (!this.scene) return
         this.scene.move(dx, dy)
 
         this.shapeModifier.update()
-        const props = this.scene?.getProperties()
+        const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
 
     finishDrag() {
         if (!this.scene) return
+        
         const parent = this.scene.getParent()
         if (this.scene instanceof ContainerNode) {
             this.scene.applyLayout()
@@ -65,10 +73,23 @@ class ShapeManager {
         }
 
         this.shapeModifier.handleRemoveModiferHandle()
-
         this.shapeModifier.update()
-        const props = this.scene?.getProperties()
-        this.throttledUpdate(props)
+        
+        const finalProps = this.scene.getProperties()
+        this.throttledUpdate(finalProps)
+
+        // Record history
+        if (this.initialProps && this.scene instanceof ShapeNode && this.scene.shape) {
+            const shapeId = this.scene.shape.data.id
+            const hasChanged = JSON.stringify(this.initialProps) !== JSON.stringify(finalProps)
+            
+            if (hasChanged) {
+                HistoryManager.getInstance().pushAction(
+                    new UpdateShapeAction(shapeId, this.initialProps, structuredClone(finalProps))
+                )
+            }
+        }
+        this.initialProps = null
     }
 
     handleTinyShapes(): void {
@@ -87,7 +108,7 @@ class ShapeManager {
         this.throttledUpdate(props)
     }
 
-    get currentScene(): SceneNode {
+    get currentScene(): SceneNode | null {
         return this.scene
     }
 
@@ -100,7 +121,11 @@ class ShapeManager {
 
         this.scene = scene
         this.shapeModifier.attachShape(scene)
-        // Optionally sync initial props:
+        
+        if (this.scene instanceof ShapeNode && this.scene.shape) {
+            useSceneStore.getState().setSelectedShapeId(this.scene.shape.data.id)
+        }
+
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
@@ -111,20 +136,31 @@ class ShapeManager {
         this.scene?.cleanUp()
         this.scene = null
         this.shapeModifier.detachShape()
+        useSceneStore.getState().setSelectedShapeId(null)
         useSceneStore.getState().clearProperties()
     }
 
     updateProperty<K extends keyof Properties>(key: K, value: Properties[K]) {
         if (!this.scene) throw new Error('No shape attached')
-        const prop = this.scene.getProperties()
-        this.scene.setProperties({
-            ...prop,
+        
+        const oldProps = structuredClone(this.scene.getProperties())
+        const newProps = {
+            ...oldProps,
             [key]: value,
-        })
-
+        }
+        
+        this.scene.setProperties(newProps)
         this.shapeModifier.update()
-        const props = this.scene.getProperties()
-        this.throttledUpdate(props)
+        
+        const finalProps = this.scene.getProperties()
+        this.throttledUpdate(finalProps)
+
+        // Record history for property bar updates
+        if (this.scene instanceof ShapeNode && this.scene.shape) {
+            HistoryManager.getInstance().pushAction(
+                new UpdateShapeAction(this.scene.shape.data.id, oldProps, structuredClone(finalProps))
+            )
+        }
     }
 
     handleHover(x: number, y: number): Handle | null {
@@ -158,8 +194,6 @@ class ShapeManager {
             return false
         }
     }
-
-    // Additional methods: move, resize, updateBorderRadius, etc.
 }
 
 export default ShapeManager

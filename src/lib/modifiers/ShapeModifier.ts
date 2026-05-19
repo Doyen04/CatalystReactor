@@ -4,6 +4,7 @@ import CanvasKitResources from '@lib/core/CanvasKitResource'
 import SText from '@lib/shapes/primitives/SText'
 import SceneNode from '@lib/node/Scene'
 import { Coord } from '@lib/types/shapes'
+import { ShapeData as StoreShapeData } from '@lib/core/EngineStateStore'
 import { ShapeData } from './modifier'
 import {
     updateShapeRadii,
@@ -39,7 +40,25 @@ class ShapeModifier {
         this.handles = []
         this.isHovered = false
         this.selectedModifierHandle = null
-        this.font = new SText(0, 0)
+        
+        const dummyData: StoreShapeData = {
+            id: 'dimension-label',
+            type: 'text' as any,
+            properties: {
+                transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, anchorPoint: null },
+                size: { width: 0, height: 0 },
+                style: {
+                    fill: { color: { type: 'solid', color: [1, 1, 1, 1] }, opacity: 1 },
+                    stroke: { color: { type: 'solid', color: [0, 0, 0, 1] }, opacity: 1, width: 0 }
+                },
+                textStyle: {
+                    textColor: [1, 1, 1, 1],
+                    fontSize: 10,
+                    fontFamily: ['Inter', 'sans-serif'],
+                }
+            }
+        }
+        this.font = new SText(dummyData)
     }
 
     attachShape(scene: SceneNode) {

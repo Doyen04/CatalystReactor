@@ -4,91 +4,71 @@ import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { ArcHandleState, ArcSegment, Coord, Properties } from '@lib/types/shapes'
 import clamp from '@lib/helper/clamp'
 import { normalizeAngle } from '@lib/helper/normalise'
+import { ShapeData } from '@lib/core/EngineStateStore'
 
 class Oval extends Shape {
-    private radiusX: number
-    private radiusY: number
-    private arcSegment: ArcSegment
-    private arcDirection: 'ccw' | 'cw'
-    private startCrossed: boolean | null = false
     private arcHandleState: ArcHandleState
 
-    constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super({ x, y, type: 'oval', ...shapeProps })
-        this.arcSegment = { startAngle: 0, sweep: 2 * Math.PI, ratio: 0 }
-        this.radiusX = 0
-        this.radiusY = 0
-        this.arcDirection = 'cw'
+    constructor(data: ShapeData) {
+        super(data)
+        const arcSegment = this.data.properties.arcSegment || { startAngle: 0, sweep: 2 * Math.PI, ratio: 0 }
         this.arcHandleState = {
-            dragDirection: this.arcSegment.sweep >= 0 ? 1 : -1,
-            dragLastDiff: normalizeAngle(this.arcSegment.sweep),
-            dragPrevPointer: normalizeAngle(this.arcSegment.startAngle + this.arcSegment.sweep),
+            dragDirection: arcSegment.sweep >= 0 ? 1 : -1,
+            dragLastDiff: normalizeAngle(arcSegment.sweep),
+            dragPrevPointer: normalizeAngle(arcSegment.startAngle + arcSegment.sweep),
         }
-        this.calculateBoundingRect()
     }
 
-    override moveShape(mx: number, my: number): void {
-        this.transform.x += mx
-        this.transform.y += my
-        this.calculateBoundingRect()
+    get radiusX(): number {
+        return this.data.properties.size.width / 2
     }
 
-    setRadius(radius: number): void {
-        this.radiusX = radius
-        this.radiusY = radius
-        this.calculateBoundingRect()
+    get radiusY(): number {
+        return this.data.properties.size.height / 2
     }
 
-    //move to shape
+    get arcSegment(): ArcSegment {
+        return this.data.properties.arcSegment || { startAngle: 0, sweep: 2 * Math.PI, ratio: 0 }
+    }
+
     override setDim(width: number, height: number) {
-        this.radiusX = width / 2
-        this.radiusY = height / 2
-        this.calculateBoundingRect()
+        this.data.properties.size.width = width
+        this.data.properties.size.height = height
     }
 
-    setRatio(nx: number) {
-        this.arcSegment.ratio = nx
+    override setRatio(nx: number) {
+        if (!this.data.properties.arcSegment) {
+            this.data.properties.arcSegment = { startAngle: 0, sweep: 2 * Math.PI, ratio: nx }
+        } else {
+            this.data.properties.arcSegment.ratio = nx
+        }
     }
 
-    override setCoord(x: number, y: number): void {
-        this.transform.x = x
-        this.transform.y = y
-        this.calculateBoundingRect()
-    }
-
-    setArc(startAngle: number, sweep: number) {
-        this.arcSegment.startAngle = startAngle
-        this.arcSegment.sweep = sweep
-    }
-
-    override setProperties(prop: Properties): void {
-        this.transform = prop.transform
-        this.setDim(prop.size.width, prop.size.height)
-        this.style = prop.style
-        this.arcSegment = prop.arcSegment
+    override setArc(startAngle: number, sweep: number) {
+        if (!this.data.properties.arcSegment) {
+            this.data.properties.arcSegment = { startAngle, sweep, ratio: 0 }
+        } else {
+            this.data.properties.arcSegment.startAngle = startAngle
+            this.data.properties.arcSegment.sweep = sweep
+        }
     }
 
     override getDim(): { width: number; height: number } {
-        return { width: this.radiusX * 2, height: this.radiusY * 2 }
-    }
-
-    override getProperties(): Properties {
-        return {
-            transform: this.transform,
-            size: this.getDim(),
-            style: this.style,
-            arcSegment: this.arcSegment,
+        return { 
+            width: Math.round(this.data.properties.size.width), 
+            height: Math.round(this.data.properties.size.height) 
         }
     }
 
-    getArcAngles(): { start: number; sweep: number } {
+    override getArcAngles(): { start: number; sweep: number } {
+        const arc = this.arcSegment
         return {
-            start: this.arcSegment.startAngle,
-            sweep: this.arcSegment.sweep,
+            start: arc.startAngle,
+            sweep: arc.sweep,
         }
     }
 
-    getCenterCoord(): { x: number; y: number } {
+    override getCenterCoord(): { x: number; y: number } {
         return { x: this.radiusX, y: this.radiusY }
     }
 
@@ -119,19 +99,19 @@ class Oval extends Shape {
 
     private getRatioModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size
-        // const { width, height } = this.getDim()
+        const arc = this.arcSegment
 
-        if (this.arcSegment.ratio === 0) {
+        if (arc.ratio === 0) {
             return {
                 x: this.radiusX - size,
                 y: this.radiusY - size,
             }
         }
 
-        const innerRadiusX = this.radiusX * this.arcSegment.ratio
-        const innerRadiusY = this.radiusY * this.arcSegment.ratio
+        const innerRadiusX = this.radiusX * arc.ratio
+        const innerRadiusY = this.radiusY * arc.ratio
 
-        const handleAngle = handle.isDragging ? handle.handleRatioAngle : this.arcSegment.startAngle + this.getSweep() / 2
+        const handleAngle = handle.isDragging ? handle.handleRatioAngle : arc.startAngle + this.getSweep() / 2
 
         const handleX = this.radiusX + innerRadiusX * Math.cos(handleAngle)
         const handleY = this.radiusY + innerRadiusY * Math.sin(handleAngle)
@@ -144,24 +124,25 @@ class Oval extends Shape {
 
     private getArcModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size
+        const arc = this.arcSegment
 
         const outerRx = this.radiusX
         const outerRy = this.radiusY
-        const innerRx = this.radiusX * this.arcSegment.ratio
-        const innerRy = this.radiusY * this.arcSegment.ratio
+        const innerRx = this.radiusX * arc.ratio
+        const innerRy = this.radiusY * arc.ratio
 
         let rx = 0
         let ry = 0
         if (handle.isDragging) {
-            const ratio = clamp(handle.handleRatioFromCenter, this.arcSegment.ratio, 1)
+            const ratio = clamp(handle.handleRatioFromCenter, arc.ratio, 1)
             rx = outerRx * ratio
             ry = outerRy * ratio
         } else {
-            rx = this.arcSegment.ratio === 0 ? outerRx * 0.8 : (outerRx + innerRx) / 2
-            ry = this.arcSegment.ratio === 0 ? outerRy * 0.8 : (outerRy + innerRy) / 2
+            rx = arc.ratio === 0 ? outerRx * 0.8 : (outerRx + innerRx) / 2
+            ry = arc.ratio === 0 ? outerRy * 0.8 : (outerRy + innerRy) / 2
         }
 
-        const theta = handle.pos === 'arc-end' ? this.arcSegment.startAngle + this.arcSegment.sweep : this.arcSegment.startAngle
+        const theta = handle.pos === 'arc-end' ? arc.startAngle + arc.sweep : arc.startAngle
 
         // Compute handle's center point along ellipse, then offset by handle size
         const handleCenterX = this.radiusX + rx * Math.cos(theta)
@@ -173,35 +154,27 @@ class Oval extends Shape {
         }
     }
 
-    getSweep() {
+    override getSweep() {
         const TWO_PI = 2 * Math.PI
-        const sweep = (this.arcHandleState.dragDirection * -1) >= 0 ? normalizeAngle(this.arcSegment.sweep) : normalizeAngle(this.arcSegment.sweep) - TWO_PI
+        const arc = this.arcSegment
+        const sweep = (this.arcHandleState.dragDirection * -1) >= 0 ? normalizeAngle(arc.sweep) : normalizeAngle(arc.sweep) - TWO_PI
 
         return sweep
     }
 
-    getArcHandleState(): ArcHandleState | null {
+    override getArcHandleState(): ArcHandleState | null {
         return this.arcHandleState
     }
 
-    setArcHandleState(state: Partial<ArcHandleState>, replace = false): void {
+    override setArcHandleState(state: Partial<ArcHandleState>, replace = false): void {
         this.arcHandleState = replace ? { ...state } : { ...this.arcHandleState, ...state }
     }
 
-    toDegree(rad: number) {
+    override toDegree(rad: number) {
         return rad * (180 / Math.PI)
     }
 
-    override calculateBoundingRect(): void {
-        this.boundingRect = {
-            top: 0,
-            left: 0,
-            bottom: this.radiusY * 2,
-            right: this.radiusX * 2,
-        }
-    }
-
-    isArc(): boolean {
+    override isArc(): boolean {
         return Math.abs(this.arcSegment.sweep) < 2 * Math.PI
     }
 
@@ -212,8 +185,8 @@ class Oval extends Shape {
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        const fill = this.paintManager.initFillPaint(this.style.fill, this.getDim())
-        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim())
+        const fill = this.paintManager.initFillPaint(this.data.properties.style.fill, this.getDim())
+        const stroke = this.paintManager.initStrokePaint(this.data.properties.style.stroke, this.getDim())
         const { width, height } = this.getDim()
 
         const rect = this.resource.canvasKit.XYWHRect(0, 0, width, height)
@@ -235,7 +208,7 @@ class Oval extends Shape {
         }
     }
 
-    private drawHoverEffect(canvas: Canvas, rect: Rect): void {
+    protected override drawHoverEffect(canvas: Canvas, rect: any): void {
         if (!this.resource) return
 
         const hoverPaint = this.paintManager.stroke
@@ -254,15 +227,15 @@ class Oval extends Shape {
     private drawComplexShape(canvas: Canvas, rect: Rect) {
         const { canvasKit } = this.resource
         const path = new canvasKit.Path()
+        const arc = this.arcSegment
 
-        //0 + radx + radx
         const innerRect = canvasKit.XYWHRect(
-            this.radiusX - this.radiusX * this.arcSegment.ratio,
-            this.radiusY - this.radiusY * this.arcSegment.ratio,
-            this.radiusX * this.arcSegment.ratio * 2,
-            this.radiusY * this.arcSegment.ratio * 2
+            this.radiusX - this.radiusX * arc.ratio,
+            this.radiusY - this.radiusY * arc.ratio,
+            this.radiusX * arc.ratio * 2,
+            this.radiusY * arc.ratio * 2
         )
-        const startDegrees = this.toDegree(this.arcSegment.startAngle)
+        const startDegrees = this.toDegree(arc.startAngle)
         const sweep = this.getSweep()
 
         const sweepDegrees = this.toDegree(sweep)
@@ -291,11 +264,12 @@ class Oval extends Shape {
     }
 
     private drawComplexTorusArc(rect: Rect, innerRect: Rect, path: Path, startDegrees: number, sweepDegrees: number) {
-        const innerStartX = this.radiusX + this.radiusX * this.arcSegment.ratio * Math.cos(this.arcSegment.startAngle)
-        const innerStartY = this.radiusY + this.radiusY * this.arcSegment.ratio * Math.sin(this.arcSegment.startAngle)
+        const arc = this.arcSegment
+        const innerStartX = this.radiusX + this.radiusX * arc.ratio * Math.cos(arc.startAngle)
+        const innerStartY = this.radiusY + this.radiusY * arc.ratio * Math.sin(arc.startAngle)
 
-        const outerEndX = this.radiusX + this.radiusX * Math.cos(this.arcSegment.startAngle + this.arcSegment.sweep)
-        const outerEndY = this.radiusY + this.radiusY * Math.sin(this.arcSegment.startAngle + this.arcSegment.sweep)
+        const outerEndX = this.radiusX + this.radiusX * Math.cos(arc.startAngle + arc.sweep)
+        const outerEndY = this.radiusY + this.radiusY * Math.sin(arc.startAngle + arc.sweep)
 
         path.moveTo(innerStartX, innerStartY)
         path.arcToOval(innerRect, startDegrees, sweepDegrees, false)

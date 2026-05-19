@@ -1,7 +1,7 @@
 import Shape from '../base/Shape'
 import { Canvas, Font } from 'canvaskit-wasm'
-import { Properties, Size } from '@lib/types/shapes'
 import Handle from '@lib/modifiers/Handles'
+import { ShapeData } from '@lib/core/EngineStateStore'
 
 interface SimpleTextStyle {
     textColor: number[]
@@ -10,159 +10,140 @@ interface SimpleTextStyle {
 }
 
 class SText extends Shape {
-    private text: string = ''
-    private textStyle: SimpleTextStyle
-    private dimension: Size
     private font: Font
-    private padding: number
-    private bStyle
+    private padding: number = 2
+    private TWidth: number = 0
+    private THeight: number = 0
 
-    constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
-        super({ x, y, type: 'text', ...shapeProps })
+    constructor(data: ShapeData) {
+        super(data)
 
-        this.bStyle = {
-            fill: '#0000ff',
-            stroke: { fill: '#0000ff', width: 0 },
+        if (!this.data) {
+            console.warn('SText: data is missing')
+            return
         }
 
-        this.text = text || ''
-        this.dimension = { width: 0, height: 0 }
-        this.padding = 2
-        this.textStyle = {
-            textColor: [1, 1, 1, 1],
-            fontSize: 10,
-            fontFamily: ['Inter', 'sans-serif'],
+        if (!this.data.properties) {
+            this.data.properties = {
+                transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, anchorPoint: null },
+                size: { width: 0, height: 0 },
+                style: {
+                    fill: { color: { type: 'solid', color: '#D9D9D9' }, opacity: 1 },
+                    stroke: { color: { type: 'solid', color: '#000000' }, opacity: 1, width: 1 },
+                }
+            }
         }
-        const typeface = this.resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(this.resource.fontData[0])
-        console.log(typeface, 'inside text')
 
-        this.font = new this.resource.canvasKit.Font(typeface, this.textStyle.fontSize)
+        if (!this.data.properties.textStyle) {
+            this.data.properties.textStyle = {
+                textColor: [1, 1, 1, 1],
+                fontSize: 10,
+                fontFamily: ['Inter', 'sans-serif'],
+            }
+        }
+        
+        if (this.data.properties.text === undefined) {
+             this.data.properties.text = ""
+        }
 
-        this.calculateBoundingRect()
+        if (this.resource && this.resource.canvasKit && this.resource.fontData && this.resource.fontData[0]) {
+            const typeface = this.resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(this.resource.fontData[0])
+            this.font = new this.resource.canvasKit.Font(typeface, this.textStyle.fontSize)
+            this.calculateTextDim()
+        } else {
+            console.warn('SText: Resource or font data not available during initialization')
+        }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    override moveShape(mx: number, my: number): void {}
+    get text(): string {
+        return this.data.properties.text || ''
+    }
+
+    get textStyle(): SimpleTextStyle {
+        return this.data.properties.textStyle
+    }
 
     override setDim(width: number, height: number): void {
-        this.dimension.width = width
-        this.dimension.height = height
-        this.calculateBoundingRect()
-    }
-
-    override setCoord(x: number, y: number): void {
-        this.transform.x = x
-        this.transform.y = y
-        this.calculateBoundingRect()
+        this.data.properties.size.width = width
+        this.data.properties.size.height = height
     }
 
     setText(text: string): void {
-        this.text = text
-        this.calculateBoundingRect()
+        this.data.properties.text = text
+        this.calculateTextDim()
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    override setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {}
-
-    setFontSize(size: number): void {
+    override setFontSize(size: number): void {
         this.textStyle.fontSize = size
-        this.calculateBoundingRect()
+        this.font.setSize(size)
+        this.calculateTextDim()
     }
 
-    setFontFamily(fontFamily: string): void {
+    override setFontFamily(fontFamily: string): void {
         this.textStyle.fontFamily.unshift(fontFamily)
-        this.calculateBoundingRect()
+        this.calculateTextDim()
     }
 
-    setProperties(prop: Properties): void {
-        this.transform = prop.transform
-        this.dimension = prop.size
-        this.style = prop.style
-    }
-
-    getText(): string {
-        return this.text
-    }
-
-    getCenterCoord() {
+    override getCenterCoord() {
+        const dim = this.getDim()
         return {
-            x: this.getDim().width / 2,
-            y: this.getDim().height / 2,
+            x: dim.width / 2,
+            y: dim.height / 2,
         }
     }
 
     override getDim(): { width: number; height: number } {
+        const { width, height } = this.data.properties.size
         return {
-            width: this.dimension.width + this.padding * 2,
-            height: this.dimension.height + this.padding * 2,
+            width: (width || this.TWidth) + this.padding * 2,
+            height: (height || this.THeight) + this.padding * 2,
         }
     }
 
-    override getProperties(): Properties {
-        return {
-            transform: this.transform,
-            size: this.dimension,
-            style: this.style,
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     override getModifierHandles(): Handle[] {
         return []
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    override getModifierHandlesPos(handle: Handle): { x: number; y: number } {
+    override getModifierHandlesPos(_handle: Handle): { x: number; y: number } {
         return { x: 0, y: 0 }
     }
 
-    calculateBoundingRect(): void {
-        // Simple estimation: width = fontSize * text.length * 0.6, height = fontSize
+    private calculateTextDim(): void {
+        if (!this.font || !this.text) {
+             this.TWidth = 0
+             this.THeight = 0
+             return
+        }
         const glyphs = this.font.getGlyphIDs(this.text)
         const widths = this.font.getGlyphWidths(glyphs)
         const metrics = this.font.getMetrics()
-        const width = widths.reduce((a, w) => a + w, 0)
-        const height = metrics.descent - metrics.ascent
-
-        this.dimension.width = width
-        this.dimension.height = height
-        this.boundingRect = {
-            left: this.transform.x,
-            top: this.transform.y,
-            right: this.transform.x + width,
-            bottom: this.transform.y + height,
-        }
+        this.TWidth = widths.reduce((a, w) => a + w, 0)
+        this.THeight = metrics.descent - metrics.ascent
     }
 
-    setTextPaint(fill: number[] | string, stroke?: number[] | string) {
+    private setTextPaint(fill: number[] | string, strokeColor?: number[] | string) {
         if (!this.resource) return
         const cnvsKit = this.resource
 
         const fillcolor = Array.isArray(fill) ? fill : cnvsKit.canvasKit.parseColorString(fill)
         this.paintManager.paint.setColor(fillcolor)
 
-        if (stroke) {
-            const strokeColor = Array.isArray(stroke) ? stroke : cnvsKit.canvasKit.parseColorString(stroke)
-            this.paintManager.stroke.setColor(strokeColor)
+        if (strokeColor) {
+            const sc = Array.isArray(strokeColor) ? strokeColor : cnvsKit.canvasKit.parseColorString(strokeColor)
+            this.paintManager.stroke.setColor(sc)
             this.paintManager.stroke.setStrokeWidth(1)
         }
 
         return { fill: this.paintManager.paint, stroke: this.paintManager.stroke }
     }
 
-    draw(canvas: Canvas): void {
-        if (!this.resource) {
-            console.log('No CanvasKit resources')
-            return
-        }
-        const { fill: fillShape, stroke } = this.setTextPaint(this.bStyle.fill, this.bStyle.stroke.fill)
-        const rect = this.resource.canvasKit.LTRBRect(
-            this.transform.x - this.padding,
-            this.transform.y - this.padding,
-            this.transform.x + this.dimension.width + this.padding,
-            this.transform.y + this.dimension.height + this.padding
-        )
-
+    override draw(canvas: Canvas): void {
+        if (!this.resource) return
+        
+        const dim = this.getDim()
+        const { fill: fillShape, stroke } = this.setTextPaint([0, 0, 1, 1], [0, 0, 1, 1]) // Default blue
+        
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, dim.width, dim.height)
         const rrect = this.resource.canvasKit.RRectXY(rect, 3, 3)
         canvas.drawRRect(rrect, fillShape)
         canvas.drawRRect(rrect, stroke)
@@ -171,8 +152,8 @@ class SText extends Shape {
         try {
             canvas.drawText(
                 this.text,
-                this.transform.x,
-                this.transform.y + this.textStyle.fontSize, // baseline
+                this.padding,
+                this.padding - (this.font.getMetrics().ascent), // baseline adjustment
                 fill,
                 this.font
             )
@@ -181,22 +162,13 @@ class SText extends Shape {
         }
     }
 
-    pointInShape(x: number, y: number): boolean {
-        return (
-            x >= this.transform.x &&
-            x <= this.transform.x + this.dimension.width &&
-            y >= this.transform.y &&
-            y <= this.transform.y + this.dimension.height
-        )
+    override pointInShape(x: number, y: number): boolean {
+        const dim = this.getDim()
+        return x >= 0 && x <= dim.width && y >= 0 && y <= dim.height
     }
 
-    override cleanUp(): void {
-        // No cursor or paragraph to clean up
-    }
-
-    override destroy(): void {
-        // No builder or paragraph to delete
-    }
+    override cleanUp(): void { }
+    override destroy(): void { }
 }
 
 export default SText

@@ -2,62 +2,27 @@ import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Rect } from 'canvaskit-wasm'
 import { Coord, Properties, Size } from '@lib/types/shapes'
 import Shape from '../base/Shape'
+import { ShapeData } from '@lib/core/EngineStateStore'
 
 class SimpleRect extends Shape {
-    dimension: Size
-
-    constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super({ x, y, type: 'rect', ...shapeProps })
-        this.dimension = { width: 0, height: 0 }
-        this.calculateBoundingRect()
+    constructor(data: ShapeData) {
+        super(data)
     }
 
-    override moveShape(dx: number, dy: number): void {
-        this.transform.x += dx
-        this.transform.y += dy
-
-        this.calculateBoundingRect()
-    }
-
-    override setCoord(x: number, y: number): void {
-        this.transform.x = x
-        this.transform.y = y
-
-        this.calculateBoundingRect()
-    }
-
-    //move to shape
     override setDim(width: number, height: number): void {
-        this.dimension.width = width
-        this.dimension.height = height
-
-        this.calculateBoundingRect()
-    }
-
-    override setProperties(prop: Properties): void {
-        this.transform = prop.transform
-        this.dimension = prop.size
-        this.style = prop.style
-        this.calculateBoundingRect()
+        this.data.properties.size.width = width
+        this.data.properties.size.height = height
     }
 
     override getCenterCoord(): Coord {
-        const { width, height } = this.dimension
+        const { width, height } = this.data.properties.size
         return { x: width / 2, y: height / 2 }
     }
 
     override getDim(): { width: number; height: number } {
         return {
-            width: Math.round(this.dimension.width),
-            height: Math.round(this.dimension.height),
-        }
-    }
-
-    override getProperties(): Properties {
-        return {
-            transform: { ...this.transform },
-            size: { ...this.dimension },
-            style: { ...this.style },
+            width: Math.round(this.data.properties.size.width),
+            height: Math.round(this.data.properties.size.height),
         }
     }
 
@@ -80,22 +45,13 @@ class SimpleRect extends Shape {
         return { x: 0, y: 0 }
     }
 
-    override calculateBoundingRect(): void {
-        this.boundingRect = {
-            top: 0,
-            left: 0,
-            bottom: this.dimension.height,
-            right: this.dimension.width,
-        }
-    }
-
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        const fill = this.paintManager.initFillPaint(this.style.fill, this.getDim())
-        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim())
+        const fill = this.paintManager.initFillPaint(this.data.properties.style.fill, this.getDim())
+        const stroke = this.paintManager.initStrokePaint(this.data.properties.style.stroke, this.getDim())
 
-        const rect = this.resource.canvasKit.XYWHRect(0, 0, this.dimension.width, this.dimension.height)
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, this.data.properties.size.width, this.data.properties.size.height)
 
         canvas.drawRect(rect, fill)
         canvas.drawRect(rect, stroke)
@@ -106,7 +62,7 @@ class SimpleRect extends Shape {
         }
     }
 
-    protected drawHoverEffect(canvas: Canvas, rect: Rect): void {
+    protected override drawHoverEffect(canvas: Canvas, rect: any): void {
         if (!this.resource) return
 
         const hoverPaint = this.paintManager.stroke
@@ -117,7 +73,8 @@ class SimpleRect extends Shape {
     }
 
     override pointInShape(x: number, y: number): boolean {
-        return x >= 0 && x <= this.dimension.width && y >= 0 && y <= this.dimension.height
+        const { width, height } = this.data.properties.size
+        return x >= 0 && x <= width && y >= 0 && y <= height
     }
 
     override cleanUp(): void { }

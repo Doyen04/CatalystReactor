@@ -3,44 +3,67 @@ import TextCursor from '../base/TextCursor'
 import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
 import Handle from '@lib/modifiers/Handles'
 import { Coord, Properties, PTextStyle, Size } from '@lib/types/shapes'
-
-//TODO:optimise this guy  make sure resources is done in canvaskitresources and all font is loaded there then use style to target it
+import { ShapeData } from '@lib/core/EngineStateStore'
 
 class PText extends Shape {
-    private text: string = ''
-    private textStyle: PTextStyle
-    private dimension: Size
     private TWidth: number = 0
     private THeight: number = 0
     private cursor: TextCursor
-    private builder: ParagraphBuilder
-    private paragraph: Paragraph | null
+    private builder: ParagraphBuilder | null = null
+    private paragraph: Paragraph | null = null
     private selectionStart: number = 0
     private selectionEnd: number = 0
     private isEdit: boolean = true
 
-    constructor(x: number, y: number, text?: string, { ...shapeProps } = {}) {
-        super({ x, y, type: 'text', ...shapeProps })
-        this.text = text || ''
-        this.dimension = { width: 0, height: 0 }
-        this.cursor = new TextCursor(x, y, 0)
+    constructor(data: ShapeData) {
+        super(data)
+        this.cursor = new TextCursor(this.data.properties.transform.x, this.data.properties.transform.y, 0)
+        
+        if (!this.data.properties.text) {
+            this.data.properties.text = ''
+        }
+        
+        if (!this.data.properties.textStyle) {
+            this.data.properties.textStyle = {
+                textFill: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
+                textAlign: 'left',
+                fontSize: 18,
+                fontWeight: 500,
+                fontFamilies: ['Antonio', 'sans-serif'],
+                lineHeight: 1.2,
+                backgroundColor: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
+            }
+        }
 
-        this.paragraph = null
-        this.builder = null
-        this.setTextStyle()
         this.setUpBuilder()
-        this.insertText(this.text, false)
-        this.calculateBoundingRect()
+        this.setUpParagraph()
+        this.calculateTextDim()
+        this.startEditing()
     }
+
+    get text(): string {
+        return this.data.properties.text || ''
+    }
+
+    set text(val: string) {
+        this.data.properties.text = val
+    }
+
+    get textStyle(): PTextStyle {
+        return this.data.properties.textStyle!
+    }
+
     diableEditing() {
         this.isEdit = false
         this.cursor.stopCursorBlink()
     }
-    startEditing() {
+
+    override startEditing() {
         this.isEdit = true
         this.cursor.startCursorBlink()
     }
-    canEdit(): boolean {
+
+    override canEdit(): boolean {
         return this.isEdit
     }
 
@@ -49,9 +72,10 @@ class PText extends Shape {
     }
 
     override getCenterCoord(): Coord {
+        const { width, height } = this.getDim()
         return {
-            x: (this.dimension.width > 0 ? this.dimension.width : this.TWidth) / 2,
-            y: (this.dimension.height > 0 ? this.dimension.height : this.THeight) / 2,
+            x: width / 2,
+            y: height / 2,
         }
     }
 
@@ -73,90 +97,52 @@ class PText extends Shape {
     }
 
     override getDim(): { width: number; height: number } {
+        const { width, height } = this.data.properties.size
         return {
-            width: this.dimension.width > 0 ? this.dimension.width : this.TWidth,
-            height: this.dimension.height > 0 ? this.dimension.height : this.THeight,
+            width: width > 0 ? width : this.TWidth,
+            height: height > 0 ? height : this.THeight,
         }
     }
-    getProperties(): Properties {
-        return {
-            transform: this.transform,
-            size: this.dimension,
-            style: this.style,
-            textStyle: this.textStyle,
-        }
-    }
-    setProperties(prop: Properties): void {
-        this.transform = prop.transform
-        this.dimension = prop.size
-        this.style = prop.style
-        this.textStyle = prop.textStyle
 
+    override setFontSize(size: number): void {
+        this.textStyle.fontSize = size
         this.setUpParagraph()
         this.calculateTextDim()
-        this.calculateBoundingRect()
-        this.cursor.setCoord(this.transform.x, this.transform.y)
-        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
-    }
-    setFontSize(size: number): void {
-        this.textStyle.fontSize = size
-
-        //work on this
-        this.calculateBoundingRect() //i tink it is not comp
     }
 
-    setFontFamily(fontFamily: string): void {
+    override setFontFamily(fontFamily: string): void {
         this.textStyle.fontFamilies.unshift(fontFamily)
-
-        //work on this
-        this.calculateBoundingRect() //i tink it is not comp
+        this.setUpParagraph()
+        this.calculateTextDim()
     }
 
     override setDim(width: number, height: number): void {
-        this.dimension.width = width
-        this.dimension.height = height
+        this.data.properties.size.width = width
+        this.data.properties.size.height = height
 
         this.setUpParagraph()
         this.calculateTextDim()
-        this.calculateBoundingRect()
         this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
     }
 
     override setCoord(x: number, y: number): void {
-        this.transform.x = x
-        this.transform.y = y
+        this.data.properties.transform.x = x
+        this.data.properties.transform.y = y
         this.cursor.setCoord(x, y)
-        this.calculateBoundingRect()
-    }
-
-    private setTextStyle() {
-        if (!this.resource) {
-            console.log('no canvas kit resources')
-        }
-        this.textStyle = {
-            textFill: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
-            textAlign: 'left',
-            fontSize: 18,
-            fontWeight: 500,
-            fontFamilies: ['Antonio', 'sans-serif'],
-            lineHeight: 1.2,
-            backgroundColor: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
-        }
     }
 
     private getParagraphStyle(): ParagraphStyle {
         const canvasKit = this.resource.canvasKit
+        if (!canvasKit) throw new Error("CanvasKit not loaded")
 
-        if (!canvasKit) return
-
-        const textAlign = {
+        const textAlignMap = {
             left: canvasKit.TextAlign.Left,
             right: canvasKit.TextAlign.Right,
             center: canvasKit.TextAlign.Center,
             justify: canvasKit.TextAlign.Justify,
         }
-        // Create text style
-        this.resource.textStyle.color = [0, 0, 0, 1] // Black text
+
+        this.resource.textStyle.color = [0, 0, 0, 1] 
         this.resource.textStyle.fontSize = 12
         this.resource.textStyle.fontFamilies = ['Antonio', 'sans-serif']
         this.resource.textStyle.backgroundColor = [0, 0, 0, 0]
@@ -165,68 +151,50 @@ class PText extends Shape {
             { axis: 'opsz', value: 12 },
         ]
 
-        // Create paragraph style
         this.resource.paragraphStyle.textStyle = this.resource.textStyle
-        this.resource.paragraphStyle.textAlign = textAlign.left //replace this
+        this.resource.paragraphStyle.textAlign = textAlignMap[this.textStyle.textAlign as keyof typeof textAlignMap] || textAlignMap.left
 
         return this.resource.paragraphStyle
     }
 
     private getTextStyleFromSpan(textStyle: PTextStyle): { stroke: Paint; fill: Paint, backgroundColor: Paint, backgroundStroke: Paint, textStyle: TextStyle } {
-        const canvasKit = this.resource.canvasKit
-        if (!canvasKit) return
-
-        const fill = this.paintManager.makeNewPaint(textStyle.textFill, this.getDim())
-        const stroke = this.paintManager.makeNewPaint(textStyle.textStroke, this.getDim(), true)
-        const backgroundFill = this.paintManager.makeNewPaint(textStyle.backgroundColor, this.getDim())
-        const backgroundStroke = this.paintManager.makeNewPaint(textStyle.backgroundStroke, this.getDim(), true)
+        const dim = this.getDim()
+        const fill = this.paintManager.makeNewPaint(textStyle.textFill, dim)
+        const stroke = this.paintManager.makeNewPaint(textStyle.textStroke, dim, true)
+        const backgroundFill = this.paintManager.makeNewPaint(textStyle.backgroundColor, dim)
+        const backgroundStroke = this.paintManager.makeNewPaint(textStyle.backgroundStroke, dim, true)
 
         this.resource.textStyle.fontSize = textStyle.fontSize
         this.resource.textStyle.fontFamilies = textStyle.fontFamilies
         this.resource.textStyle.fontVariations = textStyle.fontVariations
 
-        return { fill: fill, stroke: stroke, backgroundColor: backgroundFill, backgroundStroke: backgroundStroke, textStyle: this.resource.textStyle }
+        return { fill, stroke, backgroundColor: backgroundFill, backgroundStroke, textStyle: this.resource.textStyle }
     }
 
     override moveShape(mx: number, my: number): void {
-        this.transform.x += mx
-        this.transform.y += my
-        this.cursor.setCoord(this.transform.x, this.transform.y)
-
-        this.calculateBoundingRect()
+        super.moveShape(mx, my)
+        this.cursor.setCoord(this.data.properties.transform.x, this.data.properties.transform.y)
     }
 
-    pointInShape(x: number, y: number): boolean {
-        const w = this.dimension.width == 0 ? this.TWidth : this.dimension.width
-        const h = this.dimension.height == 0 ? this.THeight : this.dimension.height
-        return x >= 0 && x <= w && y >= 0 && y <= h
+    override pointInShape(x: number, y: number): boolean {
+        const dim = this.getDim()
+        return x >= 0 && x <= dim.width && y >= 0 && y <= dim.height
     }
 
-    calculateBoundingRect(): void {
-        this.boundingRect = {
-            left: 0,
-            top: 0,
-            right: this.dimension.width > 0 ? this.dimension.width : this.TWidth,
-            bottom: this.dimension.height > 0 ? this.dimension.height : this.THeight,
-        }
-    }
-
-    draw(canvas: Canvas): void {
-        if (!this.resource || !this.paragraph) {
-            console.log('failed to draw')
-            return
-        }
+    override draw(canvas: Canvas): void {
+        if (!this.resource || !this.paragraph) return
 
         try {
             canvas.drawParagraph(this.paragraph, 0, 0)
-            this.cursor.draw(canvas)
+            if (this.isEdit) {
+                this.cursor.draw(canvas)
+            }
         } catch (error) {
             console.error('Error drawing PText:', error)
-            console.warn('PText: Attempting fallback rendering')
         }
     }
 
-    setCursorPosFromCoord(x: number, y: number) {
+    override setCursorPosFromCoord(x: number, y: number) {
         this.clearSelection()
         this.cursor.setCursorPositionFromCoord(this.paragraph, this.text, this.textStyle.fontSize, this.textStyle.lineHeight, x, y)
         this.setUpParagraph()
@@ -242,14 +210,14 @@ class PText extends Shape {
         this.clearSelection()
     }
 
-    selectAll() {
+    override selectAll() {
         this.selectionStart = 0
         this.selectionEnd = this.text.length
         this.cursor.setCursorPos(this.text.length)
         this.setUpParagraph()
     }
 
-    insertText(char: string, shiftKey?: boolean): void {
+    override insertText(char: string, _shiftKey?: boolean): void {
         if (this.hasSelection) {
             this.deleteSelection()
         }
@@ -259,12 +227,11 @@ class PText extends Shape {
 
         this.setUpParagraph()
         this.calculateTextDim()
-        this.calculateBoundingRect()
         this.cursor.updateCursorPosIndex(char.length)
         this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
     }
 
-    deleteText(direction: 'forward' | 'backward'): void {
+    override deleteText(direction: 'forward' | 'backward'): void {
         if (this.hasSelection) {
             this.deleteSelection()
         }
@@ -277,47 +244,36 @@ class PText extends Shape {
 
         this.setUpParagraph()
         this.calculateTextDim()
-        this.calculateBoundingRect()
         this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
     }
 
     copyText() {
         const start = Math.min(this.selectionStart, this.selectionEnd)
         const end = Math.max(this.selectionStart, this.selectionEnd)
-        const text = this.text.substring(start, end)
-        navigator.clipboard.writeText(text)
+        const textToCopy = this.text.substring(start, end)
+        navigator.clipboard.writeText(textToCopy)
     }
 
     pasteText() {
         navigator.clipboard.readText().then(string => {
             this.insertText(string, false)
         })
-        // is there any eveny like onpaste
     }
 
-    setUpBuilder() {
-        if (this.resource.fontData.length == 0) {
-            console.log(this.resource.fontData)
-
-            return
-        }
+    private setUpBuilder() {
+        if (!this.resource || this.resource.fontData.length == 0) return
         const paragraphStyle = this.getParagraphStyle()
         this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.resource.fontMgr)
     }
 
-    setUpParagraph() {
-        if (!this.builder || !this.resource) {
-            console.log('no resources amd builder')
-            return
-        }
+    private setUpParagraph() {
+        if (!this.builder || !this.resource) return
 
         this.builder.reset()
 
         if (!this.hasSelection) {
-
             const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
-            const background = this.resource.canvasKit.TRANSPARENT
-            backgroundColor.setColor(background)// fix this later
+            backgroundColor.setColor(this.resource.canvasKit.TRANSPARENT)
 
             this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
             this.builder.addText(this.text)
@@ -325,30 +281,24 @@ class PText extends Shape {
         } else {
             const start = Math.min(this.selectionStart, this.selectionEnd)
             const end = Math.max(this.selectionStart, this.selectionEnd)
+            
             if (start > 0) {
                 const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
-                const background = this.resource.canvasKit.TRANSPARENT
-                backgroundColor.setColor(background)// fix this later
-
+                backgroundColor.setColor(this.resource.canvasKit.TRANSPARENT)
                 this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
                 this.builder.addText(this.text.substring(0, start))
                 this.builder.pop()
             }
             if (start < end) {
                 const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
-
-                const background = this.resource.canvasKit.Color(0, 0, 255)
-                backgroundColor.setColor(background)// fix this later
-
+                backgroundColor.setColor(this.resource.canvasKit.Color(0, 0, 255))
                 this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
                 this.builder.addText(this.text.substring(start, end))
                 this.builder.pop()
             }
             if (end < this.text.length) {
                 const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
-                const background = this.resource.canvasKit.TRANSPARENT
-                backgroundColor.setColor(background)// fix this later
-
+                backgroundColor.setColor(this.resource.canvasKit.TRANSPARENT)
                 this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
                 this.builder.addText(this.text.substring(end))
                 this.builder.pop()
@@ -356,13 +306,12 @@ class PText extends Shape {
         }
 
         this.paragraph = this.builder.build()
-
-        this.paragraph.layout(this.dimension.width > 0 ? this.dimension.width : 1000)
+        const layoutWidth = this.data.properties.size.width > 0 ? this.data.properties.size.width : 1000
+        this.paragraph.layout(layoutWidth)
     }
 
-    calculateTextDim() {
+    private calculateTextDim() {
         if (!this.paragraph) return
-
         this.TWidth = this.paragraph.getLongestLine()
         this.THeight = this.paragraph.getHeight()
     }
@@ -376,7 +325,7 @@ class PText extends Shape {
         this.selectionEnd = 0
     }
 
-    moveCursor(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean) {
+    override moveCursor(direction: 'left' | 'right' | 'up' | 'down', shiftKey: boolean) {
         if (shiftKey) {
             if (!this.hasSelection) this.selectionStart = this.cursor.cursorPosIndex
         } else {
@@ -389,20 +338,14 @@ class PText extends Shape {
     }
 
     override cleanUp(): void {
-        console.log('CLEANUP');
-
         this.cursor.stopCursorBlink()
         this.diableEditing()
     }
+
     override destroy(): void {
         this.cursor.stopCursorBlink()
-        if (this.builder) {
-            this.builder.delete()
-        }
-        if (this.paragraph) {
-            this.paragraph.delete()
-        } // not sure if i should delete
-        //add more from this class
+        if (this.builder) this.builder.delete()
+        if (this.paragraph) this.paragraph.delete()
     }
 }
 

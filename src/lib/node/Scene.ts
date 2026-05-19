@@ -5,7 +5,7 @@ import { ArcHandleState, BoundingRect, Coord, HandlePos, Properties, Size } from
 import { Canvas } from 'canvaskit-wasm'
 
 abstract class SceneNode {
-    protected shape: Shape
+    public shape: Shape
     protected parent: SceneNode | null
     protected localMatrix: number[] | null
     protected worldMatrix: number[] | null

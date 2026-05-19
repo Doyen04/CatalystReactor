@@ -5,96 +5,94 @@ import { Coord, HandlePos, Properties } from '@lib/types/shapes'
 import clamp from '@lib/helper/clamp'
 import computeRoundedCorner from '@lib/helper/roundingUtil'
 import { arcPointAtFraction } from '@lib/helper/pointInArc'
+import { ShapeData } from '@lib/core/EngineStateStore'
 
 class Star extends Shape {
-    radiusX: number
-    radiusY: number
-    spikes: number
-    ratio: number
-    points: Coord[]
-    bRadius: number = 0
+    private points: Coord[] = []
 
-    constructor(x: number, y: number, { ...shapeProps } = {}) {
-        super({ x, y, type: 'star', ...shapeProps })
-        this.radiusX = 0
-        this.radiusY = 0
-        this.spikes = 5
-        this.ratio = 0.5
+    constructor(data: ShapeData) {
+        super(data)
         this.points = this.generateStarPoints()
-        this.calculateBoundingRect()
+    }
+
+    get radiusX(): number {
+        return this.data.properties.size.width / 2
+    }
+
+    get radiusY(): number {
+        return this.data.properties.size.height / 2
+    }
+
+    get spikes(): number {
+        return this.data.properties.spikesRatio?.spikes || 5
+    }
+
+    get ratio(): number {
+        return this.data.properties.spikesRatio?.ratio || 0.5
+    }
+
+    get bRadius(): number {
+        return this.data.properties.borderRadius?.['top-left'] || 0
     }
 
     private generateStarPoints(): Coord[] {
         const points: Coord[] = []
+        const spikes = this.spikes
 
-        for (let i = 0; i < this.spikes * 2; i++) {
-            const point = this.getVertex(this.spikes, i)
+        for (let i = 0; i < spikes * 2; i++) {
+            const point = this.getVertex(spikes, i)
             points.push(point)
         }
 
         return points
     }
 
-    override moveShape(mx: number, my: number): void {
-        this.transform.x += mx
-        this.transform.y += my
-
-        this.points = this.generateStarPoints()
-        this.calculateBoundingRect()
-    }
-
-    setBorderRadius(newRadius: number, pos: HandlePos) {
+    override setBorderRadius(newRadius: number, pos: HandlePos) {
         if (pos != 'top') return
 
         const { width, height } = this.getDim()
         const max = Math.min(width, height) / 2
         const newRad = Math.max(0, Math.min(newRadius, max))
 
-        this.bRadius = newRad
+        if (!this.data.properties.borderRadius) {
+            this.data.properties.borderRadius = {
+                'top-left': newRad,
+                'top-right': newRad,
+                'bottom-left': newRad,
+                'bottom-right': newRad,
+                locked: true
+            }
+        } else {
+            this.data.properties.borderRadius['top-left'] = newRad // Using top-left as proxy for star radius
+            this.data.properties.borderRadius.locked = true
+        }
     }
 
-    setDim(width: number, height: number) {
-        this.radiusX = width / 2
-        this.radiusY = height / 2
-
+    override setDim(width: number, height: number) {
+        this.data.properties.size.width = width
+        this.data.properties.size.height = height
         this.points = this.generateStarPoints()
-        this.calculateBoundingRect()
     }
 
-    override setCoord(x: number, y: number): void {
-        this.transform.x = x
-        this.transform.y = y
-
+    override setVertexCount(points: number): void {
+        if (!this.data.properties.spikesRatio) {
+            this.data.properties.spikesRatio = { spikes: clamp(points, 3, 60), ratio: 0.5 }
+        } else {
+            this.data.properties.spikesRatio.spikes = clamp(points, 3, 60)
+        }
         this.points = this.generateStarPoints()
-        this.calculateBoundingRect()
     }
 
-    setVertexCount(points: number): void {
-        this.spikes = clamp(points, 3, 60)
-
+    override setRatio(rat: number) {
+        if (!this.data.properties.spikesRatio) {
+            this.data.properties.spikesRatio = { spikes: 5, ratio: rat }
+        } else {
+            this.data.properties.spikesRatio.ratio = rat
+        }
         this.points = this.generateStarPoints()
-        this.calculateBoundingRect()
     }
 
-    setRotation(rotation: number): void {
-        this.transform.rotation = rotation % 360
-    }
-
-    setRatio(rat: number) {
-        this.ratio = rat
-        this.points = this.generateStarPoints()
-        this.calculateBoundingRect()
-    }
-
-    override setProperties(prop: Properties): void {
-        this.transform = prop.transform
-        this.setDim(prop.size.width, prop.size.height)
-        this.style = prop.style
-        this.setVertexCount(prop.spikesRatio.spikes)
-        this.setRatio(prop.spikesRatio.ratio)
-    }
-
-    getVertex(sides: number, index: number, startAngle = -Math.PI / 2): { x: number; y: number } {
+    override getVertex(sides: number, index: number, startAngle = -Math.PI / 2): { x: number; y: number } {
         const angleStep = (Math.PI * 2) / sides
         const angle = index * (angleStep / 2) + startAngle
 
@@ -107,16 +105,14 @@ class Star extends Shape {
         return { x, y }
     }
 
-    getVertexCount(): number {
+    override getVertexCount(): number {
         return this.spikes
     }
 
-    override getProperties(): Properties {
-        return {
-            transform: this.transform,
-            size: this.getDim(),
-            style: this.style,
-            spikesRatio: { spikes: this.spikes, ratio: this.ratio },
+    override getDim(): { width: number; height: number } {
+        return { 
+            width: Math.round(this.data.properties.size.width), 
+            height: Math.round(this.data.properties.size.height) 
         }
     }
 
@@ -163,14 +159,17 @@ class Star extends Shape {
 
     private getRatioModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size
+        const spikes = this.spikes
+        const bRadius = this.bRadius
+
         if (this.points.length > 0) {
-            if (this.bRadius > 0) {
+            if (bRadius > 0) {
                 const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
                     'star',
                     1,
                     this.points,
-                    this.spikes * 2,
-                    Math.min(this.bRadius, this.getMaxRadius())
+                    spikes * 2,
+                    Math.min(bRadius, this.getMaxRadius())
                 )
                 const { x: tangentX, y: tangentY } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
                 return { x: tangentX - size, y: tangentY - size }
@@ -184,14 +183,17 @@ class Star extends Shape {
 
     private getVerticesModifierHandlesPos(handle: Handle): Coord {
         const size = handle.size
+        const spikes = this.spikes
+        const bRadius = this.bRadius
+
         if (this.points.length > 0) {
-            if (this.bRadius > 0) {
+            if (bRadius > 0) {
                 const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
                     'star',
                     2,
                     this.points,
-                    this.spikes * 2,
-                    Math.min(this.bRadius, this.getMaxRadius()) ///
+                    spikes * 2,
+                    Math.min(bRadius, this.getMaxRadius())
                 )
                 const { x: tangentX, y: tangentY } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
                 return { x: tangentX - size, y: tangentY - size }
@@ -203,18 +205,15 @@ class Star extends Shape {
         return { x: this.radiusX, y: this.radiusY }
     }
 
-    getCenterCoord(): Coord {
+    override getCenterCoord(): Coord {
         return { x: this.radiusX, y: this.radiusY }
-    }
-    override getDim(): { width: number; height: number } {
-        return { width: this.radiusX * 2, height: this.radiusY * 2 }
     }
 
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
-        const fill = this.paintManager.initFillPaint(this.style.fill, this.getDim())
-        const stroke = this.paintManager.initStrokePaint(this.style.stroke, this.getDim())
+        const fill = this.paintManager.initFillPaint(this.data.properties.style.fill, this.getDim())
+        const stroke = this.paintManager.initStrokePaint(this.data.properties.style.stroke, this.getDim())
 
         const path = new this.resource.canvasKit.Path()
         if (this.bRadius > 0) {
@@ -234,7 +233,7 @@ class Star extends Shape {
         }
     }
 
-    private drawHoverEffect(canvas: Canvas): void {
+    protected drawHoverEffect(canvas: Canvas): void {
         if (!this.resource) return
         const { canvasKit } = this.resource
         const path = new canvasKit.Path()
@@ -255,6 +254,7 @@ class Star extends Shape {
     }
 
     private createRegularStarPath(path: Path) {
+        if (this.points.length === 0) return
         path.moveTo(this.points[0].x, this.points[0].y)
 
         for (let i = 1; i < this.points.length; i++) {
@@ -263,11 +263,11 @@ class Star extends Shape {
         path.close()
     }
 
-    getMaxRadius() {
+    override getMaxRadius() {
         const outerRadius = Math.min(this.radiusX, this.radiusY) // outer radius
         const ratio = this.ratio
         const phi = Math.PI / this.spikes // half-step angle
-        // empirical mapping observed in
+        // empirical mapping observed
         const innerRadius = outerRadius * ratio * Math.cos(phi) // inner radius approx
         const L = Math.sqrt(outerRadius * outerRadius + innerRadius * innerRadius - 2 * outerRadius * innerRadius * Math.cos(phi))
         const corner = (L / 2) * Math.tan(phi) // fillet formula
@@ -275,13 +275,16 @@ class Star extends Shape {
     }
 
     private createRoundedStarPath(path: Path) {
+        const spikes = this.spikes
+        const bRadius = this.bRadius
+
         for (let i = 0; i < this.points.length; i++) {
             const { startPoint, endPoint, controlPoint, currentRadius } = computeRoundedCorner(
                 'star',
                 i,
                 this.points,
-                this.spikes * 2,
-                Math.min(this.bRadius, this.getMaxRadius())
+                spikes * 2,
+                Math.min(bRadius, this.getMaxRadius())
             )
             if (i === 0) {
                 path.moveTo(startPoint.x, startPoint.y)
@@ -289,24 +292,11 @@ class Star extends Shape {
                 path.lineTo(startPoint.x, startPoint.y)
             }
 
-            // Arc from p1a → p1b
             path.arcToTangent(controlPoint.x, controlPoint.y, endPoint.x, endPoint.y, currentRadius)
         }
 
         path.close()
         return path
-    }
-
-    override calculateBoundingRect(): void {
-        const maxRadiusX = this.radiusX
-        const maxRadiusY = this.radiusY
-
-        const left = 0
-        const top = 0
-        const right = maxRadiusX * 2
-        const bottom = maxRadiusY * 2
-
-        this.boundingRect = { left, top, right, bottom }
     }
 
     override pointInShape(x: number, y: number): boolean {
@@ -325,6 +315,7 @@ class Star extends Shape {
 
         return inside
     }
+
     override cleanUp(): void { }
     override destroy(): void { }
 }

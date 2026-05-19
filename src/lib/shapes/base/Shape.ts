@@ -1,6 +1,3 @@
-// ════════════════════════════════════
-// 📐 Abstract Base Shape Class
-
 import Handle from '@lib/modifiers/Handles'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import {
@@ -11,57 +8,23 @@ import {
     HandlePos,
     Properties,
     ShapeType,
-    SolidFill,
-    Style,
-    Transform,
 } from '@lib/types/shapes'
 import type { Canvas } from 'canvaskit-wasm'
 import PaintManager from '@lib/core/PaintManager'
 import container from '@lib/core/DependencyManager'
-
-interface Arguments {
-    x: number
-    y: number
-    type: ShapeType
-    rotation?: number
-    scale?: number
-    _fill?: string
-    strokeWidth?: number
-    strokeColor?: string
-}
+import { ShapeData } from '@lib/core/EngineStateStore'
 
 abstract class Shape {
     protected aspectRatio: number = 1
     protected maintainAspectRatio: boolean = false
-    protected shapeType: ShapeType
-    protected transform: Transform
-    protected style: Style
-    protected boundingRect: BoundingRect
-    protected isHover: boolean
-    protected rotationAnchorPosition: Coord
+    protected isHover: boolean = false
+    protected rotationAnchorPosition: Coord = { x: 0.5, y: 0.5 }
     protected paintManager: PaintManager
+    public data: ShapeData
 
-    constructor({ x, y, type, rotation = 0, scale = 1, _fill = '#fff', strokeWidth = 1, strokeColor = '#000' }: Arguments) {
+    constructor(data: ShapeData) {
         if (new.target === Shape) throw new Error('Shape is abstract; extend it!')
-        this.transform = {
-            x,
-            y,
-            rotation,
-            scaleX: scale,
-            scaleY: scale,
-            anchorPoint: { x: 0, y: 0 },
-        }
-        this.rotationAnchorPosition = { x: 0.5, y: 0.5 }
-
-        const fill: SolidFill = { type: 'solid', color: _fill }
-        const stroke: SolidFill = { type: 'solid', color: strokeColor }
-        this.style = {
-            fill: { color: fill, opacity: 1 },
-            stroke: { color: stroke, opacity: 1, width: strokeWidth },
-        }
-        this.boundingRect = { top: 0, left: 0, bottom: 0, right: 0 }
-        this.isHover = false
-        this.shapeType = type
+        this.data = data
         this.paintManager = container.resolve("paintManager");
     }
 
@@ -69,14 +32,9 @@ abstract class Shape {
     abstract getModifierHandles(): Handle[]
     abstract getModifierHandlesPos(handle: Handle): { x: number; y: number }
     abstract pointInShape(x: number, y: number): boolean
-    abstract moveShape(mx: number, my: number): void
-    abstract calculateBoundingRect(): void
     abstract draw(canvas: Canvas): void
     abstract setDim(width: number, height: number): void
     abstract getDim(): { width: number; height: number }
-    abstract setCoord(x: number, y: number): void
-    abstract getProperties(): Properties
-    abstract setProperties(prop: Properties): void
     abstract cleanUp(): void
 
     get resource(): CanvasKitResources {
@@ -85,9 +43,18 @@ abstract class Shape {
             return resources
         } else {
             console.log('resources is null')
-
             return null
         }
+    }
+
+    moveShape(mx: number, my: number): void {
+        this.data.properties.transform.x += mx
+        this.data.properties.transform.y += my
+    }
+
+    setCoord(x: number, y: number): void {
+        this.data.properties.transform.x = x
+        this.data.properties.transform.y = y
     }
 
     setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
@@ -97,8 +64,8 @@ abstract class Shape {
         const willFlipX = deltaX < 0
         const willFlipY = deltaY < 0
 
-        this.transform.scaleX = willFlipX ? -1 : 1
-        this.transform.scaleY = willFlipY ? -1 : 1
+        this.data.properties.transform.scaleX = willFlipX ? -1 : 1
+        this.data.properties.transform.scaleY = willFlipY ? -1 : 1
 
         if (shiftKey || this.maintainAspectRatio) {
             let newWidth: number
@@ -123,24 +90,27 @@ abstract class Shape {
 
             this.setDim(newWidth, newHeight)
 
-            // ADD: Position update for proper flipping
-            this.transform.x = willFlipX ? dragStart.x - newWidth : dragStart.x
-            this.transform.y = willFlipY ? dragStart.y - newHeight : dragStart.y
+            this.data.properties.transform.x = willFlipX ? dragStart.x - newWidth : dragStart.x
+            this.data.properties.transform.y = willFlipY ? dragStart.y - newHeight : dragStart.y
         } else {
             this.setDim(Math.abs(deltaX), Math.abs(deltaY))
-            this.transform.x = Math.min(dragStart.x, mx)
-            this.transform.y = Math.min(dragStart.y, my)
+            this.data.properties.transform.x = Math.min(dragStart.x, mx)
+            this.data.properties.transform.y = Math.min(dragStart.y, my)
         }
-
-        this.calculateBoundingRect()
     }
 
     getShapeType(): ShapeType {
-        return this.shapeType
+        return this.data.type
     }
 
     getLocalBoundingRect(): BoundingRect {
-        return structuredClone(this.boundingRect)
+        const { width, height } = this.getDim()
+        return {
+            left: 0,
+            top: 0,
+            right: width,
+            bottom: height
+        }
     }
 
     getRotationAnchorPoint() {
@@ -155,7 +125,6 @@ abstract class Shape {
         return handles
     }
 
-    //local coord
     getAngleModifierHandlesPos(handle: Handle): Coord {
         const dimen = this.getDim()
         const bRect = {
@@ -165,30 +134,17 @@ abstract class Shape {
             bottom: dimen.height,
         }
         const size = handle.size / 2
-
         const padding = handle.size
 
         switch (handle.pos) {
             case 'top-left':
-                return {
-                    x: bRect.left - size - padding,
-                    y: bRect.top - size - padding,
-                }
+                return { x: bRect.left - size - padding, y: bRect.top - size - padding }
             case 'top-right':
-                return {
-                    x: bRect.right - size + padding,
-                    y: bRect.top - size - padding,
-                }
+                return { x: bRect.right - size + padding, y: bRect.top - size - padding }
             case 'bottom-left':
-                return {
-                    x: bRect.left - size - padding,
-                    y: bRect.bottom - size + padding,
-                }
+                return { x: bRect.left - size - padding, y: bRect.bottom - size + padding }
             case 'bottom-right':
-                return {
-                    x: bRect.right - size + padding,
-                    y: bRect.bottom - size + padding,
-                }
+                return { x: bRect.right - size + padding, y: bRect.bottom - size + padding }
             default:
                 return { x: 0, y: 0 }
         }
@@ -202,7 +158,6 @@ abstract class Shape {
         return handles
     }
 
-    //local coord
     getSizeModifierHandlesPos(handle: Handle): Coord {
         const dimen = this.getDim()
         const bRect = {
@@ -228,55 +183,45 @@ abstract class Shape {
     }
 
     getCoord(): Coord {
-        return { x: this.transform.x, y: this.transform.y }
+        return { x: this.data.properties.transform.x, y: this.data.properties.transform.y }
     }
 
     drawDefault() {
         const defSize = 100
         this.setDim(defSize, defSize)
-        this.setCoord(this.transform.x - defSize / 2, this.transform.y - defSize / 2)
+        this.setCoord(this.data.properties.transform.x - defSize / 2, this.data.properties.transform.y - defSize / 2)
     }
 
     getRotationAngle(): number {
-        return this.transform.rotation || 0
+        return this.data.properties.transform.rotation || 0
     }
 
     getScale(): { x: number; y: number } {
         return {
-            x: this.transform.scaleX || 1,
-            y: this.transform.scaleY || 1,
+            x: this.data.properties.transform.scaleX || 1,
+            y: this.data.properties.transform.scaleY || 1,
         }
     }
 
     setAngle(angle: number): void {
-        this.transform.rotation = angle
-        // this.style.strokeColor = color;
+        this.data.properties.transform.rotation = angle
     }
 
     setAnchorPoint(anchor: Coord): void {
         console.log('not yet implemented', anchor)
-        // this.transform.anchorPoint = anchor
-    }
-
-    setStrokeColor(stroke: string | number[]): void {
-        console.log(stroke)
     }
 
     setScale(x: number, y: number): void {
-        this.transform.scaleX = x
-        this.transform.scaleY = y
+        this.data.properties.transform.scaleX = x
+        this.data.properties.transform.scaleY = y
     }
 
-    setStrokeWidth(width: number): void {
-        console.log(width)
-
-        // this.style.strokeWidth = width;
+    getProperties(): Properties {
+        return this.data.properties
     }
 
-    setFill(color: string): void {
-        console.log(color)
-
-        //     this.style.fill = color;
+    setProperties(prop: Properties): void {
+        this.data.properties = prop
     }
 
     setHovered(bool: boolean) {
@@ -284,10 +229,7 @@ abstract class Shape {
     }
 
     // ── Virtual methods with default no-op implementations ───────────────
-    // Subclasses override only the methods they support.
-    // This eliminates instanceof checks in SceneNode.
-
-    // Arc (Oval)
+    
     getArcAngles(): { start: number; sweep: number } | null { return null }
     isArc(): boolean { return false }
     setArc(_start: number, _end: number): void { /* no-op */ }
@@ -296,18 +238,14 @@ abstract class Shape {
     setArcHandleState(_state: Partial<ArcHandleState>, _replace?: boolean): void { /* no-op */ }
     toDegree(_rad: number): number | undefined { return undefined }
 
-    // Vertices (Star, Polygon)
     getVertexCount(): number | null { return null }
     setVertexCount(_count: number): void { /* no-op */ }
     getVertex(_prev: number, _vertex: number): { x: number; y: number } | null { return null }
 
-    // Ratio (Oval, Star)
     setRatio(_ratio: number): void { /* no-op */ }
 
-    // Border radius (Rect, Star, Polygon)
     setBorderRadius(_radius: number, _position: HandlePos): void { /* no-op */ }
 
-    // Text editing (PText)
     canEdit(): boolean { return false }
     insertText(_char: string, _shiftKey: boolean): void { /* no-op */ }
     startEditing(): void { /* no-op */ }
@@ -315,8 +253,11 @@ abstract class Shape {
     setCursorPosFromCoord(_x: number, _y: number): void { /* no-op */ }
     deleteText(_direc: 'forward' | 'backward'): void { /* no-op */ }
     moveCursor(_direc: 'right' | 'left' | 'up' | 'down', _shiftKey: boolean): void { /* no-op */ }
+    protected drawHoverEffect(_canvas: Canvas, _rect?: any): void { /* no-op */ }
+    setFontSize(_size: number): void { /* no-op */ }
+    setFontFamily(_fontFamily: string): void { /* no-op */ }
+    getMaxRadius(): number { return Infinity }
 
     abstract destroy(): void
 }
 export default Shape
-

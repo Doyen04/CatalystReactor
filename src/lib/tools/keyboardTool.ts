@@ -2,6 +2,7 @@ import { isPrintableCharUnicode } from '@/util/textUtil'
 import container from '@lib/core/DependencyManager'
 import ShapeManager from '@lib/core/ShapeManager'
 import SceneNode from '@lib/node/Scene'
+import HistoryManager from '@lib/core/HistoryManager'
 
 class KeyboardTool {
     private shapeManager: ShapeManager | null = null
@@ -35,6 +36,17 @@ class KeyboardTool {
                 this.handleArrowKeys(e)
                 break
             default:
+                // Handle Undo/Redo
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'z') {
+                        e.preventDefault()
+                        HistoryManager.getInstance().undo()
+                    } else if (e.key === 'y' || (e.key === 'Z' && e.shiftKey)) {
+                        e.preventDefault()
+                        HistoryManager.getInstance().redo()
+                    }
+                }
+
                 // Handle alphanumeric and other printable characters
                 if (isPrintableCharUnicode(e.key)) {
                     this.handleTextKey(e)
