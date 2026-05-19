@@ -270,6 +270,17 @@ class Polygon extends Shape {
         return inside
     }
 
+    override convertToPathData(): any {
+        const pointsArray: any[] = []
+        for (let i = 0; i < this.points.length; i++) {
+            const { x, y } = this.points[i]
+            // Note: Bypassing parametric border radius rendering for raw points. 
+            // Users can use EditTool bezier smoothing manually on the raw nodes.
+            pointsArray.push({ x, y, smooth: false })
+        }
+        return { points: pointsArray, closed: true }
+    }
+
     override cleanUp(): void { }
     override destroy(): void { }
 }

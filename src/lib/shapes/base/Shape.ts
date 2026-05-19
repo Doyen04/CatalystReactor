@@ -228,6 +228,29 @@ abstract class Shape {
         this.isHover = bool
     }
 
+    // ── DELEGATION MODIFIER METHODS ───────────────
+    // These methods replace the legacy Handles array system and allow 
+    // shapes to natively calculate hit tests and draw their own smart UI overlays.
+
+    drawModifierHandles(_canvas: any): void { /* no-op by default */ }
+    
+    hitTestModifierHandle(_x: number, _y: number): string | null { 
+        return null 
+    }
+    
+    dragModifierHandle(
+        _handleID: string, 
+        _localCurrent: Coord, 
+        _localStart: Coord, 
+        _initialShapeData: any
+    ): void { /* no-op by default */ }
+
+    // ── FLATTEN METHOD ───────────────
+    // Converts mathematically parameterized primitive data into explicit points
+    convertToPathData(): any | null {
+        return null
+    }
+
     // ── Virtual methods with default no-op implementations ───────────────
     
     getArcAngles(): { start: number; sweep: number } | null { return null }

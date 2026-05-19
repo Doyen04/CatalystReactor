@@ -225,6 +225,53 @@ class Rectangle extends SimpleRect {
         return x >= 0 && x <= width && y >= 0 && y <= height
     }
 
+    override convertToPathData(): any {
+        const { width, height } = this.data.properties.size
+        const points: any[] = []
+
+        if (!this.hasRadius()) {
+            points.push({ x: 0, y: 0, smooth: false })
+            points.push({ x: width, y: 0, smooth: false })
+            points.push({ x: width, y: height, smooth: false })
+            points.push({ x: 0, y: height, smooth: false })
+            return { points, closed: true }
+        }
+
+        const radii = this.getBorderRadius()
+        const { 'top-left': tl, 'top-right': tr, 'bottom-right': br, 'bottom-left': bl } = radii
+        const k = 0.552284749831
+
+        if (tl > 0) {
+            points.push({ x: 0, y: tl, cp1: { x: 0, y: tl * (1 - k) } })
+            points.push({ x: tl, y: 0, cp2: { x: tl * (1 - k), y: 0 } })
+        } else {
+            points.push({ x: 0, y: 0 })
+        }
+
+        if (tr > 0) {
+            points.push({ x: width - tr, y: 0, cp1: { x: width - tr * (1 - k), y: 0 } })
+            points.push({ x: width, y: tr, cp2: { x: width, y: tr * (1 - k) } })
+        } else {
+            points.push({ x: width, y: 0 })
+        }
+
+        if (br > 0) {
+            points.push({ x: width, y: height - br, cp1: { x: width, y: height - br * (1 - k) } })
+            points.push({ x: width - br, y: height, cp2: { x: width - br * (1 - k), y: height } })
+        } else {
+            points.push({ x: width, y: height })
+        }
+
+        if (bl > 0) {
+            points.push({ x: bl, y: height, cp1: { x: bl * (1 - k), y: height } })
+            points.push({ x: 0, y: height - bl, cp2: { x: 0, y: height - bl * (1 - k) } })
+        } else {
+            points.push({ x: 0, y: height })
+        }
+
+        return { points, closed: true }
+    }
+
     override cleanUp(): void { }
     override destroy(): void { }
 }

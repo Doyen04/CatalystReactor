@@ -4,6 +4,7 @@ import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
 import container from '@lib/core/DependencyManager'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
+import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 
 type EditState = 'idle' | 'dragging-anchor' | 'dragging-control'
 type DragTarget = {
@@ -167,6 +168,55 @@ class EditTool extends Tool {
         if (vp) {
             this.editingShape = vp
             this.editingNode = this.shapeManager.currentScene
+            this.cnvsElm.style.cursor = 'crosshair'
+            this.shapeModifier?.setEditMode(true)
+        } else {
+            // Try to flatten parameterized primitive to vector path
+            this.flattenShapeToVectorPath()
+        }
+    }
+
+    private flattenShapeToVectorPath(): void {
+        const currentScene = this.shapeManager?.currentScene
+        if (!currentScene || !(currentScene instanceof ShapeNode)) return
+
+        const shape = currentScene.shape
+        if (shape instanceof VectorPath) return // Already a vector path
+        
+        // Ensure it has a conversion method
+        if (!('convertToPathData' in shape) || typeof shape.convertToPathData !== 'function') return
+        
+        const pathData = shape.convertToPathData()
+        if (!pathData) return // Cannot convert (e.g. Text, Image)
+
+        // Generate new VectorPath replacement
+        const pos = currentScene.getCoord()
+        const newShape = ShapeFactory.createShape('path', { x: pos.x, y: pos.y })
+        
+        // Map the properties exactly over
+        const oldProps = shape.getProperties()
+        const newProps = newShape.getProperties()
+        
+        newProps.style = JSON.parse(JSON.stringify(oldProps.style))
+        newProps.transform = JSON.parse(JSON.stringify(oldProps.transform))
+        newProps.pathData = pathData
+        
+        // Size bounds are now dictated by path, but we keep transform scaling
+        
+        const newNode = new ShapeNode(newShape)
+        
+        // Swap shapes in the tree
+        const parent = currentScene.getParent()
+        if (parent) {
+            parent.addChildNode(newNode)
+            currentScene.destroy()
+            
+            // Attach tool to new node
+            this.shapeManager.detachShape()
+            this.shapeManager.attachNode(newNode)
+            
+            this.editingShape = newShape as VectorPath
+            this.editingNode = newNode
             this.cnvsElm.style.cursor = 'crosshair'
             this.shapeModifier?.setEditMode(true)
         }

@@ -293,6 +293,28 @@ class Oval extends Shape {
         return normalizedDistance <= 1
     }
 
+    override convertToPathData(): any {
+        const { width, height } = this.data.properties.size
+        const rx = width / 2
+        const ry = height / 2
+        const cx = rx
+        const cy = ry
+        
+        // Exact cubic Bézier constant for a circle/ellipse
+        const k = 0.552284749831
+        const dx = rx * k
+        const dy = ry * k
+
+        const points: any[] = [
+            { x: cx, y: 0, cp1: { x: cx - dx, y: 0 }, cp2: { x: cx + dx, y: 0 }, smooth: true }, // Top
+            { x: width, y: cy, cp1: { x: width, y: cy - dy }, cp2: { x: width, y: cy + dy }, smooth: true }, // Right
+            { x: cx, y: height, cp1: { x: cx + dx, y: height }, cp2: { x: cx - dx, y: height }, smooth: true }, // Bottom
+            { x: 0, y: cy, cp1: { x: 0, y: cy + dy }, cp2: { x: 0, y: cy - dy }, smooth: true } // Left
+        ]
+
+        return { points, closed: true }
+    }
+
     override cleanUp(): void { }
     override destroy(): void { }
 }
