@@ -12,6 +12,10 @@ import {
     AlignVerticalJustifyCenter,
     Grid3X3,
     Frame,
+    Minus,
+    PenTool,
+    Spline,
+    MousePointerClick,
 } from 'lucide-react'
 import './Component.css'
 import Button from '../ui/Button'
@@ -94,6 +98,29 @@ function ToolBar() {
         tip: 'Text',
     }
 
+    const VectorTools = [
+        {
+            toolName: 'line',
+            icon: <Minus className={'w-4 h-4'} />,
+            tip: 'Line',
+        },
+        {
+            toolName: 'path',
+            icon: <PenTool className={'w-4 h-4'} />,
+            tip: 'Pen',
+        },
+        {
+            toolName: 'bezier',
+            icon: <Spline className={'w-4 h-4'} />,
+            tip: 'Bézier',
+        },
+        {
+            toolName: 'edit',
+            icon: <MousePointerClick className={'w-4 h-4'} />,
+            tip: 'Edit Points',
+        },
+    ]
+
     const { setTool, tool: currentTool } = useToolStore()
     if (!currentTool) {
         setTool(SelectTools[0], 'select')
@@ -110,7 +137,11 @@ function ToolBar() {
             <Button tool={ShapeTools[0]} group={ShapeTools} groupId="shape" />
             <MoreButton tools={ShapeTools} tip={'ShapeTools'} groupId="shape" />
 
+            <Button tool={VectorTools[0]} group={VectorTools} groupId="vector" />
+            <MoreButton tools={VectorTools} tip={'VectorTools'} groupId="vector" />
+            
             <Button tool={TextTool} group={[TextTool]} groupId="text" />
+
         </div>
     )
 }

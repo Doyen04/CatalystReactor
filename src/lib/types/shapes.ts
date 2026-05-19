@@ -329,6 +329,19 @@ export interface PTextSpan {
     metadata?: Record<string, unknown>;  
 }
 
+export interface PathPoint {
+    x: number
+    y: number
+    cp1?: Coord  // incoming control point (from previous segment)
+    cp2?: Coord  // outgoing control point (to next segment)
+    smooth?: boolean
+}
+
+export interface PathData {
+    points: PathPoint[]
+    closed: boolean
+}
+
 export interface Properties {
     transform: Transform
     size: Size
@@ -339,6 +352,7 @@ export interface Properties {
     spikesRatio?: SpikesRatio
     textStyle?: PTextStyle
     text?: string
+    pathData?: PathData
 }
 
 export interface BoundingRect {
@@ -354,7 +368,7 @@ export interface Coord {
 }
 export const CornerPos: HandlePos[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
-export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img' | 'plainRect'
+export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img' | 'plainRect' | 'line' | 'path' | 'bezier'
 
 export type HandlePos =
     | 'top-left'
@@ -376,4 +390,4 @@ export type ArcHandleState = {
     dragPrevPointer?: number
 }
 
-export type HandleType = 'size' | 'angle' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio'
+export type HandleType = 'size' | 'angle' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio' | 'path-point' | 'control-point'

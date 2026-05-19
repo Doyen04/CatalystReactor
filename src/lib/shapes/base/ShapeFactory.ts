@@ -5,6 +5,7 @@ import Polygon from '../primitives/Polygon'
 import PText from '../primitives/PText'
 import { Coord, ShapeType, Properties } from '@lib/types/shapes'
 import PImage from '../primitives/Image'
+import VectorPath from '../primitives/VectorPath'
 
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 import type Shape from './Shape'
@@ -43,6 +44,11 @@ export default class ShapeFactory {
                 shape = new PImage(data, image)
                 break
             }
+            case 'line':
+            case 'path':
+            case 'bezier':
+                shape = new VectorPath(data)
+                break
             default:
                 throw new Error(`Unsupported shape type: ${type}`)
         }
@@ -90,6 +96,21 @@ export default class ShapeFactory {
                 lineHeight: 1.2,
                 backgroundColor: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
             };
+        } else if (type === 'line') {
+            props.pathData = {
+                points: [
+                    { x: pos.x, y: pos.y },
+                    { x: pos.x + 100, y: pos.y },
+                ],
+                closed: false,
+            };
+            props.style.stroke.width = 2;
+        } else if (type === 'path' || type === 'bezier') {
+            props.pathData = {
+                points: [],
+                closed: false,
+            };
+            props.style.stroke.width = 2;
         }
 
         return props;

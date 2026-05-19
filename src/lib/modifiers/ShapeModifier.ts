@@ -3,6 +3,7 @@ import Handle from './Handles'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import SText from '@lib/shapes/primitives/SText'
 import SceneNode from '@lib/node/Scene'
+import ShapeNode from '@lib/node/ShapeNode'
 import { Coord } from '@lib/types/shapes'
 import { ShapeData as StoreShapeData } from '@lib/core/EngineStateStore'
 import { ShapeData } from './modifier'
@@ -17,6 +18,7 @@ import {
 } from './modifierUtility'
 import container from '@lib/core/DependencyManager'
 import PaintManager from '@lib/core/PaintManager'
+import VectorPath from '@lib/shapes/primitives/VectorPath'
 
 // const { UpdateModifierHandlesPos } = EventTypes
 
@@ -31,6 +33,7 @@ class ShapeModifier {
     private initialShapeData: ShapeData | null = null
     private font: SText
     private paintManager:PaintManager
+    private _editMode: boolean = false
 
     constructor() {
         this.scene = null
@@ -291,6 +294,14 @@ class ShapeModifier {
         return this.isHovered
     }
 
+    setEditMode(editMode: boolean): void {
+        this._editMode = editMode
+    }
+
+    isInEditMode(): boolean {
+        return this._editMode
+    }
+
     canDraw(): boolean {
         if (!this.scene) return false
         const { width, height } = this.scene.getDim()
@@ -312,6 +323,18 @@ class ShapeModifier {
         if (!this.scene || this.canDraw() || !this.resource) {
             return
         }
+
+        // In edit mode for VectorPaths, draw the path edit overlay instead
+        if (this._editMode && this.scene instanceof ShapeNode && this.scene.shape instanceof VectorPath) {
+            this.setPaint()
+            canvas.save()
+            canvas.concat(this.scene.getWorldMatrix())
+            this.scene.shape.drawEditOverlay(canvas)
+            canvas.restore()
+            this.drawText(canvas)
+            return
+        }
+
         this.setPaint()
 
         canvas.save()

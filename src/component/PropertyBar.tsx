@@ -179,6 +179,52 @@ function PropertyBar() {
                     </Section>
                 )}
 
+                {currentShapeProperties?.pathData && (
+                    <Section title="Path">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#aaa' }}>
+                                <span>Points</span>
+                                <span style={{ color: '#ddd', fontWeight: 500 }}>
+                                    {currentShapeProperties.pathData.points?.length ?? 0}
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#aaa' }}>
+                                <span>Closed</span>
+                                <button
+                                    onClick={() => {
+                                        if (!shapeManager) return
+                                        const pd = { ...currentShapeProperties.pathData!, closed: !currentShapeProperties.pathData!.closed }
+                                        shapeManager.updateProperty('pathData', pd)
+                                    }}
+                                    style={{
+                                        background: currentShapeProperties.pathData.closed ? '#3b82f6' : '#333',
+                                        border: '1px solid #555',
+                                        borderRadius: '4px',
+                                        color: '#fff',
+                                        padding: '2px 10px',
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    {currentShapeProperties.pathData.closed ? 'Yes' : 'No'}
+                                </button>
+                            </div>
+                        </div>
+                        <Input
+                            type="number"
+                            title="Stroke W"
+                            value={currentShapeProperties.style?.stroke?.width ?? 2}
+                            onChange={value => {
+                                if (!shapeManager) return
+                                shapeManager.updateSubProperty('style', 'stroke', {
+                                    ...currentShapeProperties.style.stroke,
+                                    width: value,
+                                })
+                            }}
+                        />
+                    </Section>
+                )}
+
                 
             </div>
         </div>

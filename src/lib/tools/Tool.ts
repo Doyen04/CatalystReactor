@@ -57,6 +57,9 @@ abstract class Tool {
     toolChange(): void {
         console.log('tool changed')
     }
+
+    // Optional keyboard handler — override in tools that need keyboard input
+    handleKeyDown(_e: KeyboardEvent): void { /* no-op */ }
 }
 
 export default Tool

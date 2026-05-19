@@ -5,6 +5,10 @@ import ImageTool from '@lib/tools/ImageTool'
 import KeyboardTool from '@lib/tools/keyboardTool'
 import { ToolType } from '@lib/tools/toolTypes'
 import GroupTool from '@lib/tools/GroupTool'
+import LineTool from '@lib/tools/LineTool'
+import PenTool from '@lib/tools/PenTool'
+import BezierTool from '@lib/tools/BezierTool'
+import EditTool from '@lib/tools/EditTool'
 import type InputManager from './InputManager'
 import type { InputCallbacks } from './InputManager'
 
@@ -46,6 +50,18 @@ class ToolManager {
             case 'img':
                 currentTool = new ImageTool(this.cnvsElm)
                 break
+            case 'line':
+                currentTool = new LineTool(this.cnvsElm)
+                break
+            case 'path':
+                currentTool = new PenTool(this.cnvsElm)
+                break
+            case 'bezier':
+                currentTool = new BezierTool(this.cnvsElm)
+                break
+            case 'edit':
+                currentTool = new EditTool(this.cnvsElm)
+                break
             default:
                 console.warn('tool not implemented')
                 currentTool = null
@@ -69,11 +85,17 @@ class ToolManager {
 
     addEvent() {
         // Create an explicit callback object to subscribe directly to InputManager
+        const boundToolKeyDown = this.currentTool.handleKeyDown.bind(this.currentTool)
+
         this.inputCallbacks = {
             onPointerDown: this.currentTool.handlePointerDown.bind(this.currentTool),
             onPointerMove: this.currentTool.handlePointerMove.bind(this.currentTool),
             onPointerUp: this.currentTool.handlePointerUp.bind(this.currentTool),
-            onKeyDown: this.keyboardTool.handleKeyDown.bind(this.keyboardTool),
+            onKeyDown: (e: KeyboardEvent) => {
+                this.keyboardTool.handleKeyDown(e)
+                // Forward to the current tool (PenTool, BezierTool, EditTool, etc.)
+                boundToolKeyDown(e)
+            },
             onKeyUp: this.keyboardTool.handleKeyUp.bind(this.keyboardTool),
         }
 
