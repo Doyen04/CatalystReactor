@@ -16,84 +16,38 @@ function PropertyBar() {
     const { shapeManager } = useCanvasManagerStore()
 
     const handlePropertyChange = (key: string, value: number) => {
-        const { transform, size, style, borderRadius, arcSegment, sides, spikesRatio, textStyle } = currentShapeProperties
+        if (!shapeManager) return
 
-        const propertyMap = [
-            { prop: transform, name: 'transform' },
-            { prop: size, name: 'size' },
-            { prop: style, name: 'style' },
-            { prop: borderRadius, name: 'borderRadius' },
-            { prop: arcSegment, name: 'arcSegment' },
-            { prop: sides, name: 'sides' },
-            { prop: spikesRatio, name: 'spikesRatio' },
-            { prop: textStyle, name: 'textStyle' },
-        ]
+        const { borderRadius, transform, size, spikesRatio, arcSegment, sides } = currentShapeProperties
 
-        for (const { prop, name } of propertyMap) {
-            if (!prop) continue
+        // Special handling for radius
+        if (key === 'top-left' || key === 'top-right' || key === 'bottom-left' || key === 'bottom-right' || key === 'radii') {
+            shapeManager.updateBorderRadius(value, key)
+            return
+        }
 
-            if (key == 'radii' && borderRadius && borderRadius.locked && typeof value == 'number') {
-                shapeManager?.updateProperty('borderRadius', {
-                    'top-left': value,
-                    'top-right': value,
-                    'bottom-left': value,
-                    'bottom-right': value,
-                    locked: true,
-                })
-            } else if (key in prop) {
-                shapeManager?.updateProperty(name as keyof Properties, {
-                    ...prop,
-                    [key]: value,
-                })
-                break
-            }
+        // Delegated sub-property updates
+        if (transform && key in transform) {
+            shapeManager.updateSubProperty('transform', key, value)
+        } else if (size && key in size) {
+            shapeManager.updateSubProperty('size', key, value)
+        } else if (spikesRatio && key in spikesRatio) {
+            shapeManager.updateSubProperty('spikesRatio', key, value)
+        } else if (arcSegment && key in arcSegment) {
+            shapeManager.updateSubProperty('arcSegment', key, value)
+        } else if (sides && key in sides) {
+            shapeManager.updateSubProperty('sides', key, value)
         }
     }
 
-    const toggle = (e, key: string, value: boolean) => {
-        const { borderRadius } = currentShapeProperties
-        if (key !== 'locked') return
-
-        let newBorderRadius
-        if (value) {
-            const maxRadius = Math.max(borderRadius['top-left'], borderRadius['top-right'], borderRadius['bottom-left'], borderRadius['bottom-right'])
-            newBorderRadius = {
-                'top-left': maxRadius,
-                'top-right': maxRadius,
-                'bottom-left': maxRadius,
-                'bottom-right': maxRadius,
-                locked: true,
-            }
-        } else {
-            newBorderRadius = { ...borderRadius, locked: false }
+    const toggle = (e: any, key: string, value: boolean) => {
+        if (key === 'locked') {
+            shapeManager?.updateRadiusLock(value)
         }
-
-        shapeManager?.updateProperty('borderRadius', newBorderRadius)
     }
 
     const handleColorChange = (key: string, value: ColorProps) => {
-        const { style } = currentShapeProperties
-        if (!style) return
-
-        let newStyle = { ...style }
-
-        if (key === 'fill') {
-            newStyle = {
-                ...style,
-                fill: value,
-            }
-        } else if (key === 'strokeColor') {
-            newStyle = {
-                ...style,
-                stroke: {
-                    ...style.stroke,
-                    color: value.color,
-                    opacity: value.opacity,
-                },
-            }
-        }
-
-        shapeManager?.updateProperty('style', newStyle)
+        shapeManager?.updateStyle(key as 'fill' | 'strokeColor', value)
     }
 
     if (!currentShapeProperties) {

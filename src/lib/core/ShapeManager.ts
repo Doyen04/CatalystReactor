@@ -163,6 +163,81 @@ class ShapeManager {
         }
     }
 
+    updateBorderRadius(value: number, pos?: string) {
+        if (!this.scene) return
+        const props = this.scene.getProperties()
+        if (!props.borderRadius) return
+
+        const newBorderRadius = { ...props.borderRadius }
+        if (newBorderRadius.locked) {
+            newBorderRadius['top-left'] = value
+            newBorderRadius['top-right'] = value
+            newBorderRadius['bottom-left'] = value
+            newBorderRadius['bottom-right'] = value
+        } else if (pos) {
+            // @ts-ignore
+            newBorderRadius[pos] = value
+        }
+
+        this.updateProperty('borderRadius', newBorderRadius)
+    }
+
+    updateRadiusLock(locked: boolean) {
+        if (!this.scene) return
+        const props = this.scene.getProperties()
+        if (!props.borderRadius) return
+
+        let newBorderRadius
+        if (locked) {
+            const br = props.borderRadius
+            const maxRadius = Math.max(br['top-left'], br['top-right'], br['bottom-left'], br['bottom-right'])
+            newBorderRadius = {
+                'top-left': maxRadius,
+                'top-right': maxRadius,
+                'bottom-left': maxRadius,
+                'bottom-right': maxRadius,
+                locked: true,
+            }
+        } else {
+            newBorderRadius = { ...props.borderRadius, locked: false }
+        }
+
+        this.updateProperty('borderRadius', newBorderRadius)
+    }
+
+    updateStyle(key: 'fill' | 'strokeColor', value: any) {
+        if (!this.scene) return
+        const style = this.scene.getProperties().style
+        if (!style) return
+
+        let newStyle = { ...style }
+        if (key === 'fill') {
+            newStyle.fill = value
+        } else if (key === 'strokeColor') {
+            newStyle.stroke = {
+                ...style.stroke,
+                color: value.color,
+                opacity: value.opacity,
+            }
+        }
+
+        this.updateProperty('style', newStyle)
+    }
+
+    updateSubProperty(section: keyof Properties, key: string, value: any) {
+        if (!this.scene) return
+        const props = this.scene.getProperties()
+        const target = props[section]
+        if (!target || typeof target !== 'object') return
+
+        const newSectionProps = {
+            ...target,
+            [key]: value
+        }
+
+        this.updateProperty(section, newSectionProps as any)
+    }
+
     handleHover(x: number, y: number): Handle | null {
         if (!this.shapeModifier || !this.scene) return null
 
