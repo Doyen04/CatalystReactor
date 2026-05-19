@@ -199,7 +199,7 @@ class Star extends Shape {
         } else if (handleID === 's-ratio') {
             const deltaX = localCurrent.x - this.radiusX
             const deltaY = localCurrent.y - this.radiusY
-            const deg = Math.atan2(deltaY, deltaX)
+            const deg = Math.atan2(this.radiusX * deltaY, this.radiusY * deltaX)
             const cos = Math.cos(deg); const sin = Math.sin(deg)
             const ellAt = Math.sqrt((this.radiusX * this.radiusX * this.radiusY * this.radiusY) / (this.radiusY * this.radiusY * cos * cos + this.radiusX * this.radiusX * sin * sin))
             const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY)

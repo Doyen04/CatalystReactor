@@ -172,12 +172,11 @@ class Oval extends Shape {
             
             if (handleID === 'arc-start') {
                 const newStart = normalizeAngle(pointerAngle)
-                const currentState = this.ensureArcEndState(null, sweep, newStart)
+                const currentState = this.ensureArcEndState(this.arcHandleState, sweep, newStart)
                 this.setArcHandleState(currentState, true)
                 this.setArc(newStart, sweep)
             } else {
-                const arcState = this.getArcHandleState() ?? {}
-                const currentState = this.ensureArcEndState(arcState, sweep, start)
+                const currentState = this.ensureArcEndState(this.arcHandleState, sweep, start)
                 const { state: nextState, sweep: newSweep } = this.resolveArcEndSweep(currentState, pointerAngle, start)
                 this.setArcHandleState(nextState, true)
                 this.setArc(start, newSweep)
@@ -237,8 +236,7 @@ class Oval extends Shape {
     override getSweep() {
         const TWO_PI = 2 * Math.PI
         const arc = this.arcSegment
-        const sweep = (this.arcHandleState.dragDirection * -1) >= 0 ? normalizeAngle(arc.sweep) : normalizeAngle(arc.sweep) - TWO_PI
-
+        const sweep = this.arcHandleState.dragDirection >= 0 ? normalizeAngle(arc.sweep) : normalizeAngle(arc.sweep) - TWO_PI
         return sweep
     }
 
