@@ -1,7 +1,6 @@
 import type { Canvas, Path } from 'canvaskit-wasm'
 import Shape from '../base/Shape'
 import { Coord, HandlePos, Properties, Sides } from '@lib/types/shapes'
-import Handle from '@lib/modifiers/Handles'
 import clamp from '@lib/helper/clamp'
 import computeRoundedCorner from '@lib/helper/roundingUtil'
 import { arcPointAtFraction } from '@lib/helper/pointInArc'
@@ -83,66 +82,95 @@ class Polygon extends Shape {
         }
     }
 
-    override getModifierHandles(): Handle[] {
-        const handles = super.getSizeModifierHandles()
-        super.getAngleModifierHandles().forEach(handle => {
-            handles.push(handle)
-        })
-        handles.push(new Handle(0, 0, 'top', 'radius'))
-        handles.push(new Handle(0, 0, 'right', 'vertices'))
-        return handles
-    }
+    override drawModifierHandles(canvas: Canvas, resource: any): void {
+        super.drawModifierHandles(canvas, resource)
 
-    override getModifierHandlesPos(handle: Handle): Coord {
-        if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle)
-        } else if (handle.type == 'radius') {
-            return this.getRadiusModifierHandlesPos(handle)
-        } else if (handle.type === 'vertices') {
-            return this.getVerticesModifierHandlesPos(handle)
-        } else if (handle.type == 'angle') {
-            return super.getAngleModifierHandlesPos(handle)
+        if (this.points.length < 2) return
+        
+        const cw = resource.canvasKit
+        const paint = new cw.Paint()
+        paint.setColor(cw.Color(255, 255, 255, 1))
+        paint.setStyle(cw.PaintStyle.Fill)
+        
+        const stroke = new cw.Paint()
+        stroke.setColor(cw.Color(0, 0, 255, 1))
+        stroke.setStyle(cw.PaintStyle.Stroke)
+        stroke.setStrokeWidth(1.5)
+
+        const drawCircle = (x: number, y: number) => {
+            canvas.drawCircle(x, y, 4, paint)
+            canvas.drawCircle(x, y, 4, stroke)
         }
-        return { x: 0, y: 0 }
-    }
-
-    private getRadiusModifierHandlesPos(handle: Handle): Coord {
-        const size = handle.size
-        const padding = 10
-        const radius = Math.min(this.bRadius, this.getMaxRadius())
-
-        if (this.points.length > 0) {
-            const { x, y } = this.points[0]
-            return {
-                x: x - size,
-                y: y + (handle.isDragging || radius >= padding ? radius : padding),
-            }
-        }
-        return { x: this.radiusX, y: this.radiusY }
-    }
-
-    private getVerticesModifierHandlesPos(handle: Handle): Coord {
-        const size = handle.size
-        const sides = this.sides
+        
         const bRadius = this.bRadius
+        const spikes = this.sides
+        
+        let radiusY = this.points[0].y + (bRadius > 0 ? bRadius : 10)
+        
+        let vertPt = this.points[1]
+        if (bRadius > 0) {
+            const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
+                'polygon', 1, this.points, spikes, Math.min(bRadius, this.getMaxRadius())
+            )
+            vertPt = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
+        }
 
-        if (this.points.length > 1) {
-            if (bRadius > 0) {
-                const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
-                    'polygon',
-                    1,
-                    this.points,
-                    sides,
-                    Math.min(bRadius, this.getMaxRadius())
-                )
-                const { x: tangentX, y: tangentY } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
-                return { x: tangentX - size, y: tangentY - size }
-            } else {
-                const { x, y } = this.points[1]
-                return { x: x - size, y: y - size }
+        drawCircle(this.points[0].x, radiusY)
+        drawCircle(vertPt.x, vertPt.y)
+
+        paint.delete(); stroke.delete()
+    }
+
+    override hitTestModifierHandle(x: number, y: number): string | null {
+        const base = super.hitTestModifierHandle(x, y)
+        if (base) return base
+
+        if (this.points.length < 2) return null
+
+        const bRadius = this.bRadius
+        const spikes = this.sides
+        
+        let radiusY = this.points[0].y + (bRadius > 0 ? bRadius : 10)
+        let vertPt = this.points[1]
+        
+        if (bRadius > 0) {
+            const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
+                'polygon', 1, this.points, spikes, Math.min(bRadius, this.getMaxRadius())
+            )
+            vertPt = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
+        }
+
+        const s = 10
+        if (Math.abs(x - this.points[0].x) <= s && Math.abs(y - radiusY) <= s) return 'radius-top'
+        if (Math.abs(x - vertPt.x) <= s && Math.abs(y - vertPt.y) <= s) return 'vertices'
+
+        return null
+    }
+
+    override dragModifierHandle(handleID: string, localCurrent: Coord, localStart: Coord, initialShapeData: any): void {
+        const { width, height } = this.data.properties.size
+        
+        if (handleID === 'radius-top') {
+            let distY = localCurrent.y - 0
+            if (distY >= 0) this.setBorderRadius(Math.abs(distY), 'top' as any)
+        } else if (handleID === 'vertices') {
+            const count = this.getVertexCount()
+            const vx = localCurrent.x
+            const vy = localCurrent.y
+
+            const next = clamp(count + 1, 3, 60)
+            const prev = clamp(count - 1, 3, 60)
+            const GAP = 10
+
+            const { x: px, y: py } = this.getVertex(prev, 1)
+            const { x: nx, y: ny } = this.getVertex(next, 1)
+            
+            if (vy < ny && (Math.abs(vx - nx) < GAP || Math.abs(vy - ny) < GAP)) {
+                this.setVertexCount(next)
+            } else if (vy > py && (Math.abs(vx - px) < GAP || Math.abs(vy - py) < GAP)) {
+                this.setVertexCount(prev)
             }
         }
-        return { x: this.radiusX, y: this.radiusY }
     }
 
     override getVertex(sides: number, index: number, startAngle = -Math.PI / 2) {

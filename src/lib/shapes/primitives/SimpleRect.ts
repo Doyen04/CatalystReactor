@@ -1,4 +1,3 @@
-import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Rect } from 'canvaskit-wasm'
 import { Coord, Properties, Size } from '@lib/types/shapes'
 import Shape from '../base/Shape'
@@ -26,24 +25,7 @@ class SimpleRect extends Shape {
         }
     }
 
-    override getModifierHandles(): Handle[] {
-        const handles = super.getSizeModifierHandles()
 
-        super.getAngleModifierHandles().forEach(handle => {
-            handles.push(handle)
-        })
-
-        return handles
-    }
-
-    override getModifierHandlesPos(handle: Handle): { x: number; y: number } {
-        if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle)
-        } else if (handle.type == 'angle') {
-            return super.getAngleModifierHandlesPos(handle)
-        }
-        return { x: 0, y: 0 }
-    }
 
     override draw(canvas: Canvas): void {
         if (!this.resource) return

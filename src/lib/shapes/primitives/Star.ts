@@ -1,4 +1,3 @@
-import Handle from '@/lib/modifiers/Handles'
 import Shape from '../base/Shape'
 import type { Canvas, Path } from 'canvaskit-wasm'
 import { Coord, HandlePos, Properties } from '@lib/types/shapes'
@@ -116,93 +115,113 @@ class Star extends Shape {
         }
     }
 
-    override getModifierHandles(): Handle[] {
-        const handles = super.getSizeModifierHandles()
-        super.getAngleModifierHandles().forEach(handle => {
-            handles.push(handle)
-        })
-        handles.push(new Handle(0, 0, 'top', 'radius'))
-        handles.push(new Handle(0, 0, 'right', 'vertices'))
-        handles.push(new Handle(0, 0, 'between', 's-ratio'))
-        return handles
-    }
+    override drawModifierHandles(canvas: Canvas, resource: any): void {
+        super.drawModifierHandles(canvas, resource)
 
-    override getModifierHandlesPos(handle: Handle): Coord {
-        if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle)
-        } else if (handle.type == 'radius') {
-            return this.getRadiusModifierHandlesPos(handle)
-        } else if (handle.type === 'vertices') {
-            return this.getVerticesModifierHandlesPos(handle)
-        } else if (handle.type === 's-ratio') {
-            return this.getRatioModifierHandlesPos(handle)
-        } else if (handle.type == 'angle') {
-            return super.getAngleModifierHandlesPos(handle)
+        if (this.points.length < 3) return
+        
+        const cw = resource.canvasKit
+        const paint = new cw.Paint()
+        paint.setColor(cw.Color(255, 255, 255, 1))
+        paint.setStyle(cw.PaintStyle.Fill)
+        
+        const stroke = new cw.Paint()
+        stroke.setColor(cw.Color(0, 0, 255, 1))
+        stroke.setStyle(cw.PaintStyle.Stroke)
+        stroke.setStrokeWidth(1.5)
+
+        const drawCircle = (x: number, y: number) => {
+            canvas.drawCircle(x, y, 4, paint)
+            canvas.drawCircle(x, y, 4, stroke)
         }
-        return { x: 0, y: 0 }
-    }
-
-    private getRadiusModifierHandlesPos(handle: Handle): Coord {
-        const size = handle.size
-        const padding = 10
-        const radius = Math.min(this.bRadius, this.getMaxRadius())
-
-        if (this.points.length > 0) {
-            const { x, y } = this.points[0]
-            return {
-                x: x - size,
-                y: y + (handle.isDragging || radius >= padding ? radius : padding),
-            }
-        }
-        return { x: this.radiusX, y: this.radiusY }
-    }
-
-    private getRatioModifierHandlesPos(handle: Handle): Coord {
-        const size = handle.size
-        const spikes = this.spikes
+        
         const bRadius = this.bRadius
-
-        if (this.points.length > 0) {
+        const spikes = this.spikes
+        const rPos = (idx: number) => {
             if (bRadius > 0) {
                 const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
-                    'star',
-                    1,
-                    this.points,
-                    spikes * 2,
-                    Math.min(bRadius, this.getMaxRadius())
+                    'star', idx, this.points, spikes * 2, Math.min(bRadius, this.getMaxRadius())
                 )
-                const { x: tangentX, y: tangentY } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
-                return { x: tangentX - size, y: tangentY - size }
-            } else {
-                const { x, y } = this.points[1]
-                return { x: x - size, y: y - size }
+                const { x, y } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
+                return { x, y }
             }
+            return this.points[idx]
         }
-        return { x: this.radiusX, y: this.radiusY }
+
+        const radiusPt = { x: this.points[0].x, y: this.points[0].y + (bRadius > 0 ? bRadius : 10) }
+        const ratioPt = rPos(1)
+        const vertPt = rPos(2)
+
+        drawCircle(radiusPt.x, radiusPt.y)
+        drawCircle(ratioPt.x, ratioPt.y)
+        drawCircle(vertPt.x, vertPt.y)
+
+        paint.delete(); stroke.delete()
     }
 
-    private getVerticesModifierHandlesPos(handle: Handle): Coord {
-        const size = handle.size
-        const spikes = this.spikes
-        const bRadius = this.bRadius
+    override hitTestModifierHandle(x: number, y: number): string | null {
+        const base = super.hitTestModifierHandle(x, y)
+        if (base) return base
 
-        if (this.points.length > 0) {
+        if (this.points.length < 3) return null
+
+        const bRadius = this.bRadius
+        const spikes = this.spikes
+        const rPos = (idx: number) => {
             if (bRadius > 0) {
                 const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
-                    'star',
-                    2,
-                    this.points,
-                    spikes * 2,
-                    Math.min(bRadius, this.getMaxRadius())
+                    'star', idx, this.points, spikes * 2, Math.min(bRadius, this.getMaxRadius())
                 )
-                const { x: tangentX, y: tangentY } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
-                return { x: tangentX - size, y: tangentY - size }
-            } else {
-                const { x, y } = this.points[2]
-                return { x: x - size, y: y - size }
+                const { px, py } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
+                return { x: px, y: py }
+            }
+            return this.points[idx]
+        }
+
+        const radiusPt = { x: this.points[0].x, y: this.points[0].y + (bRadius > 0 ? bRadius : 10) }
+        const ratioPt = rPos(1)
+        const vertPt = rPos(2)
+
+        const s = 10
+        if (Math.abs(x - radiusPt.x) <= s && Math.abs(y - radiusPt.y) <= s) return 'radius-top'
+        if (Math.abs(x - ratioPt.x) <= s && Math.abs(y - ratioPt.y) <= s) return 's-ratio'
+        if (Math.abs(x - vertPt.x) <= s && Math.abs(y - vertPt.y) <= s) return 'vertices'
+
+        return null
+    }
+
+    override dragModifierHandle(handleID: string, localCurrent: Coord, localStart: Coord, initialShapeData: any): void {
+        const { width, height } = this.data.properties.size
+        
+        if (handleID === 'radius-top') {
+            let distY = localCurrent.y - 0 // Bounding rect top is 0
+            if (distY >= 0) this.setBorderRadius(Math.abs(distY), 'top' as any)
+        } else if (handleID === 's-ratio') {
+            const deltaX = localCurrent.x - this.radiusX
+            const deltaY = localCurrent.y - this.radiusY
+            const deg = Math.atan2(deltaY, deltaX)
+            const cos = Math.cos(deg); const sin = Math.sin(deg)
+            const ellAt = Math.sqrt((this.radiusX * this.radiusX * this.radiusY * this.radiusY) / (this.radiusY * this.radiusY * cos * cos + this.radiusX * this.radiusX * sin * sin))
+            const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+            this.setRatio(Math.min(0.99, dist / ellAt))
+        } else if (handleID === 'vertices') {
+            const count = this.getVertexCount()
+            const vx = localCurrent.x
+            const vy = localCurrent.y
+
+            const next = clamp(count + 1, 3, 60)
+            const prev = clamp(count - 1, 3, 60)
+            const GAP = 10
+
+            const { x: px, y: py } = this.getVertex(prev, 2)
+            const { x: nx, y: ny } = this.getVertex(next, 2)
+            
+            if (vy < ny && (Math.abs(vx - nx) < GAP || Math.abs(vy - ny) < GAP)) {
+                this.setVertexCount(next)
+            } else if (vy > py && (Math.abs(vx - px) < GAP || Math.abs(vy - py) < GAP)) {
+                this.setVertexCount(prev)
             }
         }
-        return { x: this.radiusX, y: this.radiusY }
     }
 
     override getCenterCoord(): Coord {

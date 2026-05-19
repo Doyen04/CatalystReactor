@@ -3,7 +3,6 @@ import { useSceneStore } from '@hooks/sceneStore'
 import { Coord, Properties } from '@lib/types/shapes'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import throttle from '@lib/helper/throttle'
-import Handle from '@lib/modifiers/Handles'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 import ShapeNode from '@lib/node/ShapeNode'
@@ -238,7 +237,7 @@ class ShapeManager {
         this.updateProperty(section, newSectionProps as any)
     }
 
-    handleHover(x: number, y: number): Handle | null {
+    handleHover(x: number, y: number): string | null {
         if (!this.shapeModifier || !this.scene) return null
 
         const isCollide = this.shapeModifier.collideRect(x, y)

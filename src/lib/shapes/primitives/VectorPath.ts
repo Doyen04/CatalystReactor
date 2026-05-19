@@ -1,4 +1,3 @@
-import Handle from '@lib/modifiers/Handles'
 import type { Canvas, Path as SkPath } from 'canvaskit-wasm'
 import { Coord, PathPoint, Properties } from '@lib/types/shapes'
 import Shape from '../base/Shape'
@@ -367,20 +366,7 @@ class VectorPath extends Shape {
 
     // ── Modifier handles (for edit mode) ──────────────────────────
 
-    override getModifierHandles(): Handle[] {
-        const handles = super.getSizeModifierHandles()
-        super.getAngleModifierHandles().forEach(h => handles.push(h))
-        return handles
-    }
 
-    override getModifierHandlesPos(handle: Handle): { x: number; y: number } {
-        if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle)
-        } else if (handle.type === 'angle') {
-            return super.getAngleModifierHandlesPos(handle)
-        }
-        return { x: 0, y: 0 }
-    }
 
     // Find the closest point index to a coordinate
     findClosestPoint(x: number, y: number, threshold = 12): number {

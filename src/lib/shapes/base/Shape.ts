@@ -1,4 +1,3 @@
-import Handle from '@lib/modifiers/Handles'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import {
     ArcHandleState,
@@ -29,8 +28,6 @@ abstract class Shape {
     }
 
     abstract getCenterCoord(): Coord
-    abstract getModifierHandles(): Handle[]
-    abstract getModifierHandlesPos(handle: Handle): { x: number; y: number }
     abstract pointInShape(x: number, y: number): boolean
     abstract draw(canvas: Canvas): void
     abstract setDim(width: number, height: number): void
@@ -117,70 +114,7 @@ abstract class Shape {
         return this.rotationAnchorPosition
     }
 
-    getAngleModifierHandles(): Handle[] {
-        const handles: Handle[] = []
-        CornerPos.forEach(pos => {
-            handles.push(new Handle(0, 0, pos, 'angle'))
-        })
-        return handles
-    }
 
-    getAngleModifierHandlesPos(handle: Handle): Coord {
-        const dimen = this.getDim()
-        const bRect = {
-            left: 0,
-            top: 0,
-            right: dimen.width,
-            bottom: dimen.height,
-        }
-        const size = handle.size / 2
-        const padding = handle.size
-
-        switch (handle.pos) {
-            case 'top-left':
-                return { x: bRect.left - size - padding, y: bRect.top - size - padding }
-            case 'top-right':
-                return { x: bRect.right - size + padding, y: bRect.top - size - padding }
-            case 'bottom-left':
-                return { x: bRect.left - size - padding, y: bRect.bottom - size + padding }
-            case 'bottom-right':
-                return { x: bRect.right - size + padding, y: bRect.bottom - size + padding }
-            default:
-                return { x: 0, y: 0 }
-        }
-    }
-
-    getSizeModifierHandles(): Handle[] {
-        const handles: Handle[] = []
-        CornerPos.forEach(pos => {
-            handles.push(new Handle(0, 0, pos, 'size'))
-        })
-        return handles
-    }
-
-    getSizeModifierHandlesPos(handle: Handle): Coord {
-        const dimen = this.getDim()
-        const bRect = {
-            left: 0,
-            top: 0,
-            right: dimen.width,
-            bottom: dimen.height,
-        }
-        const size = handle.size / 2
-
-        switch (handle.pos) {
-            case 'top-left':
-                return { x: bRect.left - size, y: bRect.top - size }
-            case 'top-right':
-                return { x: bRect.right - size, y: bRect.top - size }
-            case 'bottom-left':
-                return { x: bRect.left - size, y: bRect.bottom - size }
-            case 'bottom-right':
-                return { x: bRect.right - size, y: bRect.bottom - size }
-            default:
-                return { x: 0, y: 0 }
-        }
-    }
 
     getCoord(): Coord {
         return { x: this.data.properties.transform.x, y: this.data.properties.transform.y }
@@ -232,9 +166,63 @@ abstract class Shape {
     // These methods replace the legacy Handles array system and allow 
     // shapes to natively calculate hit tests and draw their own smart UI overlays.
 
-    drawModifierHandles(_canvas: any): void { /* no-op by default */ }
+    drawModifierHandles(canvas: Canvas, resource: CanvasKitResources): void {
+        const { width, height } = this.getDim()
+        const cw = resource.canvasKit
+        const pad = 2
+
+        const paint = new cw.Paint()
+        paint.setColor(cw.Color(255, 255, 255, 1))
+        paint.setStyle(cw.PaintStyle.Fill)
+        
+        const stroke = new cw.Paint()
+        stroke.setColor(cw.Color(0, 0, 255, 1))
+        stroke.setStyle(cw.PaintStyle.Stroke)
+        stroke.setStrokeWidth(1.5)
+
+        const drawHandle = (x: number, y: number, s: number = 8) => {
+            const rect = cw.XYWHRect(x - s/2, y - s/2, s, s)
+            canvas.drawRect(rect, paint)
+            canvas.drawRect(rect, stroke)
+        }
+
+        // Draw Bounding Box Outline
+        const bbox = cw.XYWHRect(0, 0, width, height)
+        canvas.drawRect(bbox, stroke)
+
+        // Draw Size Handles
+        drawHandle(0, 0) // top-left
+        drawHandle(width, 0) // top-right
+        drawHandle(0, height) // bottom-left
+        drawHandle(width, height) // bottom-right
+
+        // Draw Rotation Handle
+        drawHandle(width / 2, -25)
+        
+        // Draw Rotation Line
+        const linePath = new cw.Path()
+        linePath.moveTo(width / 2, 0)
+        linePath.lineTo(width / 2, -21)
+        canvas.drawPath(linePath, stroke)
+        
+        paint.delete(); stroke.delete(); linePath.delete()
+    }
     
-    hitTestModifierHandle(_x: number, _y: number): string | null { 
+    hitTestModifierHandle(x: number, y: number): string | null { 
+        const { width, height } = this.getDim()
+        const s = 10 // hit pad
+
+        // Check Rotation
+        const cx = width / 2
+        const cy = -25
+        if (Math.abs(x - cx) <= s && Math.abs(y - cy) <= s) return 'angle'
+
+        // Check Size
+        if (Math.abs(x - 0) <= s && Math.abs(y - 0) <= s) return 'size-top-left'
+        if (Math.abs(x - width) <= s && Math.abs(y - 0) <= s) return 'size-top-right'
+        if (Math.abs(x - 0) <= s && Math.abs(y - height) <= s) return 'size-bottom-left'
+        if (Math.abs(x - width) <= s && Math.abs(y - height) <= s) return 'size-bottom-right'
+
         return null 
     }
     
@@ -242,8 +230,9 @@ abstract class Shape {
         _handleID: string, 
         _localCurrent: Coord, 
         _localStart: Coord, 
-        _initialShapeData: any
-    ): void { /* no-op by default */ }
+        _initialShapeData: any,
+        _sceneUpdate?: any
+    ): void { /* no-op by default for base */ }
 
     // ── FLATTEN METHOD ───────────────
     // Converts mathematically parameterized primitive data into explicit points

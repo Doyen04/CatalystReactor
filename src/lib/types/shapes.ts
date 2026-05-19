@@ -391,3 +391,16 @@ export type ArcHandleState = {
 }
 
 export type HandleType = 'size' | 'angle' | 'radius' | 'arc' | 'c-ratio' | 'vertices' | 's-ratio' | 'path-point' | 'control-point'
+
+export interface InitialTransformState {
+    position: Coord
+    dimension: { width: number; height: number }
+    scale: Coord
+    rotation: number
+    rotationAnchor: Coord
+    inverseWorldTransform: number[]
+    localTransform: number[]
+    worldTransform: number[]
+    initialMouseAngle?: number
+    arcAngle?: { start: number; sweep: number }
+}

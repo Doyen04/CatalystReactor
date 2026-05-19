@@ -1,24 +1,21 @@
 import type { Canvas } from 'canvaskit-wasm'
-import Handle from './Handles'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import SText from '@lib/shapes/primitives/SText'
 import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
-import { Coord } from '@lib/types/shapes'
+import { Coord, InitialTransformState } from '@lib/types/shapes'
 import { ShapeData as StoreShapeData } from '@lib/core/EngineStateStore'
-import { ShapeData } from './modifier'
-import {
-    updateShapeRadii,
-    updateShapeDim,
-    updateShapeAngle,
-    updateOvalRatio,
-    updateStarRatio,
-    updateShapeArc,
-    updateShapeVertices,
-} from './modifierUtility'
 import container from '@lib/core/DependencyManager'
 import PaintManager from '@lib/core/PaintManager'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
+import { getOppositeHandle, getHandleLocalPoint } from '@lib/helper/handleUtil'
+
+// Helper for local transformation
+function transformPoint(matrix: number[], x: number, y: number, resource: CanvasKitResources) {
+    const Matrix = resource.canvasKit.Matrix
+    const localCurrent = Matrix.mapPoints(matrix, [x, y])
+    return { x: localCurrent[0], y: localCurrent[1] }
+}
 
 // const { UpdateModifierHandlesPos } = EventTypes
 
@@ -27,12 +24,11 @@ class ShapeModifier {
     private strokeColor: string | number[]
     private strokeWidth: number
     private fill: string = '#fff'
-    private handles: Handle[]
     private isHovered: boolean
-    private selectedModifierHandle: Handle | null
-    private initialShapeData: ShapeData | null = null
+    private selectedModifierHandle: string | null
+    private initialShapeData: InitialTransformState | null = null
     private font: SText
-    private paintManager:PaintManager
+    private paintManager: PaintManager
     private _editMode: boolean = false
 
     constructor() {
@@ -40,7 +36,6 @@ class ShapeModifier {
         this.strokeColor = '#00f'
         this.paintManager = container.resolve('paintManager')
         this.strokeWidth = 1
-        this.handles = []
         this.isHovered = false
         this.selectedModifierHandle = null
         
@@ -65,15 +60,12 @@ class ShapeModifier {
     }
 
     attachShape(scene: SceneNode) {
-        this.handles = []
         this.scene = scene
         if (!this.scene) {
             console.log('no shape for shape modifier')
             return
         }
-
-        this.handles = this.scene.getModifierHandles()
-        this.updateResizerPositions()
+        this.updateResizerPositions() // Left for backwards compatibility text updating
     }
 
     get resource(): CanvasKitResources {
@@ -120,99 +112,116 @@ class ShapeModifier {
     handleRemoveModiferHandle() {
         console.log('finished dragging handle')
         this.initialShapeData = null
-        if (this.selectedModifierHandle) {
-            this.selectedModifierHandle.reset()
-            this.selectedModifierHandle.isDragging = false
-            this.selectedModifierHandle = null
-        }
+        this.selectedModifierHandle = null
     }
 
     selectModifier(x: number, y: number) {
-        if (this.handles.length == 0 || !this.scene) return null
-        let selected: Handle = null
+        if (!this.scene) return null
 
         const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
-
-        for (const node of this.handles) {
-            if (node && node.isCollide(tx, ty)) {
-                selected = node
-                break
-            }
-        }
-        if (!selected) {
-            //use bounding box
-            const dimen = this.scene.getDim()
-            const bRect = {
-                left: 0,
-                top: 0,
-                right: dimen.width,
-                bottom: dimen.height,
-            }
-            const tolerance = 5
-            const nearTop = Math.abs(ty - bRect.top) <= tolerance && tx >= bRect.left - tolerance && tx <= bRect.right + tolerance
-            const nearBottom = Math.abs(ty - bRect.bottom) <= tolerance && tx >= bRect.left - tolerance && tx <= bRect.right + tolerance
-            const nearLeft = Math.abs(tx - bRect.left) <= tolerance && ty >= bRect.top - tolerance && ty <= bRect.bottom + tolerance
-            const nearRight = Math.abs(tx - bRect.right) <= tolerance && ty >= bRect.top - tolerance && ty <= bRect.bottom + tolerance
-
-            //work on this
-            if (nearTop) selected = new Handle(0, 0, 'top', 'size')
-            if (nearBottom) selected = new Handle(0, 0, 'bottom', 'size')
-            if (nearLeft) selected = new Handle(0, 0, 'left', 'size')
-            if (nearRight) selected = new Handle(0, 0, 'right', 'size')
-        }
-        this.selectedModifierHandle = selected
-        return selected
+        const hitID = this.scene.shape.hitTestModifierHandle(tx, ty)
+        
+        this.selectedModifierHandle = hitID
+        return hitID
     }
 
     handleModifierDrag(dragStart: Coord, e: MouseEvent) {
-        if (this.selectedModifierHandle) {
-            switch (this.selectedModifierHandle.type) {
-                case 'radius':
-                    updateShapeRadii(this.selectedModifierHandle, e, this.scene, this.initialShapeData)
-                    break
-                case 'size':
-                    updateShapeDim(this.selectedModifierHandle, dragStart, e, this.scene, this.initialShapeData)
-                    break
-                case 'c-ratio':
-                    updateOvalRatio(this.selectedModifierHandle, e, this.scene, this.initialShapeData)
-                    break
-                case 'arc':
-                    updateShapeArc(this.selectedModifierHandle, e, this.scene, this.initialShapeData)
-                    break
-                case 'angle':
-                    updateShapeAngle(e, this.scene, this.initialShapeData)
-                    break
-                case 's-ratio':
-                    updateStarRatio(e, this.scene, this.initialShapeData)
-                    break
-                case 'vertices':
-                    updateShapeVertices(e, this.scene, this.initialShapeData)
-                    break
-                default:
-                    break
-            }
+        if (!this.selectedModifierHandle || !this.scene) return
+        
+        if (this.selectedModifierHandle.startsWith('size-')) {
+            this.updateShapeDim(this.selectedModifierHandle, dragStart, e)
+        } else if (this.selectedModifierHandle === 'angle') {
+            this.updateShapeAngle(e)
+        } else {
+            // Transform pointer to local space before delegating
+            const localCurrent = transformPoint(this.initialShapeData.inverseWorldTransform, e.offsetX, e.offsetY, this.resource)
+            const localDragStart = transformPoint(this.initialShapeData.inverseWorldTransform, dragStart.x, dragStart.y, this.resource)
+
+            // Delegate parametric modifications straight to the pure Shape node
+            this.scene.shape.dragModifierHandle(this.selectedModifierHandle, localCurrent, localDragStart, this.initialShapeData)
         }
     }
 
+    private updateShapeDim(handleID: string, dragStart: Coord, e: MouseEvent) {
+        if (!this.scene || !this.initialShapeData) return
+        const initial = this.initialShapeData
+        
+        const localStart = transformPoint(initial.inverseWorldTransform, dragStart.x, dragStart.y, this.resource)
+        const localCurrent = transformPoint(initial.inverseWorldTransform, e.offsetX, e.offsetY, this.resource)
+
+        let newWidth = initial.dimension.width
+        let newHeight = initial.dimension.height
+
+        const dx = localCurrent.x - localStart.x
+        const dy = localCurrent.y - localStart.y
+        const pos = handleID.replace('size-', '')
+
+        switch (pos) {
+            case 'top-left': newWidth -= dx; newHeight -= dy; break
+            case 'top-right': newWidth += dx; newHeight -= dy; break
+            case 'bottom-left': newWidth -= dx; newHeight += dy; break
+            case 'bottom-right': newWidth += dx; newHeight += dy; break
+            case 'top': newHeight -= dy; break
+            case 'bottom': newHeight += dy; break
+            case 'left': newWidth -= dx; break
+            case 'right': newWidth += dx; break
+        }
+
+        const MIN_SIZE = 2
+        const absW = Math.max(MIN_SIZE, Math.abs(newWidth))
+        const absH = Math.max(MIN_SIZE, Math.abs(newHeight))
+
+        const scaleX = (newWidth < 0 ? -1 : 1) * Math.sign(initial.scale.x || 1)
+        const scaleY = (newHeight < 0 ? -1 : 1) * Math.sign(initial.scale.y || 1)
+
+        const fixedHandleKey = getOppositeHandle(pos as any)
+        const fixedLocal = getHandleLocalPoint(fixedHandleKey, initial.dimension.width, initial.dimension.height)
+        const fixedWorld = transformPoint(initial.localTransform, fixedLocal.x, fixedLocal.y, this.resource)
+        
+        const handleNewLocal = getHandleLocalPoint(fixedHandleKey, absW, absH)
+        const zeroTransform = this.scene.buildZeroTransform(absW, absH, initial.rotation, { x: scaleX, y: scaleY }, initial.rotationAnchor)
+
+        const offset = transformPoint(zeroTransform, handleNewLocal.x, handleNewLocal.y, this.resource)
+        const posX = (fixedWorld ? fixedWorld.x : initial.position.x) - offset.x
+        const posY = (fixedWorld ? fixedWorld.y : initial.position.y) - offset.y
+
+        this.scene.updateScene({
+            position: { x: Math.round(posX), y: Math.round(posY) },
+            scale: { x: scaleX, y: scaleY },
+            dimension: { width: absW, height: absH },
+        })
+    }
+
+    private updateShapeAngle(e: MouseEvent) {
+        if (!this.scene || !this.initialShapeData) return
+        const initial = this.initialShapeData
+
+        const center = transformPoint(
+            initial.worldTransform,
+            initial.dimension.width * initial.rotationAnchor.x,
+            initial.dimension.height * initial.rotationAnchor.y,
+            this.resource
+        )
+
+        const currentMouseAngle = Math.atan2(e.offsetY - center.y, e.offsetX - center.x)
+        const startMouseAngle = initial.initialMouseAngle ?? currentMouseAngle
+        const delta = currentMouseAngle - startMouseAngle
+        
+        this.scene.setAngle(initial.rotation + delta)
+    }
+
     handleModifierDown(dragStart: Coord, e: MouseEvent) {
-        if (!this.scene) return
+        if (!this.scene || !this.selectedModifierHandle) return
 
-        if (this.selectedModifierHandle) {
-            switch (this.selectedModifierHandle.type) {
-                case 'angle': {
-                    const Matrix = this.resource.canvasKit.Matrix
-                    const center = Matrix.mapPoints(this.initialShapeData.worldTransform, [
-                        this.initialShapeData.dimension.width * this.initialShapeData.rotationAnchor.x,
-                        this.initialShapeData.dimension.height * this.initialShapeData.rotationAnchor.y,
-                    ])
+        if (this.selectedModifierHandle === 'angle') {
+            const Matrix = this.resource.canvasKit.Matrix
+            const center = Matrix.mapPoints(this.initialShapeData.worldTransform, [
+                this.initialShapeData.dimension.width * this.initialShapeData.rotationAnchor.x,
+                this.initialShapeData.dimension.height * this.initialShapeData.rotationAnchor.y,
+            ])
 
-                    const initialMouseAngle = Math.atan2(e.offsetY - center[1], e.offsetX - center[0])
-                    this.initialShapeData.initialMouseAngle = initialMouseAngle
-                    break
-                }
-                default:
-                    break
-            }
+            const initialMouseAngle = Math.atan2(e.offsetY - center[1], e.offsetX - center[0])
+            this.initialShapeData.initialMouseAngle = initialMouseAngle
         }
     }
 
@@ -221,9 +230,7 @@ class ShapeModifier {
     }
 
     dragHandle(dragStart: Coord, e: MouseEvent) {
-        this.selectedModifierHandle.isDragging = true
-        if (this.selectedModifierHandle.type === 'size') this.isHovered = false
-
+        if (this.selectedModifierHandle?.startsWith('size')) this.isHovered = false
         this.handleModifierDrag(dragStart, e)
     }
 
@@ -236,22 +243,13 @@ class ShapeModifier {
     }
 
     updateResizerPositions() {
-        if (!this.scene) {
-            console.log(' no shape for updateresizer')
-            return
-        }
-
-        for (const resizer of this.handles) {
-            const { x, y } = this.scene.getModifierHandlesPos(resizer)
-            resizer.updatePosition(x, y)
-        }
+        if (!this.scene) return
         this.updateText()
     }
 
     //local coord
     updateText() {
         const { width, height } = this.scene.getDim()
-
         this.font.setText(`${width} X ${height}`)
     }
 
@@ -259,12 +257,10 @@ class ShapeModifier {
         if (!this.resource) return
 
         const fillColor = Array.isArray(this.fill) ? this.fill : this.resource.canvasKit.parseColorString(this.fill)
-
         const strokeColor = Array.isArray(this.strokeColor) ? this.strokeColor : this.resource.canvasKit.parseColorString(this.strokeColor)
 
         this.paintManager.stroke.setColor(strokeColor)
         this.paintManager.stroke.setStrokeWidth(this.strokeWidth)
-
         this.paintManager.paint.setColor(fillColor)
     }
 
@@ -281,7 +277,6 @@ class ShapeModifier {
 
     detachShape() {
         this.scene = null
-        this.handles = []
         this.isHovered = false
         this.selectedModifierHandle = null
         this.initialShapeData = null
@@ -340,19 +335,8 @@ class ShapeModifier {
         canvas.save()
         canvas.concat(this.scene.getWorldMatrix())
 
-        const dimen = this.scene.getDim()
-
-        const rect = this.resource.canvasKit.XYWHRect(0, 0, dimen.width, dimen.height)
-
-        canvas.drawRect(rect, this.paintManager.stroke)
-
-        this.handles.forEach(handle => {
-            if (handle.type === 'size') {
-                handle.draw(canvas)
-            } else if (this.isHovered && handle.type !== 'angle') {
-                handle.draw(canvas)
-            }
-        })
+        // Delegate native rendering!
+        this.scene.shape.drawModifierHandles(canvas, this.resource)
 
         canvas.restore()
 
@@ -382,8 +366,7 @@ class ShapeModifier {
         this.strokeColor = ''
         this.strokeWidth = 0
         this.fill = ''
-        this.handles = []
-        this.isHovered = null
+        this.isHovered = false
         this.selectedModifierHandle = null
     }
 }

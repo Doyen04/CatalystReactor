@@ -1,5 +1,4 @@
 import Tool from './Tool'
-import Handle from '@lib/modifiers/Handles'
 import SceneNode from '@lib/node/Scene'
 import ResizeCursor from './ResizeCursor'
 
@@ -97,8 +96,8 @@ class SelectTool extends Tool {
         }
     }
 
-    setCursorForHandle(handle: Handle, rad: number) {
-        if (!handle) {
+    setCursorForHandle(handleID: string | null, rad: number) {
+        if (!handleID) {
             const cursor = 'default'
             if (this.cnvsElm) {
                 this.cnvsElm.style.cursor = cursor
@@ -108,11 +107,12 @@ class SelectTool extends Tool {
 
         let cursor = 'default'
         const degrees = (rad * 180) / Math.PI
-        // check this
-        if (handle.type == 'size') {
+
+        if (handleID.startsWith('size-')) {
+            const pos = handleID.replace('size-', '')
             let baseAngle = 0
 
-            switch (handle.pos) {
+            switch (pos) {
                 case 'top-left':
                     baseAngle = 45 // Northwest
                     break
@@ -137,17 +137,15 @@ class SelectTool extends Tool {
                 case 'right':
                     baseAngle = -180 // East
                     break
-                default:
-                    break
             }
 
-            // Apply rotation to the base angle
             const finalAngle = baseAngle + degrees
             cursor = ResizeCursor.createCursor(finalAngle)
-        } else if (handle.type === 'angle') {
+        } else if (handleID.startsWith('angle-')) {
+            const pos = handleID.replace('angle-', '')
             let baseAngle = 0
 
-            switch (handle.pos) {
+            switch (pos) {
                 case 'top-left':
                     baseAngle = -135 // Northwest
                     break
@@ -160,15 +158,12 @@ class SelectTool extends Tool {
                 case 'bottom-right':
                     baseAngle = 45 // Southeast
                     break
-                default:
-                    break
             }
-            // Apply rotation to the base angle
+            
             const finalAngle = baseAngle + degrees
             cursor = ResizeCursor.createRotationCursorCSS(finalAngle)
         }
 
-        // Set the cursor on the canvas element
         if (this.cnvsElm) {
             this.cnvsElm.style.cursor = cursor
         }

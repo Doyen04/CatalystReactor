@@ -87,7 +87,7 @@ export function updateShapeRadii(handle: Handle, e: MouseEvent, scene: SceneNode
     scene.setBorderRadius(newRadius, handle.pos)
 }
 
-export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
+export function updateShapeDim(handleID: string, dragStart: Coord, e: MouseEvent, scene: SceneNode, initialShapeData: any) {
     const localStart = tranformPoint(initialShapeData.inverseWorldTransform, dragStart.x, dragStart.y)
     const localCurrent = tranformPoint(initialShapeData.inverseWorldTransform, e.offsetX, e.offsetY)
 
@@ -97,7 +97,9 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
     const dx = localCurrent.x - localStart.x
     const dy = localCurrent.y - localStart.y
 
-    switch (handle.pos) {
+    const pos = handleID.replace('size-', '')
+
+    switch (pos) {
         case 'top-left':
             newWidth = initialShapeData.dimension.width - dx
             newHeight = initialShapeData.dimension.height - dy
@@ -137,7 +139,8 @@ export function updateShapeDim(handle: Handle, dragStart: Coord, e: MouseEvent, 
     const desiredScaleX = willFlipX ? -Math.sign(initialShapeData.scale.x || 1) : Math.sign(initialShapeData.scale.x || 1)
     const desiredScaleY = willFlipY ? -Math.sign(initialShapeData.scale.y || 1) : Math.sign(initialShapeData.scale.y || 1)
 
-    const fixedHandleKey = getOppositeHandle(handle.pos)
+    // Cast pos to HandlePos since it's now a pure string
+    const fixedHandleKey = getOppositeHandle(pos as any)
     const fixedLocal = getHandleLocalPoint(fixedHandleKey, initialShapeData.dimension.width, initialShapeData.dimension.height)
     const fixedWorld = tranformPoint(initialShapeData.localTransform, fixedLocal.x, fixedLocal.y)
     const handleNewLocal = getHandleLocalPoint(fixedHandleKey, absW, absH)

@@ -1,6 +1,5 @@
 import Shape from '../base/Shape'
 import { Canvas, Font } from 'canvaskit-wasm'
-import Handle from '@lib/modifiers/Handles'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
 interface SimpleTextStyle {
@@ -100,13 +99,7 @@ class SText extends Shape {
         }
     }
 
-    override getModifierHandles(): Handle[] {
-        return []
-    }
 
-    override getModifierHandlesPos(_handle: Handle): { x: number; y: number } {
-        return { x: 0, y: 0 }
-    }
 
     private calculateTextDim(): void {
         if (!this.font || !this.text) {

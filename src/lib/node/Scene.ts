@@ -1,5 +1,4 @@
 import CanvasKitResources from '@lib/core/CanvasKitResource'
-import Handle from '@lib/modifiers/Handles'
 import type Shape from '@lib/shapes/base/Shape'
 import { ArcHandleState, BoundingRect, Coord, HandlePos, Properties, Size } from '@lib/types/shapes'
 import { Canvas } from 'canvaskit-wasm'
@@ -211,11 +210,7 @@ abstract class SceneNode {
         return this.shape ? this.shape.getCoord() : null
     }
 
-    getModifierHandlesPos(handle: Handle): { x: number; y: number } | null {
-        if (!this.shape) return null
 
-        return this.shape.getModifierHandlesPos(handle)
-    }
 
     getScale(): { x: number; y: number } | null {
         return this.shape ? this.shape.getScale() : null
@@ -229,9 +224,7 @@ abstract class SceneNode {
         return this.shape ? this.shape.getRotationAnchorPoint() : null
     }
 
-    getModifierHandles(): Handle[] | null {
-        return this.shape ? this.shape.getModifierHandles() : null
-    }
+
 
     getLocalBoundingRect(): BoundingRect | null {
         if (!this.shape) return null

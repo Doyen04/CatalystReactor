@@ -1,4 +1,3 @@
-import Handle from '@/lib/modifiers/Handles'
 import Shape from '../base/Shape'
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { ArcHandleState, ArcSegment, Coord, Properties } from '@lib/types/shapes'
@@ -72,85 +71,166 @@ class Oval extends Shape {
         return { x: this.radiusX, y: this.radiusY }
     }
 
-    override getModifierHandles(): Handle[] {
-        const handles = super.getSizeModifierHandles()
-        super.getAngleModifierHandles().forEach(handle => {
-            handles.push(handle)
-        })
-        handles.push(new Handle(0, 0, 'arc-end', 'arc'))
-        handles.push(new Handle(0, 0, 'arc-start', 'arc'))
-        handles.push(new Handle(0, 0, 'center', 'c-ratio'))
-        return handles
-    }
+    override drawModifierHandles(canvas: Canvas, resource: any): void {
+        super.drawModifierHandles(canvas, resource) // draw size and rotation
+        const cw = resource.canvasKit
+        
+        const paint = new cw.Paint()
+        paint.setColor(cw.Color(255, 255, 255, 1))
+        paint.setStyle(cw.PaintStyle.Fill)
+        
+        const stroke = new cw.Paint()
+        stroke.setColor(cw.Color(0, 0, 255, 1))
+        stroke.setStyle(cw.PaintStyle.Stroke)
+        stroke.setStrokeWidth(1.5)
 
-    override getModifierHandlesPos(handle: Handle): Coord {
-        if (handle.type == 'size') {
-            return super.getSizeModifierHandlesPos(handle)
-        } else if (handle.type == 'c-ratio') {
-            return this.getRatioModifierHandlesPos(handle)
-        } else if (handle.type == 'arc') {
-            return this.getArcModifierHandlesPos(handle)
-        } else if (handle.type == 'angle') {
-            return super.getAngleModifierHandlesPos(handle)
-        } else {
-            return { x: 0, y: 0 }
+        const drawCircle = (x: number, y: number) => {
+            canvas.drawCircle(x, y, 4, paint)
+            canvas.drawCircle(x, y, 4, stroke)
         }
-    }
 
-    private getRatioModifierHandlesPos(handle: Handle): Coord {
-        const size = handle.size
+        // Draw C-Ratio Arc Handle
         const arc = this.arcSegment
-
+        const innerRadiusX = this.radiusX * arc.ratio
+        const innerRadiusY = this.radiusY * arc.ratio
+        
         if (arc.ratio === 0) {
+            drawCircle(this.radiusX, this.radiusY)
+        } else {
+            const handleAngle = arc.startAngle + this.getSweep() / 2
+            const ratioX = this.radiusX + innerRadiusX * Math.cos(handleAngle)
+            const ratioY = this.radiusY + innerRadiusY * Math.sin(handleAngle)
+            drawCircle(ratioX, ratioY)
+        }
+
+        // Draw Arc Start and Arc End Handles
+        const getArcCenter = (theta: number, rRatio: number) => {
+            const rx = arc.ratio === 0 ? this.radiusX * 0.8 : (this.radiusX + innerRadiusX) / 2
+            const ry = arc.ratio === 0 ? this.radiusY * 0.8 : (this.radiusY + innerRadiusY) / 2
             return {
-                x: this.radiusX - size,
-                y: this.radiusY - size,
+                x: this.radiusX + rx * Math.cos(theta),
+                y: this.radiusY + ry * Math.sin(theta)
             }
         }
+        
+        const arcStartCenter = getArcCenter(arc.startAngle, arc.ratio)
+        const arcEndCenter = getArcCenter(arc.startAngle + arc.sweep, arc.ratio)
 
+        drawCircle(arcStartCenter.x, arcStartCenter.y)
+        drawCircle(arcEndCenter.x, arcEndCenter.y)
+
+        paint.delete(); stroke.delete()
+    }
+
+    override hitTestModifierHandle(x: number, y: number): string | null {
+        const base = super.hitTestModifierHandle(x, y)
+        if (base) return base
+
+        const arc = this.arcSegment
         const innerRadiusX = this.radiusX * arc.ratio
         const innerRadiusY = this.radiusY * arc.ratio
 
-        const handleAngle = handle.isDragging ? handle.handleRatioAngle : arc.startAngle + this.getSweep() / 2
+        const s = 10 // pad
+        
+        const handleAngle = arc.startAngle + this.getSweep() / 2
+        const ratioX = arc.ratio === 0 ? this.radiusX : this.radiusX + innerRadiusX * Math.cos(handleAngle)
+        const ratioY = arc.ratio === 0 ? this.radiusY : this.radiusY + innerRadiusY * Math.sin(handleAngle)
+        
+        if (Math.abs(x - ratioX) <= s && Math.abs(y - ratioY) <= s) return 'c-ratio'
 
-        const handleX = this.radiusX + innerRadiusX * Math.cos(handleAngle)
-        const handleY = this.radiusY + innerRadiusY * Math.sin(handleAngle)
+        const getArcCenter = (theta: number) => {
+            const rx = arc.ratio === 0 ? this.radiusX * 0.8 : (this.radiusX + innerRadiusX) / 2
+            const ry = arc.ratio === 0 ? this.radiusY * 0.8 : (this.radiusY + innerRadiusY) / 2
+            return {
+                x: this.radiusX + rx * Math.cos(theta),
+                y: this.radiusY + ry * Math.sin(theta)
+            }
+        }
 
-        return {
-            x: handleX - size,
-            y: handleY - size,
+        const aStart = getArcCenter(arc.startAngle)
+        const aEnd = getArcCenter(arc.startAngle + arc.sweep)
+        
+        if (Math.abs(x - aStart.x) <= s && Math.abs(y - aStart.y) <= s) return 'arc-start'
+        if (Math.abs(x - aEnd.x) <= s && Math.abs(y - aEnd.y) <= s) return 'arc-end'
+
+        return null
+    }
+
+    override dragModifierHandle(handleID: string, localCurrent: Coord, localStart: Coord, initialShapeData: any): void {
+        const { width, height } = this.data.properties.size
+        const radiusX = width / 2
+        const radiusY = height / 2
+        
+        if (handleID === 'c-ratio') {
+            const ratio = this.calculateRatioFromMousePosition(localCurrent, radiusX, radiusY, width, height)
+            this.setRatio(ratio)
+        } else if (handleID === 'arc-start' || handleID === 'arc-end') {
+            const { start, sweep } = initialShapeData.arcAngle
+            const deltaX = localCurrent.x - radiusX
+            const deltaY = localCurrent.y - radiusY
+            const pointerAngle = normalizeAngle(Math.atan2(radiusX * deltaY, radiusY * deltaX))
+            
+            if (handleID === 'arc-start') {
+                const newStart = normalizeAngle(pointerAngle)
+                const currentState = this.ensureArcEndState(null, sweep, newStart)
+                this.setArcHandleState(currentState, true)
+                this.setArc(newStart, sweep)
+            } else {
+                const arcState = this.getArcHandleState() ?? {}
+                const currentState = this.ensureArcEndState(arcState, sweep, start)
+                const { state: nextState, sweep: newSweep } = this.resolveArcEndSweep(currentState, pointerAngle, start)
+                this.setArcHandleState(nextState, true)
+                this.setArc(start, newSweep)
+            }
         }
     }
 
-    private getArcModifierHandlesPos(handle: Handle): Coord {
-        const size = handle.size
-        const arc = this.arcSegment
+    private calculateRatioFromMousePosition(e: Coord, centerX: number, centerY: number, width: number, height: number): number {
+        const deltaX = e.x - centerX
+        const deltaY = e.y - centerY
+        const radiusX = width / 2
+        const radiusY = height / 2
+        const deg = Math.atan2(deltaY, deltaX)
+        const cos = Math.cos(deg)
+        const sin = Math.sin(deg)
+        const ellipseRadiusAtAngle = Math.sqrt((radiusX * radiusX * radiusY * radiusY) / (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin))
+        const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+        return Math.min(0.99, distanceFromCenter / ellipseRadiusAtAngle)
+    }
 
-        const outerRx = this.radiusX
-        const outerRy = this.radiusY
-        const innerRx = this.radiusX * arc.ratio
-        const innerRy = this.radiusY * arc.ratio
-
-        let rx = 0
-        let ry = 0
-        if (handle.isDragging) {
-            const ratio = clamp(handle.handleRatioFromCenter, arc.ratio, 1)
-            rx = outerRx * ratio
-            ry = outerRy * ratio
-        } else {
-            rx = arc.ratio === 0 ? outerRx * 0.8 : (outerRx + innerRx) / 2
-            ry = arc.ratio === 0 ? outerRy * 0.8 : (outerRy + innerRy) / 2
-        }
-
-        const theta = handle.pos === 'arc-end' ? arc.startAngle + arc.sweep : arc.startAngle
-
-        // Compute handle's center point along ellipse, then offset by handle size
-        const handleCenterX = this.radiusX + rx * Math.cos(theta)
-        const handleCenterY = this.radiusY + ry * Math.sin(theta)
-
+    private ensureArcEndState(state: any, sweep: number, anchorAngle: number): ArcHandleState {
+        if (state?.dragDirection !== undefined) return state
         return {
-            x: handleCenterX - size,
-            y: handleCenterY - size,
+            ...(state ?? {}),
+            dragDirection: sweep >= 0 ? 1 : -1,
+            dragLastDiff: normalizeAngle(sweep),
+            dragPrevPointer: normalizeAngle(anchorAngle + sweep),
+        }
+    }
+
+    private resolveArcEndSweep(state: ArcHandleState, pointerAngle: number, anchorAngle: number): { state: ArcHandleState; sweep: number } {
+        const diffCW = normalizeAngle(pointerAngle - anchorAngle)
+        const TWO_PI = 2 * Math.PI
+        const FULL_ARC_EPSILON = 1e-4
+        const SWEEP_LIMIT = TWO_PI - FULL_ARC_EPSILON
+        const prevDiff = state.dragLastDiff ?? diffCW
+        const prevPointer = state.dragPrevPointer ?? pointerAngle
+
+        let pointerDelta = pointerAngle - prevPointer
+        if (pointerDelta > Math.PI) pointerDelta -= TWO_PI
+        if (pointerDelta < -Math.PI) pointerDelta += TWO_PI
+
+        let dragDirection = state.dragDirection ?? 1
+        const EPS = 1e-6
+        if (pointerDelta > EPS && diffCW + EPS < prevDiff) dragDirection *= -1
+        else if (pointerDelta < -EPS && diffCW > prevDiff + EPS) dragDirection *= -1
+
+        const sweepCandidate = (dragDirection >= 0) ? diffCW : diffCW - TWO_PI
+        const sweep = Math.max(-SWEEP_LIMIT, Math.min(SWEEP_LIMIT, sweepCandidate))
+
+        return { 
+            state: { ...state, dragDirection, dragLastDiff: diffCW, dragPrevPointer: pointerAngle },
+            sweep 
         }
     }
 

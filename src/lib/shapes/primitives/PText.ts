@@ -1,7 +1,6 @@
 import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
 import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
-import Handle from '@lib/modifiers/Handles'
 import { Coord, Properties, PTextStyle, Size } from '@lib/types/shapes'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
@@ -77,23 +76,6 @@ class PText extends Shape {
             x: width / 2,
             y: height / 2,
         }
-    }
-
-    override getModifierHandlesPos(handle: Handle): { x: number; y: number } {
-        if (handle.type === 'size') {
-            return super.getSizeModifierHandlesPos(handle)
-        } else if (handle.type == 'angle') {
-            return super.getAngleModifierHandlesPos(handle)
-        }
-        return { x: 0, y: 0 }
-    }
-
-    override getModifierHandles(): Handle[] {
-        const handles = super.getSizeModifierHandles()
-        super.getAngleModifierHandles().forEach(handle => {
-            handles.push(handle)
-        })
-        return handles
     }
 
     override getDim(): { width: number; height: number } {
