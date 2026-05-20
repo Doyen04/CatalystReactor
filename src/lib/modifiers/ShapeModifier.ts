@@ -30,6 +30,7 @@ class ShapeModifier {
     private font: SText
     private paintManager: PaintManager
     private _editMode: boolean = false
+    private _suppressHandles: boolean = false
 
     constructor() {
         this.scene = null
@@ -297,12 +298,18 @@ class ShapeModifier {
         return this._editMode
     }
 
+    setSuppressHandles(suppress: boolean) {
+        this._suppressHandles = suppress
+    }
+
     canDraw(): boolean {
         if (!this.scene) return false
         const { width, height } = this.scene.getDim()
         const MINSIZE = 5
 
-        return width < MINSIZE || height < MINSIZE
+        // Only block if BOTH are too small (like a single point)
+        // or if it's a line, let it draw if it has some length
+        return width < 1 && height < 1
     }
 
     collideRect(x: number, y: number): boolean {
@@ -315,7 +322,7 @@ class ShapeModifier {
     }
 
     draw(canvas: Canvas): void {
-        if (!this.scene || this.canDraw() || !this.resource) {
+        if (!this.scene || this.canDraw() || !this.resource || this._suppressHandles) {
             return
         }
 

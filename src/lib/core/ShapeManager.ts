@@ -268,6 +268,9 @@ class ShapeManager {
             return false
         }
     }
+    setSuppressHandles(suppress: boolean) {
+        this.shapeModifier.setSuppressHandles(suppress)
+    }
 }
 
 export default ShapeManager

@@ -51,6 +51,7 @@ class LineTool extends Tool {
                 shape.addPoint({ x: 0, y: 0 })
                 
                 this.shapeManager.attachNode(shapeNode)
+                this.shapeManager.setSuppressHandles(true)
                 this.activeNode = shapeNode
                 this.state = 'drawing'
             }
@@ -116,6 +117,7 @@ class LineTool extends Tool {
 
     private finishLine() {
         if (this.activeShape) {
+            this.shapeManager.setSuppressHandles(false)
             this.activeShape.previewPoint = null
             // If only one point, destroy it
             if (this.activeShape.points.length < 2) {

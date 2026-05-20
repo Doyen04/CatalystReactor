@@ -43,6 +43,7 @@ class BezierTool extends Tool {
                 shape.addPoint({ x: 0, y: 0, smooth: true })
 
                 this.shapeManager.attachNode(shapeNode)
+                this.shapeManager.setSuppressHandles(true)
                 this.activeNode = shapeNode
 
                 this.state = 'placing'
@@ -120,6 +121,7 @@ class BezierTool extends Tool {
 
     private finishPath(): void {
         if (this.activeShape) {
+            this.shapeManager.setSuppressHandles(false)
             if (this.activeShape.points.length < 2) {
                 if (this.activeNode) this.activeNode.destroy()
                 this.shapeManager.detachShape()

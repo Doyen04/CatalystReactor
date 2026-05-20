@@ -45,6 +45,7 @@ class PenTool extends Tool {
                 shape.addPoint({ x: 0, y: 0 })
 
                 this.shapeManager.attachNode(shapeNode)
+                this.shapeManager.setSuppressHandles(true)
                 this.activeNode = shapeNode
 
                 this.state = 'placing'
@@ -124,6 +125,7 @@ class PenTool extends Tool {
 
     private finishPath(): void {
         if (this.activeShape) {
+            this.shapeManager.setSuppressHandles(false)
             // If only one point, remove the path
             if (this.activeShape.points.length < 2) {
                 if (this.activeNode) {
