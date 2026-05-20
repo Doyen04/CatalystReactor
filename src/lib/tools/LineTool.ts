@@ -6,6 +6,7 @@ import VectorPath from '@lib/shapes/primitives/VectorPath'
 
 class LineTool extends Tool {
     private activeShape: VectorPath | null = null
+    private activeNode: SceneNode | null = null
 
     constructor(cnvs: HTMLCanvasElement) {
         super(cnvs)
@@ -24,26 +25,24 @@ class LineTool extends Tool {
         if (shape && shape instanceof VectorPath) {
             this.activeShape = shape
 
-            // Add two points at the same location — the second will follow the mouse
-            shape.addPoint({ x, y })
-            shape.addPoint({ x, y })
-
             const shapeNode: SceneNode = new ShapeNode(shape)
             scene.addChildNode(shapeNode)
+            shapeNode.setPosition(x, y)
+
+            // Add two points at local origin — the second will follow the mouse
+            shape.addPoint({ x: 0, y: 0 })
+            shape.addPoint({ x: 0, y: 0 })
+
             this.shapeManager.attachNode(shapeNode)
+            this.activeNode = shapeNode
         }
     }
 
     override handlePointerMove(e: MouseEvent): void {
-        if (this.isPointerDown && this.activeShape) {
+        if (this.isPointerDown && this.activeShape && this.activeNode) {
             this.isDragging = true
-            let scene = this.shapeManager.currentScene
-            if (!scene) return
 
-            const parent = scene.getParent()
-            const { x, y } = parent
-                ? parent.worldToLocal(e.offsetX, e.offsetY)
-                : { x: e.offsetX, y: e.offsetY }
+            const { x, y } = this.activeNode.worldToLocal(e.offsetX, e.offsetY)
 
             let endX = x
             let endY = y
@@ -79,6 +78,7 @@ class LineTool extends Tool {
             }
         }
         this.activeShape = null
+        this.activeNode = null
 
         if (this.isDragging) {
             this.shapeManager.finishDrag()

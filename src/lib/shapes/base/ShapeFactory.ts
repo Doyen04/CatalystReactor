@@ -98,10 +98,7 @@ export default class ShapeFactory {
             };
         } else if (type === 'line') {
             props.pathData = {
-                points: [
-                    { x: pos.x, y: pos.y },
-                    { x: pos.x + 100, y: pos.y },
-                ],
+                points: [],
                 closed: false,
             };
             props.style.stroke.width = 2;

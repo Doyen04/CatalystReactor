@@ -33,19 +33,20 @@ class BezierTool extends Tool {
             const shape = ShapeFactory.createShape('bezier', { x: 0, y: 0 })
             if (shape && shape instanceof VectorPath) {
                 this.activeShape = shape
-                // Every point in BezierTool starts as smooth
-                shape.addPoint({ x, y, smooth: true })
 
                 const shapeNode: SceneNode = new ShapeNode(shape)
                 scene.addChildNode(shapeNode)
+                shapeNode.setPosition(x, y)
+                shape.addPoint({ x: 0, y: 0, smooth: true })
+
                 this.shapeManager.attachNode(shapeNode)
                 this.activeNode = shapeNode
 
                 this.state = 'placing'
             }
         } else if (this.state === 'placing' && this.activeShape) {
-            const { x, y } = this.parentScene
-                ? this.parentScene.worldToLocal(e.offsetX, e.offsetY)
+            const { x, y } = this.activeNode
+                ? this.activeNode.worldToLocal(e.offsetX, e.offsetY)
                 : { x: e.offsetX, y: e.offsetY }
 
             // Check if clicking near the first point to close
@@ -67,8 +68,8 @@ class BezierTool extends Tool {
     override handlePointerMove(e: MouseEvent): void {
         if (!this.activeShape || this.state === 'idle') return
 
-        const { x, y } = this.parentScene
-            ? this.parentScene.worldToLocal(e.offsetX, e.offsetY)
+        const { x, y } = this.activeNode
+            ? this.activeNode.worldToLocal(e.offsetX, e.offsetY)
             : { x: e.offsetX, y: e.offsetY }
 
         if (this.isPointerDown && this.lastDownPos) {

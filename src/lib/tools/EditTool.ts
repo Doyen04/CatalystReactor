@@ -54,9 +54,8 @@ class EditTool extends Tool {
 
         // If we have an active vector path in edit mode
         if (this.editingShape) {
-            const parent = this.editingNode?.getParent()
-            const { x, y } = parent
-                ? parent.worldToLocal(e.offsetX, e.offsetY)
+            const { x, y } = this.editingNode
+                ? this.editingNode.worldToLocal(e.offsetX, e.offsetY)
                 : { x: e.offsetX, y: e.offsetY }
 
             // Check for control point hit first (they're smaller targets on top of anchors)
@@ -135,9 +134,8 @@ class EditTool extends Tool {
 
         this.isDragging = true
 
-        const parent = this.editingNode?.getParent()
-        const { x, y } = parent
-            ? parent.worldToLocal(e.offsetX, e.offsetY)
+        const { x, y } = this.editingNode
+            ? this.editingNode.worldToLocal(e.offsetX, e.offsetY)
             : { x: e.offsetX, y: e.offsetY }
 
         if (this.dragTarget.type === 'anchor') {

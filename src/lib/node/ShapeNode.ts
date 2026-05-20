@@ -16,10 +16,10 @@ class ShapeNode extends SceneNode {
 
         const parentMatrix = parentWorld ?? Matrix.identity()
 
-        if (this.canComputeMatrix) {
+        if (this.canComputeMatrix || (this.shape && this.shape.matrixDirty)) {
             this.recomputeLocalMatrix()
-
             this.canComputeMatrix = false
+            if (this.shape) this.shape.matrixDirty = false
         }
 
         this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)

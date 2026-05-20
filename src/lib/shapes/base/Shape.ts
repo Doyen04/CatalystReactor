@@ -20,6 +20,7 @@ abstract class Shape {
     protected rotationAnchorPosition: Coord = { x: 0.5, y: 0.5 }
     protected paintManager: PaintManager
     public data: ShapeData
+    public matrixDirty: boolean = false
 
     constructor(data: ShapeData) {
         if (new.target === Shape) throw new Error('Shape is abstract; extend it!')

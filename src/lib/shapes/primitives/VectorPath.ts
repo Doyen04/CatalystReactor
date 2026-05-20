@@ -166,6 +166,7 @@ class VectorPath extends Shape {
             }
             this.data.properties.transform.x += minX
             this.data.properties.transform.y += minY
+            this.matrixDirty = true
         }
 
         this.data.properties.size.width = Math.max(1, maxX - minX)
