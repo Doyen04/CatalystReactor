@@ -39,6 +39,9 @@ class PenTool extends Tool {
                 const shapeNode: SceneNode = new ShapeNode(shape)
                 scene.addChildNode(shapeNode)
                 shapeNode.setPosition(x, y)
+                // Force matrix update so worldToLocal works immediately
+                shapeNode.updateWorldMatrix(scene.getWorldMatrix() || undefined)
+                
                 shape.addPoint({ x: 0, y: 0 })
 
                 this.shapeManager.attachNode(shapeNode)
