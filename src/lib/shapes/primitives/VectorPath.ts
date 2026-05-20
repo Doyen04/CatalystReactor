@@ -150,6 +150,24 @@ class VectorPath extends Shape {
             }
         }
 
+        // Shift points if origin is not at (0, 0)
+        if (minX !== 0 || minY !== 0) {
+            for (const pt of pts) {
+                pt.x -= minX
+                pt.y -= minY
+                if (pt.cp1) {
+                    pt.cp1.x -= minX
+                    pt.cp1.y -= minY
+                }
+                if (pt.cp2) {
+                    pt.cp2.x -= minX
+                    pt.cp2.y -= minY
+                }
+            }
+            this.data.properties.transform.x += minX
+            this.data.properties.transform.y += minY
+        }
+
         this.data.properties.size.width = Math.max(1, maxX - minX)
         this.data.properties.size.height = Math.max(1, maxY - minY)
     }
@@ -508,18 +526,6 @@ class VectorPath extends Shape {
         this.paintManager.resetPaint()
     }
 
-    override getLocalBoundingRect() {
-        const pts = this.points
-        if (pts.length === 0) return { left: 0, top: 0, right: 0, bottom: 0 }
-
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-        for (const pt of pts) {
-            minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y)
-            maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y)
-        }
-
-        return { left: minX, top: minY, right: maxX, bottom: maxY }
-    }
 
     override cleanUp(): void {
         this.previewPoint = null

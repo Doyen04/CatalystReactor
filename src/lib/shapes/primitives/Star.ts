@@ -109,9 +109,9 @@ class Star extends Shape {
     }
 
     override getDim(): { width: number; height: number } {
-        return { 
-            width: Math.round(this.data.properties.size.width), 
-            height: Math.round(this.data.properties.size.height) 
+        return {
+            width: Math.round(this.data.properties.size.width),
+            height: Math.round(this.data.properties.size.height)
         }
     }
 
@@ -119,12 +119,12 @@ class Star extends Shape {
         super.drawModifierHandles(canvas, resource)
 
         if (this.points.length < 3) return
-        
+
         const cw = resource.canvasKit
         const paint = new cw.Paint()
         paint.setColor(cw.Color(255, 255, 255, 1))
         paint.setStyle(cw.PaintStyle.Fill)
-        
+
         const stroke = new cw.Paint()
         stroke.setColor(cw.Color(0, 0, 255, 1))
         stroke.setStyle(cw.PaintStyle.Stroke)
@@ -134,7 +134,7 @@ class Star extends Shape {
             canvas.drawCircle(x, y, 4, paint)
             canvas.drawCircle(x, y, 4, stroke)
         }
-        
+
         const bRadius = this.bRadius
         const spikes = this.spikes
         const rPos = (idx: number) => {
@@ -172,8 +172,8 @@ class Star extends Shape {
                 const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
                     'star', idx, this.points, spikes * 2, Math.min(bRadius, this.getMaxRadius())
                 )
-                const { px, py } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
-                return { x: px, y: py }
+                const { x, y } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
+                return { x, y }
             }
             return this.points[idx]
         }
@@ -192,7 +192,7 @@ class Star extends Shape {
 
     override dragModifierHandle(handleID: string, localCurrent: Coord, localStart: Coord, initialShapeData: any): void {
         const { width, height } = this.data.properties.size
-        
+
         if (handleID === 'radius-top') {
             let distY = localCurrent.y - 0 // Bounding rect top is 0
             if (distY >= 0) this.setBorderRadius(Math.abs(distY), 'top' as any)
@@ -215,7 +215,7 @@ class Star extends Shape {
 
             const { x: px, y: py } = this.getVertex(prev, 2)
             const { x: nx, y: ny } = this.getVertex(next, 2)
-            
+
             if (vy < ny && (Math.abs(vx - nx) < GAP || Math.abs(vy - ny) < GAP)) {
                 this.setVertexCount(next)
             } else if (vy > py && (Math.abs(vx - px) < GAP || Math.abs(vy - py) < GAP)) {
