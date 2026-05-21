@@ -112,6 +112,17 @@ abstract class SceneNode {
         }
     }
 
+    worldDeltaToLocal(dx: number, dy: number) {
+        const Matrix = this.resource.canvasKit.Matrix
+        const inverseMatrix = Matrix.invert(this.worldMatrix)
+        const p1 = Matrix.mapPoints(inverseMatrix, [0, 0])
+        const p2 = Matrix.mapPoints(inverseMatrix, [dx, dy])
+        return {
+            x: p2[0] - p1[0],
+            y: p2[1] - p1[1]
+        }
+    }
+
     buildZeroTransform(width: number, height: number, rotation: number, scale: { x: number; y: number }, rotationAnchor: { x: number; y: number }) {
         const Matrix = this.resource.canvasKit.Matrix
 

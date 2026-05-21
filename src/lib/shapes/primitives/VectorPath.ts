@@ -8,6 +8,8 @@ class VectorPath extends Shape {
     public previewPoint: PathPoint | null = null
     // Index of the currently selected anchor (for edit tool)
     public selectedPointIndex: number = -1
+    // Index of the currently selected segment
+    public selectedSegmentIndex: number = -1
     // Index of the anchor being snapped to (for drawing tools)
     public snapPointIndex: number = -1
 
@@ -308,6 +310,11 @@ class VectorPath extends Shape {
             previewPath.delete()
         }
 
+        // Draw selected segment highlight
+        if (this.selectedSegmentIndex >= 0) {
+            this.drawSelectedSegment(canvas)
+        }
+
         // Show anchors while drawing for snapping feedback
         if (this.previewPoint) {
             this.drawDrawingAnchors(canvas)
@@ -346,6 +353,39 @@ class VectorPath extends Shape {
             canvas.drawRect(r, anchorFill)
             canvas.drawRect(r, anchorStroke)
         }
+    }
+
+    private drawSelectedSegment(canvas: Canvas): void {
+        if (!this.resource || this.selectedSegmentIndex < 0) return
+        const pts = this.points
+        const i2 = this.selectedSegmentIndex
+        const i1 = i2 === 0 ? pts.length - 1 : i2 - 1
+        
+        if (!pts[i1] || !pts[i2]) return
+
+        const CanvasKit = this.resource.canvasKit
+        const highlightPaint = this.paintManager.stroke
+        highlightPaint.setColor(CanvasKit.Color(59, 130, 246, 0.4)) // Light blue highlight
+        highlightPaint.setStrokeWidth((this.data.properties.style.stroke?.width ?? 2) + 4)
+
+        const path = new CanvasKit.Path()
+        path.moveTo(pts[i1].x, pts[i1].y)
+        
+        const hasCP2 = pts[i1].cp2 != null
+        const hasCP1 = pts[i2].cp1 != null
+
+        if (hasCP2 || hasCP1) {
+            path.cubicTo(
+                pts[i1].cp2?.x ?? pts[i1].x, pts[i1].cp2?.y ?? pts[i1].y,
+                pts[i2].cp1?.x ?? pts[i2].x, pts[i2].cp1?.y ?? pts[i2].y,
+                pts[i2].x, pts[i2].y
+            )
+        } else {
+            path.lineTo(pts[i2].x, pts[i2].y)
+        }
+        
+        canvas.drawPath(path, highlightPaint)
+        path.delete()
     }
 
     protected override drawHoverEffect(canvas: Canvas): void {
@@ -566,12 +606,14 @@ class VectorPath extends Shape {
     override cleanUp(): void {
         this.previewPoint = null
         this.selectedPointIndex = -1
+        this.selectedSegmentIndex = -1
         this.snapPointIndex = -1
     }
 
     override destroy(): void {
         this.previewPoint = null
         this.snapPointIndex = -1
+        this.selectedSegmentIndex = -1
     }
 }
 

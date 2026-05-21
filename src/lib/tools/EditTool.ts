@@ -14,6 +14,9 @@ type DragTarget = {
     type: 'control'
     index: number
     which: 'cp1' | 'cp2'
+} | {
+    type: 'segment'
+    index: number
 } | null
 
 class EditTool extends Tool {
@@ -25,6 +28,8 @@ class EditTool extends Tool {
     private lastClickTime: number = 0
     private doubleClickDelay: number = 300
     private shapeModifier: ShapeModifier | null = null
+    private lastLocalPos: { x: number; y: number } | null = null
+    private lastWorldPos: { x: number; y: number } | null = null
 
     constructor(cnvs: HTMLCanvasElement) {
         super(cnvs)
@@ -42,6 +47,7 @@ class EditTool extends Tool {
 
     override handlePointerDown(e: MouseEvent): void {
         super.handlePointerDown(e)
+        this.lastWorldPos = { x: e.offsetX, y: e.offsetY }
 
         // Handle double-click detection
         const now = Date.now()
@@ -83,13 +89,33 @@ class EditTool extends Tool {
                 return
             }
 
-            // Check for segment hit (insert point)
+            // Check for segment hit (insert point ONLY on double click)
             const segIdx = this.editingShape.findClosestSegment(x, y)
             if (segIdx >= 0) {
-                this.editingShape.insertPoint(segIdx, { x, y })
-                this.editingShape.selectedPointIndex = segIdx
-                this.state = 'dragging-anchor'
-                this.dragTarget = { type: 'anchor', index: segIdx }
+                if (this.clickCount >= 2) {
+                    this.clickCount = 0
+                    this.editingShape.insertPoint(segIdx, { x, y })
+                    this.editingShape.selectedPointIndex = segIdx
+                    this.state = 'dragging-anchor'
+                    this.dragTarget = { type: 'anchor', index: segIdx }
+                    return
+                }
+                
+                // Single click on segment — allow dragging the segment (moves both points)
+                this.state = 'idle'
+                this.dragTarget = { type: 'segment', index: segIdx }
+                this.lastLocalPos = { x, y }
+                this.lastWorldPos = { x: e.offsetX, y: e.offsetY }
+                this.editingShape.selectedSegmentIndex = segIdx
+                this.editingShape.selectedPointIndex = -1
+                return
+            }
+
+            // If we hit the shape but not a specific handle/segment
+            if (this.editingShape.pointInShape(x, y)) {
+                this.editingShape.selectedSegmentIndex = -1
+                this.editingShape.selectedPointIndex = -1
+                this.lastWorldPos = { x: e.offsetX, y: e.offsetY }
                 return
             }
 
@@ -134,19 +160,36 @@ class EditTool extends Tool {
 
         this.isDragging = true
 
-        const { x, y } = this.editingNode
-            ? this.editingNode.worldToLocal(e.offsetX, e.offsetY)
-            : { x: e.offsetX, y: e.offsetY }
+        const dxWorld = e.offsetX - this.lastWorldPos.x
+        const dyWorld = e.offsetY - this.lastWorldPos.y
+        const localDelta = this.editingNode.worldDeltaToLocal(dxWorld, dyWorld)
 
         if (this.dragTarget.type === 'anchor') {
-            this.editingShape.updatePoint(this.dragTarget.index, x, y)
+            const pt = this.editingShape.points[this.dragTarget.index]
+            this.editingShape.updatePoint(this.dragTarget.index, pt.x + localDelta.x, pt.y + localDelta.y)
         } else if (this.dragTarget.type === 'control') {
+            const pt = this.editingShape.points[this.dragTarget.index]
+            const cp = pt[this.dragTarget.which]!
             this.editingShape.updateControlPoint(
                 this.dragTarget.index,
                 this.dragTarget.which,
-                x, y
+                cp.x + localDelta.x, cp.y + localDelta.y
             )
+        } else if (this.dragTarget.type === 'segment' && this.editingShape) {
+            const pts = this.editingShape.points
+            let i1 = this.dragTarget.index - 1
+            let i2 = this.dragTarget.index
+            
+            if (i2 === pts.length) {
+                i1 = pts.length - 1
+                i2 = 0
+            }
+
+            this.editingShape.updatePoint(i1, pts[i1].x + localDelta.x, pts[i1].y + localDelta.y)
+            this.editingShape.updatePoint(i2, pts[i2].x + localDelta.x, pts[i2].y + localDelta.y)
         }
+
+        this.lastWorldPos = { x: e.offsetX, y: e.offsetY }
     }
 
     override handlePointerUp(e: MouseEvent): void {
@@ -159,6 +202,8 @@ class EditTool extends Tool {
         this.isPointerDown = false
         this.isDragging = false
         this.dragStart = null
+        this.lastLocalPos = null
+        this.lastWorldPos = null
     }
 
     private tryEnterEditMode(): void {
@@ -223,6 +268,7 @@ class EditTool extends Tool {
     private exitEditMode(): void {
         if (this.editingShape) {
             this.editingShape.selectedPointIndex = -1
+            this.editingShape.selectedSegmentIndex = -1
         }
         this.editingShape = null
         this.editingNode = null
