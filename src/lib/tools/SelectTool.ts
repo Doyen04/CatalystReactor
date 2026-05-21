@@ -141,7 +141,7 @@ class SelectTool extends Tool {
 
             const finalAngle = baseAngle + degrees
             cursor = ResizeCursor.createCursor(finalAngle)
-        } else if (handleID.startsWith('angle-')) {
+        } else if (handleID === 'angle' || handleID.startsWith('angle-')) {
             const pos = handleID.replace('angle-', '')
             let baseAngle = 0
 
