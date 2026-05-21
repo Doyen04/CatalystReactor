@@ -8,6 +8,8 @@ class VectorPath extends Shape {
     public previewPoint: PathPoint | null = null
     // Index of the currently selected anchor (for edit tool)
     public selectedPointIndex: number = -1
+    // Index of the anchor being snapped to (for drawing tools)
+    public snapPointIndex: number = -1
 
     constructor(data: ShapeData) {
         super(data)
@@ -306,10 +308,43 @@ class VectorPath extends Shape {
             previewPath.delete()
         }
 
+        // Show anchors while drawing for snapping feedback
+        if (this.previewPoint) {
+            this.drawDrawingAnchors(canvas)
+        }
+
         this.paintManager.resetPaint()
 
         if (this.isHover) {
             this.drawHoverEffect(canvas)
+        }
+    }
+
+    private drawDrawingAnchors(canvas: Canvas): void {
+        if (!this.resource) return
+        const CanvasKit = this.resource.canvasKit
+        const pts = this.points
+        const aSize = 4
+
+        const anchorFill = this.paintManager.paint
+        const anchorStroke = this.paintManager.stroke
+        anchorStroke.setStrokeWidth(1)
+
+        for (let i = 0; i < pts.length; i++) {
+            const pt = pts[i]
+            const isSnapped = i === this.snapPointIndex
+
+            if (isSnapped) {
+                anchorFill.setColor(CanvasKit.Color(255, 165, 0, 1)) // Orange for snap
+                anchorStroke.setColor(CanvasKit.Color(200, 100, 0, 1))
+            } else {
+                anchorFill.setColor(CanvasKit.Color(255, 255, 255, 0.5)) // Semi-transparent white
+                anchorStroke.setColor(CanvasKit.Color(100, 100, 255, 0.5))
+            }
+
+            const r = CanvasKit.XYWHRect(pt.x - aSize, pt.y - aSize, aSize * 2, aSize * 2)
+            canvas.drawRect(r, anchorFill)
+            canvas.drawRect(r, anchorStroke)
         }
     }
 
@@ -531,10 +566,12 @@ class VectorPath extends Shape {
     override cleanUp(): void {
         this.previewPoint = null
         this.selectedPointIndex = -1
+        this.snapPointIndex = -1
     }
 
     override destroy(): void {
         this.previewPoint = null
+        this.snapPointIndex = -1
     }
 }
 

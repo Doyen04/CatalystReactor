@@ -75,6 +75,8 @@ class LineTool extends Tool {
             }
 
             this.activeShape.addPoint({ x: endX, y: endY })
+            // Force matrix update because addPoint might have triggered recomputeBounds (shifting the origin)
+            this.activeNode.updateWorldMatrix(this.activeNode.getParent()?.getWorldMatrix() || undefined)
         }
     }
 

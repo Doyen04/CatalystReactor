@@ -27,6 +27,10 @@ class ContainerNode extends SceneNode {
         // this.applyLayout()
     }
 
+    override getChildren(): SceneNode[] {
+        return this.children
+    }
+
     override removeChildNode(child: SceneNode): void {
         const i = this.children.indexOf(child)
         if (i !== -1) {

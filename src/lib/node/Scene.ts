@@ -354,6 +354,11 @@ abstract class SceneNode {
     cleanUp() {
         this.shape.cleanUp()
     }
+
+    getChildren(): SceneNode[] {
+        return []
+    }
+
     abstract draw(ctx: Canvas): void
     abstract updateWorldMatrix(matrix?: number[]): void
     abstract destroy(): void

@@ -13,6 +13,7 @@ class PenTool extends Tool {
     private state: PenState = 'idle'
     private lastDownPos: { x: number; y: number } | null = null
     private parentScene: SceneNode | null = null
+    private lastSnapShape: VectorPath | null = null
 
     constructor(cnvs: HTMLCanvasElement) {
         super(cnvs)
@@ -51,14 +52,35 @@ class PenTool extends Tool {
                 this.state = 'placing'
             }
         } else if (this.state === 'placing' && this.activeShape) {
-            const { x, y } = this.activeNode
-                ? this.activeNode.worldToLocal(e.offsetX, e.offsetY)
-                : { x: e.offsetX, y: e.offsetY }
+            const snap = this.findSnapPoint(e, this.activeShape)
+            let endX: number, endY: number
 
-            // Check if clicking near the first point to close the path
+            if (snap) {
+                const local = this.activeNode
+                    ? this.activeNode.worldToLocal(snap.x, snap.y)
+                    : { x: snap.x, y: snap.y }
+                endX = local.x
+                endY = local.y
+
+                // If snapping to the first point of the current shape, close it
+                if (snap.shape === this.activeShape && snap.index === 0 && this.activeShape.points.length > 2) {
+                    this.activeShape.closed = true
+                    this.activeShape.previewPoint = null
+                    this.finishPath()
+                    return
+                }
+            } else {
+                const local = this.activeNode
+                    ? this.activeNode.worldToLocal(e.offsetX, e.offsetY)
+                    : { x: e.offsetX, y: e.offsetY }
+                endX = local.x
+                endY = local.y
+            }
+
+            // Check if clicking near the first point to close the path (legacy check just in case snap missed it)
             const firstPt = this.activeShape.points[0]
-            const dx = x - firstPt.x
-            const dy = y - firstPt.y
+            const dx = endX - firstPt.x
+            const dy = endY - firstPt.y
             if (this.activeShape.points.length > 2 && Math.sqrt(dx * dx + dy * dy) < 12) {
                 this.activeShape.closed = true
                 this.activeShape.previewPoint = null
@@ -67,7 +89,10 @@ class PenTool extends Tool {
             }
 
             // Add a new point
-            this.activeShape.addPoint({ x, y })
+            this.activeShape.addPoint({ x: endX, y: endY })
+            if (this.activeNode) {
+                this.activeNode.updateWorldMatrix(this.activeNode.getParent()?.getWorldMatrix() || undefined)
+            }
         }
     }
 
@@ -99,7 +124,31 @@ class PenTool extends Tool {
             }
         } else {
             // Just hovering — update preview line
-            this.activeShape.previewPoint = { x, y }
+            if (this.lastSnapShape) {
+                this.lastSnapShape.snapPointIndex = -1
+                this.lastSnapShape = null
+            }
+
+            const snap = this.findSnapPoint(e, this.activeShape)
+            let endX: number, endY: number
+
+            if (snap) {
+                const local = this.activeNode
+                    ? this.activeNode.worldToLocal(snap.x, snap.y)
+                    : { x: snap.x, y: snap.y }
+                endX = local.x
+                endY = local.y
+                snap.shape.snapPointIndex = snap.index
+                this.lastSnapShape = snap.shape
+            } else {
+                const local = this.activeNode
+                    ? this.activeNode.worldToLocal(e.offsetX, e.offsetY)
+                    : { x: e.offsetX, y: e.offsetY }
+                endX = local.x
+                endY = local.y
+            }
+
+            this.activeShape.previewPoint = { x: endX, y: endY }
         }
     }
 
@@ -153,9 +202,13 @@ class PenTool extends Tool {
                 this.shapeManager.finishDrag()
             }
         }
+        if (this.lastSnapShape) {
+            this.lastSnapShape.snapPointIndex = -1
+        }
         this.activeShape = null
         this.activeNode = null
         this.parentScene = null
+        this.lastSnapShape = null
         this.state = 'idle'
         super.toolChange()
     }
