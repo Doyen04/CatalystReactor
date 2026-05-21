@@ -168,6 +168,20 @@ class VectorPath extends Shape {
                     pt.cp2.y -= minY
                 }
             }
+
+            if (this.previewPoint) {
+                this.previewPoint.x -= minX
+                this.previewPoint.y -= minY
+                if (this.previewPoint.cp1) {
+                    this.previewPoint.cp1.x -= minX
+                    this.previewPoint.cp1.y -= minY
+                }
+                if (this.previewPoint.cp2) {
+                    this.previewPoint.cp2.x -= minX
+                    this.previewPoint.cp2.y -= minY
+                }
+            }
+
             this.data.properties.transform.x += minX
             this.data.properties.transform.y += minY
             this.matrixDirty = true

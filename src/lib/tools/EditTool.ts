@@ -69,6 +69,7 @@ class EditTool extends Tool {
             if (cpHit) {
                 this.state = 'dragging-control'
                 this.dragTarget = { type: 'control', index: cpHit.index, which: cpHit.which }
+                this.editingShape.selectedSegmentIndex = -1
                 return
             }
 
@@ -76,6 +77,7 @@ class EditTool extends Tool {
             const ptIdx = this.editingShape.findClosestPoint(x, y)
             if (ptIdx >= 0) {
                 this.editingShape.selectedPointIndex = ptIdx
+                this.editingShape.selectedSegmentIndex = -1
 
                 // Double-click toggles smooth/corner
                 if (this.clickCount >= 2) {
