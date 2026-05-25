@@ -1,101 +1,97 @@
 @import 'tailwindcss';
 
 :root {
-    --c: #58c;
-    --b: rgba(255, 255, 255, 0.267);
-    --t: rgba(255, 255, 255, 0.144);
-    --n: transparent;
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --bg-tertiary: #2a2a2a;
+    --border-color: #333333;
+    --accent-color: #3b82f6;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --glass-bg: rgba(30, 30, 30, 0.7);
+    --glass-blur: blur(12px);
 }
 
 .sidebar {
-    @apply w-12 h-full border-r-[1px] bg-gray-300;
+    @apply h-full border-r border-[#333] bg-[#1a1a1a] flex flex-col;
+    width: 240px;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .canvas {
-    @apply w-full h-full box-border border-t-[1px] border-b-[1px];
+    @apply w-full h-full box-border;
     @apply focus:outline-0;
-    background-color: rgb(193, 192, 192);
-    background-image:
-        linear-gradient(
-            0deg,
-            var(--n) 0%,
-            var(--n) 9px,
-            var(--b) 9px,
-            var(--b) 10px,
-            var(--n) 10px,
-            var(--n) 19px,
-            var(--t) 19px,
-            var(--t) 20px,
-            var(--n) 20px,
-            var(--n) 29px,
-            var(--t) 29px,
-            var(--t) 30px,
-            var(--n) 30px,
-            var(--n) 39px,
-            var(--t) 39px,
-            var(--t) 40px,
-            var(--n) 40px,
-            var(--n) 49px,
-            var(--t) 49px,
-            var(--t) 50px
-        ),
-        linear-gradient(
-            -90deg,
-            var(--n) 0%,
-            var(--n) 9px,
-            var(--b) 9px,
-            var(--b) 10px,
-            var(--n) 10px,
-            var(--n) 19px,
-            var(--t) 19px,
-            var(--t) 20px,
-            var(--n) 20px,
-            var(--n) 29px,
-            var(--t) 29px,
-            var(--t) 30px,
-            var(--n) 30px,
-            var(--n) 39px,
-            var(--t) 39px,
-            var(--t) 40px,
-            var(--n) 40px,
-            var(--n) 49px,
-            var(--t) 49px,
-            var(--t) 50px
-        );
-    background-size: 50px 50px;
+    background-color: #333333;
+    background-image: 
+        linear-gradient(45deg, #3a3a3a 25%, transparent 25%), 
+        linear-gradient(-45deg, #3a3a3a 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #3a3a3a 75%), 
+        linear-gradient(-45deg, transparent 75%, #3a3a3a 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
 .canvasContainer {
-    @apply flex-1 h-full relative;
-}
-
-.overlay {
-    @apply inset-0 absolute bg-transparent p-4 pointer-events-none;
-}
-
-.toolbar {
-    @apply absolute bottom-4 left-4 bg-gray-100 rounded-lg;
-    @apply flex items-center gap-2 p-2;
-    @apply select-none;
-    @apply border border-gray-600;
-    @apply z-10 h-10 pointer-events-auto;
-}
-
-.square-button-group {
-    @apply flex items-center;
+    @apply flex-1 h-full relative overflow-hidden;
 }
 
 .propertybar {
-    @apply w-64 h-full border-l-[1px] border-gray-50 bg-gray-300;
+    @apply w-72 h-full border-l border-[#333] bg-[#1a1a1a] flex flex-col;
+    color: var(--text-primary);
 }
 
 .propertybar-header {
-    @apply w-full h-9 bg-gray-400 p-1;
+    @apply w-full h-11 border-b border-[#333] flex items-center px-3 bg-[#1e1e1e];
 }
 
 .propertybar-body {
-    @apply text-gray-500 text-center p-2.5;
+    @apply flex-1 overflow-y-auto p-4 space-y-2;
+    scrollbar-width: thin;
+    scrollbar-color: #444 transparent;
 }
+
+.section-title {
+    @apply text-[10px] font-bold uppercase tracking-wider text-[#777] mb-1;
+}
+
+.tab-btn {
+    @apply px-4 py-2 text-xs font-semibold transition-all relative;
+    color: var(--text-secondary);
+}
+
+.tab-btn.active {
+    color: var(--text-primary);
+}
+
+.tab-btn.active::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-[2px] bg-blue-500;
+}
+
+.layer-item {
+    @apply flex items-center gap-2 px-3 py-1.5 cursor-pointer rounded-md transition-colors;
+    @apply hover:bg-[#2a2a2a] text-xs;
+}
+
+.layer-item.selected {
+    @apply bg-[#3b82f633] text-blue-400 border border-[#3b82f655];
+}
+
+.toolbar {
+    @apply absolute bottom-6 left-1/2 -translate-x-1/2 bg-[#1a1a1ae0] backdrop-blur-xl rounded-2xl;
+    @apply flex items-center gap-1 p-2;
+    @apply border border-[#ffffff10] shadow-[0_20px_50px_rgba(0,0,0,0.5)];
+    @apply z-10 pointer-events-auto;
+}
+
+.tool-btn {
+    @apply p-2 rounded-lg transition-all hover:bg-[#ffffff10] text-[#888];
+}
+
+.tool-btn.active {
+    @apply bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)];
+}
+
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
@@ -108,6 +104,3 @@ input[type='number'] {
     -moz-appearance: textfield;
 }
 
-.object-transform {
-    @apply rounded-xs w-full h-fit;
-}

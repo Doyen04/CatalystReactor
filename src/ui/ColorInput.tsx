@@ -1,4 +1,4 @@
-import { getDisplayTextFromFill, extractFillValue, imageValue, arrayBufferToDataUrl, getBackgroundStyleFromFillValue } from '@/util/getBackgroundFill'
+import { getDisplayTextFromFill, extractImageBuffer, imageValue, arrayBufferToDataUrl, getBackgroundStyleFromFillValue } from '@/util/getBackgroundFill'
 import { ColorProps, FillType, GradientFill, ImageFill, SolidFill } from '@lib/types/shapes'
 import { FileImage, Paintbrush2, Zap } from 'lucide-react'
 import React, { forwardRef, useEffect, useState } from 'react'
@@ -19,14 +19,19 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
     const [activeTab, setActiveTab] = useState<FillType>('solid')
     const [imageUrl, setImageUrl] = useState<string | null>(null)
 
-    const fillValue = extractFillValue(fill.color)
+    const result = extractImageBuffer(fill.color)
     const name = getDisplayTextFromFill(fill.color)
 
-    let backgroundStyle
-
     useEffect(() => {
+
         if (fill.color.type === 'image' || fill.color.type === 'pattern') {
-            const url = arrayBufferToDataUrl(imageValue(fillValue.value))
+            const imageBuf = imageValue(result.buf)
+            // work on if imagebuf is empty
+            if(!imageBuf){ 
+                setImageUrl(null)
+                return
+            }
+            const url = arrayBufferToDataUrl(imageBuf)
             setImageUrl(prevUrl => {
                 if (prevUrl && prevUrl !== url) {
                     URL.revokeObjectURL(prevUrl)
@@ -41,7 +46,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
                 return null
             })
         }
-    }, [fill.color.type, fillValue.value])
+    }, [fill.color.type, result.buf])
 
     useEffect(() => {
         switch (fill.color.type) {
@@ -59,10 +64,11 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
         }
     }, [fill.color.type])
 
+    let backgroundStyle
     if (fill.color.type === 'image' || fill.color.type === 'pattern') {
-        backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill.color, imageUrl)
+        backgroundStyle = getBackgroundStyleFromFillValue(fill.color, imageUrl)
     } else {
-        backgroundStyle = getBackgroundStyleFromFillValue(fillValue.value, fill.color)
+        backgroundStyle = getBackgroundStyleFromFillValue(fill.color)
     }
 
     useEffect(() => {
@@ -76,7 +82,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
     return (
         <div className={`relative ${className}`}>
             <aside
-                className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-28
+                className={twMerge(`rounded-sm bg-[#252525] flex h-fit w-fit
             items-center gap-1 pl-1 border border-transparent cursor-pointer
              hover:border-gray-500 
              transition-colors ${className}`)}
@@ -84,7 +90,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
                 <p onClick={() => setIsOpen(!isOpen)} className="font-semibold text-gray-700 h-4 w-4 rounded-xs" style={{ ...backgroundStyle }}></p>
                 <div
                     ref={ref}
-                    className="px-0.5 py-1 w-14 h-full bg-transparent text-gray-900 text-xs text-left font-mono border-r-2 border-r-gray-300 focus:outline-none"
+                    className="px-1 py-1 h-full bg-transparent text-[#e0e0e0] text-xs text-left font-mono border-r-1 border-r-gray-300 focus:outline-none"
                     {...props}
                 >
                     {name}
@@ -109,25 +115,22 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
                             <div className="flex items-center gap-1 p-2 w-full h-9 border-b-1 border-t-1 border-b-[#e6e6e6] border-t-[#e6e6e6]">
                                 <button
                                     onClick={() => setActiveTab('solid')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${
-                                        activeTab === 'solid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
-                                    }`}
+                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'solid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                                        }`}
                                 >
                                     <Paintbrush2 className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('gradient')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${
-                                        activeTab === 'gradient' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
-                                    }`}
+                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'gradient' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                                        }`}
                                 >
                                     <Zap className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('image')}
-                                    className={`p-1 rounded hover:bg-gray-100 ${
-                                        activeTab === 'image' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
-                                    }`}
+                                    className={`p-1 rounded hover:bg-gray-100 ${activeTab === 'image' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                                        }`}
                                 >
                                     <FileImage className="w-4 h-4" />
                                 </button>

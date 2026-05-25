@@ -1,7 +1,6 @@
 import Shape from '../base/Shape'
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
-import { ArcHandleState, ArcSegment, Coord, Properties } from '@lib/types/shapes'
-import clamp from '@lib/helper/clamp'
+import { ArcHandleState, ArcSegment, Coord } from '@lib/types/shapes'
 import { normalizeAngle } from '@lib/helper/normalise'
 import { ShapeData } from '@lib/core/EngineStateStore'
 

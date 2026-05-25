@@ -7,6 +7,7 @@ import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 import ShapeNode from '@lib/node/ShapeNode'
 import HistoryManager, { UpdateShapeAction } from './HistoryManager'
+import EngineStateStore from './EngineStateStore'
 
 class ShapeManager {
     private scene: SceneNode | null = null
@@ -25,7 +26,7 @@ class ShapeManager {
 
         this.scene.drawOnDrag(dragStart, e)
 
-        this.shapeModifier.update()
+        this.shapeModifier?.update()
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
@@ -34,19 +35,19 @@ class ShapeManager {
         if (this.scene) {
             this.initialProps = structuredClone(this.scene.getProperties())
         }
-        this.shapeModifier.handleMouseDown(dragStart, e)
+        this.shapeModifier?.handleMouseDown(dragStart, e)
     }
 
     drag(dragStart: Coord, e: MouseEvent) {
         if (!this.scene) return
 
-        if (this.shapeModifier.hasSelectedHandle()) {
-            this.shapeModifier.dragHandle(dragStart, e)
+        if (this.shapeModifier?.hasSelectedHandle()) {
+            this.shapeModifier?.dragHandle(dragStart, e)
         } else {
-            this.shapeModifier.dragShape(dragStart, e)
+            this.shapeModifier?.dragShape(dragStart, e)
         }
 
-        this.shapeModifier.update()
+        this.shapeModifier?.update()
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
@@ -55,7 +56,7 @@ class ShapeManager {
         if (!this.scene) return
         this.scene.move(dx, dy)
 
-        this.shapeModifier.update()
+        this.shapeModifier?.update()
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
@@ -71,8 +72,8 @@ class ShapeManager {
             parent.applyLayout()
         }
 
-        this.shapeModifier.handleRemoveModiferHandle()
-        this.shapeModifier.update()
+        this.shapeModifier?.handleRemoveModiferHandle()
+        this.shapeModifier?.update()
         
         const finalProps = this.scene.getProperties()
         this.throttledUpdate(finalProps)
@@ -88,6 +89,8 @@ class ShapeManager {
                 )
             }
         }
+        //remeber this line
+        EngineStateStore.getInstance().notify()
         this.initialProps = null
     }
 
@@ -102,7 +105,7 @@ class ShapeManager {
             console.log('Shape removed: too small add default size')
         }
 
-        this.shapeModifier.update()
+        this.shapeModifier?.update()
         const props = this.scene.getProperties()
         this.throttledUpdate(props)
     }
@@ -119,7 +122,7 @@ class ShapeManager {
         if (!scene) return
 
         this.scene = scene
-        this.shapeModifier.attachShape(scene)
+        this.shapeModifier?.attachShape(scene)
         
         if (this.scene instanceof ShapeNode && this.scene.shape) {
             useSceneStore.getState().setSelectedShapeId(this.scene.shape.data.id)
@@ -134,7 +137,7 @@ class ShapeManager {
 
         this.scene?.cleanUp()
         this.scene = null
-        this.shapeModifier.detachShape()
+        this.shapeModifier?.detachShape()
         useSceneStore.getState().setSelectedShapeId(null)
         useSceneStore.getState().clearProperties()
     }
@@ -149,7 +152,7 @@ class ShapeManager {
         }
         
         this.scene.setProperties(newProps)
-        this.shapeModifier.update()
+        this.shapeModifier?.update()
         
         const finalProps = this.scene.getProperties()
         this.throttledUpdate(finalProps)
@@ -165,7 +168,7 @@ class ShapeManager {
     updateBorderRadius(value: number, pos?: string) {
         if (!this.scene) return
         const props = this.scene.getProperties()
-        if (!props.borderRadius) return
+        if (!props || !props.borderRadius) return
 
         const newBorderRadius = { ...props.borderRadius }
         if (newBorderRadius.locked) {
@@ -174,7 +177,7 @@ class ShapeManager {
             newBorderRadius['bottom-left'] = value
             newBorderRadius['bottom-right'] = value
         } else if (pos) {
-            // @ts-ignore
+            
             newBorderRadius[pos] = value
         }
 
@@ -184,7 +187,7 @@ class ShapeManager {
     updateRadiusLock(locked: boolean) {
         if (!this.scene) return
         const props = this.scene.getProperties()
-        if (!props.borderRadius) return
+        if (!props || !props.borderRadius) return
 
         let newBorderRadius
         if (locked) {
@@ -206,10 +209,10 @@ class ShapeManager {
 
     updateStyle(key: 'fill' | 'strokeColor', value: any) {
         if (!this.scene) return
-        const style = this.scene.getProperties().style
+        const style = this.scene.getProperties()?.style
         if (!style) return
 
-        let newStyle = { ...style }
+        const newStyle = { ...style }
         if (key === 'fill') {
             newStyle.fill = value
         } else if (key === 'strokeColor') {
@@ -252,7 +255,7 @@ class ShapeManager {
 
     resetHover(scene: SceneNode | null) {
         if (this.scene !== scene) {
-            this.shapeModifier.setHover(false)
+            this.shapeModifier?.setHover(false)
         }
     }
 
@@ -260,7 +263,7 @@ class ShapeManager {
         if (!this.scene) {
             return false
         }
-        const handle = this.shapeModifier.selectModifier(x, y)
+        const handle = this.shapeModifier?.selectModifier(x, y)
 
         if (handle) {
             return true
@@ -269,7 +272,7 @@ class ShapeManager {
         }
     }
     setSuppressHandles(suppress: boolean) {
-        this.shapeModifier.setSuppressHandles(suppress)
+        this.shapeModifier?.setSuppressHandles(suppress)
     }
 }
 

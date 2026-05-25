@@ -105,7 +105,7 @@ class Polygon extends Shape {
         const bRadius = this.bRadius
         const spikes = this.sides
         
-        let radiusY = this.points[0].y + (bRadius > 0 ? bRadius : 10)
+        const radiusY = this.points[0].y + (bRadius > 0 ? bRadius : 10)
         
         let vertPt = this.points[1]
         if (bRadius > 0) {
@@ -130,7 +130,7 @@ class Polygon extends Shape {
         const bRadius = this.bRadius
         const spikes = this.sides
         
-        let radiusY = this.points[0].y + (bRadius > 0 ? bRadius : 10)
+        const radiusY = this.points[0].y + (bRadius > 0 ? bRadius : 10)
         let vertPt = this.points[1]
         
         if (bRadius > 0) {
@@ -151,7 +151,7 @@ class Polygon extends Shape {
         const { width, height } = this.data.properties.size
         
         if (handleID === 'radius-top') {
-            let distY = localCurrent.y - 0
+            const distY = localCurrent.y - 0
             if (distY >= 0) this.setBorderRadius(Math.abs(distY), 'top' as any)
         } else if (handleID === 'vertices') {
             const count = this.getVertexCount()

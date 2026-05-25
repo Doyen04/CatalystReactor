@@ -4,13 +4,13 @@ import { ArcHandleState, BoundingRect, Coord, HandlePos, Properties, Size } from
 import { Canvas } from 'canvaskit-wasm'
 
 abstract class SceneNode {
-    public shape: Shape
+    public shape: Shape | null
     protected parent: SceneNode | null
     protected localMatrix: number[] | null
     protected worldMatrix: number[] | null
     protected canComputeMatrix: boolean = false
 
-    get resource(): CanvasKitResources {
+    get resource(): CanvasKitResources | null {
         const resources = CanvasKitResources.getInstance()
         if (resources) {
             return resources
@@ -22,6 +22,11 @@ abstract class SceneNode {
     }
 
     setUpMatrix() {
+        if (!this.resource) {
+            console.log('canaskit resourses not set');
+            return
+        }
+
         const Matrix = this.resource.canvasKit.Matrix
         this.localMatrix = Matrix.identity()
         this.worldMatrix = Matrix.identity()
@@ -34,31 +39,31 @@ abstract class SceneNode {
     }
 
     setDimension(width: number, height: number): void {
-        this.shape.setDim(width, height)
+        this.shape?.setDim(width, height)
 
         this.canComputeMatrix = true
     }
 
     setScale(x: number, y: number): void {
-        this.shape.setScale(x, y)
+        this.shape?.setScale(x, y)
 
         this.canComputeMatrix = true
     }
 
     setAngle(angle: number): void {
-        this.shape.setAngle(angle)
+        this.shape?.setAngle(angle)
 
         this.canComputeMatrix = true
     }
 
     setPosition(x: number, y: number): void {
-        this.shape.setCoord(x, y)
+        this.shape?.setCoord(x, y)
 
         this.canComputeMatrix = true
     }
 
     move(dx: number, dy: number): void {
-        this.shape.moveShape(dx, dy)
+        this.shape?.moveShape(dx, dy)
 
         this.canComputeMatrix = true
     }
@@ -71,18 +76,22 @@ abstract class SceneNode {
         const { x: dx, y: dy } = this.worldToParentLocal(dragStart.x, dragStart.y)
         const { x: tx, y: ty } = this.worldToParentLocal(e.offsetX, e.offsetY)
 
-        this.shape.setSize({ x: dx, y: dy }, tx, ty, e.shiftKey)
+        this.shape?.setSize({ x: dx, y: dy }, tx, ty, e.shiftKey)
 
         this.canComputeMatrix = true
     }
 
     drawDefault() {
-        this.shape.drawDefault()
+        this.shape?.drawDefault()
 
         this.canComputeMatrix = true
     }
 
     localToWorld(dx: number, dy: number) {
+        if (!this.resource || !this.worldMatrix) {
+            console.log('worldmatrix or canaskit resourses not set');
+            return
+        }
         const Matrix = this.resource.canvasKit.Matrix
         const transformedPoint = Matrix.mapPoints(this.worldMatrix, [dx, dy])
         return {
@@ -92,6 +101,10 @@ abstract class SceneNode {
     }
 
     worldToParentLocal(x: number, y: number) {
+        if (!this.parent || !this.resource || !this.parent.worldMatrix) {
+            console.log('parent or parent worldmatrix or canaskit resourses not set');
+            return { x: 0, y: 0 }
+        }
         const Matrix = this.resource.canvasKit.Matrix
         const inverseMatrix = Matrix.invert(this.parent.worldMatrix)
         const transformedPoint = Matrix.mapPoints(inverseMatrix, [x, y])
@@ -102,6 +115,10 @@ abstract class SceneNode {
     }
 
     worldToLocal(x: number, y: number) {
+        if (!this.resource || !this.worldMatrix) {
+            console.log('worldmatrix or canaskit resourses not set');
+            return { x: 0, y: 0 }
+        }
         const Matrix = this.resource.canvasKit.Matrix
         const inverseMatrix = Matrix.invert(this.worldMatrix)
 
@@ -113,6 +130,10 @@ abstract class SceneNode {
     }
 
     worldDeltaToLocal(dx: number, dy: number) {
+        if (!this.resource || !this.worldMatrix) {
+            console.log('worldmatrix or canaskit resourses not set');
+            return { x: 0, y: 0 }
+        }
         const Matrix = this.resource.canvasKit.Matrix
         const inverseMatrix = Matrix.invert(this.worldMatrix)
         const p1 = Matrix.mapPoints(inverseMatrix, [0, 0])
@@ -124,6 +145,11 @@ abstract class SceneNode {
     }
 
     buildZeroTransform(width: number, height: number, rotation: number, scale: { x: number; y: number }, rotationAnchor: { x: number; y: number }) {
+        if (!this.resource) {
+            console.log(' canaskit resourses not set');
+            return
+        }
+
         const Matrix = this.resource.canvasKit.Matrix
 
         const anchorX = width * (rotationAnchor?.x ?? 0.5)
@@ -138,7 +164,7 @@ abstract class SceneNode {
     // Build a local matrix from current transform.
     // Note: shapes already draw in absolute coords (x,y). We rotate/scale around the visual center.
     protected recomputeLocalMatrix(): void {
-        if (!this.shape) {
+        if (!this.shape || !this.resource) {
             return
         }
 
@@ -166,7 +192,7 @@ abstract class SceneNode {
         return this.shape.pointInShape(tx, ty)
     }
 
-    getAbsoluteBoundingRect(): BoundingRect {
+    getAbsoluteBoundingRect(): BoundingRect | null {
         if (!this.shape) {
             return null
         }

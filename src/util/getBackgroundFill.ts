@@ -32,7 +32,7 @@ export const colorValue = (value: string | ArrayBuffer | number[]) => {
     return typeof value === 'string' ? value : null
 }
 
-export const imageValue = (value: string | ArrayBuffer | number[]) => {
+export const imageValue = (value: ArrayBuffer | number[]) => {
     return value instanceof ArrayBuffer ? value : null
 }
 export const getGradientAngle = (gradient: LinearGradient) => {
@@ -58,9 +58,11 @@ export const getGradientPreview = (gradient: GradientFill) => {
 
     return 'transparent'
 }
-export function getBackgroundStyleFromFillValue(value: string | ArrayBuffer | number[], fill: PaintStyle, url?: string) {
+export function getBackgroundStyleFromFillValue( fill: PaintStyle, url?: string|null) {
     switch (fill.type) {
         case 'solid': {
+            
+            const value = fill.color
             const color = colorValue(value)
             return { backgroundColor: color }
         }
@@ -116,33 +118,19 @@ export function getBackgroundStyleFromFillValue(value: string | ArrayBuffer | nu
     }
 }
 
-export function extractFillValue(fill: PaintStyle): {
-    value: string | ArrayBuffer | number[]
-    metadata?: unknown
+export function extractImageBuffer(fill: PaintStyle): {
+    buf: ArrayBuffer | number[]
 } {
     switch (fill.type) {
-        case 'solid':
-            return {
-                value: fill.color,
-            }
-
         case 'image':
         case 'pattern':
             fill = fill as ImageFill
             return {
-                value: fill.imageData.imageBuffer,
+                buf: fill.imageData ? fill.imageData.imageBuffer : [],
             }
-
-        case 'linear':
-        case 'radial':
-            fill = fill as LinearGradient | RadialGradient
-            return {
-                value: '',
-            }
-
         default:
             return {
-                value: '',
+                buf: [],
             }
     }
 }

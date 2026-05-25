@@ -10,8 +10,8 @@ interface BackgroundImagePickerProps {
     className?: string
     value: ImageFill
     onImageChange: (fill: ImageFill) => void
-    setImageUrl: React.Dispatch<React.SetStateAction<string>>
-    imageUrl: string
+    setImageUrl: React.Dispatch<React.SetStateAction<string | null>>
+    imageUrl: string | null
 }
 
 const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, imageUrl, setImageUrl, onImageChange, isOpen, className }) => {

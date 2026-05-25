@@ -7,11 +7,11 @@ interface SceneStore {
     currentShapeProperties: Properties | null
     setSelectedShapeId: (id: string | null) => void
     setCurrentShapeProperties: (properties: Properties | null) => void
-    updateProperty: (key: string, value: any) => void
+    updateProperty: (key: string, value: unknown) => void
     clearProperties: () => void
 }
 
-export const useSceneStore = create<SceneStore>((set, get) => ({
+export const useSceneStore = create<SceneStore>((set) => ({
     selectedShapeId: null,
     currentShapeProperties: null,
 

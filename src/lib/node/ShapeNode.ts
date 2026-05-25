@@ -12,6 +12,11 @@ class ShapeNode extends SceneNode {
     }
 
     override updateWorldMatrix(parentWorld?: number[]) {
+        if (!this.resource) {
+            console.log('canaskit resourses not set');
+            return
+        }
+
         const Matrix = this.resource.canvasKit.Matrix
 
         const parentMatrix = parentWorld ?? Matrix.identity()
@@ -21,12 +26,20 @@ class ShapeNode extends SceneNode {
             this.canComputeMatrix = false
             if (this.shape) this.shape.matrixDirty = false
         }
-
+        if (!this.localMatrix) {
+            console.log('localmatrix not set');
+            return
+        }
         this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
     }
 
     override draw(canvas: Canvas): void {
         canvas.save()
+        
+        if (!this.localMatrix) {
+            console.log('localmatrix not set');
+            return
+        }
         canvas.concat(this.localMatrix)
 
         if (this.shape) this.shape.draw(canvas)

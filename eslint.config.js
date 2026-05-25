@@ -7,7 +7,7 @@ import importPlugin from 'eslint-plugin-import'
 import { globalIgnores } from 'eslint/config'
 
 export default tseslint.config([
-    globalIgnores(['dist']),
+    globalIgnores(['dist','node_modules']),
     {
         files: ['**/*.{ts,tsx}'],
         plugins: {

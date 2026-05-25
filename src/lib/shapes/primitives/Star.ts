@@ -194,7 +194,7 @@ class Star extends Shape {
         const { width, height } = this.data.properties.size
 
         if (handleID === 'radius-top') {
-            let distY = localCurrent.y - 0 // Bounding rect top is 0
+            const distY = localCurrent.y - 0 // Bounding rect top is 0
             if (distY >= 0) this.setBorderRadius(Math.abs(distY), 'top' as any)
         } else if (handleID === 's-ratio') {
             const deltaX = localCurrent.x - this.radiusX

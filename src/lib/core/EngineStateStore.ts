@@ -1,9 +1,9 @@
-import { ShapeType } from "@lib/types/shapes"
+import { Properties, ShapeType } from "@lib/types/shapes"
 
 export interface ShapeData {
     id: string
     type: ShapeType
-    properties: any // Will be specialized for each shape
+    properties: Properties // Will be specialized for each shape
 }
 
 class EngineStateStore {
@@ -20,7 +20,7 @@ class EngineStateStore {
         return EngineStateStore.instance
     }
 
-    createShapeData(id: string, type: ShapeType, properties: any): ShapeData {
+    createShapeData(id: string, type: ShapeType, properties: Properties): ShapeData {
         const data: ShapeData = { id, type, properties }
         this.shapeDataMap.set(id, data)
         return data

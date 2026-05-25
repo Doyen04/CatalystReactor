@@ -3,7 +3,6 @@ import {
     ArcHandleState,
     BoundingRect,
     Coord,
-    CornerPos,
     HandlePos,
     Properties,
     ShapeType,
@@ -35,7 +34,7 @@ abstract class Shape {
     abstract getDim(): { width: number; height: number }
     abstract cleanUp(): void
 
-    get resource(): CanvasKitResources {
+    get resource(): CanvasKitResources | null {
         const resources = CanvasKitResources.getInstance()
         if (resources) {
             return resources
@@ -170,7 +169,6 @@ abstract class Shape {
     drawModifierHandles(canvas: Canvas, resource: CanvasKitResources): void {
         const { width, height } = this.getDim()
         const cw = resource.canvasKit
-        const pad = 2
 
         const paint = new cw.Paint()
         paint.setColor(cw.Color(255, 255, 255, 1))

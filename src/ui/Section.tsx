@@ -7,11 +7,17 @@ interface SectionProps {
     childClass?: string
 }
 
-const Section: React.FC<SectionProps> = ({ title, children, childClass }) => (
-    <section className="object-transform">
-        <div className="text-left p-0.5 text-black font-medium text-xs">{title}</div>
-        <div className={twMerge(`flex h-fit w-fit gap-3 text-black text-sm font-mono ${childClass}`)}>{children}</div>
+export const GRID2X2: React.FC<SectionProps> = ({ title, children, childClass }) => (
+    <section className="w-full p-0">
+        <div className="section-title">{title}</div>
+        <div className={twMerge(`grid grid-cols-2 gap-2 text-sm ${childClass}`)}>{children}</div>
+    </section>
+)
+export const Section: React.FC<SectionProps> = ({ title, children, childClass }) => (
+    <section className="w-full p-0">
+        <div className="section-title">{title}</div>
+        <div className={twMerge(`flex flex-1 gap-2 text-sm ${childClass}`)}>{children}</div>
     </section>
 )
 
-export default Section
+

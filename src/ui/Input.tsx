@@ -16,7 +16,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ title, icon, type, onC
 
     const handleChange = (num: number) => {
         const vl = props.min != undefined && props.max != undefined ? clamp(num, props.min as number, props.max as number) : num
-        console.log(props.min != undefined && props.max != undefined, props.min, num, props.max, vl)
         setCurrentValue(vl)
     }
 
@@ -26,12 +25,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ title, icon, type, onC
 
     return (
         <aside
-            className={twMerge(`rounded-sm bg-gray-200 flex h-fit w-20
-         items-center gap-1 p-0.5 border border-transparent 
-         hover:border-gray-500 hover:focus-within:border-blue-500 focus-within:border-blue-500
-             transition-colors ${className}`)}
+            className={twMerge(`rounded-md bg-[#252525] flex h-8 w-fit min-w-[70px]
+         items-center gap-1.5 px-2 border border-[#333] 
+         hover:border-[#444] focus-within:border-blue-500/50 
+             transition-all ${className}`)}
         >
-            {(title ?? icon) && <p className="px-1 font-medium text-gray-700 text-sm">{title ?? icon}</p>}
+            {(title ?? icon) && (
+                <div className="flex items-center justify-center text-[#777] text-[10px] font-bold uppercase min-w-[12px]">
+                    {title ?? icon}
+                </div>
+            )}
             <input
                 ref={ref}
                 type={type}
@@ -40,9 +43,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ title, icon, type, onC
                 onKeyDown={e => {
                     if (e.key === 'Enter') {
                         onChange(current)
+                        e.currentTarget.blur()
                     }
                 }}
-                className="flex-1 min-w-0 bg-transparent text-gray-900 text-xs font-mono border-none focus:outline-none"
+                onBlur={() => onChange(current)}
+                className="flex-1 w-full bg-transparent text-[#e0e0e0] text-xs font-medium border-none focus:outline-none"
                 {...props}
             />
         </aside>
@@ -52,3 +57,4 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ title, icon, type, onC
 Input.displayName = 'Input'
 
 export default Input
+
