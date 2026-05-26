@@ -24,17 +24,21 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ title, icon, type, onC
     }, [value])
 
     return (
-        <aside
-            className={twMerge(`rounded-md bg-[#252525] flex h-8 w-fit min-w-[70px]
-         items-center gap-1.5 px-2 border border-[#333] 
+        <div
+            className={twMerge(`rounded-md bg-[#222222] flex h-7 w-full 
+         items-center gap-1 px-1.5 border border-[#333] 
          hover:border-[#444] focus-within:border-blue-500/50 
              transition-all ${className}`)}
         >
-            {(title ?? icon) && (
-                <div className="flex items-center justify-center text-[#777] text-[10px] font-bold uppercase min-w-[12px]">
-                    {title ?? icon}
+            {React.isValidElement(icon) ? (
+                <div className="flex items-center justify-center text-[#777] min-w-[16px]">
+                    {React.cloneElement(icon as React.ReactElement<{ size?: number }>, { size: 14 })}
                 </div>
-            )}
+            ) : title ? (
+                <div className="flex items-center justify-center text-[#777] text-[10px] font-bold uppercase min-w-[12px]">
+                    {title}
+                </div>
+            ) : null}
             <input
                 ref={ref}
                 type={type}
@@ -50,7 +54,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ title, icon, type, onC
                 className="flex-1 w-full bg-transparent text-[#e0e0e0] text-xs font-medium border-none focus:outline-none"
                 {...props}
             />
-        </aside>
+        </div>
     )
 })
 

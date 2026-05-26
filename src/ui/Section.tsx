@@ -9,14 +9,14 @@ interface SectionProps {
 
 export const GRID2X2: React.FC<SectionProps> = ({ title, children, childClass }) => (
     <section className="w-full p-0">
-        <div className="section-title">{title}</div>
-        <div className={twMerge(`grid grid-cols-2 gap-2 text-sm ${childClass}`)}>{children}</div>
+        <div className="section-title text-[10px] opacity-60 mb-1.5">{title}</div>
+        <div className={twMerge(`grid grid-cols-2 gap-1.5 text-sm ${childClass}`)}>{children}</div>
     </section>
 )
 export const Section: React.FC<SectionProps> = ({ title, children, childClass }) => (
     <section className="w-full p-0">
-        <div className="section-title">{title}</div>
-        <div className={twMerge(`flex flex-1 gap-2 text-sm ${childClass}`)}>{children}</div>
+        <div className="section-title text-[10px] opacity-60 mb-1.5">{title}</div>
+        <div className={twMerge(`flex flex-wrap gap-1.5 text-sm ${childClass}`)}>{children}</div>
     </section>
 )
 
