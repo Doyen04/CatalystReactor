@@ -3,7 +3,7 @@ import CanvasKitResources from '@lib/core/CanvasKitResource'
 import SText from '@lib/shapes/primitives/SText'
 import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
-import { Coord, InitialTransformState } from '@lib/types/shapes'
+import { Coord, InitialTransformState, PTextStyle } from '@lib/types/shapes'
 import { ShapeData as StoreShapeData } from '@lib/core/EngineStateStore'
 import container from '@lib/core/DependencyManager'
 import PaintManager from '@lib/core/PaintManager'
@@ -51,10 +51,13 @@ class ShapeModifier {
                     stroke: { color: { type: 'solid', color: [0, 0, 0, 1] }, opacity: 1, width: 0 }
                 },
                 textStyle: {
-                    textColor: [1, 1, 1, 1],
+                    textFill: { color: { type: 'solid' as const, color: [1, 1, 1, 1] }, opacity: 1 },
                     fontSize: 10,
-                    fontFamily: ['Inter', 'sans-serif'],
-                }
+                    fontWeight: 400,
+                    fontFamilies: ['Inter', 'sans-serif'],
+                    lineHeight: 1.2,
+                    textAlign: 'left' as const,
+                } satisfies PTextStyle
             }
         }
         this.font = new SText(dummyData)

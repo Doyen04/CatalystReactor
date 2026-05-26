@@ -13,6 +13,11 @@ class SText extends Shape {
     private padding: number = 2
     private TWidth: number = 0
     private THeight: number = 0
+    private _style: SimpleTextStyle = {
+        textColor: [1, 1, 1, 1],
+        fontSize: 10,
+        fontFamily: ['Inter', 'sans-serif'],
+    }
 
     constructor(data: ShapeData) {
         super(data)
@@ -33,13 +38,8 @@ class SText extends Shape {
             }
         }
 
-        if (!this.data.properties.textStyle) {
-            this.data.properties.textStyle = {
-                textColor: [1, 1, 1, 1],
-                fontSize: 10,
-                fontFamily: ['Inter', 'sans-serif'],
-            }
-        }
+        // _style is the private rendering style for this internal text label.
+        // It is intentionally separate from data.properties.textStyle (PTextStyle).
         
         if (this.data.properties.text === undefined) {
              this.data.properties.text = ""
@@ -59,7 +59,7 @@ class SText extends Shape {
     }
 
     get textStyle(): SimpleTextStyle {
-        return this.data.properties.textStyle
+        return this._style
     }
 
     override setDim(width: number, height: number): void {
@@ -73,13 +73,13 @@ class SText extends Shape {
     }
 
     override setFontSize(size: number): void {
-        this.textStyle.fontSize = size
-        this.font.setSize(size)
+        this._style.fontSize = size
+        this.font?.setSize(size)
         this.calculateTextDim()
     }
 
     override setFontFamily(fontFamily: string): void {
-        this.textStyle.fontFamily.unshift(fontFamily)
+        this._style.fontFamily.unshift(fontFamily)
         this.calculateTextDim()
     }
 

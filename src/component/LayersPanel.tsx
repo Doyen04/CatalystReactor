@@ -24,7 +24,8 @@ const LayersPanel: React.FC = () => {
         }
 
         updateShapes()
-        return EngineStateStore.getInstance().subscribe(updateShapes)
+        const unsubscribe = EngineStateStore.getInstance().subscribe(updateShapes)
+        return () => { unsubscribe() }
     }, [])
 
     return (

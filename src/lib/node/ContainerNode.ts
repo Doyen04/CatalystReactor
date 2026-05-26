@@ -6,7 +6,7 @@ import { FlexLayout, GridLayout, LayoutConstraints } from './nodeTypes'
 import { applyColumnLayout, applyGridLayout, applyRowLayout } from './LayoutEngine'
 import PaintManager from '@lib/core/PaintManager'
 import container from '@lib/core/DependencyManager'
-import { Properties } from '@lib/types/shapes'
+import type { Properties } from '@lib/types/shapes'
 
 class ContainerNode extends SceneNode {
     children: SceneNode[]
