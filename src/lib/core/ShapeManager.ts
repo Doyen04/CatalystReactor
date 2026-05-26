@@ -1,4 +1,4 @@
-// ShapeManager.ts
+
 import { useSceneStore } from '@hooks/sceneStore'
 import { Coord, Properties } from '@lib/types/shapes'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
@@ -18,7 +18,8 @@ class ShapeManager {
     constructor(shapeModifier: ShapeModifier) {
         this.scene = null
         this.shapeModifier = shapeModifier
-        this.throttledUpdate = throttle(useSceneStore.getState().setCurrentShapeProperties)
+        
+        this.throttledUpdate = throttle(useSceneStore.getState().setCurrentShapeProperties as any)
     }
 
     drawShape(dragStart: Coord, e: MouseEvent) {
@@ -28,7 +29,7 @@ class ShapeManager {
 
         this.shapeModifier?.update()
         const props = this.scene.getProperties()
-        this.throttledUpdate(props)
+        if (props) this.throttledUpdate(props)
     }
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
@@ -49,7 +50,7 @@ class ShapeManager {
 
         this.shapeModifier?.update()
         const props = this.scene.getProperties()
-        this.throttledUpdate(props)
+        if (props) this.throttledUpdate(props)
     }
 
     moveScene(dx: number, dy: number) {
@@ -58,7 +59,7 @@ class ShapeManager {
 
         this.shapeModifier?.update()
         const props = this.scene.getProperties()
-        this.throttledUpdate(props)
+        if (props) this.throttledUpdate(props)
     }
 
     finishDrag() {
@@ -76,7 +77,7 @@ class ShapeManager {
         this.shapeModifier?.update()
         
         const finalProps = this.scene.getProperties()
-        this.throttledUpdate(finalProps)
+        if (finalProps) this.throttledUpdate(finalProps)
 
         // Record history
         if (this.initialProps && this.scene instanceof ShapeNode && this.scene.shape) {
@@ -97,7 +98,10 @@ class ShapeManager {
     handleTinyShapes(): void {
         if (!this.scene) return
 
-        const { height, width } = this.scene.getDim()
+        const dim = this.scene.getDim()
+        if (!dim) return
+        
+        const { height, width } = dim
         const minSize = 5
 
         if (width < minSize || height < minSize) {
@@ -107,7 +111,7 @@ class ShapeManager {
 
         this.shapeModifier?.update()
         const props = this.scene.getProperties()
-        this.throttledUpdate(props)
+        if (props) this.throttledUpdate(props)
     }
 
     get currentScene(): SceneNode | null {
@@ -129,7 +133,7 @@ class ShapeManager {
         }
 
         const props = this.scene.getProperties()
-        this.throttledUpdate(props)
+        if (props) this.throttledUpdate(props)
     }
 
     detachShape() {
@@ -151,11 +155,11 @@ class ShapeManager {
             [key]: value,
         }
         
-        this.scene.setProperties(newProps)
+        this.scene.setProperties(newProps as Properties)
         this.shapeModifier?.update()
         
         const finalProps = this.scene.getProperties()
-        this.throttledUpdate(finalProps)
+        if (finalProps) this.throttledUpdate(finalProps)
 
         // Record history for property bar updates
         if (this.scene instanceof ShapeNode && this.scene.shape) {
@@ -171,14 +175,15 @@ class ShapeManager {
         if (!props || !props.borderRadius) return
 
         const newBorderRadius = { ...props.borderRadius }
+        const validKeys = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+        
         if (newBorderRadius.locked) {
             newBorderRadius['top-left'] = value
             newBorderRadius['top-right'] = value
             newBorderRadius['bottom-left'] = value
             newBorderRadius['bottom-right'] = value
-        } else if (pos) {
-            
-            newBorderRadius[pos] = value
+        } else if (pos && validKeys.includes(pos)) {
+            (newBorderRadius as Record<string, number | boolean>)[pos] = value
         }
 
         this.updateProperty('borderRadius', newBorderRadius)
@@ -207,6 +212,7 @@ class ShapeManager {
         this.updateProperty('borderRadius', newBorderRadius)
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updateStyle(key: 'fill' | 'strokeColor', value: any) {
         if (!this.scene) return
         const style = this.scene.getProperties()?.style
@@ -226,18 +232,28 @@ class ShapeManager {
         this.updateProperty('style', newStyle)
     }
 
-    updateSubProperty(section: keyof Properties, key: string, value: any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    updateSubProperty(section: keyof Properties, key: string, value: any): void {
         if (!this.scene) return
         const props = this.scene.getProperties()
+        if (!props) return
         const target = props[section]
         if (!target || typeof target !== 'object') return
 
-        const newSectionProps = {
-            ...target,
-            [key]: value
+        // Handle nested paths like 'stroke.width'
+        const keys = key.split('.')
+        const newSectionProps = JSON.parse(JSON.stringify(target))
+        let current = newSectionProps
+        
+        for (let i = 0; i < keys.length - 1; i++) {
+            if (!current[keys[i]]) {
+                current[keys[i]] = {}
+            }
+            current = current[keys[i]]
         }
+        current[keys[keys.length - 1]] = value
 
-        this.updateProperty(section, newSectionProps as any)
+        this.updateProperty(section, newSectionProps as Properties[keyof Properties])
     }
 
     handleHover(x: number, y: number): string | null {

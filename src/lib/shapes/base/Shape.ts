@@ -4,6 +4,8 @@ import {
     BoundingRect,
     Coord,
     HandlePos,
+    InitialTransformState,
+    PathData,
     Properties,
     ShapeType,
 } from '@lib/types/shapes'
@@ -226,16 +228,16 @@ abstract class Shape {
     }
     
     dragModifierHandle(
-        _handleID: string, 
-        _localCurrent: Coord, 
-        _localStart: Coord, 
-        _initialShapeData: any,
-        _sceneUpdate?: any
+        _handleID: string,
+        _localCurrent: Coord,
+        _localStart: Coord,
+        _initialShapeData: InitialTransformState,
+        _sceneUpdate?: () => void
     ): void { /* no-op by default for base */ }
 
     // ── FLATTEN METHOD ───────────────
     // Converts mathematically parameterized primitive data into explicit points
-    convertToPathData(): any | null {
+    convertToPathData(): PathData | null {
         return null
     }
 
@@ -264,7 +266,7 @@ abstract class Shape {
     setCursorPosFromCoord(_x: number, _y: number): void { /* no-op */ }
     deleteText(_direc: 'forward' | 'backward'): void { /* no-op */ }
     moveCursor(_direc: 'right' | 'left' | 'up' | 'down', _shiftKey: boolean): void { /* no-op */ }
-    protected drawHoverEffect(_canvas: Canvas, _rect?: any): void { /* no-op */ }
+    protected drawHoverEffect(_canvas: Canvas, _rect?: BoundingRect): void { /* no-op */ }
     setFontSize(_size: number): void { /* no-op */ }
     setFontFamily(_fontFamily: string): void { /* no-op */ }
     getMaxRadius(): number { return Infinity }

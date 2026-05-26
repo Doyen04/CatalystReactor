@@ -4,12 +4,12 @@ import type { CanvasKit, ParagraphStyle, TextStyle, FontMgr, Path } from 'canvas
 import fontMap from '@/lib/core/fonts.json'
 
 export class CanvasKitResources {
-    private static instance: CanvasKitResources
+    private static instance: CanvasKitResources | null = null
     private static cnvsFontData: ArrayBuffer[] = []
     private static fontsLoaded: boolean = false
     private static fontLoadPromise: Promise<void> | null = null
 
-    private cnvsTextStyle: TextStyle
+    private cnvsTextStyle: TextStyle | null = null
     private cnvsParagraphStyle: ParagraphStyle
     private cnvsFontMgr: FontMgr | null
     private cnvsCanvasKit: CanvasKit
@@ -25,7 +25,7 @@ export class CanvasKitResources {
         return this.cnvsPath
     }
    
-    get textStyle() {
+    get textStyle(): TextStyle | null {
         return this.cnvsTextStyle
     }
     get paragraphStyle() {

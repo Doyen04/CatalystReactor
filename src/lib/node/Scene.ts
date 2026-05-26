@@ -68,7 +68,7 @@ abstract class SceneNode {
         this.canComputeMatrix = true
     }
 
-    setParent(parent: SceneNode) {
+    setParent(parent: SceneNode | null): void {
         this.parent = parent
     }
 
@@ -87,10 +87,10 @@ abstract class SceneNode {
         this.canComputeMatrix = true
     }
 
-    localToWorld(dx: number, dy: number) {
+    localToWorld(dx: number, dy: number): { x: number; y: number } {
         if (!this.resource || !this.worldMatrix) {
             console.log('worldmatrix or canaskit resourses not set');
-            return
+            return { x: 0, y: 0 }
         }
         const Matrix = this.resource.canvasKit.Matrix
         const transformedPoint = Matrix.mapPoints(this.worldMatrix, [dx, dy])
@@ -144,10 +144,10 @@ abstract class SceneNode {
         }
     }
 
-    buildZeroTransform(width: number, height: number, rotation: number, scale: { x: number; y: number }, rotationAnchor: { x: number; y: number }) {
+    buildZeroTransform(width: number, height: number, rotation: number, scale: { x: number; y: number }, rotationAnchor: { x: number; y: number }): number[] {
         if (!this.resource) {
             console.log(' canaskit resourses not set');
-            return
+            return []
         }
 
         const Matrix = this.resource.canvasKit.Matrix
@@ -187,8 +187,8 @@ abstract class SceneNode {
     }
 
     isCollide(x: number, y: number): boolean {
+        if (!this.shape) return false
         const { x: tx, y: ty } = this.worldToLocal(x, y)
-
         return this.shape.pointInShape(tx, ty)
     }
 
@@ -388,8 +388,8 @@ abstract class SceneNode {
         this.shape?.moveCursor(direc, shiftKey)
     }
 
-    cleanUp() {
-        this.shape.cleanUp()
+    cleanUp(): void {
+        this.shape?.cleanUp()
     }
 
     getChildren(): SceneNode[] {

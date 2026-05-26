@@ -342,6 +342,8 @@ export interface PathData {
     closed: boolean
 }
 
+import { type LayoutConstraints } from '../node/nodeTypes'
+
 export interface Properties {
     transform: Transform
     size: Size
@@ -353,6 +355,7 @@ export interface Properties {
     textStyle?: PTextStyle
     text?: string
     pathData?: PathData
+    layoutConstraints?: LayoutConstraints
 }
 
 export interface BoundingRect {

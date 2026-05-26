@@ -4,8 +4,8 @@ import { SolidFill, LinearGradient, RadialGradient, ImageFill, Size, ScaleMode, 
 import { PCache } from "./Cache"
 
 class PaintManager {
-    private fillPaint: Paint
-    private strokePaint: Paint
+    private fillPaint: Paint | null = null
+    private strokePaint: Paint | null = null
     private paintCache: PCache<Paint>
     shaderCache: PCache<Shader>
     imageCache: PCache<CanvasKitImage>
@@ -50,7 +50,7 @@ class PaintManager {
     }
 
     setPaint(fill: PaintStyle, size: Size): Color | Shader | null {
-        if (!this.resource) return
+        if (!this.resource) return null
         switch (fill.type) {
             case 'solid': {
                 const solid = fill as SolidFill
@@ -133,8 +133,7 @@ class PaintManager {
                 return shader
             }
             case 'pattern':
-                // Similar to image but with pattern-specific handling
-                break
+                return null
             default:
                 console.warn(`Unknown fill type: ${fill}`);
                 return this.resource.canvasKit.parseColorString('#000')
@@ -167,7 +166,7 @@ class PaintManager {
         return this.stroke
     }
 
-    makeNewPaint(props: ColorProps | Stroke, size: Size, isStroke = false): Paint {
+    makeNewPaint(props: ColorProps | Stroke, size: Size, isStroke = false): Paint | null {
         const res = this.resource
         if (!res || !props) return null
 
@@ -197,7 +196,7 @@ class PaintManager {
         this.stroke.setAlphaf(1.0)
     }
 
-    makeImageShader(dim: Size, canvasKitImage: CanvasKitImage, scaleMode: ScaleMode = 'fill'): Shader {
+    makeImageShader(dim: Size, canvasKitImage: CanvasKitImage, scaleMode: ScaleMode = 'fill'): Shader | null {
         if (!this.resource?.canvasKit) return null
         const ck = this.resource.canvasKit
 
@@ -260,29 +259,29 @@ class PaintManager {
         const cnvsimg = this.resource.canvasKit.MakeImageFromEncoded(backgroundImage)
         if (!cnvsimg) {
             console.error('Failed to create CanvasKit image from encoded data')
-            return
+            return null
         }
         return cnvsimg
     }
 
-    get paint() {
-        return this.fillPaint
+    get paint(): Paint {
+        return this.fillPaint!
     }
-    get stroke() {
-        return this.strokePaint
-    }
-
-    protected isShader(obj): boolean {
-        return obj != null && typeof obj === 'object' && obj.constructor?.name === 'Shader'
+    get stroke(): Paint {
+        return this.strokePaint!
     }
 
-    protected isColor(fill): boolean {
+    protected isShader(obj: unknown): boolean {
+        return obj != null && typeof obj === 'object' && (obj as Record<string, unknown>).constructor !== undefined && (obj as { constructor: { name: string } }).constructor.name === 'Shader'
+    }
+
+    protected isColor(fill: unknown): boolean {
         return fill instanceof Float32Array
     }
 
     public destroy() {
-        this.fillPaint.delete()
-        this.strokePaint.delete()
+        this.fillPaint?.delete()
+        this.strokePaint?.delete()
 
         this.fillPaint = null
         this.strokePaint = null

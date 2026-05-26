@@ -1,3 +1,4 @@
+
 import { Canvas, Paint, Rect } from 'canvaskit-wasm'
 import SceneNode from './Scene'
 import type Shape from '@lib/shapes/base/Shape'
@@ -5,6 +6,7 @@ import { FlexLayout, GridLayout, LayoutConstraints } from './nodeTypes'
 import { applyColumnLayout, applyGridLayout, applyRowLayout } from './LayoutEngine'
 import PaintManager from '@lib/core/PaintManager'
 import container from '@lib/core/DependencyManager'
+import { Properties } from '@lib/types/shapes'
 
 class ContainerNode extends SceneNode {
     children: SceneNode[]
@@ -47,6 +49,37 @@ class ContainerNode extends SceneNode {
 
     getLayoutConstraints() {
         return this.layoutConstraints
+    }
+
+    override getProperties(): Properties {
+        if (this.shape) {
+            return {
+                ...this.shape.getProperties(),
+                layoutConstraints: this.layoutConstraints
+            }
+        }
+
+        // Minimal valid Properties for a shapeless container
+        return {
+            transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, anchorPoint: null },
+            size: { width: 0, height: 0 },
+            style: {
+                fill: { color: { type: 'solid', color: '#ffffff' }, opacity: 1 },
+                stroke: { color: { type: 'solid', color: '#000000' }, opacity: 1, width: 0 },
+            },
+            layoutConstraints: this.layoutConstraints,
+        }
+    }
+
+    override setProperties(props: Properties): void {
+        if (this.shape) {
+            this.shape.setProperties(props)
+        }
+
+        if (props.layoutConstraints) {
+            this.layoutConstraints = props.layoutConstraints
+            this.applyLayout()
+        }
     }
 
     applyLayout(): void {
@@ -107,7 +140,7 @@ class ContainerNode extends SceneNode {
         const { padding } = this.layoutConstraints
 
         if (!padding) return
-        const bounds = this.shape.getDim()
+        const bounds = this.shape!.getDim()
 
         const fillPaint = this.paintManager.paint
 
@@ -173,7 +206,7 @@ class ContainerNode extends SceneNode {
 
         if (gap <= 0) return
 
-        const containerBounds = this.shape.getDim()
+        const containerBounds = this.shape!.getDim()
         const paddingLeft = padding?.left || 0
         const paddingRight = padding?.right || 0
         const paddingTop = padding?.top || 0
@@ -248,7 +281,7 @@ class ContainerNode extends SceneNode {
             }
         }
     }
-    
+
     destroy() {
         // Detach from parent — never destroy the parent
         if (this.parent) {
