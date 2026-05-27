@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
     Triangle,
     Lasso,
@@ -22,109 +23,112 @@ import Button from '../ui/Button'
 import MoreButton from '@ui/MoreButton'
 import { useToolStore } from '@hooks/useTool'
 
+const SelectTools = [
+    {
+        toolName: 'select',
+        icon: <MousePointer2 className={'w-4 h-4'} />,
+        tip: 'Select',
+    },
+    {
+        toolName: 'freeform',
+        icon: <Lasso className={'w-4 h-4'} />,
+        tip: 'Freeform',
+    },
+    {
+        toolName: 'scale',
+        icon: <Maximize2 className={'w-4 h-4'} />,
+        tip: 'Scale',
+    },
+]
+
+const GroupTools = [
+    {
+        toolName: 'row',
+        icon: <AlignHorizontalJustifyCenter className="w-4 h-4" />,
+        tip: 'Row',
+    },
+    {
+        toolName: 'column',
+        icon: <AlignVerticalJustifyCenter className="w-4 h-4" />,
+        tip: 'Column',
+    },
+    {
+        toolName: 'grid',
+        icon: <Grid3X3 className="w-4 h-4" />,
+        tip: 'Grid',
+    },
+    {
+        toolName: 'frame',
+        icon: <Frame className="w-4 h-4" />,
+        tip: 'Frame',
+    },
+]
+
+const ShapeTools = [
+    {
+        toolName: 'rect',
+        icon: <Square className={'w-4 h-4'} />,
+        tip: 'Rect',
+    },
+    {
+        toolName: 'oval',
+        icon: <Circle className={'w-4 h-4'} />,
+        tip: 'Circle',
+    },
+    {
+        toolName: 'polygon',
+        icon: <Triangle className={'w-4 h-4'} />,
+        tip: 'Polygon',
+    },
+    {
+        toolName: 'star',
+        icon: <Star className={'w-4 h-4'} />,
+        tip: 'Star',
+    },
+    {
+        toolName: 'img',
+        icon: <Image className={'w-4 h-4'} />,
+        tip: 'Image',
+    },
+]
+
+const TextTool = {
+    toolName: 'text',
+    icon: <Type className={'w-4 h-4'} />,
+    tip: 'Text',
+}
+
+const VectorTools = [
+    {
+        toolName: 'line',
+        icon: <Minus className={'w-4 h-4'} />,
+        tip: 'Line',
+    },
+    {
+        toolName: 'path',
+        icon: <PenTool className={'w-4 h-4'} />,
+        tip: 'Pen',
+    },
+    {
+        toolName: 'bezier',
+        icon: <Spline className={'w-4 h-4'} />,
+        tip: 'Bézier',
+    },
+    {
+        toolName: 'edit',
+        icon: <MousePointerClick className={'w-4 h-4'} />,
+        tip: 'Edit Points',
+    },
+]
+
 function ToolBar() {
-    const SelectTools = [
-        {
-            toolName: 'select',
-            icon: <MousePointer2 className={'w-4 h-4'} />,
-            tip: 'Select',
-        },
-        {
-            toolName: 'freeform',
-            icon: <Lasso className={'w-4 h-4'} />,
-            tip: 'Freeform',
-        },
-        {
-            toolName: 'scale',
-            icon: <Maximize2 className={'w-4 h-4'} />,
-            tip: 'Scale',
-        },
-    ]
-
-    const GroupTools = [
-        {
-            toolName: 'row',
-            icon: <AlignHorizontalJustifyCenter className="w-4 h-4" />,
-            tip: 'Row',
-        },
-        {
-            toolName: 'column',
-            icon: <AlignVerticalJustifyCenter className="w-4 h-4" />,
-            tip: 'Column',
-        },
-        {
-            toolName: 'grid',
-            icon: <Grid3X3 className="w-4 h-4" />,
-            tip: 'Grid',
-        },
-        {
-            toolName: 'frame',
-            icon: <Frame className="w-4 h-4" />,
-            tip: 'Frame',
-        },
-    ]
-
-    const ShapeTools = [
-        {
-            toolName: 'rect',
-            icon: <Square className={'w-4 h-4'} />,
-            tip: 'Rect',
-        },
-        {
-            toolName: 'oval',
-            icon: <Circle className={'w-4 h-4'} />,
-            tip: 'Circle',
-        },
-        {
-            toolName: 'polygon',
-            icon: <Triangle className={'w-4 h-4'} />,
-            tip: 'Polygon',
-        },
-        {
-            toolName: 'star',
-            icon: <Star className={'w-4 h-4'} />,
-            tip: 'Star',
-        },
-        {
-            toolName: 'img',
-            icon: <Image className={'w-4 h-4'} />,
-            tip: 'Image',
-        },
-    ]
-
-    const TextTool = {
-        toolName: 'text',
-        icon: <Type className={'w-4 h-4'} />,
-        tip: 'Text',
-    }
-
-    const VectorTools = [
-        {
-            toolName: 'line',
-            icon: <Minus className={'w-4 h-4'} />,
-            tip: 'Line',
-        },
-        {
-            toolName: 'path',
-            icon: <PenTool className={'w-4 h-4'} />,
-            tip: 'Pen',
-        },
-        {
-            toolName: 'bezier',
-            icon: <Spline className={'w-4 h-4'} />,
-            tip: 'Bézier',
-        },
-        {
-            toolName: 'edit',
-            icon: <MousePointerClick className={'w-4 h-4'} />,
-            tip: 'Edit Points',
-        },
-    ]
 
     const { setTool, tool: currentTool } = useToolStore()
-    if (!currentTool) {
-        setTool(SelectTools[0], 'select')
-    }
+    useEffect(() => {
+        if (!currentTool) {
+            setTool(SelectTools[0], 'select')
+        }
+    }, [ currentTool, setTool])
 
     return (
         <div className={'toolbar'}>
