@@ -163,14 +163,6 @@ class PText extends Shape {
         return x >= 0 && x <= dim.width && y >= 0 && y <= dim.height
     }
 
-    override getPath(): Path | null {
-        if (!this.resource) return null
-        const dim = this.getDim()
-        const rect = this.resource.canvasKit.XYWHRect(0, 0, dim.width, dim.height)
-        const path = new this.resource.canvasKit.Path()
-        path.addRect(rect)
-        return path
-    }
 
     override draw(canvas: Canvas): void {
         if (!this.resource || !this.paragraph) return
@@ -326,6 +318,15 @@ class PText extends Shape {
 
         if (shiftKey) this.selectionEnd = this.cursor.cursorPosIndex
         this.setUpParagraph()
+    }
+
+    override getPath(): Path | null {
+        if (!this.resource) return null
+        const ck = this.resource.canvasKit
+        const dim = this.getDim()
+        const path = new ck.Path()
+        path.addRect(ck.XYWHRect(0, 0, dim.width, dim.height))
+        return path
     }
 
     override cleanUp(): void {

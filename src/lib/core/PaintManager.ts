@@ -7,13 +7,11 @@ class PaintManager {
     private fillPaint: Paint | null = null
     private strokePaint: Paint | null = null
     private paintCache: PCache<Paint>
-    shaderCache: PCache<Shader>
     imageCache: PCache<CanvasKitImage>
     private transientShaders: Shader[] = []
 
     constructor() {
         this.paintCache = new PCache<Paint>()
-        this.shaderCache = new PCache<Shader>()
         this.imageCache = new PCache<CanvasKitImage>()
         this.setUpPaint()
     }
@@ -58,59 +56,37 @@ class PaintManager {
             }
             case 'linear': {
                 const grad = fill as LinearGradient
-                const stopsKey = grad.stops.map(s => `${s.color}@${s.offset}`).join('|')
-                const baseKey = `linear-base:${stopsKey}`
-                
-                let baseShader = this.shaderCache.get(baseKey)
-                if (!baseShader) {
-                    baseShader = ck.Shader.MakeLinearGradient(
-                        [0, 0], [1, 1], // Normalized
-                        grad.stops.map(s => ck.parseColorString(s.color)),
-                        grad.stops.map(s => s.offset),
-                        ck.TileMode.Clamp
-                    )
-                    this.shaderCache.set(baseKey, baseShader)
-                }
 
-                // Map normalized 0-1 coords to target pixel coords
+                // Compute final pixel coordinates directly
                 const x1 = (grad.x1 / 100) * size.width
                 const y1 = (grad.y1 / 100) * size.height
                 const x2 = (grad.x2 / 100) * size.width
                 const y2 = (grad.y2 / 100) * size.height
 
-                const matrix = ck.Matrix.multiply(
-                    ck.Matrix.translated(x1, y1),
-                    ck.Matrix.scaled(x2 - x1, y2 - y1)
+                const shader = ck.Shader.MakeLinearGradient(
+                    [x1, y1], [x2, y2],
+                    grad.stops.map(s => ck.parseColorString(s.color)),
+                    grad.stops.map(s => s.offset),
+                    ck.TileMode.Clamp
                 )
-
-                return this.registerTransientShader(baseShader.withLocalMatrix(matrix))
+                if (!shader) return null
+                return this.registerTransientShader(shader)
             }
             case 'radial': {
                 const grad = fill as RadialGradient
-                const stopsKey = grad.stops.map(s => `${s.color}@${s.offset}`).join('|')
-                const baseKey = `radial-base:${stopsKey}`
-
-                let baseShader = this.shaderCache.get(baseKey)
-                if (!baseShader) {
-                    baseShader = ck.Shader.MakeRadialGradient(
-                        [0, 0], 1,
-                        grad.stops.map(s => ck.parseColorString(s.color)),
-                        grad.stops.map(s => s.offset),
-                        ck.TileMode.Clamp
-                    )
-                    this.shaderCache.set(baseKey, baseShader)
-                }
 
                 const cx = (grad.cx / 100) * size.width
                 const cy = (grad.cy / 100) * size.height
                 const radius = (grad.radius / 100) * Math.max(size.width, size.height)
 
-                const matrix = ck.Matrix.multiply(
-                    ck.Matrix.translated(cx, cy),
-                    ck.Matrix.scaled(radius, radius)
+                const shader = ck.Shader.MakeRadialGradient(
+                    [cx, cy], radius,
+                    grad.stops.map(s => ck.parseColorString(s.color)),
+                    grad.stops.map(s => s.offset),
+                    ck.TileMode.Clamp
                 )
-
-                return this.registerTransientShader(baseShader.withLocalMatrix(matrix))
+                if (!shader) return null
+                return this.registerTransientShader(shader)
             }
             case 'image': {
                 const { imageData, scaleMode } = fill as ImageFill
@@ -122,19 +98,15 @@ class PaintManager {
                 }
                 if (!cnvsImage) return null
 
-                const baseKey = `image-base:${imageData.name}`
-                let baseShader = this.shaderCache.get(baseKey)
-                if (!baseShader) {
-                    baseShader = cnvsImage.makeShaderOptions(
-                        ck.TileMode.Clamp, ck.TileMode.Clamp,
-                        ck.FilterMode.Linear, ck.MipmapMode.Linear,
-                        ck.Matrix.identity()
-                    )
-                    this.shaderCache.set(baseKey, baseShader)
-                }
-
                 const matrix = this.calculateImageMatrix(size, cnvsImage, scaleMode)
-                return this.registerTransientShader(baseShader.withLocalMatrix(matrix))
+
+                const shader = cnvsImage.makeShaderOptions(
+                    ck.TileMode.Clamp, ck.TileMode.Clamp,
+                    ck.FilterMode.Linear, ck.MipmapMode.Linear,
+                    matrix
+                )
+                if (!shader) return null
+                return this.registerTransientShader(shader)
             }
             case 'pattern': return null
             default: return ck.parseColorString('#000')
@@ -257,7 +229,8 @@ class PaintManager {
     }
 
     protected isShader(obj: unknown): boolean {
-        return obj != null && typeof obj === 'object' && (obj as Record<string, unknown>).constructor !== undefined && (obj as { constructor: { name: string } }).constructor.name === 'Shader'
+        // Duck-type: not null, is an object, but not a Float32Array (Color)
+        return obj != null && typeof obj === 'object' && !(obj instanceof Float32Array)
     }
 
     protected isColor(fill: unknown): boolean {

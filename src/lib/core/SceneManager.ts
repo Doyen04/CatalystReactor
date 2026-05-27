@@ -12,10 +12,10 @@ class SceneManager {
     private shapeModifier: ShapeModifier
     private shapeManager: ShapeManager
 
-    constructor(shapeModifier: ShapeModifier) {
+    constructor(shapeModifier: ShapeModifier, shapeManager: ShapeManager) {
         this.scene = new ContainerNode(null, null)
         this.shapeModifier = shapeModifier
-        this.shapeManager = container.resolve('shapeManager')
+        this.shapeManager = shapeManager
     }
 
     getScene(): SceneNode {

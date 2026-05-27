@@ -5,6 +5,7 @@ import EngineStateStore from '@lib/core/EngineStateStore'
 interface SceneStore {
     selectedShapeId: string | null
     currentShapeProperties: Properties | null
+    gridSize: number
     setSelectedShapeId: (id: string | null) => void
     setCurrentShapeProperties: (properties: Properties | null) => void
     updateProperty: (key: string, value: unknown) => void
@@ -14,6 +15,7 @@ interface SceneStore {
 export const useSceneStore = create<SceneStore>((set) => ({
     selectedShapeId: null,
     currentShapeProperties: null,
+    gridSize: 10,
 
     setSelectedShapeId: id => {
         set({ selectedShapeId: id })

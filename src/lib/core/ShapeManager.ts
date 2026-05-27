@@ -8,12 +8,17 @@ import ContainerNode from '@lib/node/ContainerNode'
 import ShapeNode from '@lib/node/ShapeNode'
 import HistoryManager, { UpdateShapeAction } from './HistoryManager'
 import EngineStateStore from './EngineStateStore'
+import SnapManager, { SnapResult } from './SnapManager'
+import CanvasKitResources from './CanvasKitResource'
 
 class ShapeManager {
     private scene: SceneNode | null = null
     private shapeModifier: ShapeModifier | null
     private throttledUpdate: (properties: Properties) => void
     private initialProps: Properties | null = null
+    private activeSnapResult: SnapResult | null = null
+    private snapGuidePaint: any = null
+    private snapGuideDash: any = null
 
     constructor(shapeModifier: ShapeModifier) {
         this.scene = null
@@ -42,10 +47,30 @@ class ShapeManager {
     drag(dragStart: Coord, e: MouseEvent) {
         if (!this.scene) return
 
+        let mouseX = e.offsetX
+        let mouseY = e.offsetY
+
+        // Handle snapping
+        this.activeSnapResult = SnapManager.getInstance().getSnapResult(
+            this.scene,
+            { x: mouseX, y: mouseY },
+            useSceneStore.getState().gridSize
+        )
+
+        if (this.activeSnapResult && this.activeSnapResult.snapped) {
+            mouseX = this.activeSnapResult.x
+            mouseY = this.activeSnapResult.y
+        }
+
+        // Patch the event for the modifier — only override offsetX/offsetY
+        const snappedEvent = new MouseEvent(e.type, e)
+        Object.defineProperty(snappedEvent, 'offsetX', { value: mouseX })
+        Object.defineProperty(snappedEvent, 'offsetY', { value: mouseY })
+
         if (this.shapeModifier?.hasSelectedHandle()) {
-            this.shapeModifier?.dragHandle(dragStart, e)
+            this.shapeModifier?.dragHandle(dragStart, snappedEvent)
         } else {
-            this.shapeModifier?.dragShape(dragStart, e)
+            this.shapeModifier?.dragShape(dragStart, snappedEvent)
         }
 
         this.shapeModifier?.update()
@@ -93,6 +118,7 @@ class ShapeManager {
         //remeber this line
         EngineStateStore.getInstance().notify()
         this.initialProps = null
+        this.activeSnapResult = null
     }
 
     handleTinyShapes(): void {
@@ -289,6 +315,45 @@ class ShapeManager {
     }
     setSuppressHandles(suppress: boolean) {
         this.shapeModifier?.setSuppressHandles(suppress)
+    }
+
+    draw(canvas: any) {
+        if (!this.shapeModifier) return
+        this.shapeModifier.draw(canvas)
+        this.drawSnapGuides(canvas)
+    }
+
+    private drawSnapGuides(canvas: any) {
+        if (!this.activeSnapResult || !this.activeSnapResult.snapped || !this.activeSnapResult.guides.length) return
+        
+        const ck = CanvasKitResources.getInstance()?.canvasKit
+        if (!ck) return
+
+        // Lazily create and cache the snap guide paint + dash effect
+        if (!this.snapGuidePaint) {
+            this.snapGuidePaint = new ck.Paint()
+            this.snapGuidePaint.setStyle(ck.PaintStyle.Stroke)
+            this.snapGuidePaint.setStrokeWidth(1)
+            this.snapGuidePaint.setAntiAlias(true)
+            
+            this.snapGuideDash = ck.PathEffect.MakeDash([5, 5], 0)
+            this.snapGuidePaint.setPathEffect(this.snapGuideDash)
+        }
+
+        for (const guide of this.activeSnapResult.guides) {
+            this.snapGuidePaint.setColor(guide.isGrid ? ck.Color(0, 255, 255, 0.5) : ck.Color(255, 0, 255, 0.8))
+            
+            const path = new ck.Path()
+            if (guide.orientation === 'horizontal') {
+                path.moveTo(-10000, guide.pos)
+                path.lineTo(10000, guide.pos)
+            } else {
+                path.moveTo(guide.pos, -10000)
+                path.lineTo(guide.pos, 10000)
+            }
+            canvas.drawPath(path, this.snapGuidePaint)
+            path.delete()
+        }
     }
 }
 

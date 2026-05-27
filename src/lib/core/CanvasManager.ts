@@ -35,7 +35,7 @@ class CanvasManager {
         this.shapeManager = new ShapeManager(this.shapeModifier)
         container.register('shapeManager', this.shapeManager)
 
-        this.sceneManager = new SceneManager(this.shapeModifier)
+        this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager)
         container.register('sceneManager', this.sceneManager)
 
         this.inputManager = new InputManager(canvas)

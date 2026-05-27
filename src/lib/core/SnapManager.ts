@@ -10,11 +10,17 @@ export interface SnapPoint {
     sourceId?: string
 }
 
+export interface SnapGuide {
+    pos: number
+    orientation: 'horizontal' | 'vertical'
+    isGrid: boolean
+}
+
 export interface SnapResult {
     snapped: boolean
     x: number
     y: number
-    guides: { x?: number; y?: number }[]
+    guides: SnapGuide[]
 }
 
 export class SnapManager {
@@ -42,13 +48,20 @@ export class SnapManager {
 
     /**
      * Finds the best snap position for a target coordinate given a set of shapes.
+     * targetPos should be in world/screen space (e.g. e.offsetX, e.offsetY).
      */
-    snap(targetX: number, targetY: number, nodes: SceneNode[], excludeId?: string): SnapResult {
+    getSnapResult(targetNode: SceneNode, targetPos: Coord, gridSize: number = 10): SnapResult {
+        this.gridSize = gridSize
+        const targetX = targetPos.x
+        const targetY = targetPos.y
+        const nodes = targetNode.getParent()?.getChildren() || []
+        const excludeId = targetNode.id
+
         let bestX = targetX
         let bestY = targetY
         let snappedX = false
         let snappedY = false
-        const guides: { x?: number; y?: number }[] = []
+        const guides: SnapGuide[] = []
 
         // 1. Grid Snapping
         if (this.enableGrid) {
@@ -58,16 +71,16 @@ export class SnapManager {
             if (Math.abs(targetX - gridX) <= this.snapDistance) {
                 bestX = gridX
                 snappedX = true
-                guides.push({ x: gridX })
+                guides.push({ pos: gridX, orientation: 'vertical', isGrid: true })
             }
             if (Math.abs(targetY - gridY) <= this.snapDistance) {
                 bestY = gridY
                 snappedY = true
-                guides.push({ y: gridY })
+                guides.push({ pos: gridY, orientation: 'horizontal', isGrid: true })
             }
         }
 
-        // 2. Shape Snapping (only if not snapped fully to grid or if closer)
+        // 2. Shape Snapping (overrides grid when closer)
         if (this.enableShapes) {
             for (const node of nodes) {
                 if (node.id === excludeId) continue
@@ -79,10 +92,11 @@ export class SnapManager {
                         if (Math.abs(targetX - pt.x) <= this.snapDistance) {
                             bestX = pt.x
                             snappedX = true
-                            // Update or add guide
-                            const existing = guides.find(g => g.x !== undefined)
-                            if (existing) existing.x = pt.x
-                            else guides.push({ x: pt.x })
+                            // Replace or add guide
+                            const index = guides.findIndex(g => g.orientation === 'vertical')
+                            const guide: SnapGuide = { pos: pt.x, orientation: 'vertical', isGrid: false }
+                            if (index !== -1) guides[index] = guide
+                            else guides.push(guide)
                         }
                     }
 
@@ -91,9 +105,10 @@ export class SnapManager {
                         if (Math.abs(targetY - pt.y) <= this.snapDistance) {
                             bestY = pt.y
                             snappedY = true
-                            const existing = guides.find(g => g.y !== undefined)
-                            if (existing) existing.y = pt.y
-                            else guides.push({ y: pt.y })
+                            const index = guides.findIndex(g => g.orientation === 'horizontal')
+                            const guide: SnapGuide = { pos: pt.y, orientation: 'horizontal', isGrid: false }
+                            if (index !== -1) guides[index] = guide
+                            else guides.push(guide)
                         }
                     }
                 }
@@ -108,24 +123,38 @@ export class SnapManager {
         }
     }
 
+    /**
+     * Get snap points for a node in WORLD space.
+     * Transforms the node's local bounding box corners/edges/center through
+     * the node's world matrix so they can be compared against world-space mouse coords.
+     */
     private getNodesSnapPoints(node: SceneNode): SnapPoint[] {
         const props = node.getProperties()
         if (!props) return []
 
-        const { x, y } = props.transform
         const { width, height } = props.size
         const id = node.id
 
-        return [
-            { x, y, type: 'corner', sourceId: id }, // Top-left
-            { x: x + width, y, type: 'corner', sourceId: id }, // Top-right
-            { x, y: y + height, type: 'corner', sourceId: id }, // Bottom-left
-            { x: x + width, y: y + height, type: 'corner', sourceId: id }, // Bottom-right
-            { x: x + width / 2, y: y + height / 2, type: 'center', sourceId: id }, // Center
-            { x: x + width / 2, y, type: 'edge', sourceId: id }, // Top-mid
-            { x: x + width / 2, y: y + height, type: 'edge', sourceId: id }, // Bottom-mid
-            { x, y: y + height / 2, type: 'edge', sourceId: id }, // Left-mid
-            { x: x + width, y: y + height / 2, type: 'edge', sourceId: id } // Right-mid
+        // Generate points in the node's local space (origin at 0,0)
+        // then transform to world space via node.localToWorld()
+        const localPoints: { lx: number, ly: number, type: SnapPoint['type'] }[] = [
+            { lx: 0, ly: 0, type: 'corner' },              // Top-left
+            { lx: width, ly: 0, type: 'corner' },           // Top-right
+            { lx: 0, ly: height, type: 'corner' },          // Bottom-left
+            { lx: width, ly: height, type: 'corner' },      // Bottom-right
+            { lx: width / 2, ly: height / 2, type: 'center' }, // Center
+            { lx: width / 2, ly: 0, type: 'edge' },         // Top-mid
+            { lx: width / 2, ly: height, type: 'edge' },    // Bottom-mid
+            { lx: 0, ly: height / 2, type: 'edge' },        // Left-mid
+            { lx: width, ly: height / 2, type: 'edge' },    // Right-mid
         ]
+
+        return localPoints.map(p => {
+            const world = node.localToWorld(p.lx, p.ly)
+            return { x: world.x, y: world.y, type: p.type, sourceId: id }
+        })
     }
 }
+
+export default SnapManager
+

@@ -5,7 +5,7 @@ import { ColorProps } from '@lib/types/shapes'
 import Input from '@ui/Input'
 import { useCanvasManagerStore } from '@hooks/useCanvasManager'
 import { Hexagon } from 'lucide-react'
-import { Section,  GRID2X2 } from '@ui/Section'
+import { Section, GRID2X2 } from '@ui/Section'
 import LockButton from '@ui/LockedButton'
 import BorderRadius from '@ui/BorderRadius'
 import BorderRadiusAll from '@ui/BorderRadiusAll'
@@ -27,12 +27,12 @@ function PropertyBar() {
     const handlePropertyChange = (key: string, value: any): void => {
         if (!shapeManager || !currentShapeProperties) return
         const { transform, size, spikesRatio, arcSegment, sides, style, textStyle } = currentShapeProperties
-        
+
         if (key === 'top-left' || key === 'top-right' || key === 'bottom-left' || key === 'bottom-right' || key === 'radii') {
             shapeManager.updateBorderRadius(value, key)
             return
         }
-        
+
         // Transform properties (including rotation, scale, anchor)
         if (transform && (key === 'x' || key === 'y' || key === 'rotation' || key === 'scaleX' || key === 'scaleY')) {
             shapeManager.updateSubProperty('transform', key, value)
@@ -166,7 +166,7 @@ function PropertyBar() {
                                     {style.stroke.lineCap && (
                                         <div>
                                             <label className="text-xs text-gray-600">Line Cap</label>
-                                            <DropDownPicker 
+                                            <DropDownPicker
                                                 value={{ value: style.stroke.lineCap, label: style.stroke.lineCap }}
                                                 values={[
                                                     { value: 'butt', label: 'Butt' },
@@ -180,7 +180,7 @@ function PropertyBar() {
                                     {style.stroke.lineJoin && (
                                         <div>
                                             <label className="text-xs text-gray-600">Line Join</label>
-                                            <DropDownPicker 
+                                            <DropDownPicker
                                                 value={{ value: style.stroke.lineJoin, label: style.stroke.lineJoin }}
                                                 values={[
                                                     { value: 'miter', label: 'Miter' },
@@ -194,15 +194,15 @@ function PropertyBar() {
                                     {style.stroke.dashArray && (
                                         <div>
                                             <label className="text-xs text-gray-600">Dash Pattern</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 placeholder="e.g., 5,5 or 10,5,2,5"
-                                                defaultValue={style.stroke.dashArray.join(',')} 
+                                                defaultValue={style.stroke.dashArray.join(',')}
                                                 className="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs text-white"
                                                 onChange={(e) => {
                                                     const dashes = e.currentTarget.value.split(',').map(v => parseFloat(v.trim())).filter((v: number) => !isNaN(v))
                                                     handlePropertyChange('stroke_dashArray', dashes)
-                                                }} 
+                                                }}
                                             />
                                         </div>
                                     )}
@@ -232,7 +232,7 @@ function PropertyBar() {
                                     {textStyle.textAlign && (
                                         <div>
                                             <label className="text-xs text-gray-600">Text Align</label>
-                                            <DropDownPicker 
+                                            <DropDownPicker
                                                 value={{ value: textStyle.textAlign, label: textStyle.textAlign }}
                                                 values={[
                                                     { value: 'left', label: 'Left' },
@@ -247,7 +247,7 @@ function PropertyBar() {
                                     {textStyle.fontFamilies && textStyle.fontFamilies.length > 0 && (
                                         <div>
                                             <label className="text-xs text-gray-600">Font Family</label>
-                                            <DropDownPicker 
+                                            <DropDownPicker
                                                 value={{ value: textStyle.fontFamilies[0] || 'Arial', label: textStyle.fontFamilies[0] || 'Arial' }}
                                                 values={textStyle.fontFamilies.map((font: string) => ({ value: font, label: font }))}
                                                 onValueChange={(value: string) => handlePropertyChange('text_fontFamilies', [value])}
@@ -271,105 +271,105 @@ function PropertyBar() {
                                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     const lc = layoutConstraints as any;
                                     return (
-                                    <div className="space-y-3">
-                                        {lc.type === 'row' || lc.type === 'column' ? (
-                                            <>
-                                                {lc.flexDirection && (
-                                                    <div>
-                                                        <label className="text-xs text-gray-600">Direction</label>
-                                                        <DropDownPicker 
-                                                            value={{ value: lc.flexDirection, label: lc.flexDirection }}
-                                                            values={[
-                                                                { value: 'row', label: 'Row' },
-                                                                { value: 'column', label: 'Column' }
-                                                            ]}
-                                                            onValueChange={(value: string) => handlePropertyChange('layout_flexDirection', value)}
-                                                        />
+                                        <div className="space-y-3">
+                                            {lc.type === 'row' || lc.type === 'column' ? (
+                                                <>
+                                                    {lc.flexDirection && (
+                                                        <div>
+                                                            <label className="text-xs text-gray-600">Direction</label>
+                                                            <DropDownPicker
+                                                                value={{ value: lc.flexDirection, label: lc.flexDirection }}
+                                                                values={[
+                                                                    { value: 'row', label: 'Row' },
+                                                                    { value: 'column', label: 'Column' }
+                                                                ]}
+                                                                onValueChange={(value: string) => handlePropertyChange('layout_flexDirection', value)}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    {lc.flexWrap && (
+                                                        <div>
+                                                            <label className="text-xs text-gray-600">Wrap</label>
+                                                            <DropDownPicker
+                                                                value={{ value: lc.flexWrap, label: lc.flexWrap }}
+                                                                values={[
+                                                                    { value: 'nowrap', label: 'No Wrap' },
+                                                                    { value: 'wrap', label: 'Wrap' }
+                                                                ]}
+                                                                onValueChange={(value: string) => handlePropertyChange('layout_flexWrap', value)}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </>
+                                            ) : null}
+                                            {lc.gap !== undefined && (
+                                                <Input type="number" title="Gap" value={lc.gap} onChange={value => handlePropertyChange('layout_gap', value)} />
+                                            )}
+                                            {lc.padding !== undefined && (
+                                                typeof lc.padding === 'number' ? (
+                                                    <Input type="number" title="Padding" value={lc.padding} onChange={value => handlePropertyChange('layout_padding', value)} />
+                                                ) : (
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <Input type="number" title="Pad Top" value={lc.padding?.top ?? 0} onChange={value => handlePropertyChange('layout_padding_top', value)} />
+                                                        <Input type="number" title="Pad Right" value={lc.padding?.right ?? 0} onChange={value => handlePropertyChange('layout_padding_right', value)} />
+                                                        <Input type="number" title="Pad Bottom" value={lc.padding?.bottom ?? 0} onChange={value => handlePropertyChange('layout_padding_bottom', value)} />
+                                                        <Input type="number" title="Pad Left" value={lc.padding?.left ?? 0} onChange={value => handlePropertyChange('layout_padding_left', value)} />
                                                     </div>
-                                                )}
-                                                {lc.flexWrap && (
-                                                    <div>
-                                                        <label className="text-xs text-gray-600">Wrap</label>
-                                                        <DropDownPicker 
-                                                            value={{ value: lc.flexWrap, label: lc.flexWrap }}
-                                                            values={[
-                                                                { value: 'nowrap', label: 'No Wrap' },
-                                                                { value: 'wrap', label: 'Wrap' }
-                                                            ]}
-                                                            onValueChange={(value: string) => handlePropertyChange('layout_flexWrap', value)}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </>
-                                        ) : null}
-                                        {lc.gap !== undefined && (
-                                            <Input type="number" title="Gap" value={lc.gap} onChange={value => handlePropertyChange('layout_gap', value)} />
-                                        )}
-                                        {lc.padding !== undefined && (
-                                            typeof lc.padding === 'number' ? (
-                                                <Input type="number" title="Padding" value={lc.padding} onChange={value => handlePropertyChange('layout_padding', value)} />
-                                            ) : (
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <Input type="number" title="Pad Top" value={lc.padding?.top ?? 0} onChange={value => handlePropertyChange('layout_padding_top', value)} />
-                                                    <Input type="number" title="Pad Right" value={lc.padding?.right ?? 0} onChange={value => handlePropertyChange('layout_padding_right', value)} />
-                                                    <Input type="number" title="Pad Bottom" value={lc.padding?.bottom ?? 0} onChange={value => handlePropertyChange('layout_padding_bottom', value)} />
-                                                    <Input type="number" title="Pad Left" value={lc.padding?.left ?? 0} onChange={value => handlePropertyChange('layout_padding_left', value)} />
+                                                )
+                                            )}
+                                            {lc.mainAlign && (
+                                                <div>
+                                                    <label className="text-xs text-gray-600">Main Align</label>
+                                                    <DropDownPicker
+                                                        value={{ value: lc.mainAlign, label: lc.mainAlign }}
+                                                        values={[
+                                                            { value: 'start', label: 'Start' },
+                                                            { value: 'center', label: 'Center' },
+                                                            { value: 'end', label: 'End' },
+                                                            { value: 'space-between', label: 'Space Between' }
+                                                        ]}
+                                                        onValueChange={(value: string) => handlePropertyChange('layout_mainAlign', value)}
+                                                    />
                                                 </div>
-                                            )
-                                        )}
-                                        {lc.mainAlign && (
-                                            <div>
-                                                <label className="text-xs text-gray-600">Main Align</label>
-                                                <DropDownPicker 
-                                                    value={{ value: lc.mainAlign, label: lc.mainAlign }}
-                                                    values={[
-                                                        { value: 'start', label: 'Start' },
-                                                        { value: 'center', label: 'Center' },
-                                                        { value: 'end', label: 'End' },
-                                                        { value: 'space-between', label: 'Space Between' }
-                                                    ]}
-                                                    onValueChange={(value: string) => handlePropertyChange('layout_mainAlign', value)}
-                                                />
-                                            </div>
-                                        )}
-                                        {lc.crossAlign && (
-                                            <div>
-                                                <label className="text-xs text-gray-600">Cross Align</label>
-                                                <DropDownPicker 
-                                                    value={{ value: lc.crossAlign, label: lc.crossAlign }}
-                                                    values={[
-                                                        { value: 'start', label: 'Start' },
-                                                        { value: 'center', label: 'Center' },
-                                                        { value: 'end', label: 'End' }
-                                                    ]}
-                                                    onValueChange={(value: string) => handlePropertyChange('layout_crossAlign', value)}
-                                                />
-                                            </div>
-                                        )}
-                                        {lc.type === 'grid' && (
-                                            <>
-                                                {lc.gridRowGap !== undefined && (
-                                                    <Input type="number" title="Row Gap" value={lc.gridRowGap} onChange={value => handlePropertyChange('layout_gridRowGap', value)} />
-                                                )}
-                                                {lc.gridColumnGap !== undefined && (
-                                                    <Input type="number" title="Column Gap" value={lc.gridColumnGap} onChange={value => handlePropertyChange('layout_gridColumnGap', value)} />
-                                                )}
-                                                {lc.gridAutoFlow && (
-                                                    <div>
-                                                        <label className="text-xs text-gray-600">Auto Flow</label>
-                                                        <DropDownPicker 
-                                                            value={{ value: lc.gridAutoFlow, label: lc.gridAutoFlow }}
-                                                            values={[
-                                                                { value: 'row', label: 'Row' },
-                                                                { value: 'column', label: 'Column' }
-                                                            ]}
-                                                            onValueChange={(value: string) => handlePropertyChange('layout_gridAutoFlow', value)}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
+                                            )}
+                                            {lc.crossAlign && (
+                                                <div>
+                                                    <label className="text-xs text-gray-600">Cross Align</label>
+                                                    <DropDownPicker
+                                                        value={{ value: lc.crossAlign, label: lc.crossAlign }}
+                                                        values={[
+                                                            { value: 'start', label: 'Start' },
+                                                            { value: 'center', label: 'Center' },
+                                                            { value: 'end', label: 'End' }
+                                                        ]}
+                                                        onValueChange={(value: string) => handlePropertyChange('layout_crossAlign', value)}
+                                                    />
+                                                </div>
+                                            )}
+                                            {lc.type === 'grid' && (
+                                                <>
+                                                    {lc.gridRowGap !== undefined && (
+                                                        <Input type="number" title="Row Gap" value={lc.gridRowGap} onChange={value => handlePropertyChange('layout_gridRowGap', value)} />
+                                                    )}
+                                                    {lc.gridColumnGap !== undefined && (
+                                                        <Input type="number" title="Column Gap" value={lc.gridColumnGap} onChange={value => handlePropertyChange('layout_gridColumnGap', value)} />
+                                                    )}
+                                                    {lc.gridAutoFlow && (
+                                                        <div>
+                                                            <label className="text-xs text-gray-600">Auto Flow</label>
+                                                            <DropDownPicker
+                                                                value={{ value: lc.gridAutoFlow, label: lc.gridAutoFlow }}
+                                                                values={[
+                                                                    { value: 'row', label: 'Row' },
+                                                                    { value: 'column', label: 'Column' }
+                                                                ]}
+                                                                onValueChange={(value: string) => handlePropertyChange('layout_gridAutoFlow', value)}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
                                     );
                                 })()}
                             </Section>
@@ -472,7 +472,7 @@ function PropertyBar() {
                             )}
                         </Section>
                         <Section title="Export JSON">
-                            <button 
+                            <button
                                 className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-xs transition-colors"
                                 onClick={() => {
                                     console.log(currentShapeProperties)

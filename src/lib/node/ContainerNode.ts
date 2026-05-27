@@ -52,7 +52,7 @@ class ContainerNode extends SceneNode {
 
     override getProperties() {
         const props = this.shape ? this.shape.getProperties() : null
-        
+
         // Override to include layout constraints
         if (props) {
             return {
@@ -60,7 +60,7 @@ class ContainerNode extends SceneNode {
                 layoutConstraints: this.layoutConstraints
             }
         }
-        
+
         // For containers without a shape, create a minimal properties object
         return {
             transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 },
@@ -74,7 +74,7 @@ class ContainerNode extends SceneNode {
         if (this.shape) {
             this.shape.setProperties(props)
         }
-        
+
         // Update layout constraints if provided
         if (props.layoutConstraints) {
             this.layoutConstraints = props.layoutConstraints
@@ -281,7 +281,7 @@ class ContainerNode extends SceneNode {
             }
         }
     }
-    
+
     destroy() {
         // Detach from parent — never destroy the parent
         if (this.parent) {

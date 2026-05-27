@@ -1,5 +1,5 @@
 import Shape from '../base/Shape'
-import { Canvas, Font } from 'canvaskit-wasm'
+import { Canvas, Font, Path } from 'canvaskit-wasm'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
 interface SimpleTextStyle {
@@ -40,9 +40,9 @@ class SText extends Shape {
 
         // _style is the private rendering style for this internal text label.
         // It is intentionally separate from data.properties.textStyle (PTextStyle).
-        
+
         if (this.data.properties.text === undefined) {
-             this.data.properties.text = ""
+            this.data.properties.text = ""
         }
 
         if (this.resource && this.resource.canvasKit && this.resource.fontData && this.resource.fontData[0]) {
@@ -103,9 +103,9 @@ class SText extends Shape {
 
     private calculateTextDim(): void {
         if (!this.font || !this.text) {
-             this.TWidth = 0
-             this.THeight = 0
-             return
+            this.TWidth = 0
+            this.THeight = 0
+            return
         }
         const glyphs = this.font.getGlyphIDs(this.text)
         const widths = this.font.getGlyphWidths(glyphs)
@@ -129,22 +129,45 @@ class SText extends Shape {
 
         return { fill: this.paintManager.paint, stroke: this.paintManager.stroke }
     }
-
+    
     override getPath(): Path | null {
-        if (!this.resource) return null
-        const dim = this.getDim()
-        const rect = this.resource.canvasKit.XYWHRect(0, 0, dim.width, dim.height)
-        const path = new this.resource.canvasKit.Path()
-        path.addRect(rect)
-        return path
+        if (!this.resource || !this.font || !this.text) return null
+        const ck = this.resource.canvasKit
+        const typeface = this.font.getTypeface()
+        if (!typeface) return null
+
+        const glyphs = this.font.getGlyphIDs(this.text)
+        const widths = this.font.getGlyphWidths(glyphs)
+        const metrics = this.font.getMetrics()
+        const masterPath = new ck.Path()
+        
+        const baselineY = this.padding - metrics.ascent
+        let currentX = this.padding
+
+        for (let i = 0; i < glyphs.length; i++) {
+            const glyphPath = (typeface as any).getGlyphPath(glyphs[i])
+            if (glyphPath) {
+                const scale = this.textStyle.fontSize / (typeface as any).getUnitsPerEm()
+                const matrix = ck.Matrix.multiply(
+                    ck.Matrix.translated(currentX, baselineY),
+                    ck.Matrix.scaled(scale, -scale) 
+                )
+                glyphPath.transform(matrix)
+                masterPath.addPath(glyphPath)
+                glyphPath.delete()
+            }
+            currentX += widths[i]
+        }
+
+        return masterPath
     }
 
     override draw(canvas: Canvas): void {
         if (!this.resource) return
-        
+
         const dim = this.getDim()
         const { fill: fillShape, stroke } = this.setTextPaint([0, 0, 1, 1], [0, 0, 1, 1]) // Default blue
-        
+
         const rect = this.resource.canvasKit.XYWHRect(0, 0, dim.width, dim.height)
         const rrect = this.resource.canvasKit.RRectXY(rect, 3, 3)
         canvas.drawRRect(rrect, fillShape)
