@@ -14,6 +14,7 @@ export interface SnapGuide {
     pos: number
     orientation: 'horizontal' | 'vertical'
     isGrid: boolean
+    type: SnapPoint['type']
 }
 
 export interface SnapResult {
@@ -21,6 +22,7 @@ export interface SnapResult {
     x: number
     y: number
     guides: SnapGuide[]
+    indicators: SnapPoint[]
 }
 
 export class SnapManager {
@@ -62,6 +64,7 @@ export class SnapManager {
         let snappedX = false
         let snappedY = false
         const guides: SnapGuide[] = []
+        const indicators: SnapPoint[] = []
 
         // 1. Grid Snapping
         if (this.enableGrid) {
@@ -71,42 +74,50 @@ export class SnapManager {
             if (Math.abs(targetX - gridX) <= this.snapDistance) {
                 bestX = gridX
                 snappedX = true
-                guides.push({ pos: gridX, orientation: 'vertical', isGrid: true })
+                guides.push({ pos: gridX, orientation: 'vertical', isGrid: true, type: 'grid' })
             }
             if (Math.abs(targetY - gridY) <= this.snapDistance) {
                 bestY = gridY
                 snappedY = true
-                guides.push({ pos: gridY, orientation: 'horizontal', isGrid: true })
+                guides.push({ pos: gridY, orientation: 'horizontal', isGrid: true, type: 'grid' })
             }
         }
 
-        // 2. Shape Snapping (overrides grid when closer)
+        // 2. Shape Snapping
         if (this.enableShapes) {
             for (const node of nodes) {
                 if (node.id === excludeId) continue
                 
                 const snapPoints = this.getNodesSnapPoints(node)
                 for (const pt of snapPoints) {
-                    // Check X
-                    if (!snappedX || Math.abs(targetX - pt.x) < Math.abs(targetX - bestX)) {
-                        if (Math.abs(targetX - pt.x) <= this.snapDistance) {
+                    const distH = Math.abs(targetX - pt.x)
+                    const distV = Math.abs(targetY - pt.y)
+
+                    // Collect all available snap points as indicators
+                    if (distH <= this.snapDistance || distV <= this.snapDistance) {
+                        indicators.push(pt)
+                    }
+
+                    // Check X for actual coordinate snapping (best match)
+                    if (distH <= this.snapDistance) {
+                        if (!snappedX || distH < Math.abs(targetX - bestX)) {
                             bestX = pt.x
                             snappedX = true
-                            // Replace or add guide
+                            // For actual snapping, we keep the line guides
                             const index = guides.findIndex(g => g.orientation === 'vertical')
-                            const guide: SnapGuide = { pos: pt.x, orientation: 'vertical', isGrid: false }
+                            const guide: SnapGuide = { pos: pt.x, orientation: 'vertical', isGrid: false, type: pt.type }
                             if (index !== -1) guides[index] = guide
                             else guides.push(guide)
                         }
                     }
 
-                    // Check Y
-                    if (!snappedY || Math.abs(targetY - pt.y) < Math.abs(targetY - bestY)) {
-                        if (Math.abs(targetY - pt.y) <= this.snapDistance) {
+                    // Check Y for actual coordinate snapping (best match)
+                    if (distV <= this.snapDistance) {
+                        if (!snappedY || distV < Math.abs(targetY - bestY)) {
                             bestY = pt.y
                             snappedY = true
                             const index = guides.findIndex(g => g.orientation === 'horizontal')
-                            const guide: SnapGuide = { pos: pt.y, orientation: 'horizontal', isGrid: false }
+                            const guide: SnapGuide = { pos: pt.y, orientation: 'horizontal', isGrid: false, type: pt.type }
                             if (index !== -1) guides[index] = guide
                             else guides.push(guide)
                         }
@@ -119,7 +130,8 @@ export class SnapManager {
             snapped: snappedX || snappedY,
             x: bestX,
             y: bestY,
-            guides
+            guides,
+            indicators
         }
     }
 

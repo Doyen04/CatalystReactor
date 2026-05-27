@@ -12,8 +12,9 @@ export function applyRowLayout(shape: Shape, children: SceneNode[], layoutConstr
 
     // Calculate total width of all children
     const totalChildrenWidth = children.reduce((sum, child, index) => {
-        if (!child.hasShape()) return sum
-        return sum + child.getDim().width + (index > 0 ? gap : 0)
+        const dim = child.getDim()
+        if (!dim) return sum
+        return sum + dim.width + (index > 0 ? gap : 0)
     }, 0)
 
     const availableWidth = containerWidth - (padding?.left || 0) - (padding?.right || 0)
@@ -46,9 +47,10 @@ export function applyRowLayout(shape: Shape, children: SceneNode[], layoutConstr
     }
 
     children.forEach((child, index) => {
-        if (!child.hasShape()) return
+        const dim = child.getDim()
+        if (!dim) return
 
-        const childBounds = child.getDim()
+        const childBounds = dim
         let yPos: number
 
         // Calculate Y position based on crossAlign (cross axis = vertical for row)
@@ -108,8 +110,9 @@ export function applyColumnLayout(shape: Shape, children: SceneNode[], layoutCon
 
     // Calculate total height of all children
     const totalChildrenHeight = children.reduce((sum, child, index) => {
-        if (!child.hasShape()) return sum
-        return sum + child.getDim().height + (index > 0 ? gap : 0)
+        const dim = child.getDim()
+        if (!dim) return sum
+        return sum + dim.height + (index > 0 ? gap : 0)
     }, 0)
 
     const availableHeight = containerHeight - (padding?.top || 0) - (padding?.bottom || 0)
@@ -142,9 +145,10 @@ export function applyColumnLayout(shape: Shape, children: SceneNode[], layoutCon
     }
 
     children.forEach((child, index) => {
-        if (!child.hasShape()) return
+        const dim = child.getDim()
+        if (!dim) return
 
-        const childBounds = child.getDim()
+        const childBounds = dim
         let xPos: number
 
         // Calculate X position based on crossAlign (cross axis = horizontal for column)
@@ -236,19 +240,20 @@ export function applyGridLayout(shape: Shape, children: SceneNode[], layoutConst
 
     // Position children in grid
     children.forEach((child, index) => {
-        if (!child.hasShape()) return
+        const dim = child.getDim()
+        if (!dim) return
 
         let col: number
         let row: number
 
         if (gridAutoFlow === 'column') {
             // Fill columns first
-            col = Math.round(index / rows)
+            col = Math.floor(index / rows)
             row = index % rows
         } else {
             // Fill rows first (default)
             col = index % columns
-            row = Math.round(index / columns)
+            row = Math.floor(index / columns)
         }
 
         // Calculate position

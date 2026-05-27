@@ -324,7 +324,7 @@ class ShapeManager {
     }
 
     private drawSnapGuides(canvas: any) {
-        if (!this.activeSnapResult || !this.activeSnapResult.snapped || !this.activeSnapResult.guides.length) return
+        if (!this.activeSnapResult || !this.activeSnapResult.snapped) return
         
         const ck = CanvasKitResources.getInstance()?.canvasKit
         if (!ck) return
@@ -340,16 +340,34 @@ class ShapeManager {
             this.snapGuidePaint.setPathEffect(this.snapGuideDash)
         }
 
+        // 1. Draw "Every Snap Available" (Indicators)
+        const indicatorPaint = new ck.Paint()
+        indicatorPaint.setStyle(ck.PaintStyle.Fill)
+        indicatorPaint.setAntiAlias(true)
+
+        for (const pt of this.activeSnapResult.indicators) {
+            // Use different colors for different snap types for a premium feel
+            const color = pt.type === 'center' ? ck.Color(255, 200, 0, 0.9) : ck.Color(0, 255, 255, 0.9)
+            indicatorPaint.setColor(color)
+            canvas.drawCircle(pt.x, pt.y, 3, indicatorPaint) // Small dots for availability
+        }
+        indicatorPaint.delete()
+
+        // 2. Draw Snap Guide Lines (Infinite lines)
         for (const guide of this.activeSnapResult.guides) {
-            this.snapGuidePaint.setColor(guide.isGrid ? ck.Color(0, 255, 255, 0.5) : ck.Color(255, 0, 255, 0.8))
+            // USER REQUEST: Remove middle cross line (center snaps)
+            // We only draw infinite lines for edges, corners, and grid.
+            if (guide.type === 'center') continue
+
+            this.snapGuidePaint.setColor(guide.isGrid ? ck.Color(0, 255, 255, 0.4) : ck.Color(255, 0, 255, 0.7))
             
             const path = new ck.Path()
             if (guide.orientation === 'horizontal') {
-                path.moveTo(-10000, guide.pos)
-                path.lineTo(10000, guide.pos)
+                path.moveTo(-20000, guide.pos)
+                path.lineTo(20000, guide.pos)
             } else {
-                path.moveTo(guide.pos, -10000)
-                path.lineTo(guide.pos, 10000)
+                path.moveTo(guide.pos, -20000)
+                path.lineTo(guide.pos, 20000)
             }
             canvas.drawPath(path, this.snapGuidePaint)
             path.delete()

@@ -25,7 +25,7 @@ class ContainerNode extends SceneNode {
     override addChildNode(child: SceneNode): void {
         child.setParent(this)
         this.children.push(child)
-        // this.applyLayout()
+        this.applyLayout()
     }
 
     override getChildren(): SceneNode[] {
@@ -48,6 +48,11 @@ class ContainerNode extends SceneNode {
 
     getLayoutConstraints() {
         return this.layoutConstraints
+    }
+
+    override getDim(): { width: number; height: number } | null {
+        const props = this.getProperties()
+        return props ? props.size : null
     }
 
     override getProperties() {
