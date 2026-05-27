@@ -20,7 +20,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ tool, className, group, groupId,children, ...props }, ref) => {
     const { setTool, tool: currentTool, getSelectedForGroup } = useToolStore()
 
-    const isActive = group.some(grouptool => currentTool.toolName === grouptool.toolName)
+    const isActive = currentTool ? group.some(grouptool => currentTool.toolName === grouptool.toolName) : false
 
     const displayedTool = isActive && currentTool ? currentTool : getSelectedForGroup(groupId, tool)
 

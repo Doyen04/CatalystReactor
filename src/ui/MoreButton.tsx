@@ -17,13 +17,13 @@ const MoreButton = forwardRef<HTMLButtonElement, ButtonProps>(({ tools, tip, gro
     const { setTool, tool: currentTool } = useToolStore()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
-    const isActive = tools.some(tool => currentTool.toolName === tool.toolName)
+     const isActive = currentTool ? tools.some(tool => currentTool.toolName === tool.toolName) : false
 
     const baseStyles = 'py-2 px-0.25 rounded-md transition-colors duration-200'
     const activeStyles = isActive ? 'border-grey-500 bg-gray-500/50 text-grey-400' : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
 
     const handleToolSelect = (tool: { toolName: string; icon: React.ReactNode; tip: string }) => {
-        if (currentTool.toolName !== tool.toolName) setTool(tool, groupId)
+        if (!currentTool || currentTool.toolName !== tool.toolName) setTool(tool, groupId)
         setIsDropdownOpen(false)
     }
     return (
@@ -63,7 +63,7 @@ const MoreButton = forwardRef<HTMLButtonElement, ButtonProps>(({ tools, tip, gro
                         >
                             {tool.icon}
                             <span>{tool.tip}</span>
-                            {currentTool.toolName === tool.toolName && <Check className="w-4 h-4 text-white" />}
+                            {currentTool?.toolName === tool.toolName && <Check className="w-4 h-4 text-white" />}
                         </button>
                     ))}
                 </div>
