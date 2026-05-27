@@ -154,7 +154,7 @@ class ShapeManager {
         this.scene = scene
         this.shapeModifier?.attachShape(scene)
         
-        if (this.scene instanceof ShapeNode && this.scene.shape) {
+        if (this.scene && this.scene.shape) {
             useSceneStore.getState().setSelectedShapeId(this.scene.shape.data.id)
         }
 
@@ -188,10 +188,11 @@ class ShapeManager {
         if (finalProps) this.throttledUpdate(finalProps)
 
         // Record history for property bar updates
-        if (this.scene instanceof ShapeNode && this.scene.shape) {
+        if (this.scene && this.scene.shape) {
             HistoryManager.getInstance().pushAction(
                 new UpdateShapeAction(this.scene.shape.data.id, oldProps, structuredClone(finalProps))
             )
+            EngineStateStore.getInstance().notify(this.scene.shape.data.id)
         }
     }
 

@@ -1,6 +1,6 @@
 import Shape from '../base/Shape'
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
-import { ArcHandleState, ArcSegment, Coord } from '@lib/types/shapes'
+import { ArcHandleState, ArcSegment, Coord, Properties } from '@lib/types/shapes'
 import { normalizeAngle } from '@lib/helper/normalise'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
@@ -48,6 +48,17 @@ class Oval extends Shape {
         } else {
             this.data.properties.arcSegment.startAngle = startAngle
             this.data.properties.arcSegment.sweep = sweep
+        }
+    }
+
+    override setProperties(prop: Properties): void {
+        super.setProperties(prop)
+        if (prop.arcSegment) {
+            this.arcHandleState = {
+                dragDirection: prop.arcSegment.sweep >= 0 ? 1 : -1,
+                dragLastDiff: normalizeAngle(prop.arcSegment.sweep),
+                dragPrevPointer: normalizeAngle(prop.arcSegment.startAngle + prop.arcSegment.sweep),
+            }
         }
     }
 
