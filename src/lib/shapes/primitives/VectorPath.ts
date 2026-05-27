@@ -1,4 +1,4 @@
-import type { Canvas, Path as SkPath } from 'canvaskit-wasm'
+import type { Canvas, Path, Path as SkPath } from 'canvaskit-wasm'
 import { Coord, PathPoint, Properties } from '@lib/types/shapes'
 import Shape from '../base/Shape'
 import { ShapeData } from '@lib/core/EngineStateStore'
@@ -227,6 +227,10 @@ class VectorPath extends Shape {
 
     // ── Build the CanvasKit path ──────────────────────────────────
 
+    override getPath(): Path | null {
+        return this.buildPath()
+    }
+
     private buildPath(): SkPath | null {
         const pts = this.points
         if (pts.length < 2) return null
@@ -374,7 +378,7 @@ class VectorPath extends Shape {
         const pts = this.points
         const i2 = this.selectedSegmentIndex
         const i1 = i2 === 0 ? pts.length - 1 : i2 - 1
-        
+
         if (!pts[i1] || !pts[i2]) return
 
         const CanvasKit = this.resource.canvasKit
@@ -384,7 +388,7 @@ class VectorPath extends Shape {
 
         const path = new CanvasKit.Path()
         path.moveTo(pts[i1].x, pts[i1].y)
-        
+
         const hasCP2 = pts[i1].cp2 != null
         const hasCP1 = pts[i2].cp1 != null
 
@@ -397,7 +401,7 @@ class VectorPath extends Shape {
         } else {
             path.lineTo(pts[i2].x, pts[i2].y)
         }
-        
+
         canvas.drawPath(path, highlightPaint)
         path.delete()
     }

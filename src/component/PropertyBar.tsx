@@ -12,8 +12,6 @@ import BorderRadiusAll from '@ui/BorderRadiusAll'
 import ColorInput from '@ui/ColorInput'
 import Tabs from '@ui/Tabs'
 import DropDownPicker from '@ui/DropDownPicker'
-import { TransformGroup, DimensionGroup, RotationScaleGroup, AnchorGroup } from '@ui/PropertyGroups'
-import { MoveRight, MoveDown, Compass, Type, Maximize2, Minimize2, AlignLeft, AlignCenter, AlignRight, AlignJustify, Layout, Grid, Hash, PenTool } from 'lucide-react'
 
 function PropertyBar() {
     const { currentShapeProperties } = useSceneStore()
@@ -119,19 +117,17 @@ function PropertyBar() {
                 {activeTab === 'design' ? (
                     <>
                         {transform && (
-                            <TransformGroup 
-                                x={transform.x} 
-                                y={transform.y} 
-                                onChange={(key, value) => handlePropertyChange(key, value)} 
-                            />
+                            <GRID2X2 title="Transform">
+                                <Input type="number" title="X" value={transform.x} onChange={value => handlePropertyChange('x', value)} />
+                                <Input type="number" title="Y" value={transform.y} onChange={value => handlePropertyChange('y', value)} />
+                            </GRID2X2>
                         )}
 
                         {size && (
-                            <DimensionGroup 
-                                width={size.width} 
-                                height={size.height} 
-                                onChange={(key, value) => handlePropertyChange(key, value)} 
-                            />
+                            <GRID2X2 title="Dimension">
+                                <Input type="number" title="W" value={size.width} onChange={value => handlePropertyChange('width', value)} />
+                                <Input type="number" title="H" value={size.height} onChange={value => handlePropertyChange('height', value)} />
+                            </GRID2X2>
                         )}
 
                         {style && (
@@ -142,26 +138,31 @@ function PropertyBar() {
                         )}
 
                         {/* TRANSFORM - Rotation, Scale, Anchor */}
-                        <RotationScaleGroup 
-                            rotation={transform?.rotation}
-                            scaleX={transform?.scaleX}
-                            scaleY={transform?.scaleY}
-                            onChange={(key, value) => handlePropertyChange(key, value)}
-                        />
-
-                        {transform?.anchorPoint && (
-                            <AnchorGroup 
-                                x={transform.anchorPoint.x}
-                                y={transform.anchorPoint.y}
-                                onChange={(key, value) => handlePropertyChange(`anchorPoint_${key}`, value)}
-                            />
+                        {transform && (transform.rotation !== undefined || transform.scaleX !== undefined || transform.anchorPoint !== undefined) && (
+                            <GRID2X2 title="Transform (Scale/Rotate)">
+                                {transform.rotation !== undefined && (
+                                    <Input type="number" title="Rotation" value={transform.rotation} onChange={value => handlePropertyChange('rotation', value)} />
+                                )}
+                                {transform.scaleX !== undefined && (
+                                    <Input type="number" title="Scale X" value={transform.scaleX} onChange={value => handlePropertyChange('scaleX', value)} />
+                                )}
+                                {transform.scaleY !== undefined && (
+                                    <Input type="number" title="Scale Y" value={transform.scaleY} onChange={value => handlePropertyChange('scaleY', value)} />
+                                )}
+                                {transform.anchorPoint && (
+                                    <>
+                                        <Input type="number" title="Anchor X" value={transform.anchorPoint.x} onChange={value => handlePropertyChange('anchorPoint_x', value)} />
+                                        <Input type="number" title="Anchor Y" value={transform.anchorPoint.y} onChange={value => handlePropertyChange('anchorPoint_y', value)} />
+                                    </>
+                                )}
+                            </GRID2X2>
                         )}
 
                         {/* STROKE - Width, LineCap, LineJoin, DashArray */}
                         {style && style.stroke && (
                             <Section title="Stroke Properties">
-                                <div className="space-y-3 w-full">
-                                    <Input type="number" icon={<PenTool />} value={style.stroke.width ?? 1} onChange={value => handlePropertyChange('stroke_width', value)} />
+                                <div className="space-y-3">
+                                    <Input type="number" title="Width" value={style.stroke.width ?? 1} onChange={value => handlePropertyChange('stroke_width', value)} />
                                     {style.stroke.lineCap && (
                                         <div>
                                             <label className="text-xs text-gray-600">Line Cap</label>
@@ -220,13 +221,13 @@ function PropertyBar() {
                                         <ColorInput fill={{ color: textStyle.textStroke.color, opacity: textStyle.textStroke.opacity } as ColorProps} onChange={stroke => handlePropertyChange('text_textStroke', stroke)} />
                                     )}
                                     {textStyle.fontSize && (
-                                        <Input type="number" icon={<Type />} value={textStyle.fontSize} onChange={value => handlePropertyChange('text_fontSize', value)} />
+                                        <Input type="number" title="Font Size" value={textStyle.fontSize} onChange={value => handlePropertyChange('text_fontSize', value)} />
                                     )}
                                     {textStyle.fontWeight && (
-                                        <Input type="number" icon={<Hash />} value={textStyle.fontWeight} onChange={value => handlePropertyChange('text_fontWeight', value)} />
+                                        <Input type="number" title="Font Weight" value={textStyle.fontWeight} onChange={value => handlePropertyChange('text_fontWeight', value)} />
                                     )}
                                     {textStyle.lineHeight && (
-                                        <Input type="number" icon={<AlignJustify />} value={textStyle.lineHeight} onChange={value => handlePropertyChange('text_lineHeight', value)} />
+                                        <Input type="number" title="Line Height" value={textStyle.lineHeight} onChange={value => handlePropertyChange('text_lineHeight', value)} />
                                     )}
                                     {textStyle.textAlign && (
                                         <div>
@@ -302,17 +303,17 @@ function PropertyBar() {
                                             </>
                                         ) : null}
                                         {lc.gap !== undefined && (
-                                            <Input type="number" icon={<Maximize2 />} value={lc.gap} onChange={value => handlePropertyChange('layout_gap', value)} />
+                                            <Input type="number" title="Gap" value={lc.gap} onChange={value => handlePropertyChange('layout_gap', value)} />
                                         )}
                                         {lc.padding !== undefined && (
                                             typeof lc.padding === 'number' ? (
-                                                <Input type="number" icon={<Minimize2 />} value={lc.padding} onChange={value => handlePropertyChange('layout_padding', value)} />
+                                                <Input type="number" title="Padding" value={lc.padding} onChange={value => handlePropertyChange('layout_padding', value)} />
                                             ) : (
-                                                <div className="grid grid-cols-2 gap-1.5 w-full">
-                                                    <Input type="number" icon={<MoveRight className="-rotate-90" />} value={lc.padding?.top ?? 0} onChange={value => handlePropertyChange('layout_padding_top', value)} />
-                                                    <Input type="number" icon={<MoveRight />} value={lc.padding?.right ?? 0} onChange={value => handlePropertyChange('layout_padding_right', value)} />
-                                                    <Input type="number" icon={<MoveDown />} value={lc.padding?.bottom ?? 0} onChange={value => handlePropertyChange('layout_padding_bottom', value)} />
-                                                    <Input type="number" icon={<MoveDown className="rotate-90" />} value={lc.padding?.left ?? 0} onChange={value => handlePropertyChange('layout_padding_left', value)} />
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <Input type="number" title="Pad Top" value={lc.padding?.top ?? 0} onChange={value => handlePropertyChange('layout_padding_top', value)} />
+                                                    <Input type="number" title="Pad Right" value={lc.padding?.right ?? 0} onChange={value => handlePropertyChange('layout_padding_right', value)} />
+                                                    <Input type="number" title="Pad Bottom" value={lc.padding?.bottom ?? 0} onChange={value => handlePropertyChange('layout_padding_bottom', value)} />
+                                                    <Input type="number" title="Pad Left" value={lc.padding?.left ?? 0} onChange={value => handlePropertyChange('layout_padding_left', value)} />
                                                 </div>
                                             )
                                         )}

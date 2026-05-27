@@ -27,6 +27,15 @@ class SimpleRect extends Shape {
 
 
 
+    override getPath(): Rect | any {
+        if (!this.resource) return null
+        const { width, height } = this.data.properties.size
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, width, height)
+        const path = new this.resource.canvasKit.Path()
+        path.addRect(rect)
+        return path
+    }
+
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 

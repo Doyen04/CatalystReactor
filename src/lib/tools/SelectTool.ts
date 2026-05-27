@@ -24,21 +24,43 @@ class SelectTool extends Tool {
     }
 
     selectionHandler(e: MouseEvent) {
-        const selected = this.shapeManager.collide(e.offsetX, e.offsetY)
-
-        const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
-        const currentSelection = this.shapeManager.currentScene
-
-        if (selected || scene === currentSelection) {
+        // 1. Check if we are clicking on handles of current selection
+        const handleHit = this.shapeManager.handleHover(e.offsetX, e.offsetY)
+        if (handleHit) {
             this.shapeManager.handleMouseDown(this.dragStart, e)
             return
-        } else {
-            this.shapeManager.detachShape()
         }
 
-        if (scene) {
-            this.shapeManager.attachNode(scene)
+        const isDeep = e.ctrlKey || e.metaKey
+        const currentSelection = this.shapeManager.currentScene
+        
+        let targetScene: SceneNode | null = null
+
+        if (isDeep) {
+            targetScene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY, true)
+        } else if (currentSelection && currentSelection.getChildren().length > 0 && currentSelection.isCollide(e.offsetX, e.offsetY)) {
+            // Drill down: Search within current container
+            const children = currentSelection.getChildren()
+            for (let i = children.length - 1; i >= 0; i--) {
+                if (children[i].isCollide(e.offsetX, e.offsetY)) {
+                    targetScene = children[i]
+                    break
+                }
+            }
+            // If no child hit, stay with current selection
+            if (!targetScene) targetScene = currentSelection
+        } else {
+            // Regular top-level selection
+            targetScene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY, false)
         }
+
+        if (targetScene !== currentSelection) {
+            this.shapeManager.detachShape()
+            if (targetScene && targetScene !== this.sceneManager.getRootContainer()) {
+                this.shapeManager.attachNode(targetScene)
+            }
+        }
+
         this.shapeManager.handleMouseDown(this.dragStart, e)
     }
 

@@ -1,4 +1,4 @@
-import type { Canvas, Rect } from 'canvaskit-wasm'
+import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { BorderRadius, CornerPos, HandlePos, Properties, Coord } from '@lib/types/shapes'
 import SimpleRect from './SimpleRect'
 import { ShapeData } from '@lib/core/EngineStateStore'
@@ -13,7 +13,7 @@ class Rectangle extends SimpleRect {
         const borderRadius = this.data.properties.borderRadius!
         const max = Math.min(width, height) / 2
         const newRad = Math.max(0, Math.min(newRadius, max))
-        
+
         if (borderRadius.locked) {
             this.setAllBorderRadius(newRad)
             return
@@ -75,7 +75,7 @@ class Rectangle extends SimpleRect {
         const paint = new cw.Paint()
         paint.setColor(cw.Color(255, 255, 255, 1))
         paint.setStyle(cw.PaintStyle.Fill)
-        
+
         const stroke = new cw.Paint()
         stroke.setColor(cw.Color(0, 0, 255, 1))
         stroke.setStyle(cw.PaintStyle.Stroke)
@@ -163,6 +163,26 @@ class Rectangle extends SimpleRect {
         return (
             borderRadius['top-left'] > 0 || borderRadius['top-right'] > 0 || borderRadius['bottom-left'] > 0 || borderRadius['bottom-right'] > 0
         )
+    }
+
+    override getPath(): Path | null {
+        if (!this.resource) return null
+        const dim = this.getDim()
+        const borderRadius = this.data.properties.borderRadius!
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, dim.width, dim.height)
+
+        if (this.hasRadius() && borderRadius.locked) {
+            const radius = borderRadius['top-left']
+            const path = new this.resource.canvasKit.Path()
+            path.addRRect(this.resource.canvasKit.RRectXY(rect, radius, radius))
+            return path
+        } else if (this.hasRadius()) {
+            return this.makeCustomRRectPath()
+        } else {
+            const path = new this.resource.canvasKit.Path()
+            path.addRect(rect)
+            return path
+        }
     }
 
     override draw(canvas: Canvas): void {

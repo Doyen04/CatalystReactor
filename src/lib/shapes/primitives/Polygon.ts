@@ -199,6 +199,19 @@ class Polygon extends Shape {
         return points
     }
 
+    override getPath(): Path | null {
+        if (!this.resource) return null
+        const path = new this.resource.canvasKit.Path()
+        if (this.points.length >= 3) {
+            if (this.bRadius == 0) {
+                this.createRegularPolygon(path)
+            } else {
+                this.createRoundedPolygonPath(path)
+            }
+        }
+        return path
+    }
+
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 

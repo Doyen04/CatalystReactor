@@ -4,6 +4,11 @@ export interface Deletable {
 
 export class PCache<T extends Deletable> {
     private cache = new Map<string, T>()
+    private maxSize: number = 100
+
+    constructor(limit: number = 100) {
+        this.maxSize = limit
+    }
 
     get(key: string): T | null {
         if (!this.cache.has(key)) return null
@@ -18,13 +23,18 @@ export class PCache<T extends Deletable> {
     set(key: string, value: T): void {
         if (this.cache.has(key)) {
             const old = this.cache.get(key)!
-            // If the value has a delete method, call it safely
             try {
                 (old)?.delete?.()
             } catch {
                 console.warn('deletion not implemented on cache value')
             }
             this.cache.delete(key)
+        } else if (this.cache.size >= this.maxSize) {
+            // Remove least recently used (first item in Map)
+            const firstKey = this.cache.keys().next().value
+            if (firstKey !== undefined) {
+                this.delete(firstKey)
+            }
         }
         this.cache.set(key, value)
     }

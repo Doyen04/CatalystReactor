@@ -1,6 +1,6 @@
 import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
-import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle } from 'canvaskit-wasm'
+import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, Path, TextStyle } from 'canvaskit-wasm'
 import { Coord, Properties, PTextStyle, Size } from '@lib/types/shapes'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
@@ -17,11 +17,11 @@ class PText extends Shape {
     constructor(data: ShapeData) {
         super(data)
         this.cursor = new TextCursor(this.data.properties.transform.x, this.data.properties.transform.y, 0)
-        
+
         if (!this.data.properties.text) {
             this.data.properties.text = ''
         }
-        
+
         if (!this.data.properties.textStyle) {
             this.data.properties.textStyle = {
                 textFill: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
@@ -124,7 +124,7 @@ class PText extends Shape {
             justify: canvasKit.TextAlign.Justify,
         }
 
-        this.resource.textStyle.color = [0, 0, 0, 1] 
+        this.resource.textStyle.color = [0, 0, 0, 1]
         this.resource.textStyle.fontSize = 12
         this.resource.textStyle.fontFamilies = ['Antonio', 'sans-serif']
         this.resource.textStyle.backgroundColor = [0, 0, 0, 0]
@@ -161,6 +161,15 @@ class PText extends Shape {
     override pointInShape(x: number, y: number): boolean {
         const dim = this.getDim()
         return x >= 0 && x <= dim.width && y >= 0 && y <= dim.height
+    }
+
+    override getPath(): Path | null {
+        if (!this.resource) return null
+        const dim = this.getDim()
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, dim.width, dim.height)
+        const path = new this.resource.canvasKit.Path()
+        path.addRect(rect)
+        return path
     }
 
     override draw(canvas: Canvas): void {
@@ -263,7 +272,7 @@ class PText extends Shape {
         } else {
             const start = Math.min(this.selectionStart, this.selectionEnd)
             const end = Math.max(this.selectionStart, this.selectionEnd)
-            
+
             if (start > 0) {
                 const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
                 backgroundColor.setColor(this.resource.canvasKit.TRANSPARENT)

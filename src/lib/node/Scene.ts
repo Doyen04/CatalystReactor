@@ -10,6 +10,10 @@ abstract class SceneNode {
     protected worldMatrix: number[] | null
     protected canComputeMatrix: boolean = false
 
+    get id(): string {
+        return this.shape?.data.id || 'root'
+    }
+
     get resource(): CanvasKitResources | null {
         const resources = CanvasKitResources.getInstance()
         if (resources) {

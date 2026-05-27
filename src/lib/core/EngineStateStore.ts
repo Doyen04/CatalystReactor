@@ -34,6 +34,11 @@ class EngineStateStore {
         return Array.from(this.shapeDataMap.values())
     }
 
+    public removeShapeData(id: string) {
+        this.shapeDataMap.delete(id)
+        this.notify()
+    }
+
     public subscribe(listener: (shapeId?: string) => void) {
         this.listeners.add(listener)
         return () => this.listeners.delete(listener)

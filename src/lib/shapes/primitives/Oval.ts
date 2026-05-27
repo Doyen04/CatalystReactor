@@ -259,6 +259,20 @@ class Oval extends Shape {
         return this.arcSegment.ratio > 0
     }
 
+    override getPath(): Path | null {
+        if (!this.resource) return null
+        const { width, height } = this.getDim()
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, width, height)
+
+        if (this.isTorus() || this.isArc()) {
+            return this.drawComplexShape(null as any, rect)
+        } else {
+            const path = new this.resource.canvasKit.Path()
+            path.addOval(rect)
+            return path
+        }
+    }
+
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 

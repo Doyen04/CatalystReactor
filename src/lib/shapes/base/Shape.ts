@@ -9,7 +9,7 @@ import {
     Properties,
     ShapeType,
 } from '@lib/types/shapes'
-import type { Canvas } from 'canvaskit-wasm'
+import type { Canvas, Path as SkPath } from 'canvaskit-wasm'
 import PaintManager from '@lib/core/PaintManager'
 import container from '@lib/core/DependencyManager'
 import { ShapeData } from '@lib/core/EngineStateStore'
@@ -32,6 +32,7 @@ abstract class Shape {
     abstract getCenterCoord(): Coord
     abstract pointInShape(x: number, y: number): boolean
     abstract draw(canvas: Canvas): void
+    abstract getPath(): SkPath | null
     abstract setDim(width: number, height: number): void
     abstract getDim(): { width: number; height: number }
     abstract cleanUp(): void

@@ -130,6 +130,15 @@ class SText extends Shape {
         return { fill: this.paintManager.paint, stroke: this.paintManager.stroke }
     }
 
+    override getPath(): Path | null {
+        if (!this.resource) return null
+        const dim = this.getDim()
+        const rect = this.resource.canvasKit.XYWHRect(0, 0, dim.width, dim.height)
+        const path = new this.resource.canvasKit.Path()
+        path.addRect(rect)
+        return path
+    }
+
     override draw(canvas: Canvas): void {
         if (!this.resource) return
         

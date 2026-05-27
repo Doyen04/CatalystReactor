@@ -228,6 +228,17 @@ class Star extends Shape {
         return { x: this.radiusX, y: this.radiusY }
     }
 
+    override getPath(): Path | null {
+        if (!this.resource) return null
+        const path = new this.resource.canvasKit.Path()
+        if (this.bRadius > 0) {
+            this.createRoundedStarPath(path)
+        } else {
+            this.createRegularStarPath(path)
+        }
+        return path
+    }
+
     override draw(canvas: Canvas): void {
         if (!this.resource) return
 
