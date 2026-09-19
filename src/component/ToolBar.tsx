@@ -1,8 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import {
     Triangle,
-    Lasso,
-    Maximize2,
     MousePointer2,
     Square,
     Star,
@@ -31,16 +29,6 @@ function ToolBar() {
             toolName: 'select',
             icon: <MousePointer2 className={'w-4 h-4'} />,
             tip: 'Select',
-        },
-        {
-            toolName: 'freeform',
-            icon: <Lasso className={'w-4 h-4'} />,
-            tip: 'Freeform',
-        },
-        {
-            toolName: 'scale',
-            icon: <Maximize2 className={'w-4 h-4'} />,
-            tip: 'Scale',
         },
     ], [])
     

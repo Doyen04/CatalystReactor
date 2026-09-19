@@ -1,5 +1,3 @@
-import EventQueue from './EventQueue'
-
 import InputManager from './InputManager'
 import SceneManager from './SceneManager'
 import Renderer from './Renderer'
@@ -127,7 +125,6 @@ class CanvasManager {
             this.paintManager.destroy()
             this.paintManager = null
         }
-        EventQueue.removeAllEvent()
     }
 
     render() { }

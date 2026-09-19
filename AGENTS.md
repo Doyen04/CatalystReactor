@@ -31,13 +31,14 @@ Imports point one way only: `ui/` → `bridge/` → `engine/` → `core/` (plan 
 ## Refactor status (`refactor/engine-architecture`)
 
 - **Step 1 (stop the leaks) landed:** `src/engine/render/{PaintCache,TextCache,ResourceScope,ResourceCounter}` added; paint creation routed through `PaintCache`; PText paragraphs cached by version+width; shared-paint mutation removed from all live shapes/tools (only the preserved dead `Handles.ts` fallback still uses the getters); dev-only `[skia]` counter wired in `Canvas.tsx`.
-- `PaintManager.getPaint(request)` returns an immutable cached paint and is the preferred API. The `paint`/`stroke` getters remain only for the dead `Handles.ts` reference file until Step 2.
+- **Step 2 (delete the dead code) landed:** removed the unimplemented `freeform`/`scale` entries from `ToolBar`, dropped `BooleanAction` from `HistoryManager`, removed the `EventQueue` wiring (import + `removeAllEvent()` call) from `CanvasManager`, and quarantined the preserved dead files into `to-be-deleted/`.
+- `PaintManager.getPaint(request)` returns an immutable cached paint and is the preferred API. The legacy `paint`/`stroke` getters remain only for the quarantined `Handles.ts` reference (`to-be-deleted/lib/modifiers/Handles.ts`); nothing live uses them.
 
 ## Boot flow
 
 `src/component/Canvas.tsx` is the engine bootstrap: loads `canvaskit-wasm`, initializes singleton `CanvasKitResources`, then creates one `CanvasManager` per mounted canvas. `CanvasManager` registers services into `DependencyManager` in a fixed order (paintManager → shapeModifier → shapeManager → sceneManager → inputManager → renderer → toolManager); tools resolve dependencies from this container — never instantiate side copies.
 
-Events: `InputManager` captures native pointer/key/resize events and fans them out to **direct subscriber callbacks** (`InputCallbacks`: `onPointerDown/Move/Up`, `onKeyDown/Up`, `onResize`). `ToolManager` and `Renderer` `subscribe()` to it. The old `EventQueue` bus is dormant (still defined in `EventQueue.ts`, only `removeAllEvent()` is called during teardown) — don't add new flow to it. `setTool` creates a fresh tool instance each switch.
+Events: `InputManager` is the only input path — there is no event bus. It captures native pointer/key/resize events and fans them out to **direct subscriber callbacks** (`InputCallbacks`: `onPointerDown/Move/Up`, `onKeyDown/Up`, `onResize`); `ToolManager` and `Renderer` `subscribe()` to it. The old `EventQueue` class survives only as a reference copy in `to-be-deleted/lib/core/EventQueue.ts`; nothing under `src/` may import it. `setTool` creates a fresh tool instance each switch.
 
 ## Stores
 
@@ -51,10 +52,10 @@ Events: `InputManager` captures native pointer/key/resize events and fans them o
 
 - Dev runs under `<StrictMode>`, so the Canvas bootstrap effect double-fires; `Canvas.tsx` guards re-init via refs. Keep that guard when touching boot/teardown.
 - `import/no-cycle` is an eslint error (maxDepth Infinity) — the manager graph in `src/lib/core` can tempt cycles.
-- Tool type union is `ToolType` in `src/lib/tools/toolTypes.ts`; it includes `ContainerType` (row/column/grid/frame/none) used by group tools. Note `ToolBar` shows UI entries (e.g. `freeform`, `scale`) that have no matching `ToolType`/implementation.
+- Tool type union is `ToolType` in `src/lib/tools/toolTypes.ts`; it includes `ContainerType` (row/column/grid/frame/none) used by group tools.
 - `Renderer` and tool code assume `CanvasKitResources` is already initialized; anything running before canvas boot will fail.
 - `SnapManager` is a singleton configured via `useSceneStore.gridSize`. `ShapeManager` lazily caches its snap-guide paint/dash; that cache is per-ShapeManager, reset on re-mount.
-- **Files that look dead but are the working fallback — do NOT delete.** They contain the working version of code that was refactored elsewhere (the new refactor wasn't working as it should, so the working copies were kept for reference): `src/lib/modifiers/{Handles,modifier,modifierUtility}.ts`, `src/lib/core/toImplement.ts`, `PathOperator`/`BooleanAction` (unwired boolean ops), `EventQueue` (dormant bus, `removeAllEvent()` only). Treat them as reference implementations, not trash. The architecture plan (docs/arcthitecture.md) describes the migration; when migrating a concern, carry the working logic across — don't delete the file until the new location is verified working.
+- **The preserved dead/reference files are quarantined under `to-be-deleted/`** (excluded from tsconfig and eslint): `to-be-deleted/lib/core/{toImplement.ts,PathOperator.ts,EventQueue.ts,BooleanAction.ts}` and `to-be-deleted/lib/modifiers/{Handles.ts,modifier.ts,modifierUtility.ts}`. They hold the working version of code that was refactored elsewhere (the new refactor wasn't working as it should, so the working copies were kept for reference). They are working reference implementations whose new homes are not yet verified; nothing under `src/` may import them, and the matching file should be deleted from `to-be-deleted/` once the new location is verified working.
 - Tailwind 4 is CSS-first (`@import 'tailwindcss'` in `index.css`); there is no `tailwind.config.js`.
 - `tsc -b` writes `tsconfig.tsbuildinfo` to the repo root; it is committed, not gitignored.
 - Fonts load at boot from `public/fonts` (Inter variable) plus remote families in `src/lib/core/fonts.json`; requires network for the remote ones, best-effort via `Promise.allSettled`.

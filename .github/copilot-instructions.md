@@ -21,7 +21,7 @@
 - `InputManager` captures native pointer/keyboard/resize events and fans them out to **direct subscribers** via the `subscribe(callbacks)` / `unsubscribe(callbacks)` API (`InputCallbacks`: `onPointerDown/Move/Up`, `onKeyDown/Up`, `onResize`). It uses stable arrow-property handlers, so add/remove stays symmetric.
 - `ToolManager` and `Renderer` each hold an explicit `inputCallbacks` object, `unsubscribe` it in `removeEvent()`, and re-`subscribe` in `addEvent()`. Keep this idempotent pattern when editing wiring.
 - `ToolManager.setCurrentTool(tool)` creates a fresh tool instance per switch (`SelectTool`, `ShapeTool`, `GroupTool`, `ImageTool`, `LineTool`, `PenTool`, `BezierTool`, `EditTool`), calls `currentTool.toolChange()` on the outgoing one, and re-binds events. Key events forward to both the singleton `KeyboardTool` and the current tool.
-- The old `EventQueue` bus (event names like `create:scene`, `draw:shape`, `select:object`, `tool:change`) is **dormant**: nothing subscribes anymore, and only `CanvasManager.destroy()` calls `removeAllEvent()`. Do not add new flow through it.
+- The old `EventQueue` bus is **removed**; only a quarantine copy remains at `to-be-deleted/lib/core/EventQueue.ts` (excluded from tsconfig/eslint) for reference. `InputManager` direct subscribers are the only input path. Do not import it from `src/` and do not add new flow through it.
 
 ## Scene Graph and Transform Rules
 
@@ -103,10 +103,8 @@
 ## Gotchas
 
 - Dev runs under `<StrictMode>`; the Canvas bootstrap effect double-fires, so `Canvas.tsx` guards re-init via refs. Preserve that guard when changing boot/teardown.
-- `ToolBar` renders UI entries (`freeform`, `scale` under the select group) that have no matching `ToolType`/implementation — they still call `setTool`/switch tools.
 - `SceneNode.destroy()` / `ContainerNode.destroy()` cascade to children; `ContainerNode.destroy()` deliberately clears children itself. Watch out for double-destroy when removing nodes manually.
-- `src/lib/modifiers/{Handles,modifier,modifierUtility}.ts`, `src/lib/core/toImplement.ts`, and `PathOperator`/`BooleanAction` (boolean path ops) are unwired/dead — ignore unless explicitly resurrecting them.
-- Keep `EventQueue` untouched (dormant). Add input flow via `InputManager` subscribers instead.
+- The preserved dead/reference files are **quarantined** under `to-be-deleted/` (`to-be-deleted/lib/modifiers/{Handles,modifier,modifierUtility}.ts`, `to-be-deleted/lib/core/{toImplement,PathOperator,EventQueue,BooleanAction}.ts`). They are excluded from tsconfig and eslint and are kept as working references whose new homes are not yet verified. Never import them from `src/`; delete the quarantine copy once the replacement is verified. `InputManager` subscribers are the only input path.
 - `index.html` title is still "Vite + React + TS" (cosmetic).
 
 ## When Adding Features
@@ -129,7 +127,7 @@
 - Target tiers, with imports pointing one way only: `ui/` -> `bridge/` -> `engine/` -> `core/`. `src/engine/**` must stay headless (never import React, Zustand, `src/hooks`, or `src/component`); `src/core/**` must not import CanvasKit. Information flows back up as events.
 - Use `@/*` (in `tsconfig.json` paths) or relative paths for tier imports. Do NOT use the auto-generated `@<folder>` aliases (e.g. `@engine/...`) — they are not in `tsconfig.json` paths and break typechecking.
 - New WASM-owning helpers live in `src/engine/render/`: `PaintCache` (descriptor -> immutable `Paint`), `TextCache` (`Paragraph` keyed by version+width), `ResourceScope` (reverse-order disposal), `ResourceCounter` (dev-only `[skia]` log). CanvasKit resources are not garbage collected.
-- Obtain paints via `PaintManager.getPaint({ color, opacity, size, stroke?, strokeWidth? })` (or `initFillPaint`/`initStrokePaint`). They return cached paints: **never** call `.setColor`/`.setShader`/`.setStrokeWidth` on the result — request a new descriptor instead. The legacy `paint`/`stroke` getters remain only for the dead `Handles.ts` fallback until Step 2.
+- Obtain paints via `PaintManager.getPaint({ color, opacity, size, stroke?, strokeWidth? })` (or `initFillPaint`/`initStrokePaint`). They return cached paints: **never** call `.setColor`/`.setShader`/`.setStrokeWidth` on the result — request a new descriptor instead. The legacy `paint`/`stroke` getters remain only for the quarantined `Handles.ts` reference (`to-be-deleted/lib/modifiers/Handles.ts`); nothing live uses them.
 - Already landed in Step 1: PText paragraphs cached and deleted by version, SText font/typeface and ShapeManager snap paints destroyed on teardown, ImageTool deletes unplaced preloaded images.
 
 ## Copilot Expectations for This Repo

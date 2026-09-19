@@ -11,7 +11,7 @@ export interface InputCallbacks {
 class InputManager {
     private canvasEl: HTMLCanvasElement
 
-    // Direct subscribers — replaces the EventQueue for 1:1 input routing
+    // Direct subscribers — the only input path, 1:1 routing
     private subscribers: Set<InputCallbacks> = new Set()
 
     constructor(cnvs: HTMLCanvasElement) {
