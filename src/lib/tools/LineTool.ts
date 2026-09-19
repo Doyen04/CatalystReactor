@@ -104,7 +104,7 @@ class LineTool extends Tool {
         this.activeShape.previewPoint = { x: endX, y: endY }
     }
 
-    override handlePointerUp(e: MouseEvent): void {
+    override handlePointerUp(_e: MouseEvent): void {
         this.isPointerDown = false
         // Polylines don't finish on Up, they wait for explicit Finish (Enter/Double-click)
     }

@@ -1,11 +1,16 @@
 import Shape from '../base/Shape'
-import { Canvas, Font, Path } from 'canvaskit-wasm'
+import { Canvas, Font, Typeface, Path } from 'canvaskit-wasm'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
 interface SimpleTextStyle {
     textColor: number[]
     fontSize: number
     fontFamily: string[]
+}
+
+interface GlyphPathTypeface extends Typeface {
+    getGlyphPath(glyphId: number): Path | null
+    getUnitsPerEm(): number
 }
 
 class SText extends Shape {
@@ -145,9 +150,9 @@ class SText extends Shape {
         let currentX = this.padding
 
         for (let i = 0; i < glyphs.length; i++) {
-            const glyphPath = (typeface as any).getGlyphPath(glyphs[i])
+            const glyphPath = (typeface as GlyphPathTypeface).getGlyphPath(glyphs[i])
             if (glyphPath) {
-                const scale = this.textStyle.fontSize / (typeface as any).getUnitsPerEm()
+                const scale = this.textStyle.fontSize / (typeface as GlyphPathTypeface).getUnitsPerEm()
                 const matrix = ck.Matrix.multiply(
                     ck.Matrix.translated(currentX, baselineY),
                     ck.Matrix.scaled(scale, -scale) 

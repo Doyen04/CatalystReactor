@@ -1,4 +1,5 @@
 import { Coord, ShapeType } from '@lib/types/shapes'
+import type Tool from '@lib/tools/Tool'
 
 enum EventTypes {
     CreateScene = 'create:scene', //
@@ -40,12 +41,12 @@ type Handlers = {
     // [EventTypes.RemoveSelectedModifier]: () => void;
     [EventTypes.UpdateModifierHandlesPos]: () => void
     // [EventTypes.EditText]: (e: KeyboardEvent) => void;
-    [EventTypes.ToolChange]: (tool: any) => void
+    [EventTypes.ToolChange]: (tool: Tool) => void
     [EventTypes.Render]: () => void
 }
 
 class EventBus {
-    private handlers = new Map<EventTypes, Set<Function>>()
+    private handlers = new Map<EventTypes, Set<Handlers[EventTypes]>>()
 
     subscribe<T extends EventTypes>(event: T, handler: Handlers[T]) {
         // console.log(event, 'registered');
@@ -53,7 +54,7 @@ class EventBus {
         if (!this.handlers.has(event)) {
             this.handlers.set(event, new Set())
         }
-        this.handlers.get(event)!.add(handler)
+        this.handlers.get(event)!.add(handler as Handlers[EventTypes])
     }
 
     trigger<T extends EventTypes>(event: T, ...args: Parameters<Handlers[T]>): ReturnType<Handlers[T]> {
@@ -61,7 +62,7 @@ class EventBus {
         let result: ReturnType<Handlers[T]>
 
         this.handlers.get(event)?.forEach(handler => {
-            result = handler(...args)
+            result = (handler as unknown as (...params: never[]) => ReturnType<Handlers[T]>)(...args as never[])
         })
         return result
     }
@@ -73,7 +74,7 @@ class EventBus {
     }
 
     removeAllEvent() {
-        this.handlers = new Map<EventTypes, Set<Function>>()
+        this.handlers = new Map<EventTypes, Set<Handlers[EventTypes]>>()
     }
 
     /** Remove a specific handler from an event */

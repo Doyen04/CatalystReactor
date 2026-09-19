@@ -36,7 +36,7 @@ abstract class Tool {
         }
     }
 
-    handlePointerUp(e: MouseEvent) {
+    handlePointerUp(_e: MouseEvent) {
         const { setDefaultTool } = useToolStore.getState()
         setDefaultTool()
         this.isPointerDown = false

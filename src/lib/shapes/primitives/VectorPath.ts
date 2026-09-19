@@ -1,5 +1,5 @@
 import type { Canvas, Path, Path as SkPath } from 'canvaskit-wasm'
-import { Coord, PathPoint, Properties } from '@lib/types/shapes'
+import { Coord, PathPoint } from '@lib/types/shapes'
 import Shape from '../base/Shape'
 import { ShapeData } from '@lib/core/EngineStateStore'
 

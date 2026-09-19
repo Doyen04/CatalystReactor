@@ -1,5 +1,6 @@
 
 import { useSceneStore } from '@hooks/sceneStore'
+import type { Canvas, Paint, PathEffect } from 'canvaskit-wasm'
 import { Coord, Properties } from '@lib/types/shapes'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import throttle from '@lib/helper/throttle'
@@ -17,14 +18,14 @@ class ShapeManager {
     private throttledUpdate: (properties: Properties) => void
     private initialProps: Properties | null = null
     private activeSnapResult: SnapResult | null = null
-    private snapGuidePaint: any = null
-    private snapGuideDash: any = null
+    private snapGuidePaint: Paint | null = null
+    private snapGuideDash: PathEffect | null = null
 
     constructor(shapeModifier: ShapeModifier) {
         this.scene = null
         this.shapeModifier = shapeModifier
         
-        this.throttledUpdate = throttle(useSceneStore.getState().setCurrentShapeProperties as any)
+        this.throttledUpdate = throttle(useSceneStore.getState().setCurrentShapeProperties as (props: unknown) => void)
     }
 
     drawShape(dragStart: Coord, e: MouseEvent) {
@@ -111,7 +112,7 @@ class ShapeManager {
             
             if (hasChanged) {
                 HistoryManager.getInstance().pushAction(
-                    new UpdateShapeAction(shapeId, this.initialProps, structuredClone(finalProps))
+                    new UpdateShapeAction(shapeId, this.initialProps, structuredClone(finalProps as Properties))
                 )
             }
         }
@@ -190,7 +191,7 @@ class ShapeManager {
         // Record history for property bar updates
         if (this.scene && this.scene.shape) {
             HistoryManager.getInstance().pushAction(
-                new UpdateShapeAction(this.scene.shape.data.id, oldProps, structuredClone(finalProps))
+                new UpdateShapeAction(this.scene.shape.data.id, oldProps as Properties, structuredClone(finalProps as Properties))
             )
             EngineStateStore.getInstance().notify(this.scene.shape.data.id)
         }
@@ -318,13 +319,13 @@ class ShapeManager {
         this.shapeModifier?.setSuppressHandles(suppress)
     }
 
-    draw(canvas: any) {
+    draw(canvas: Canvas) {
         if (!this.shapeModifier) return
         this.shapeModifier.draw(canvas)
         this.drawSnapGuides(canvas)
     }
 
-    private drawSnapGuides(canvas: any) {
+    private drawSnapGuides(canvas: Canvas) {
         if (!this.activeSnapResult || !this.activeSnapResult.snapped) return
         
         const ck = CanvasKitResources.getInstance()?.canvasKit

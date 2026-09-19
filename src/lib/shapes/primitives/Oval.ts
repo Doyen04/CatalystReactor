@@ -1,6 +1,7 @@
 import Shape from '../base/Shape'
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
-import { ArcHandleState, ArcSegment, Coord, Properties } from '@lib/types/shapes'
+import { ArcHandleState, ArcSegment, Coord, InitialTransformState, PathData, PathPoint, Properties } from '@lib/types/shapes'
+import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import { normalizeAngle } from '@lib/helper/normalise'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
@@ -81,7 +82,7 @@ class Oval extends Shape {
         return { x: this.radiusX, y: this.radiusY }
     }
 
-    override drawModifierHandles(canvas: Canvas, resource: any): void {
+    override drawModifierHandles(canvas: Canvas, resource: CanvasKitResources): void {
         super.drawModifierHandles(canvas, resource) // draw size and rotation
         const cw = resource.canvasKit
         
@@ -114,7 +115,7 @@ class Oval extends Shape {
         }
 
         // Draw Arc Start and Arc End Handles
-        const getArcCenter = (theta: number, rRatio: number) => {
+        const getArcCenter = (theta: number, _rRatio: number) => {
             const rx = arc.ratio === 0 ? this.radiusX * 0.8 : (this.radiusX + innerRadiusX) / 2
             const ry = arc.ratio === 0 ? this.radiusY * 0.8 : (this.radiusY + innerRadiusY) / 2
             return {
@@ -166,7 +167,7 @@ class Oval extends Shape {
         return null
     }
 
-    override dragModifierHandle(handleID: string, localCurrent: Coord, localStart: Coord, initialShapeData: any): void {
+    override dragModifierHandle(handleID: string, localCurrent: Coord, _localStart: Coord, initialShapeData: InitialTransformState): void {
         const { width, height } = this.data.properties.size
         const radiusX = width / 2
         const radiusY = height / 2
@@ -175,7 +176,7 @@ class Oval extends Shape {
             const ratio = this.calculateRatioFromMousePosition(localCurrent, radiusX, radiusY, width, height)
             this.setRatio(ratio)
         } else if (handleID === 'arc-start' || handleID === 'arc-end') {
-            const { start, sweep } = initialShapeData.arcAngle
+            const { start, sweep } = initialShapeData.arcAngle!
             const deltaX = localCurrent.x - radiusX
             const deltaY = localCurrent.y - radiusY
             const pointerAngle = normalizeAngle(Math.atan2(radiusX * deltaY, radiusY * deltaX))
@@ -207,7 +208,7 @@ class Oval extends Shape {
         return Math.min(0.99, distanceFromCenter / ellipseRadiusAtAngle)
     }
 
-    private ensureArcEndState(state: any, sweep: number, anchorAngle: number): ArcHandleState {
+    private ensureArcEndState(state: ArcHandleState, sweep: number, anchorAngle: number): ArcHandleState {
         if (state?.dragDirection !== undefined) return state
         return {
             ...(state ?? {}),
@@ -276,7 +277,7 @@ class Oval extends Shape {
         const rect = this.resource.canvasKit.XYWHRect(0, 0, width, height)
 
         if (this.isTorus() || this.isArc()) {
-            return this.drawComplexShape(null as any, rect)
+            return this.drawComplexShape(null, rect)
         } else {
             const path = new this.resource.canvasKit.Path()
             path.addOval(rect)
@@ -310,7 +311,7 @@ class Oval extends Shape {
         }
     }
 
-    protected override drawHoverEffect(canvas: Canvas, rect: any): void {
+    protected override drawHoverEffect(canvas: Canvas, rect: Rect): void {
         if (!this.resource) return
 
         const hoverPaint = this.paintManager.stroke
@@ -326,7 +327,7 @@ class Oval extends Shape {
         }
     }
 
-    private drawComplexShape(canvas: Canvas, rect: Rect) {
+    private drawComplexShape(_canvas: Canvas | null, rect: Rect) {
         const { canvasKit } = this.resource
         const path = new canvasKit.Path()
         const arc = this.arcSegment
@@ -395,7 +396,7 @@ class Oval extends Shape {
         return normalizedDistance <= 1
     }
 
-    override convertToPathData(): any {
+    override convertToPathData(): PathData | null {
         const { width, height } = this.data.properties.size
         const rx = width / 2
         const ry = height / 2
@@ -407,7 +408,7 @@ class Oval extends Shape {
         const dx = rx * k
         const dy = ry * k
 
-        const points: any[] = [
+        const points: PathPoint[] = [
             { x: cx, y: 0, cp1: { x: cx - dx, y: 0 }, cp2: { x: cx + dx, y: 0 }, smooth: true }, // Top
             { x: width, y: cy, cp1: { x: width, y: cy - dy }, cp2: { x: width, y: cy + dy }, smooth: true }, // Right
             { x: cx, y: height, cp1: { x: cx + dx, y: height }, cp2: { x: cx - dx, y: height }, smooth: true }, // Bottom

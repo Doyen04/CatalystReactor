@@ -1,7 +1,5 @@
-import { Coord, BoundingRect } from '@lib/types/shapes'
-import Shape from '../shapes/base/Shape'
+import { Coord } from '@lib/types/shapes'
 import SceneNode from '../node/Scene'
-import ShapeNode from '../node/ShapeNode'
 
 export interface SnapPoint {
     x: number

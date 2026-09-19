@@ -6,6 +6,7 @@ import { FlexLayout, GridLayout, LayoutConstraints } from './nodeTypes'
 import { applyColumnLayout, applyGridLayout, applyRowLayout } from './LayoutEngine'
 import PaintManager from '@lib/core/PaintManager'
 import container from '@lib/core/DependencyManager'
+import type { Properties } from '@lib/types/shapes'
 
 class ContainerNode extends SceneNode {
     children: SceneNode[]
@@ -72,10 +73,10 @@ class ContainerNode extends SceneNode {
             size: { width: 0, height: 0 },
             style: { fill: { color: '', opacity: 1 }, stroke: { color: '', opacity: 1, width: 0 } },
             layoutConstraints: this.layoutConstraints
-        } as any
+        } as unknown as Properties
     }
 
-    override setProperties(props: any) {
+    override setProperties(props: Properties) {
         if (this.shape) {
             this.shape.setProperties(props)
         }

@@ -1,12 +1,7 @@
-import React, { ReactNode } from 'react'
+import React from 'react'
 import { GRID2X2 } from './Section'
 import Input from './Input'
 import { MoveHorizontal, MoveVertical, ArrowLeftRight, ArrowUpDown, RotateCw, Maximize, Target } from 'lucide-react'
-
-interface PropertyGroupProps {
-    title: string
-    children: ReactNode
-}
 
 export const TransformGroup: React.FC<{
     x: number,
@@ -39,6 +34,7 @@ export const RotationScaleGroup: React.FC<{
     <GRID2X2 title="Rotation / Scale">
         {rotation !== undefined && <Input type="number" icon={<RotateCw />} value={rotation} onChange={v => onChange('rotation', v)} />}
         {scaleX !== undefined && <Input type="number" icon={<Maximize />} value={scaleX} onChange={v => onChange('scaleX', v)} />}
+        {scaleY !== undefined && <Input type="number" icon={<Maximize />} value={scaleY} onChange={v => onChange('scaleY', v)} />}
     </GRID2X2>
 )
 

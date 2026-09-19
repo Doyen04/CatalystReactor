@@ -1,7 +1,7 @@
 import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
 import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, Path, TextStyle } from 'canvaskit-wasm'
-import { Coord, Properties, PTextStyle, Size } from '@lib/types/shapes'
+import { Coord, PTextStyle } from '@lib/types/shapes'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
 class PText extends Shape {

@@ -1,8 +1,7 @@
 import type { Path as SkPath, PathOp } from 'canvaskit-wasm'
 import { CanvasKitResources } from './CanvasKitResource'
 import Shape from '../shapes/base/Shape'
-import { Coord, PathPoint, Properties } from '@lib/types/shapes'
-import VectorPath from '../shapes/primitives/VectorPath'
+import { Coord, PathPoint } from '@lib/types/shapes'
 import { ShapeData } from './EngineStateStore'
 
 export class PathOperator {

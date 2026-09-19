@@ -1,5 +1,6 @@
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
-import { BorderRadius, CornerPos, HandlePos, Properties, Coord } from '@lib/types/shapes'
+import { HandlePos, Coord, InitialTransformState, PathData, PathPoint } from '@lib/types/shapes'
+import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import SimpleRect from './SimpleRect'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
@@ -69,7 +70,7 @@ class Rectangle extends SimpleRect {
         return { ...radii, locked: borderRadius.locked }
     }
 
-    override drawModifierHandles(canvas: Canvas, resource: any): void {
+    override drawModifierHandles(canvas: Canvas, resource: CanvasKitResources): void {
         super.drawModifierHandles(canvas, resource)
         const cw = resource.canvasKit
         const paint = new cw.Paint()
@@ -129,7 +130,7 @@ class Rectangle extends SimpleRect {
         return null
     }
 
-    override dragModifierHandle(handleID: string, localCurrent: Coord, localStart: Coord, initialShapeData: any): void {
+    override dragModifierHandle(handleID: string, localCurrent: Coord, _localStart: Coord, _initialShapeData: InitialTransformState): void {
         if (handleID.startsWith('radius-')) {
             const pos = handleID.replace('radius-', '') as HandlePos
             const { width, height } = this.data.properties.size
@@ -217,7 +218,7 @@ class Rectangle extends SimpleRect {
         }
     }
 
-    protected override drawHoverEffect(canvas: Canvas, rect: any): void {
+    protected override drawHoverEffect(canvas: Canvas, rect: Rect): void {
         if (!this.resource) return
 
         const borderRadius = this.data.properties.borderRadius!
@@ -277,9 +278,9 @@ class Rectangle extends SimpleRect {
         return x >= 0 && x <= width && y >= 0 && y <= height
     }
 
-    override convertToPathData(): any {
+    override convertToPathData(): PathData | null {
         const { width, height } = this.data.properties.size
-        const points: any[] = []
+        const points: PathPoint[] = []
 
         if (!this.hasRadius()) {
             points.push({ x: 0, y: 0, smooth: false })

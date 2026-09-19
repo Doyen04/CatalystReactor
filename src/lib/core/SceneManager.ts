@@ -1,10 +1,8 @@
 import type { Canvas } from 'canvaskit-wasm'
-import container from '@lib/core/DependencyManager'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 
-import ShapeNode from '@lib/node/ShapeNode'
 import ShapeManager from './ShapeManager'
 
 class SceneManager {

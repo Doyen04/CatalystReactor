@@ -32,8 +32,6 @@ export const AngleIcon = React.forwardRef<SVGSVGElement, IconProps>(
     ) => {
         const safeRatio = Math.max(0, Math.min(1, ratio))
         const sweepAngle = (endAngle - startAngle) * safeRatio
-        const startDegrees = (startAngle * 180) / Math.PI
-        const sweepDegrees = (sweepAngle * 180) / Math.PI
 
         const sin = Math.sin
         const cos = Math.cos

@@ -1,4 +1,5 @@
 import EngineStateStore, { ShapeData } from './EngineStateStore'
+import { Properties } from '@lib/types/shapes'
 
 export interface Action {
     type: string
@@ -11,8 +12,8 @@ export class UpdateShapeAction implements Action {
 
     constructor(
         public readonly shapeId: string,
-        private readonly oldState: any, // snapshot of old properties
-        private readonly newState: any  // snapshot of new properties
+        private readonly oldState: Properties, // snapshot of old properties
+        private readonly newState: Properties  // snapshot of new properties
     ) {}
 
     undo() {

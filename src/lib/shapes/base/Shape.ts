@@ -9,7 +9,7 @@ import {
     Properties,
     ShapeType,
 } from '@lib/types/shapes'
-import type { Canvas, Path as SkPath } from 'canvaskit-wasm'
+import type { Canvas, Path as SkPath, Rect } from 'canvaskit-wasm'
 import PaintManager from '@lib/core/PaintManager'
 import container from '@lib/core/DependencyManager'
 import { ShapeData } from '@lib/core/EngineStateStore'
@@ -267,7 +267,7 @@ abstract class Shape {
     setCursorPosFromCoord(_x: number, _y: number): void { /* no-op */ }
     deleteText(_direc: 'forward' | 'backward'): void { /* no-op */ }
     moveCursor(_direc: 'right' | 'left' | 'up' | 'down', _shiftKey: boolean): void { /* no-op */ }
-    protected drawHoverEffect(_canvas: Canvas, _rect?: BoundingRect): void { /* no-op */ }
+    protected drawHoverEffect(_canvas: Canvas, _rect?: Rect): void { /* no-op */ }
     setFontSize(_size: number): void { /* no-op */ }
     setFontFamily(_fontFamily: string): void { /* no-op */ }
     getMaxRadius(): number { return Infinity }

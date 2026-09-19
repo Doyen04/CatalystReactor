@@ -1,7 +1,7 @@
 import clamp from '@lib/helper/clamp'
 import { getOppositeHandle, getHandleLocalPoint } from '@lib/helper/handleUtil'
 import SceneNode from '@lib/node/Scene'
-import { ArcHandleState, Coord } from '@lib/types/shapes'
+import { ArcHandleState, Coord, HandlePos } from '@lib/types/shapes'
 import { ShapeData } from './modifier'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
 import Handle from './Handles'
@@ -87,7 +87,7 @@ export function updateShapeRadii(handle: Handle, e: MouseEvent, scene: SceneNode
     scene.setBorderRadius(newRadius, handle.pos)
 }
 
-export function updateShapeDim(handleID: string, dragStart: Coord, e: MouseEvent, scene: SceneNode, initialShapeData: any) {
+export function updateShapeDim(handleID: string, dragStart: Coord, e: MouseEvent, scene: SceneNode, initialShapeData: ShapeData) {
     const localStart = tranformPoint(initialShapeData.inverseWorldTransform, dragStart.x, dragStart.y)
     const localCurrent = tranformPoint(initialShapeData.inverseWorldTransform, e.offsetX, e.offsetY)
 
@@ -140,7 +140,7 @@ export function updateShapeDim(handleID: string, dragStart: Coord, e: MouseEvent
     const desiredScaleY = willFlipY ? -Math.sign(initialShapeData.scale.y || 1) : Math.sign(initialShapeData.scale.y || 1)
 
     // Cast pos to HandlePos since it's now a pure string
-    const fixedHandleKey = getOppositeHandle(pos as any)
+    const fixedHandleKey = getOppositeHandle(pos as HandlePos)
     const fixedLocal = getHandleLocalPoint(fixedHandleKey, initialShapeData.dimension.width, initialShapeData.dimension.height)
     const fixedWorld = tranformPoint(initialShapeData.localTransform, fixedLocal.x, fixedLocal.y)
     const handleNewLocal = getHandleLocalPoint(fixedHandleKey, absW, absH)

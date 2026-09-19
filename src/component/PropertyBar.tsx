@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { useSceneStore } from '@hooks/sceneStore'
 import { ColorProps } from '@lib/types/shapes'
 import Input from '@ui/Input'
-import { useCanvasManagerStore } from '@hooks/useCanvasManager'
+import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
 import { Hexagon } from 'lucide-react'
 import { Section, GRID2X2 } from '@ui/Section'
 import LockButton from '@ui/LockedButton'
@@ -24,12 +24,12 @@ function PropertyBar() {
     ]
 
 
-    const handlePropertyChange = (key: string, value: any): void => {
+    const handlePropertyChange = (key: string, value: number | string | number[] | string[] | ColorProps): void => {
         if (!shapeManager || !currentShapeProperties) return
         const { transform, size, spikesRatio, arcSegment, sides, style, textStyle } = currentShapeProperties
 
         if (key === 'top-left' || key === 'top-right' || key === 'bottom-left' || key === 'bottom-right' || key === 'radii') {
-            shapeManager.updateBorderRadius(value, key)
+            shapeManager.updateBorderRadius(value as number, key)
             return
         }
 

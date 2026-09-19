@@ -1,10 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import EngineStateStore from '@lib/core/EngineStateStore'
 import { useSceneStore } from '@hooks/sceneStore'
-import { useCanvasManagerStore } from '@hooks/useCanvasManager'
+import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 import { Square, Circle, Star, Type, MousePointer2, Layers, ChevronDown, ChevronRight } from 'lucide-react'
+
+interface LayerItem {
+    id: string
+    name: string
+    type: string
+    depth: number
+    isContainer: boolean
+    isExpanded: boolean
+    node: SceneNode
+}
 
 const ShapeIcon = ({ type }: { type: string }) => {
     switch (type) {
@@ -26,7 +36,7 @@ const LayersPanel: React.FC = () => {
     const sceneManager = canvasManager?.sceneManager
 
     const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({})
-    const [tick, setTick] = useState(0)
+    const [_tick, setTick] = useState(0)
 
     //this looks like and hack
     // Force re-render on Engine state store changes
@@ -79,7 +89,7 @@ const LayersPanel: React.FC = () => {
         }))
     }
 
-    const handleLayerClick = (layer: any) => {
+    const handleLayerClick = (layer: LayerItem) => {
         if (!canvasManager) return
         const node = layer.node
         if (node) {
@@ -87,12 +97,12 @@ const LayersPanel: React.FC = () => {
         }
     }
 
-    const buildVisibleLayers = (): any[] => {
+    const buildVisibleLayers = (): LayerItem[] => {
         if (!sceneManager) return []
         const root = sceneManager.getRootContainer()
         if (!root) return []
 
-        const visibleLayers: any[] = []
+        const visibleLayers: LayerItem[] = []
 
         const traverse = (node: SceneNode, depth: number) => {
             if (node !== root) {

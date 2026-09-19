@@ -1043,6 +1043,8 @@ Rules for not destroying working code, which was the stated concern and is the r
 
 **One branch per step.** Merge to main only when the app runs and the smoke test passes. Never have two steps in flight.
 
+**dont use inline ignore script to avoid what you can fix by just following the insturction the error specified
+
 **Tag before you start.** `git tag pre-refactor` already gives you an escape hatch. Tag before each large step too.
 
 **Strangler, never big-bang.** Build the new thing beside the old one. Make the old API a facade over the new implementation. Migrate callers one at a time. Delete the facade last. Step 6 is built entirely around this.

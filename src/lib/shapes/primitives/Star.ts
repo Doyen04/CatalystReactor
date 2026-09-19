@@ -1,6 +1,7 @@
 import Shape from '../base/Shape'
 import type { Canvas, Path } from 'canvaskit-wasm'
-import { Coord, HandlePos, Properties } from '@lib/types/shapes'
+import { Coord, HandlePos, InitialTransformState, PathData, PathPoint } from '@lib/types/shapes'
+import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import clamp from '@lib/helper/clamp'
 import computeRoundedCorner from '@lib/helper/roundingUtil'
 import { arcPointAtFraction } from '@lib/helper/pointInArc'
@@ -115,7 +116,7 @@ class Star extends Shape {
         }
     }
 
-    override drawModifierHandles(canvas: Canvas, resource: any): void {
+    override drawModifierHandles(canvas: Canvas, resource: CanvasKitResources): void {
         super.drawModifierHandles(canvas, resource)
 
         if (this.points.length < 3) return
@@ -190,12 +191,12 @@ class Star extends Shape {
         return null
     }
 
-    override dragModifierHandle(handleID: string, localCurrent: Coord, localStart: Coord, initialShapeData: any): void {
-        const { width, height } = this.data.properties.size
+    override dragModifierHandle(handleID: string, localCurrent: Coord, _localStart: Coord, _initialShapeData: InitialTransformState): void {
+        const { width: _width, height: _height } = this.data.properties.size
 
         if (handleID === 'radius-top') {
             const distY = localCurrent.y - 0 // Bounding rect top is 0
-            if (distY >= 0) this.setBorderRadius(Math.abs(distY), 'top' as any)
+            if (distY >= 0) this.setBorderRadius(Math.abs(distY), 'top')
         } else if (handleID === 's-ratio') {
             const deltaX = localCurrent.x - this.radiusX
             const deltaY = localCurrent.y - this.radiusY
@@ -346,8 +347,8 @@ class Star extends Shape {
         return inside
     }
 
-    override convertToPathData(): any {
-        const pointsArray: any[] = []
+    override convertToPathData(): PathData | null {
+        const pointsArray: PathPoint[] = []
         for (let i = 0; i < this.points.length; i++) {
             const { x, y } = this.points[i]
             // Note: Bypassing parametric border radius rendering for raw points.

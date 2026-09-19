@@ -30,6 +30,15 @@ export default tseslint.config([
         },
         rules: {
             'import/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: true }],
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrorsIgnorePattern: '^_',
+                    destructuredArrayIgnorePattern: '^_',
+                },
+            ],
         },
     },
 ])

@@ -108,7 +108,7 @@ class TextCursor {
         const rects = paragraph.getRectsForRange(startIndex, endIndex, CK.RectHeightStyle.IncludeLineSpacingTop, CK.RectWidthStyle.Tight)
 
         if (!rects.length) return []
-        const [x, y, w, h] = rects[rects.length - 1].rect
+        const [x, y, w, _h] = rects[rects.length - 1].rect
 
         if (current.startIndex == this.cursorIndex) {
             return [x, y, 2, height]

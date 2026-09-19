@@ -1,5 +1,5 @@
-import type { Canvas, Rect } from 'canvaskit-wasm'
-import { Coord, Properties, Size } from '@lib/types/shapes'
+import type { Canvas, Path, Rect } from 'canvaskit-wasm'
+import { Coord } from '@lib/types/shapes'
 import Shape from '../base/Shape'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
@@ -27,7 +27,7 @@ class SimpleRect extends Shape {
 
 
 
-    override getPath(): Rect | any {
+    override getPath(): Path | null {
         if (!this.resource) return null
         const { width, height } = this.data.properties.size
         const rect = this.resource.canvasKit.XYWHRect(0, 0, width, height)
@@ -53,7 +53,7 @@ class SimpleRect extends Shape {
         }
     }
 
-    protected override drawHoverEffect(canvas: Canvas, rect: any): void {
+    protected override drawHoverEffect(canvas: Canvas, rect: Rect): void {
         if (!this.resource) return
 
         const hoverPaint = this.paintManager.stroke

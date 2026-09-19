@@ -194,7 +194,7 @@ class EditTool extends Tool {
         this.lastWorldPos = { x: e.offsetX, y: e.offsetY }
     }
 
-    override handlePointerUp(e: MouseEvent): void {
+    override handlePointerUp(_e: MouseEvent): void {
         if (this.isDragging && this.editingShape) {
             this.shapeManager.finishDrag()
         }

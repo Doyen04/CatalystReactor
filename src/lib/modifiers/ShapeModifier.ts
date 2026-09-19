@@ -3,7 +3,7 @@ import CanvasKitResources from '@lib/core/CanvasKitResource'
 import SText from '@lib/shapes/primitives/SText'
 import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
-import { Coord, InitialTransformState, PTextStyle } from '@lib/types/shapes'
+import { Coord, HandlePos, InitialTransformState, PTextStyle } from '@lib/types/shapes'
 import { ShapeData as StoreShapeData } from '@lib/core/EngineStateStore'
 import container from '@lib/core/DependencyManager'
 import PaintManager from '@lib/core/PaintManager'
@@ -42,7 +42,7 @@ class ShapeModifier {
         
         const dummyData: StoreShapeData = {
             id: 'dimension-label',
-            type: 'text' as any,
+            type: 'text',
             properties: {
                 transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, anchorPoint: null },
                 size: { width: 0, height: 0 },
@@ -178,7 +178,7 @@ class ShapeModifier {
         const scaleX = (newWidth < 0 ? -1 : 1) * Math.sign(initial.scale.x || 1)
         const scaleY = (newHeight < 0 ? -1 : 1) * Math.sign(initial.scale.y || 1)
 
-        const fixedHandleKey = getOppositeHandle(pos as any)
+        const fixedHandleKey = getOppositeHandle(pos as HandlePos)
         const fixedLocal = getHandleLocalPoint(fixedHandleKey, initial.dimension.width, initial.dimension.height)
         const fixedWorld = transformPoint(initial.localTransform, fixedLocal.x, fixedLocal.y, this.resource)
         
@@ -308,7 +308,6 @@ class ShapeModifier {
     canDraw(): boolean {
         if (!this.scene) return false
         const { width, height } = this.scene.getDim()
-        const MINSIZE = 5
 
         // Only block if BOTH are too small (like a single point)
         // or if it's a line, let it draw if it has some length

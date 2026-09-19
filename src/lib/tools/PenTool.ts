@@ -152,7 +152,7 @@ class PenTool extends Tool {
         }
     }
 
-    override handlePointerUp(e: MouseEvent): void {
+    override handlePointerUp(_e: MouseEvent): void {
         this.isPointerDown = false
 
         if (this.state === 'dragging-handle') {

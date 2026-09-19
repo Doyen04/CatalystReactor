@@ -9,7 +9,7 @@ import { CanvasKitResources } from '@/lib/core/CanvasKitResource'
 import CanvasManager from '@lib/core/CanvasManager'
 
 import { useToolStore } from '@hooks/useTool'
-import { useCanvasManagerStore } from '@hooks/useCanvasManager'
+import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
 
 function Canvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
