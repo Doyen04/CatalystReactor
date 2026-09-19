@@ -2,7 +2,9 @@
 
 CanvasKit (Skia WASM) vector editor. React 19 + Vite 6 + Tailwind 4 + Zustand + TypeScript. React UI is thin; logic lives in `src/lib/{core,shapes,tools,modifiers,node}`.
 
-Read `.github/copilot-instructions.md` for the full architecture (event flow, scene graph, layout containers, tool/shape extension recipes). It is accurate and detailed.
+Read `.github/copilot-instructions.md` for the **current** architecture (event flow, scene graph, layout containers, tool/shape extension recipes). It is accurate and detailed.
+
+**The active refactor plan and target architecture:** `docs/arcthitecture.md` (engine-authoritative, headless, command/journal-based). This is the map for all work on the `refactor/engine-architecture` branch — one branch, all planned changes land here. Target end-state layout: `src/{core,engine,bridge,ui}` tiers with a monotone import direction (see the plan's section 3). If a change is listed in the plan, implement it there; do not improvise a parallel sketch in `src/lib`. Default tool is `select`; per-group remembered tools exist.
 
 ## Commands
 
@@ -38,7 +40,7 @@ Events: `InputManager` captures native pointer/key/resize events and fans them o
 - Tool type union is `ToolType` in `src/lib/tools/toolTypes.ts`; it includes `ContainerType` (row/column/grid/frame/none) used by group tools. Note `ToolBar` shows UI entries (e.g. `freeform`, `scale`) that have no matching `ToolType`/implementation.
 - `Renderer` and tool code assume `CanvasKitResources` is already initialized; anything running before canvas boot will fail.
 - `SnapManager` is a singleton configured via `useSceneStore.gridSize`. `ShapeManager` lazily caches its snap-guide paint/dash; that cache is per-ShapeManager, reset on re-mount.
-- Dead code to ignore: `src/lib/core/toImplement.ts` (scratchpad), `src/lib/modifiers/{Handles,modifier,modifierUtility}.ts` (legacy), `PathOperator`/`BooleanAction` (unwired boolean ops).
+- **Files that look dead but are the working fallback — do NOT delete.** They contain the working version of code that was refactored elsewhere (the new refactor wasn't working as it should, so the working copies were kept for reference): `src/lib/modifiers/{Handles,modifier,modifierUtility}.ts`, `src/lib/core/toImplement.ts`, `PathOperator`/`BooleanAction` (unwired boolean ops), `EventQueue` (dormant bus, `removeAllEvent()` only). Treat them as reference implementations, not trash. The architecture plan (docs/arcthitecture.md) describes the migration; when migrating a concern, carry the working logic across — don't delete the file until the new location is verified working.
 - Tailwind 4 is CSS-first (`@import 'tailwindcss'` in `index.css`); there is no `tailwind.config.js`.
 - `tsc -b` writes `tsconfig.tsbuildinfo` to the repo root; it is committed, not gitignored.
 - Fonts load at boot from `public/fonts` (Inter variable) plus remote families in `src/lib/core/fonts.json`; requires network for the remote ones, best-effort via `Promise.allSettled`.
