@@ -321,9 +321,13 @@ class VectorPath extends Shape {
             }
 
             // Dashed preview stroke
-            const previewStroke = this.paintManager.stroke
-            previewStroke.setColor(this.resource.canvasKit.Color(100, 100, 255, 0.6))
-            previewStroke.setStrokeWidth(1.5)
+            const previewStroke = this.paintManager.getPaint({
+                color: { type: 'solid', color: [100, 100, 255, 0.6] },
+                opacity: 1,
+                size: dim,
+                stroke: true,
+                strokeWidth: 1.5,
+            })
             canvas.drawPath(previewPath, previewStroke)
             previewPath.delete()
         }
@@ -338,8 +342,6 @@ class VectorPath extends Shape {
             this.drawDrawingAnchors(canvas)
         }
 
-        this.paintManager.resetPaint()
-
         if (this.isHover) {
             this.drawHoverEffect(canvas)
         }
@@ -350,22 +352,38 @@ class VectorPath extends Shape {
         const CanvasKit = this.resource.canvasKit
         const pts = this.points
         const aSize = 4
+        const dim = this.getDim()
 
-        const anchorFill = this.paintManager.paint
-        const anchorStroke = this.paintManager.stroke
-        anchorStroke.setStrokeWidth(1)
+        const snappedFill = this.paintManager.getPaint({
+            color: { type: 'solid', color: [255, 165, 0, 1] }, // Orange for snap
+            opacity: 1,
+            size: dim,
+        })
+        const snappedStroke = this.paintManager.getPaint({
+            color: { type: 'solid', color: [200, 100, 0, 1] },
+            opacity: 1,
+            size: dim,
+            stroke: true,
+            strokeWidth: 1,
+        })
+        const plainFill = this.paintManager.getPaint({
+            color: { type: 'solid', color: [255, 255, 255, 0.5] }, // Semi-transparent white
+            opacity: 1,
+            size: dim,
+        })
+        const plainStroke = this.paintManager.getPaint({
+            color: { type: 'solid', color: [100, 100, 255, 0.5] },
+            opacity: 1,
+            size: dim,
+            stroke: true,
+            strokeWidth: 1,
+        })
 
         for (let i = 0; i < pts.length; i++) {
             const pt = pts[i]
             const isSnapped = i === this.snapPointIndex
-
-            if (isSnapped) {
-                anchorFill.setColor(CanvasKit.Color(255, 165, 0, 1)) // Orange for snap
-                anchorStroke.setColor(CanvasKit.Color(200, 100, 0, 1))
-            } else {
-                anchorFill.setColor(CanvasKit.Color(255, 255, 255, 0.5)) // Semi-transparent white
-                anchorStroke.setColor(CanvasKit.Color(100, 100, 255, 0.5))
-            }
+            const anchorFill = isSnapped ? snappedFill : plainFill
+            const anchorStroke = isSnapped ? snappedStroke : plainStroke
 
             const r = CanvasKit.XYWHRect(pt.x - aSize, pt.y - aSize, aSize * 2, aSize * 2)
             canvas.drawRect(r, anchorFill)
@@ -382,9 +400,13 @@ class VectorPath extends Shape {
         if (!pts[i1] || !pts[i2]) return
 
         const CanvasKit = this.resource.canvasKit
-        const highlightPaint = this.paintManager.stroke
-        highlightPaint.setColor(CanvasKit.Color(59, 130, 246, 0.4)) // Light blue highlight
-        highlightPaint.setStrokeWidth((this.data.properties.style.stroke?.width ?? 2) + 4)
+        const highlightPaint = this.paintManager.getPaint({
+            color: { type: 'solid', color: [59, 130, 246, 0.4] }, // Light blue highlight
+            opacity: 1,
+            size: this.getDim(),
+            stroke: true,
+            strokeWidth: (this.data.properties.style.stroke?.width ?? 2) + 4,
+        })
 
         const path = new CanvasKit.Path()
         path.moveTo(pts[i1].x, pts[i1].y)
@@ -412,9 +434,13 @@ class VectorPath extends Shape {
         const path = this.buildPath()
         if (!path) return
 
-        const hoverPaint = this.paintManager.stroke
-        hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1))
-        hoverPaint.setStrokeWidth(2)
+        const hoverPaint = this.paintManager.getPaint({
+            color: { type: 'solid', color: [0, 123, 255, 1] },
+            opacity: 1,
+            size: this.getDim(),
+            stroke: true,
+            strokeWidth: 2,
+        })
         canvas.drawPath(path, hoverPaint)
         path.delete()
     }
@@ -538,9 +564,14 @@ class VectorPath extends Shape {
         const pts = this.points
 
         // Draw control handle lines
-        const linePaint = this.paintManager.stroke
-        linePaint.setColor(CanvasKit.Color(120, 120, 220, 0.7))
-        linePaint.setStrokeWidth(1)
+        const dim = this.getDim()
+        const linePaint = this.paintManager.getPaint({
+            color: { type: 'solid', color: [120, 120, 220, 0.7] },
+            opacity: 1,
+            size: dim,
+            stroke: true,
+            strokeWidth: 1,
+        })
 
         for (const pt of pts) {
             if (pt.cp1) {
@@ -560,11 +591,18 @@ class VectorPath extends Shape {
         }
 
         // Draw control points (small circles)
-        const cpFill = this.paintManager.paint
-        cpFill.setColor(CanvasKit.Color(255, 255, 255, 1))
-        const cpStroke = this.paintManager.stroke
-        cpStroke.setColor(CanvasKit.Color(100, 100, 220, 1))
-        cpStroke.setStrokeWidth(1.5)
+        const cpFill = this.paintManager.getPaint({
+            color: { type: 'solid', color: [255, 255, 255, 1] },
+            opacity: 1,
+            size: dim,
+        })
+        const cpStroke = this.paintManager.getPaint({
+            color: { type: 'solid', color: [100, 100, 220, 1] },
+            opacity: 1,
+            size: dim,
+            stroke: true,
+            strokeWidth: 1.5,
+        })
 
         const cpSize = 4
         for (const pt of pts) {
@@ -587,22 +625,37 @@ class VectorPath extends Shape {
         }
 
         // Draw anchor points (filled diamonds / squares)
-        const anchorFill = this.paintManager.paint
-        const anchorStroke = this.paintManager.stroke
-        anchorStroke.setStrokeWidth(1.5)
+        const selectedFill = this.paintManager.getPaint({
+            color: { type: 'solid', color: [59, 130, 246, 1] },
+            opacity: 1,
+            size: dim,
+        })
+        const selectedStroke = this.paintManager.getPaint({
+            color: { type: 'solid', color: [29, 78, 216, 1] },
+            opacity: 1,
+            size: dim,
+            stroke: true,
+            strokeWidth: 1.5,
+        })
+        const unselectedFill = this.paintManager.getPaint({
+            color: { type: 'solid', color: [255, 255, 255, 1] },
+            opacity: 1,
+            size: dim,
+        })
+        const unselectedStroke = this.paintManager.getPaint({
+            color: { type: 'solid', color: [59, 130, 246, 1] },
+            opacity: 1,
+            size: dim,
+            stroke: true,
+            strokeWidth: 1.5,
+        })
 
         const aSize = 5
         for (let i = 0; i < pts.length; i++) {
             const pt = pts[i]
             const isSelected = i === this.selectedPointIndex
-
-            if (isSelected) {
-                anchorFill.setColor(CanvasKit.Color(59, 130, 246, 1))
-                anchorStroke.setColor(CanvasKit.Color(29, 78, 216, 1))
-            } else {
-                anchorFill.setColor(CanvasKit.Color(255, 255, 255, 1))
-                anchorStroke.setColor(CanvasKit.Color(59, 130, 246, 1))
-            }
+            const anchorFill = isSelected ? selectedFill : unselectedFill
+            const anchorStroke = isSelected ? selectedStroke : unselectedStroke
 
             // Draw as diamond shape for path anchors
             const diamond = new CanvasKit.Path()
@@ -616,8 +669,6 @@ class VectorPath extends Shape {
             canvas.drawPath(diamond, anchorStroke)
             diamond.delete()
         }
-
-        this.paintManager.resetPaint()
     }
 
 

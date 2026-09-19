@@ -222,9 +222,13 @@ class Rectangle extends SimpleRect {
         if (!this.resource) return
 
         const borderRadius = this.data.properties.borderRadius!
-        const hoverPaint = this.paintManager.stroke
-        hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1)) // Blue with transparency
-        hoverPaint.setStrokeWidth(2)
+        const hoverPaint = this.paintManager.getPaint({
+            color: { type: 'solid', color: [0, 123, 255, 1] },
+            opacity: 1,
+            size: this.getDim(),
+            stroke: true,
+            strokeWidth: 2,
+        })
 
         if (this.hasRadius() && borderRadius.locked) {
             const radius = borderRadius['top-left']

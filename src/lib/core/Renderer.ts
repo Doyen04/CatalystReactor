@@ -182,8 +182,25 @@ class Renderer {
         skCnvs.scale(this.dpr, this.dpr)
 
         const rect = this.resource.canvasKit.LTRBRect(10, 10, 250, 100)
-        skCnvs!.drawRect(rect, this.paintManager.paint!)
-        skCnvs!.drawRect(rect, this.paintManager.stroke!)
+        const size = { width: 240, height: 90 }
+        skCnvs!.drawRect(
+            rect,
+            this.paintManager.getPaint({
+                color: { type: 'solid', color: [60, 0, 0, 0.3] },
+                opacity: 1,
+                size,
+            })
+        )
+        skCnvs!.drawRect(
+            rect,
+            this.paintManager.getPaint({
+                color: { type: 'solid', color: [0, 255, 0, 1] },
+                opacity: 1,
+                size,
+                stroke: true,
+                strokeWidth: 2,
+            })
+        )
 
         this.sceneManager.draw(skCnvs)
 

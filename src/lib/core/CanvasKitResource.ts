@@ -14,6 +14,7 @@ export class CanvasKitResources {
     private cnvsFontMgr: FontMgr | null
     private cnvsCanvasKit: CanvasKit
     private cnvsPath: Path
+    private pathDisposed = false
     
 
     private constructor(canvasKit: CanvasKit) {
@@ -134,6 +135,10 @@ export class CanvasKitResources {
     }
 
     public dispose() {
+        if (!this.pathDisposed) {
+            this.cnvsPath.delete()
+            this.pathDisposed = true
+        }
         if (this.cnvsFontMgr) {
             this.cnvsFontMgr.delete()
         }

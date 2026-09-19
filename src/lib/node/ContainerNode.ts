@@ -148,10 +148,11 @@ class ContainerNode extends SceneNode {
         if (!padding) return
         const bounds = this.shape.getDim()
 
-        const fillPaint = this.paintManager.paint
-
-        // Draw padding areas with orange color
-        fillPaint.setColor(this.resource.canvasKit.Color(255, 200, 100, 0.3))
+        const fillPaint = this.paintManager.getPaint({
+            color: { type: 'solid', color: [255, 200, 100, 0.3] },
+            opacity: 1,
+            size: bounds,
+        })
 
         // Top padding
         if (padding.top > 0) {
@@ -183,24 +184,26 @@ class ContainerNode extends SceneNode {
         }
 
         // Draw gap indicators based on layout type
-        this.drawGapIndicators(canvas, bounds, fillPaint)
+        const gapPaint = this.paintManager.getPaint({
+            color: { type: 'solid', color: [100, 200, 255, 0.4] },
+            opacity: 1,
+            size: bounds,
+        })
+        this.drawGapIndicators(canvas, bounds, gapPaint)
     }
 
-    private drawGapIndicators(canvas: Canvas, bounds: { width: number; height: number }, fillPaint: Paint): void {
+    private drawGapIndicators(canvas: Canvas, bounds: { width: number; height: number }, gapPaint: Paint): void {
         const { type } = this.layoutConstraints
 
         if (this.children.length <= 1) return
 
-        // Set gap color to blue
-        fillPaint.setColor(this.resource.canvasKit.Color(100, 200, 255, 0.4))
-
         switch (type) {
             case 'row':
             case 'column':
-                this.drawFlexGaps(canvas, fillPaint)
+                this.drawFlexGaps(canvas, gapPaint)
                 break
             case 'grid':
-                this.drawGridGaps(canvas, bounds, fillPaint)
+                this.drawGridGaps(canvas, bounds, gapPaint)
                 break
             default:
                 break

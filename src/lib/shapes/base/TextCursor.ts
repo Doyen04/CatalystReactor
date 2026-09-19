@@ -1,7 +1,7 @@
 // TextCursor.ts
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import container from '@lib/core/DependencyManager'
-import PaintManager from '@lib/core/PaintManager'
+import type PaintManager from '@lib/core/PaintManager'
 import type { Canvas, LineMetrics, Paragraph } from 'canvaskit-wasm'
 
 class TextCursor {
@@ -14,7 +14,7 @@ class TextCursor {
     private blinkInterval: ReturnType<typeof setTimeout>
     private blinkSpeed: number = 500 // ms
     private cursorIndex: number
-    paintManager:PaintManager
+    paintManager: PaintManager
 
     constructor(initialX: number, initialY: number, initialHeight: number) {
         this.x = initialX
@@ -49,17 +49,6 @@ class TextCursor {
     setCoord(x: number, y: number) {
         this.x = x
         this.y = y
-    }
-
-    setPaint() {
-        if (!this.resource) {
-            console.log('resource not set')
-
-            return
-        }
-
-        this.paintManager.stroke.setColor(this.resource.canvasKit.BLACK)
-        this.paintManager.stroke.setStrokeWidth(2)
     }
 
     setCursorPositionFromCoord(paragraph: Paragraph, text: string, fontSize: number, lineHeight: number, x: number, y: number) {
@@ -139,7 +128,9 @@ class TextCursor {
     }
 
     private findCurrentAboveBelowLine(lineMetrics: LineMetrics[]): {
-        current: LineMetrics | null; above: LineMetrics | null; below: LineMetrics | null;
+        current: LineMetrics | null
+        above: LineMetrics | null
+        below: LineMetrics | null
     } {
         const totalLines = lineMetrics.length
         const cursorIndex = this.cursorIndex
@@ -149,86 +140,75 @@ class TextCursor {
         }
 
         for (let index = totalLines - 1; index >= 0; index--) {
-            const line = lineMetrics[index];
-            const isFirstLine = index === 0;
-            const isLastLine = index === totalLines - 1;
+            const line = lineMetrics[index]
+            const isFirstLine = index === 0
+            const isLastLine = index === totalLines - 1
 
             if (cursorIndex >= line.startIndex && cursorIndex <= line.endIndex) {
                 return {
                     current: line,
                     above: !isFirstLine ? lineMetrics[index - 1] : null,
-                    below: !isLastLine ? lineMetrics[index + 1] : null
+                    below: !isLastLine ? lineMetrics[index + 1] : null,
                 }
             }
-
         }
 
-        const lastIdx = totalLines - 1;
+        const lastIdx = totalLines - 1
         return {
             current: lineMetrics[lastIdx],
             above: lastIdx - 1 >= 0 ? lineMetrics[lastIdx - 1] : null,
             below: null,
-        };
+        }
     }
 
-    private findBestIndexInLine(
-        line: LineMetrics,
-        targetX: number,
-        paragraph: Paragraph
-    ): number {
-        const CK = this.resource.canvasKit;
-        let bestIndex = line.startIndex;
+    private findBestIndexInLine(line: LineMetrics, targetX: number, paragraph: Paragraph): number {
+        const CK = this.resource.canvasKit
+        let bestIndex = line.startIndex
 
         // For performance, clamp search length
-        const endIndex = line.endExcludingWhitespaces;
+        const endIndex = line.endExcludingWhitespaces
 
         for (let i = line.startIndex; i <= endIndex; i++) {
-            const rects = paragraph.getRectsForRange(
-                i,
-                i + 1,
-                CK.RectHeightStyle.IncludeLineSpacingMiddle,
-                CK.RectWidthStyle.Tight
-            );
+            const rects = paragraph.getRectsForRange(i, i + 1, CK.RectHeightStyle.IncludeLineSpacingMiddle, CK.RectWidthStyle.Tight)
 
             if (rects.length > 0) {
-                const charLeft = rects[0].rect[0];
-                const charRight = rects[0].rect[2];
-                const charMid = (charLeft + charRight) / 2;
+                const charLeft = rects[0].rect[0]
+                const charRight = rects[0].rect[2]
+                const charMid = (charLeft + charRight) / 2
 
                 // If target is inside this character's box
                 if (targetX >= charLeft && targetX <= charRight) {
                     // Decide to place cursor before or after the character
-                    return targetX <= charMid ? i : i + 1;
+                    return targetX <= charMid ? i : i + 1
                 }
 
                 // If cursor is to the right of this char, move bestIndex forward
                 if (targetX > charRight) {
-                    bestIndex = i + 1;
+                    bestIndex = i + 1
                 } else {
                     // We've gone past the target
-                    break;
+                    break
                 }
             } else {
                 // No rect — probably end of line or newline character
-                break;
+                break
             }
         }
 
         // ✅ clamp depending on line break type
         if (line.isHardBreak) {
             // Stop at newline boundary — cursor shouldn't go past the line’s endIndex
-            return Math.min(bestIndex, line.endIndex);
+            return Math.min(bestIndex, line.endIndex)
         } else {
             // For wrapped lines, cursor can move to the *position after last char*
-            return Math.min(bestIndex, line.endIndex - 1);
+            return Math.min(bestIndex, line.endIndex - 1)
         }
     }
-
 
     private moveCursorUp(text: string, fontSize: number, lineHeight: number, paragraph: Paragraph): number {
         const metrics = paragraph.getLineMetrics()
         const { above } = this.findCurrentAboveBelowLine(metrics)
-       
+
         if (above == null) return this.cursorIndex
 
         const coord = this.calculateCursorRect(text, fontSize, lineHeight, paragraph)
@@ -278,9 +258,16 @@ class TextCursor {
         if (!this.visible || !this.resource) {
             return
         }
-        this.setPaint()
 
-        canvas.drawLine(this.textX, this.textY, this.textX, this.textY + this.height, this.paintManager.stroke)
+        const paint = this.paintManager.getPaint({
+            color: { type: 'solid', color: [0, 0, 0, 1] },
+            opacity: 1,
+            size: { width: 2, height: 2 },
+            stroke: true,
+            strokeWidth: 2,
+        })
+
+        canvas.drawLine(this.textX, this.textY, this.textX, this.textY + this.height, paint)
     }
 
     destroy(): void {

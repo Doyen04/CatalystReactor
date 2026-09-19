@@ -244,9 +244,13 @@ class Polygon extends Shape {
         const { canvasKit } = this.resource
         const path = new canvasKit.Path()
 
-        const hoverPaint = this.paintManager.stroke
-        hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1)) // Blue with transparency
-        hoverPaint.setStrokeWidth(2)
+        const hoverPaint = this.paintManager.getPaint({
+            color: { type: 'solid', color: [0, 123, 255, 1] },
+            opacity: 1,
+            size: this.getDim(),
+            stroke: true,
+            strokeWidth: 2,
+        })
 
         if (this.points.length >= 3) {
             if (this.bRadius == 0) {

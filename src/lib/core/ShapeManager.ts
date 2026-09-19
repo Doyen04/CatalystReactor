@@ -173,6 +173,17 @@ class ShapeManager {
         useSceneStore.getState().clearProperties()
     }
 
+    destroy(): void {
+        if (this.snapGuidePaint) {
+            this.snapGuidePaint.delete()
+            this.snapGuidePaint = null
+        }
+        if (this.snapGuideDash) {
+            this.snapGuideDash.delete()
+            this.snapGuideDash = null
+        }
+    }
+
     updateProperty<K extends keyof Properties>(key: K, value: Properties[K]) {
         if (!this.scene) throw new Error('No shape attached')
         

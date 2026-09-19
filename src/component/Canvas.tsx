@@ -7,6 +7,8 @@ import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url'
 
 import { CanvasKitResources } from '@/lib/core/CanvasKitResource'
 import CanvasManager from '@lib/core/CanvasManager'
+import { textCache } from '@/engine/render/TextCache'
+import { registerResourceCounter, unregisterResourceCounter, startResourceCounterMonitor } from '@/engine/render/ResourceCounter'
 
 import { useToolStore } from '@hooks/useTool'
 import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
@@ -16,11 +18,18 @@ function Canvas() {
     const canvasManagerRef = useRef<CanvasManager>(null)
     const { canvasManager, setCanvasManager } = useCanvasManagerStore()
     const canvasResourcesRef = useRef<CanvasKitResources>(null)
+    const stopMonitorRef = useRef<(() => void) | null>(null)
     const { tool } = useToolStore()
 
     useEffect(() => {
         const cleanupExisting = () => {
             console.log('doing clean up')
+
+            if (stopMonitorRef.current) {
+                stopMonitorRef.current()
+                stopMonitorRef.current = null
+            }
+            unregisterResourceCounter('paragraphs')
 
             if (canvasManagerRef.current) {
                 canvasManagerRef.current.destroy()
@@ -51,6 +60,8 @@ function Canvas() {
                 canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
                 canvasManagerRef.current = new CanvasManager(canvasRef.current)
                 setCanvasManager(canvasManagerRef.current)
+                registerResourceCounter('paragraphs', textCache)
+                stopMonitorRef.current = startResourceCounterMonitor()
                 console.log('Initializing Canvasmanager with CanvasKit')
             } catch (error) {
                 console.log(error, 'error loading canvaskit')

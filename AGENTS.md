@@ -19,6 +19,20 @@ Formatting is Prettier but not wired to a script; run `npx prettier --write <fil
 
 `vite-aliases` (`deep: true`) auto-generates an `@<dirname>` alias for every folder under `src` at dev/build time. `@/*` → `src/*`, e.g. `@lib/core/CanvasManager`, `@hooks/useTool`. New folders under `src` get aliases automatically — do NOT hardcode path config. `tsconfig.json` `paths` mirrors this for the editor's typechecking; note `tsconfig.app.json` overrides `paths` to `{}` (Vite still resolves aliases so builds work).
 
+## Architecture boundaries (enforced direction)
+
+Imports point one way only: `ui/` → `bridge/` → `engine/` → `core/` (plan sections 2.4 and 11). Information travels back up as **events**, never as imports.
+
+- `src/engine/**` must stay headless: never import React, Zustand, `src/ui`, `src/hooks`, or `src/component`. `src/engine/render/` is the first engine tier and owns WASM resource lifecycles.
+- `src/core/**` (once it exists) must not import CanvasKit.
+- WASM resources are **not** garbage-collected. `Paint`/`Path`/`Paragraph`/`Shader`/`Image` ownership goes through `src/engine/render/{PaintCache,ResourceScope,TextCache}`. Never mutate a paint returned by `PaintManager.getPaint`/`makeNewPaint` — request a new descriptor instead.
+- Engine/tier imports use `@/*` (present in `tsconfig.json` paths) or relative paths. Do **not** use the auto-generated `@<folder>` aliases (e.g. `@engine/...`) for engine imports — they are missing from `tsconfig.json` paths and break typechecking.
+
+## Refactor status (`refactor/engine-architecture`)
+
+- **Step 1 (stop the leaks) landed:** `src/engine/render/{PaintCache,TextCache,ResourceScope,ResourceCounter}` added; paint creation routed through `PaintCache`; PText paragraphs cached by version+width; shared-paint mutation removed from all live shapes/tools (only the preserved dead `Handles.ts` fallback still uses the getters); dev-only `[skia]` counter wired in `Canvas.tsx`.
+- `PaintManager.getPaint(request)` returns an immutable cached paint and is the preferred API. The `paint`/`stroke` getters remain only for the dead `Handles.ts` reference file until Step 2.
+
 ## Boot flow
 
 `src/component/Canvas.tsx` is the engine bootstrap: loads `canvaskit-wasm`, initializes singleton `CanvasKitResources`, then creates one `CanvasManager` per mounted canvas. `CanvasManager` registers services into `DependencyManager` in a fixed order (paintManager → shapeModifier → shapeManager → sceneManager → inputManager → renderer → toolManager); tools resolve dependencies from this container — never instantiate side copies.

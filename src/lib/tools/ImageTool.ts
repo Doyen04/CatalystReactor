@@ -11,6 +11,7 @@ class ImageTool extends Tool {
     private isLoading: boolean = false
     private imageData: { imageBuffer: ArrayBuffer; name: string }[] | null
     private preloadedImages: Map<string, CanvasKitImage> = new Map()
+    private consumedImageNames: Set<string> = new Set()
 
     constructor(cnvs: HTMLCanvasElement) {
         super(cnvs)
@@ -90,7 +91,19 @@ class ImageTool extends Tool {
         }
         this.imageData = rest
         const imag = this.preloadedImages.get(currentImage.name)
-        return imag ? { CanvasKitImage: imag, imageBuffer: currentImage.imageBuffer, name: currentImage.name } : null
+        if (!imag) return null
+        this.consumedImageNames.add(currentImage.name)
+        return { CanvasKitImage: imag, imageBuffer: currentImage.imageBuffer, name: currentImage.name }
+    }
+
+    private clearPreloadedImages() {
+        for (const [name, image] of this.preloadedImages) {
+            if (!this.consumedImageNames.has(name)) {
+                image.delete()
+            }
+        }
+        this.preloadedImages.clear()
+        this.consumedImageNames.clear()
     }
 
     isImageDataEmpty() {
@@ -134,7 +147,7 @@ class ImageTool extends Tool {
     override handlePointerUp(e: MouseEvent): void {
 
         if (this.isImageDataEmpty()) {
-            this.preloadedImages.clear()
+            this.clearPreloadedImages()
             console.log('Image placement completed, clearing image store')
             super.handlePointerUp(e)
         }
@@ -157,7 +170,7 @@ class ImageTool extends Tool {
     }
 
     override toolChange(): void {
-        this.preloadedImages.clear()
+        this.clearPreloadedImages()
         this.imageData = null
         this.isLoading = false
         console.log('imageTool Cleaned', this.imageData) //clean images

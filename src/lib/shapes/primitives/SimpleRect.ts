@@ -56,9 +56,13 @@ class SimpleRect extends Shape {
     protected override drawHoverEffect(canvas: Canvas, rect: Rect): void {
         if (!this.resource) return
 
-        const hoverPaint = this.paintManager.stroke
-        hoverPaint.setColor(this.resource.canvasKit.Color(0, 123, 255, 1)) // Blue with transparency
-        hoverPaint.setStrokeWidth(2)
+        const hoverPaint = this.paintManager.getPaint({
+            color: { type: 'solid', color: [0, 123, 255, 1] },
+            opacity: 1,
+            size: this.getDim(),
+            stroke: true,
+            strokeWidth: 2,
+        })
 
         canvas.drawRect(rect, hoverPaint)
     }

@@ -124,6 +124,14 @@
     - Resolve from the container where needed; clean up in the `destroy()` path.
     - If it syncs to React, register the id-keyed data in `EngineStateStore` and notify subscribers.
 
+## Architecture Boundary and Resource Ownership (refactor in progress)
+
+- Target tiers, with imports pointing one way only: `ui/` -> `bridge/` -> `engine/` -> `core/`. `src/engine/**` must stay headless (never import React, Zustand, `src/hooks`, or `src/component`); `src/core/**` must not import CanvasKit. Information flows back up as events.
+- Use `@/*` (in `tsconfig.json` paths) or relative paths for tier imports. Do NOT use the auto-generated `@<folder>` aliases (e.g. `@engine/...`) — they are not in `tsconfig.json` paths and break typechecking.
+- New WASM-owning helpers live in `src/engine/render/`: `PaintCache` (descriptor -> immutable `Paint`), `TextCache` (`Paragraph` keyed by version+width), `ResourceScope` (reverse-order disposal), `ResourceCounter` (dev-only `[skia]` log). CanvasKit resources are not garbage collected.
+- Obtain paints via `PaintManager.getPaint({ color, opacity, size, stroke?, strokeWidth? })` (or `initFillPaint`/`initStrokePaint`). They return cached paints: **never** call `.setColor`/`.setShader`/`.setStrokeWidth` on the result — request a new descriptor instead. The legacy `paint`/`stroke` getters remain only for the dead `Handles.ts` fallback until Step 2.
+- Already landed in Step 1: PText paragraphs cached and deleted by version, SText font/typeface and ShapeManager snap paints destroyed on teardown, ImageTool deletes unplaced preloaded images.
+
 ## Copilot Expectations for This Repo
 
 - Favor minimal, targeted edits over broad rewrites.

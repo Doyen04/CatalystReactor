@@ -5,8 +5,6 @@ import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
 import { Coord, HandlePos, InitialTransformState, PTextStyle } from '@lib/types/shapes'
 import { ShapeData as StoreShapeData } from '@lib/core/EngineStateStore'
-import container from '@lib/core/DependencyManager'
-import PaintManager from '@lib/core/PaintManager'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
 import { getOppositeHandle, getHandleLocalPoint } from '@lib/helper/handleUtil'
 
@@ -21,22 +19,15 @@ function transformPoint(matrix: number[], x: number, y: number, resource: Canvas
 
 class ShapeModifier {
     private scene: SceneNode | null
-    private strokeColor: string | number[]
-    private strokeWidth: number
-    private fill: string = '#fff'
     private isHovered: boolean
     private selectedModifierHandle: string | null
     private initialShapeData: InitialTransformState | null = null
-    private font: SText
-    private paintManager: PaintManager
+    private font: SText | null = null
     private _editMode: boolean = false
     private _suppressHandles: boolean = false
 
     constructor() {
         this.scene = null
-        this.strokeColor = '#00f'
-        this.paintManager = container.resolve('paintManager')
-        this.strokeWidth = 1
         this.isHovered = false
         this.selectedModifierHandle = null
         
@@ -253,19 +244,9 @@ class ShapeModifier {
 
     //local coord
     updateText() {
+        if (!this.font) return
         const { width, height } = this.scene.getDim()
         this.font.setText(`${width} X ${height}`)
-    }
-
-    setPaint(): void {
-        if (!this.resource) return
-
-        const fillColor = Array.isArray(this.fill) ? this.fill : this.resource.canvasKit.parseColorString(this.fill)
-        const strokeColor = Array.isArray(this.strokeColor) ? this.strokeColor : this.resource.canvasKit.parseColorString(this.strokeColor)
-
-        this.paintManager.stroke.setColor(strokeColor)
-        this.paintManager.stroke.setStrokeWidth(this.strokeWidth)
-        this.paintManager.paint.setColor(fillColor)
     }
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
@@ -330,7 +311,6 @@ class ShapeModifier {
 
         // In edit mode for VectorPaths, draw the path edit overlay instead
         if (this._editMode && this.scene instanceof ShapeNode && this.scene.shape instanceof VectorPath) {
-            this.setPaint()
             canvas.save()
             canvas.concat(this.scene.getWorldMatrix())
             this.scene.shape.drawEditOverlay(canvas)
@@ -338,8 +318,6 @@ class ShapeModifier {
             this.drawText(canvas)
             return
         }
-
-        this.setPaint()
 
         canvas.save()
         canvas.concat(this.scene.getWorldMatrix())
@@ -353,7 +331,7 @@ class ShapeModifier {
     }
 
     drawText(canvas: Canvas) {
-        if (!this.scene) return
+        if (!this.scene || !this.font) return
 
         const bRect = this.scene.getAbsoluteBoundingRect()
 
@@ -368,13 +346,11 @@ class ShapeModifier {
     }
 
     destroy() {
-        if (this.scene) {
-            this.scene.destroy()
-            this.scene = null
+        this.scene = null
+        if (this.font) {
+            this.font.destroy()
+            this.font = null
         }
-        this.strokeColor = ''
-        this.strokeWidth = 0
-        this.fill = ''
         this.isHovered = false
         this.selectedModifierHandle = null
     }

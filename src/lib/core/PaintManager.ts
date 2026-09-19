@@ -1,17 +1,19 @@
-import type { Color, Shader, Image as CanvasKitImage, Paint } from "canvaskit-wasm"
-import CanvasKitResources from "./CanvasKitResource"
-import { SolidFill, LinearGradient, RadialGradient, ImageFill, Size, ScaleMode, PaintStyle, ColorProps, Stroke } from "@lib/types/shapes"
-import { PCache } from "./Cache"
+import type { Color, Shader, Image as CanvasKitImage, Paint } from 'canvaskit-wasm'
+import CanvasKitResources from './CanvasKitResource'
+import type { SolidFill, LinearGradient, RadialGradient, ImageFill, Size, ScaleMode, PaintStyle, ColorProps, Stroke } from '@lib/types/shapes'
+import { PCache } from './Cache'
+import type { PaintRequest } from '@/engine/render/PaintCache'
+import { PaintCache } from '@/engine/render/PaintCache'
+import { registerResourceCounter, unregisterResourceCounter } from '@/engine/render/ResourceCounter'
 
 class PaintManager {
     private fillPaint: Paint | null = null
     private strokePaint: Paint | null = null
-    private paintCache: PCache<Paint>
+    private paintCache: PaintCache | null = null
     imageCache: PCache<CanvasKitImage>
     private transientShaders: Shader[] = []
 
     constructor() {
-        this.paintCache = new PCache<Paint>()
         this.imageCache = new PCache<CanvasKitImage>()
         this.setUpPaint()
     }
@@ -43,6 +45,32 @@ class PaintManager {
         return shader
     }
 
+    private ensurePaintCache(): PaintCache | null {
+        if (this.paintCache) return this.paintCache
+        try {
+            const res = this.resource
+            if (!res) return null
+            this.paintCache = new PaintCache(res.canvasKit, fill => this.resolveImageFill(fill))
+            registerResourceCounter('paints', this.paintCache)
+        } catch {
+            return null
+        }
+        return this.paintCache
+    }
+
+    private resolveImageFill(fill: ImageFill): CanvasKitImage | null {
+        const imageData = fill.imageData
+        if (!imageData) return null
+        let cnvsImage = this.imageCache.get(imageData.name)
+        if (!cnvsImage && imageData.imageBuffer) {
+            cnvsImage = this.createCanvasKitImage(imageData.imageBuffer)
+            if (cnvsImage) {
+                this.imageCache.set(imageData.name, cnvsImage)
+            }
+        }
+        return cnvsImage
+    }
+
     setPaint(fill: PaintStyle, size: Size): Color | Shader | null {
         if (!this.resource) return null
         const ck = this.resource.canvasKit
@@ -50,9 +78,7 @@ class PaintManager {
         switch (fill.type) {
             case 'solid': {
                 const solid = fill as SolidFill
-                return Array.isArray(solid.color) 
-                    ? new Float32Array(solid.color) 
-                    : ck.parseColorString(solid.color)
+                return Array.isArray(solid.color) ? new Float32Array(solid.color) : ck.parseColorString(solid.color)
             }
             case 'linear': {
                 const grad = fill as LinearGradient
@@ -64,7 +90,8 @@ class PaintManager {
                 const y2 = (grad.y2 / 100) * size.height
 
                 const shader = ck.Shader.MakeLinearGradient(
-                    [x1, y1], [x2, y2],
+                    [x1, y1],
+                    [x2, y2],
                     grad.stops.map(s => ck.parseColorString(s.color)),
                     grad.stops.map(s => s.offset),
                     ck.TileMode.Clamp
@@ -80,7 +107,8 @@ class PaintManager {
                 const radius = (grad.radius / 100) * Math.max(size.width, size.height)
 
                 const shader = ck.Shader.MakeRadialGradient(
-                    [cx, cy], radius,
+                    [cx, cy],
+                    radius,
                     grad.stops.map(s => ck.parseColorString(s.color)),
                     grad.stops.map(s => s.offset),
                     ck.TileMode.Clamp
@@ -100,20 +128,23 @@ class PaintManager {
 
                 const matrix = this.calculateImageMatrix(size, cnvsImage, scaleMode)
 
-                const shader = cnvsImage.makeShaderOptions(
-                    ck.TileMode.Clamp, ck.TileMode.Clamp,
-                    ck.FilterMode.Linear, ck.MipmapMode.Linear,
-                    matrix
-                )
+                const shader = cnvsImage.makeShaderOptions(ck.TileMode.Clamp, ck.TileMode.Clamp, ck.FilterMode.Linear, ck.MipmapMode.Linear, matrix)
                 if (!shader) return null
                 return this.registerTransientShader(shader)
             }
-            case 'pattern': return null
-            default: return ck.parseColorString('#000')
+            case 'pattern':
+                return null
+            default:
+                return ck.parseColorString('#000')
         }
     }
 
     initFillPaint(fill: ColorProps, size: Size): Paint {
+        const cache = this.ensurePaintCache()
+        if (cache) {
+            return cache.get({ color: fill.color, opacity: fill.opacity, size: size })
+        }
+
         const fillShader = this.setPaint(fill.color, size)
 
         if (this.isColor(fillShader)) {
@@ -127,6 +158,11 @@ class PaintManager {
     }
 
     initStrokePaint(stroke: Stroke, size: Size): Paint {
+        const cache = this.ensurePaintCache()
+        if (cache) {
+            return cache.get({ color: stroke.color, opacity: stroke.opacity, size: size, stroke: true, strokeWidth: stroke.width })
+        }
+
         const strokeShader = this.setPaint(stroke.color, size)
         if (this.isColor(strokeShader)) {
             this.stroke.setColor(strokeShader as Color)
@@ -140,8 +176,18 @@ class PaintManager {
     }
 
     makeNewPaint(props: ColorProps | Stroke, size: Size, isStroke = false): Paint | null {
+        if (!props) return null
+
+        const cache = this.ensurePaintCache()
+        if (cache) {
+            if (isStroke) {
+                return cache.get({ color: props.color, opacity: props.opacity, size: size, stroke: true, strokeWidth: (props as Stroke).width })
+            }
+            return cache.get({ color: props.color, opacity: props.opacity, size: size, stroke: false })
+        }
+
         const res = this.resource
-        if (!res || !props) return null
+        if (!res) return null
 
         const paint = new res.canvasKit.Paint()
         if (isStroke) {
@@ -159,6 +205,35 @@ class PaintManager {
         if (isStroke) {
             paint.setStrokeWidth((props as Stroke).width)
         }
+        return paint
+    }
+
+    getPaint(request: PaintRequest): Paint {
+        const cache = this.ensurePaintCache()
+        if (cache) {
+            return cache.get(request)
+        }
+
+        const res = this.resource
+        if (!res) throw new Error('CanvasKit resources are not initialized')
+        const ck = res.canvasKit
+
+        const paint = new ck.Paint()
+        paint.setAntiAlias(true)
+        paint.setStyle(request.stroke ? ck.PaintStyle.Stroke : ck.PaintStyle.Fill)
+        if (request.stroke && request.strokeWidth !== undefined) {
+            paint.setStrokeWidth(request.strokeWidth)
+        }
+
+        const src = this.setPaint(request.color, request.size)
+        if (this.isColor(src)) {
+            paint.setColor(src as Color)
+        } else if (this.isShader(src)) {
+            paint.setShader(src as Shader)
+        }
+
+        // setAlphaf must come after setColor, otherwise the color's own alpha wins
+        paint.setAlphaf(request.opacity)
         return paint
     }
 
@@ -238,6 +313,17 @@ class PaintManager {
     }
 
     public destroy() {
+        this.paintCache?.dispose()
+        this.paintCache = null
+        unregisterResourceCounter('paints')
+
+        this.imageCache.clear()
+
+        for (const shader of this.transientShaders) {
+            shader.delete()
+        }
+        this.transientShaders = []
+
         this.fillPaint?.delete()
         this.strokePaint?.delete()
 

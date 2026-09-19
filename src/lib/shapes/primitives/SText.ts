@@ -1,6 +1,6 @@
 import Shape from '../base/Shape'
-import { Canvas, Font, Typeface, Path } from 'canvaskit-wasm'
-import { ShapeData } from '@lib/core/EngineStateStore'
+import type { Canvas, Font, Typeface, Path } from 'canvaskit-wasm'
+import type { ShapeData } from '@lib/core/EngineStateStore'
 
 interface SimpleTextStyle {
     textColor: number[]
@@ -14,7 +14,8 @@ interface GlyphPathTypeface extends Typeface {
 }
 
 class SText extends Shape {
-    private font: Font
+    private font: Font | null = null
+    private typeface: Typeface | null = null
     private padding: number = 2
     private TWidth: number = 0
     private THeight: number = 0
@@ -39,7 +40,7 @@ class SText extends Shape {
                 style: {
                     fill: { color: { type: 'solid', color: '#D9D9D9' }, opacity: 1 },
                     stroke: { color: { type: 'solid', color: '#000000' }, opacity: 1, width: 1 },
-                }
+                },
             }
         }
 
@@ -47,12 +48,12 @@ class SText extends Shape {
         // It is intentionally separate from data.properties.textStyle (PTextStyle).
 
         if (this.data.properties.text === undefined) {
-            this.data.properties.text = ""
+            this.data.properties.text = ''
         }
 
         if (this.resource && this.resource.canvasKit && this.resource.fontData && this.resource.fontData[0]) {
-            const typeface = this.resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(this.resource.fontData[0])
-            this.font = new this.resource.canvasKit.Font(typeface, this.textStyle.fontSize)
+            this.typeface = this.resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(this.resource.fontData[0])
+            this.font = new this.resource.canvasKit.Font(this.typeface, this.textStyle.fontSize)
             this.calculateTextDim()
         } else {
             console.warn('SText: Resource or font data not available during initialization')
@@ -104,8 +105,6 @@ class SText extends Shape {
         }
     }
 
-
-
     private calculateTextDim(): void {
         if (!this.font || !this.text) {
             this.TWidth = 0
@@ -120,21 +119,28 @@ class SText extends Shape {
     }
 
     private setTextPaint(fill: number[] | string, strokeColor?: number[] | string) {
-        if (!this.resource) return
-        const cnvsKit = this.resource
+        const size = this.getDim()
 
-        const fillcolor = Array.isArray(fill) ? fill : cnvsKit.canvasKit.parseColorString(fill)
-        this.paintManager.paint.setColor(fillcolor)
+        const fillPaint = this.paintManager.getPaint({
+            color: { type: 'solid', color: fill },
+            opacity: 1,
+            size,
+        })
 
+        let strokePaint = fillPaint
         if (strokeColor) {
-            const sc = Array.isArray(strokeColor) ? strokeColor : cnvsKit.canvasKit.parseColorString(strokeColor)
-            this.paintManager.stroke.setColor(sc)
-            this.paintManager.stroke.setStrokeWidth(1)
+            strokePaint = this.paintManager.getPaint({
+                color: { type: 'solid', color: strokeColor },
+                opacity: 1,
+                size,
+                stroke: true,
+                strokeWidth: 1,
+            })
         }
 
-        return { fill: this.paintManager.paint, stroke: this.paintManager.stroke }
+        return { fill: fillPaint, stroke: strokePaint }
     }
-    
+
     override getPath(): Path | null {
         if (!this.resource || !this.font || !this.text) return null
         const ck = this.resource.canvasKit
@@ -145,7 +151,7 @@ class SText extends Shape {
         const widths = this.font.getGlyphWidths(glyphs)
         const metrics = this.font.getMetrics()
         const masterPath = new ck.Path()
-        
+
         const baselineY = this.padding - metrics.ascent
         let currentX = this.padding
 
@@ -153,10 +159,7 @@ class SText extends Shape {
             const glyphPath = (typeface as GlyphPathTypeface).getGlyphPath(glyphs[i])
             if (glyphPath) {
                 const scale = this.textStyle.fontSize / (typeface as GlyphPathTypeface).getUnitsPerEm()
-                const matrix = ck.Matrix.multiply(
-                    ck.Matrix.translated(currentX, baselineY),
-                    ck.Matrix.scaled(scale, -scale) 
-                )
+                const matrix = ck.Matrix.multiply(ck.Matrix.translated(currentX, baselineY), ck.Matrix.scaled(scale, -scale))
                 glyphPath.transform(matrix)
                 masterPath.addPath(glyphPath)
                 glyphPath.delete()
@@ -168,7 +171,7 @@ class SText extends Shape {
     }
 
     override draw(canvas: Canvas): void {
-        if (!this.resource) return
+        if (!this.resource || !this.font) return
 
         const dim = this.getDim()
         const { fill: fillShape, stroke } = this.setTextPaint([0, 0, 1, 1], [0, 0, 1, 1]) // Default blue
@@ -183,7 +186,7 @@ class SText extends Shape {
             canvas.drawText(
                 this.text,
                 this.padding,
-                this.padding - (this.font.getMetrics().ascent), // baseline adjustment
+                this.padding - this.font.getMetrics().ascent, // baseline adjustment
                 fill,
                 this.font
             )
@@ -197,8 +200,20 @@ class SText extends Shape {
         return x >= 0 && x <= dim.width && y >= 0 && y <= dim.height
     }
 
-    override cleanUp(): void { }
-    override destroy(): void { }
+    override cleanUp(): void {
+        this.destroy()
+    }
+
+    override destroy(): void {
+        if (this.font) {
+            this.font.delete()
+            this.font = null
+        }
+        if (this.typeface) {
+            this.typeface.delete()
+            this.typeface = null
+        }
+    }
 }
 
 export default SText

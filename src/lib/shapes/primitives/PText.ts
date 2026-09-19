@@ -1,8 +1,9 @@
 import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
 import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, Path, TextStyle } from 'canvaskit-wasm'
-import { Coord, PTextStyle } from '@lib/types/shapes'
+import { Coord, PaintStyle, PTextStyle } from '@lib/types/shapes'
 import { ShapeData } from '@lib/core/EngineStateStore'
+import { textCache } from '@/engine/render/TextCache'
 
 class PText extends Shape {
     private TWidth: number = 0
@@ -13,9 +14,13 @@ class PText extends Shape {
     private selectionStart: number = 0
     private selectionEnd: number = 0
     private isEdit: boolean = true
+    private readonly cacheId: string
+    private paragraphVersion: number = 0
+    private lastLayoutWidth: number = 0
 
     constructor(data: ShapeData) {
         super(data)
+        this.cacheId = this.data.id
         this.cursor = new TextCursor(this.data.properties.transform.x, this.data.properties.transform.y, 0)
 
         if (!this.data.properties.text) {
@@ -115,7 +120,7 @@ class PText extends Shape {
 
     private getParagraphStyle(): ParagraphStyle {
         const canvasKit = this.resource.canvasKit
-        if (!canvasKit) throw new Error("CanvasKit not loaded")
+        if (!canvasKit) throw new Error('CanvasKit not loaded')
 
         const textAlignMap = {
             left: canvasKit.TextAlign.Left,
@@ -139,18 +144,28 @@ class PText extends Shape {
         return this.resource.paragraphStyle
     }
 
-    private getTextStyleFromSpan(textStyle: PTextStyle): { stroke: Paint; fill: Paint, backgroundColor: Paint, backgroundStroke: Paint, textStyle: TextStyle } {
+    private getTextStyleFromSpan(
+        textStyle: PTextStyle,
+        background: PaintStyle
+    ): { textStyle: TextStyle; fill: Paint; stroke: Paint; background: Paint } {
         const dim = this.getDim()
-        const fill = this.paintManager.makeNewPaint(textStyle.textFill, dim)
-        const stroke = this.paintManager.makeNewPaint(textStyle.textStroke, dim, true)
-        const backgroundFill = this.paintManager.makeNewPaint(textStyle.backgroundColor, dim)
-        const backgroundStroke = this.paintManager.makeNewPaint(textStyle.backgroundStroke, dim, true)
+        const fill = this.paintManager.getPaint({ color: textStyle.textFill.color, opacity: textStyle.textFill.opacity, size: dim })
+        const stroke = textStyle.textStroke
+            ? this.paintManager.getPaint({
+                  color: textStyle.textStroke.color,
+                  opacity: textStyle.textStroke.opacity,
+                  size: dim,
+                  stroke: true,
+                  strokeWidth: textStyle.textStroke.width,
+              })
+            : fill
+        const backgroundPaint = this.paintManager.getPaint({ color: background, opacity: 1, size: dim })
 
         this.resource.textStyle.fontSize = textStyle.fontSize
         this.resource.textStyle.fontFamilies = textStyle.fontFamilies
         this.resource.textStyle.fontVariations = textStyle.fontVariations
 
-        return { fill, stroke, backgroundColor: backgroundFill, backgroundStroke, textStyle: this.resource.textStyle }
+        return { textStyle: this.resource.textStyle, fill, stroke, background: backgroundPaint }
     }
 
     override moveShape(mx: number, my: number): void {
@@ -162,7 +177,6 @@ class PText extends Shape {
         const dim = this.getDim()
         return x >= 0 && x <= dim.width && y >= 0 && y <= dim.height
     }
-
 
     override draw(canvas: Canvas): void {
         if (!this.resource || !this.paragraph) return
@@ -217,8 +231,7 @@ class PText extends Shape {
     override deleteText(direction: 'forward' | 'backward'): void {
         if (this.hasSelection) {
             this.deleteSelection()
-        }
-        else if (direction === 'backward' && this.cursor.cursorPosIndex > 0) {
+        } else if (direction === 'backward' && this.cursor.cursorPosIndex > 0) {
             this.text = this.text.slice(0, this.cursor.cursorPosIndex - 1) + this.text.slice(this.cursor.cursorPosIndex)
             this.cursor.updateCursorPosIndex(-1)
         } else if (direction === 'forward' && this.cursor.cursorPosIndex < this.text.length) {
@@ -254,11 +267,13 @@ class PText extends Shape {
 
         this.builder.reset()
 
-        if (!this.hasSelection) {
-            const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
-            backgroundColor.setColor(this.resource.canvasKit.TRANSPARENT)
+        const transparentBackground: PaintStyle = { type: 'solid', color: [0, 0, 0, 0] }
+        const selectedBackground: PaintStyle = { type: 'solid', color: [0, 0, 1, 1] }
 
-            this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
+        if (!this.hasSelection) {
+            const { textStyle, fill, background } = this.getTextStyleFromSpan(this.textStyle, transparentBackground)
+
+            this.builder.pushPaintStyle(textStyle, fill, background)
             this.builder.addText(this.text)
             this.builder.pop()
         } else {
@@ -266,31 +281,33 @@ class PText extends Shape {
             const end = Math.max(this.selectionStart, this.selectionEnd)
 
             if (start > 0) {
-                const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
-                backgroundColor.setColor(this.resource.canvasKit.TRANSPARENT)
-                this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
+                const { textStyle, fill, background } = this.getTextStyleFromSpan(this.textStyle, transparentBackground)
+                this.builder.pushPaintStyle(textStyle, fill, background)
                 this.builder.addText(this.text.substring(0, start))
                 this.builder.pop()
             }
             if (start < end) {
-                const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
-                backgroundColor.setColor(this.resource.canvasKit.Color(0, 0, 255))
-                this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
+                const { textStyle, fill, background } = this.getTextStyleFromSpan(this.textStyle, selectedBackground)
+                this.builder.pushPaintStyle(textStyle, fill, background)
                 this.builder.addText(this.text.substring(start, end))
                 this.builder.pop()
             }
             if (end < this.text.length) {
-                const { textStyle, fill, backgroundColor } = this.getTextStyleFromSpan(this.textStyle)
-                backgroundColor.setColor(this.resource.canvasKit.TRANSPARENT)
-                this.builder.pushPaintStyle(textStyle, fill, backgroundColor)
+                const { textStyle, fill, background } = this.getTextStyleFromSpan(this.textStyle, transparentBackground)
+                this.builder.pushPaintStyle(textStyle, fill, background)
                 this.builder.addText(this.text.substring(end))
                 this.builder.pop()
             }
         }
 
-        this.paragraph = this.builder.build()
-        const layoutWidth = this.data.properties.size.width > 0 ? this.data.properties.size.width : 1000
-        this.paragraph.layout(layoutWidth)
+        this.paragraphVersion++
+        this.lastLayoutWidth = this.data.properties.size.width > 0 ? this.data.properties.size.width : 1000
+        const build = () => {
+            const paragraph = this.builder!.build()
+            paragraph.layout(this.lastLayoutWidth)
+            return paragraph
+        }
+        this.paragraph = textCache.getParagraph(this.cacheId, this.paragraphVersion, this.lastLayoutWidth, build)
     }
 
     private calculateTextDim() {
@@ -337,7 +354,7 @@ class PText extends Shape {
     override destroy(): void {
         this.cursor.stopCursorBlink()
         if (this.builder) this.builder.delete()
-        if (this.paragraph) this.paragraph.delete()
+        textCache.delete(this.cacheId)
     }
 }
 

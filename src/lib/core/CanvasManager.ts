@@ -16,7 +16,7 @@ class CanvasManager {
     renderer: Renderer
     toolManager: ToolManager
     shapeManager: ShapeManager
-    shapeModifier: ShapeModifier
+    shapeModifier: ShapeModifier | null
     paintManager: PaintManager
 
     undoStack: never[]
@@ -113,6 +113,14 @@ class CanvasManager {
         if (this.toolManager) {
             this.toolManager.destroy()
             this.toolManager = null
+        }
+        if (this.shapeManager) {
+            this.shapeManager.destroy()
+            this.shapeManager = null
+        }
+        if (this.shapeModifier) {
+            this.shapeModifier.destroy()
+            this.shapeModifier = null
         }
         container.clear()
         if (this.paintManager) {
