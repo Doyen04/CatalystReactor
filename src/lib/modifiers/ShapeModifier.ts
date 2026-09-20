@@ -5,7 +5,7 @@ import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
 import { Coord, HandlePos, InitialTransformState, PTextStyle } from '@lib/types/shapes'
 import { ShapeData as StoreShapeData } from '@lib/core/EngineStateStore'
-import type { ServiceContainer } from '@lib/core/DependencyManager'
+import type PaintManager from '@lib/core/PaintManager'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
 import { getOppositeHandle, getHandleLocalPoint } from '@lib/helper/handleUtil'
 
@@ -26,10 +26,10 @@ class ShapeModifier {
     private font: SText | null = null
     private _editMode: boolean = false
     private _suppressHandles: boolean = false
-    private container: ServiceContainer
+    private paintManager: PaintManager
 
-    constructor(container: ServiceContainer) {
-        this.container = container
+    constructor(paintManager: PaintManager) {
+        this.paintManager = paintManager
         this.scene = null
         this.isHovered = false
         this.selectedModifierHandle = null
@@ -54,7 +54,7 @@ class ShapeModifier {
                 } satisfies PTextStyle,
             },
         }
-        this.font = new SText(dummyData, container)
+        this.font = new SText(dummyData, paintManager)
     }
 
     attachShape(scene: SceneNode) {

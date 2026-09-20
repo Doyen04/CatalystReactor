@@ -46,6 +46,9 @@
             ],
             "@engine/*": [
                 "src/engine/*"
+            ],
+            "@bridge/*": [
+                "src/bridge/*"
             ]
         }
     },

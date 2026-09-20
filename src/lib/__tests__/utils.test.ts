@@ -1,46 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ServiceContainer } from '@lib/core/DependencyManager'
-import type { ServiceRegistry } from '@lib/core/DependencyManager'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { ResizeCursor } from '@lib/tools/ResizeCursor'
 import { isPrintableCharUnicode } from '@util/textUtil'
-
-describe('DependencyManager', () => {
-    beforeEach(() => {
-        vi.restoreAllMocks()
-    })
-
-    it('round-trips a registered fake service through register into resolve', () => {
-        const container = new ServiceContainer()
-        const fakePaintManager = { kind: 'paint', draw: () => 'drew' } as unknown as ServiceRegistry['paintManager']
-
-        container.register('paintManager', fakePaintManager)
-
-        expect(container.resolve('paintManager')).toBe(fakePaintManager)
-    })
-
-    it('resolves an unregistered key to null and warns via console.warn', () => {
-        const container = new ServiceContainer()
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
-        const result = container.resolve('renderer')
-
-        expect(result).toBeNull()
-        expect(warnSpy).toHaveBeenCalledTimes(1)
-        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('renderer'))
-    })
-
-    it('clear() empties the container so a previously registered key resolves to null again', () => {
-        const container = new ServiceContainer()
-        container.register('shapeManager', {} as unknown as ServiceRegistry['shapeManager'])
-        expect(container.resolve('shapeManager')).not.toBeNull()
-
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-        container.clear()
-
-        expect(container.resolve('shapeManager')).toBeNull()
-        expect(warnSpy).toHaveBeenCalledTimes(1)
-    })
-})
 
 describe('ResizeCursor', () => {
     beforeEach(() => {

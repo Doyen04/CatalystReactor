@@ -2,7 +2,6 @@ import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import { ArcHandleState, BoundingRect, Coord, HandlePos, InitialTransformState, PathData, Properties, ShapeType } from '@lib/types/shapes'
 import type { Canvas, Path as SkPath, Rect } from 'canvaskit-wasm'
 import PaintManager from '@lib/core/PaintManager'
-import type { ServiceContainer } from '@lib/core/DependencyManager'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
 abstract class Shape {
@@ -14,10 +13,10 @@ abstract class Shape {
     public data: ShapeData
     public matrixDirty: boolean = false
 
-    constructor(data: ShapeData, container: ServiceContainer) {
+    constructor(data: ShapeData, paintManager: PaintManager) {
         if (new.target === Shape) throw new Error('Shape is abstract; extend it!')
         this.data = data
-        this.paintManager = container.resolve('paintManager')
+        this.paintManager = paintManager
     }
 
     abstract getCenterCoord(): Coord

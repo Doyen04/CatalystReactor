@@ -3,11 +3,11 @@ import { HandlePos, Coord, InitialTransformState, PathData, PathPoint } from '@l
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import SimpleRect from './SimpleRect'
 import { ShapeData } from '@lib/core/EngineStateStore'
-import type { ServiceContainer } from '@lib/core/DependencyManager'
+import type PaintManager from '@lib/core/PaintManager'
 
 class Rectangle extends SimpleRect {
-    constructor(data: ShapeData, container: ServiceContainer) {
-        super(data, container)
+    constructor(data: ShapeData, paintManager: PaintManager) {
+        super(data, paintManager)
     }
 
     override setBorderRadius(newRadius: number, pos: HandlePos) {

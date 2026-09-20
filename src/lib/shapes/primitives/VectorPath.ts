@@ -2,7 +2,7 @@ import type { Canvas, Path, Path as SkPath } from 'canvaskit-wasm'
 import { Coord, PathPoint } from '@lib/types/shapes'
 import Shape from '../base/Shape'
 import { ShapeData } from '@lib/core/EngineStateStore'
-import type { ServiceContainer } from '@lib/core/DependencyManager'
+import type PaintManager from '@lib/core/PaintManager'
 
 class VectorPath extends Shape {
     // Preview point shown while drawing (not yet committed)
@@ -14,8 +14,8 @@ class VectorPath extends Shape {
     // Index of the anchor being snapped to (for drawing tools)
     public snapPointIndex: number = -1
 
-    constructor(data: ShapeData, container: ServiceContainer) {
-        super(data, container)
+    constructor(data: ShapeData, paintManager: PaintManager) {
+        super(data, paintManager)
     }
 
     get points(): PathPoint[] {

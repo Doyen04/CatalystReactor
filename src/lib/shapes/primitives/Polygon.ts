@@ -6,13 +6,13 @@ import clamp from '@lib/helper/clamp'
 import computeRoundedCorner from '@lib/helper/roundingUtil'
 import { arcPointAtFraction } from '@lib/helper/pointInArc'
 import { ShapeData } from '@lib/core/EngineStateStore'
-import type { ServiceContainer } from '@lib/core/DependencyManager'
+import type PaintManager from '@lib/core/PaintManager'
 
 class Polygon extends Shape {
     private points: Coord[] = []
 
-    constructor(data: ShapeData, container: ServiceContainer) {
-        super(data, container)
+    constructor(data: ShapeData, paintManager: PaintManager) {
+        super(data, paintManager)
         this.points = this.generateRegularPolygon()
     }
 

@@ -5,7 +5,6 @@ import { EngineBus } from '@/engine/events/EngineBus'
 import type { EngineEvents } from '@lib/core/EngineEvents'
 import type { Command } from '@/engine/commands/Command'
 import type { EntityId } from '@/engine/document/entity'
-import { ServiceContainer } from '@lib/core/DependencyManager'
 import EngineStateStore from '@lib/core/EngineStateStore'
 import { SnapManager } from '@lib/core/SnapManager'
 import PaintManager from '@lib/core/PaintManager'
@@ -35,31 +34,15 @@ export function createEditor(): Editor {
     const doc = new DocumentModel()
     const store = new EngineStateStore(doc)
     const commandManager = new CommandManager(doc, bus)
-    const container = new ServiceContainer()
     const snap = new SnapManager()
 
-    container.register('commandManager', commandManager)
-
     let live: CanvasManager | null = null
-    let paintManager: PaintManager | null = null
-    let shapeModifier: ShapeModifier | null = null
 
     const attach = (canvas: HTMLCanvasElement): CanvasManager => {
         if (live) throw new Error('editor is already attached')
-        paintManager = new PaintManager()
-        container.register('paintManager', paintManager)
-        shapeModifier = new ShapeModifier(container)
-        container.register('shapeModifier', shapeModifier)
-        live = new CanvasManager(canvas, {
-            container,
-            doc,
-            store,
-            bus,
-            commandManager,
-            paintManager,
-            shapeModifier,
-            snap,
-        })
+        const paintManager = new PaintManager()
+        const shapeModifier = new ShapeModifier(paintManager)
+        live = new CanvasManager(canvas, { doc, store, bus, commandManager, paintManager, shapeModifier, snap })
         return live
     }
 
@@ -75,12 +58,7 @@ export function createEditor(): Editor {
         isAttached: () => live !== null,
         attach,
         detach,
-        dispose: () => {
-            detach()
-            shapeModifier?.destroy()
-            paintManager?.destroy()
-            container.clear()
-        },
+        dispose: detach,
         setTool: (tool: ToolType | string) => {
             live?.setTool(tool)
         },

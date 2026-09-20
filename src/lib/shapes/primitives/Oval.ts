@@ -4,13 +4,13 @@ import { ArcHandleState, ArcSegment, Coord, InitialTransformState, PathData, Pat
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import { normalizeAngle } from '@lib/helper/normalise'
 import { ShapeData } from '@lib/core/EngineStateStore'
-import type { ServiceContainer } from '@lib/core/DependencyManager'
+import type PaintManager from '@lib/core/PaintManager'
 
 class Oval extends Shape {
     private arcHandleState: ArcHandleState
 
-    constructor(data: ShapeData, container: ServiceContainer) {
-        super(data, container)
+    constructor(data: ShapeData, paintManager: PaintManager) {
+        super(data, paintManager)
         const arcSegment = this.data.properties.arcSegment || { startAngle: 0, sweep: 2 * Math.PI, ratio: 0 }
         this.arcHandleState = {
             dragDirection: arcSegment.sweep >= 0 ? 1 : -1,

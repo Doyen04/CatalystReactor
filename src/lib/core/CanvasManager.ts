@@ -7,7 +7,6 @@ import type EngineStateStore from './EngineStateStore'
 import type ShapeModifier from '@lib/modifiers/ShapeModifier'
 import { ToolType } from '@lib/tools/toolTypes'
 import type PaintManager from './PaintManager'
-import type { ServiceContainer } from './DependencyManager'
 import type SnapManager from './SnapManager'
 import type { EngineBus } from '@/engine/events/EngineBus'
 import type { EngineEvents } from './EngineEvents'
@@ -15,7 +14,6 @@ import type { CommandManager } from '@/engine/commands/CommandManager'
 import type { DocumentModel } from '@/engine/document/DocumentModel'
 
 export interface CanvasDeps {
-    container: ServiceContainer
     doc: DocumentModel
     store: EngineStateStore
     bus: EngineBus<EngineEvents>
@@ -35,7 +33,6 @@ class CanvasManager {
     paintManager: PaintManager
     commandManager: CommandManager
     bus: EngineBus<EngineEvents>
-    private container: ServiceContainer
 
     constructor(canvas: HTMLCanvasElement, deps: CanvasDeps) {
         // Phase 1: Core foundation (no dependencies)
@@ -43,27 +40,26 @@ class CanvasManager {
         this.paintManager = deps.paintManager
         this.shapeModifier = deps.shapeModifier
         this.commandManager = deps.commandManager
-        this.container = deps.container
-
-        this.container.register('paintManager', this.paintManager)
-        this.container.register('shapeModifier', this.shapeModifier)
-        this.container.register('commandManager', this.commandManager)
 
         // Phase 2: Managers requiring explicit orchestration injection
         this.shapeManager = new ShapeManager(this.shapeModifier, this.bus, this.commandManager, deps.doc, deps.snap)
-        this.container.register('shapeManager', this.shapeManager)
 
-        this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager, deps.doc, this.container, deps.store)
-        this.container.register('sceneManager', this.sceneManager)
+        this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager, deps.doc, deps.paintManager, deps.store)
 
         this.inputManager = new InputManager(canvas)
-        this.container.register('inputManager', this.inputManager)
 
         this.renderer = new Renderer(canvas, this.sceneManager, this.paintManager, this.inputManager)
-        this.container.register('renderer', this.renderer)
 
-        this.toolManager = new ToolManager(canvas, this.inputManager, this.bus, this.container, deps.doc)
-        this.container.register('toolManager', this.toolManager)
+        this.toolManager = new ToolManager(
+            canvas,
+            this.inputManager,
+            this.bus,
+            this.sceneManager,
+            this.shapeManager,
+            this.shapeModifier,
+            this.commandManager,
+            deps.doc
+        )
     }
 
     setTool(tool: string): void {
@@ -139,7 +135,6 @@ class CanvasManager {
             this.shapeModifier.destroy()
             this.shapeModifier = null
         }
-        this.container.clear()
         this.bus.clear()
         this.bus = null
         if (this.paintManager) {

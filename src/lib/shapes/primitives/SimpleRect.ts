@@ -2,11 +2,11 @@ import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { Coord } from '@lib/types/shapes'
 import Shape from '../base/Shape'
 import { ShapeData } from '@lib/core/EngineStateStore'
-import type { ServiceContainer } from '@lib/core/DependencyManager'
+import type PaintManager from '@lib/core/PaintManager'
 
 class SimpleRect extends Shape {
-    constructor(data: ShapeData, container: ServiceContainer) {
-        super(data, container)
+    constructor(data: ShapeData, paintManager: PaintManager) {
+        super(data, paintManager)
     }
 
     override setDim(width: number, height: number): void {

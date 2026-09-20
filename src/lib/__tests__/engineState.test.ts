@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import EngineStateStore from '../core/EngineStateStore'
-import { ServiceContainer } from '../core/DependencyManager'
 import SText from '../shapes/primitives/SText'
+import type PaintManager from '../core/PaintManager'
 import { CanvasKitResources } from '../core/CanvasKitResource'
 import type { Properties } from '../types/shapes'
 import { DocumentModel } from '@/engine/document/DocumentModel'
@@ -90,7 +90,7 @@ describe('EngineStateStore', () => {
         const doc = store.getDocument()
         const before = doc.journalLength
 
-        const shape = new SText(data, new ServiceContainer())
+        const shape = new SText(data, null as unknown as PaintManager)
         shape.setText('hello world')
 
         expect(doc.get(id)!.properties.text).toBe('hello world')

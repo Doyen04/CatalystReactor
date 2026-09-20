@@ -1,7 +1,6 @@
 // TextCursor.ts
 import { requestRender } from '@/engine/render/renderRequest'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
-import type { ServiceContainer } from '@lib/core/DependencyManager'
 import type PaintManager from '@lib/core/PaintManager'
 import type { Canvas, LineMetrics, Paragraph } from 'canvaskit-wasm'
 
@@ -17,13 +16,13 @@ class TextCursor {
     private cursorIndex: number
     paintManager: PaintManager
 
-    constructor(initialX: number, initialY: number, initialHeight: number, container: ServiceContainer) {
+    constructor(initialX: number, initialY: number, initialHeight: number, paintManager: PaintManager) {
         this.x = initialX
         this.y = initialY
         this.textX = 0
         this.textY = 0
         this.height = initialHeight
-        this.paintManager = container.resolve('paintManager')
+        this.paintManager = paintManager
         this.cursorIndex = 0
 
         this.startCursorBlink()

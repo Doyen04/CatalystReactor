@@ -4,7 +4,6 @@ import type Shape from '@lib/shapes/base/Shape'
 import { FlexLayout, GridLayout, LayoutConstraints } from './nodeTypes'
 import { applyColumnLayout, applyGridLayout, applyRowLayout } from './LayoutEngine'
 import PaintManager from '@lib/core/PaintManager'
-import type { ServiceContainer } from '@lib/core/DependencyManager'
 import type { Properties } from '@lib/types/shapes'
 
 class ContainerNode extends SceneNode {
@@ -12,11 +11,11 @@ class ContainerNode extends SceneNode {
     layoutConstraints: LayoutConstraints
     paintManager: PaintManager
 
-    constructor(shape: Shape | null, layoutConstraints: LayoutConstraints, container: ServiceContainer) {
+    constructor(shape: Shape | null, layoutConstraints: LayoutConstraints, paintManager: PaintManager) {
         super()
         this.shape = shape
         this.children = []
-        this.paintManager = container.resolve('paintManager')
+        this.paintManager = paintManager
         this.parent = null
         this.layoutConstraints = layoutConstraints
         this.setUpMatrix()
