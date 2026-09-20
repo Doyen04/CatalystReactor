@@ -620,11 +620,11 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 }
 ```
 
-`createEditor()` builds its own `DependencyManager` instance, its own `DocumentModel`, `CommandManager`, `SnapManager`, `SceneManager`. No module-level singletons. Two providers means two fully independent editors, which is what makes tests isolated and multi-canvas possible.
+`createEditor()` builds its own `DocumentModel`, `CommandManager`, `SnapManager`, and `SceneManager` — all wired by explicit constructor arguments, no DI container. No module-level singletons. Two providers means two fully independent editors, which is what makes tests isolated and multi-canvas possible.
 
 The one legitimate exception is `CanvasKitResources`: the WASM module and fonts are expensive, process-wide, and genuinely shared. Initialise it once, outside any editor, and document why in a comment so nobody "fixes" it later.
 
-**Step 8 status:** the live app has one canvas, so for now `EditorProvider` wraps the existing `CanvasManager` via `makeEditor(canvasManager)` (exposing `{ doc, bus, run, undo, redo, canUndo, canRedo }`) instead of calling `createEditor()` per canvas. `createEditor()` stays as the headless composition root; per-editor instances arrive in Step 9 (see the "Step 9 landed" marker below).
+**Step 8 status:** the live app has one canvas, so for now `EditorProvider` wraps the existing `CanvasManager` via `makeEditor(canvasManager)` (exposing `{ doc, bus, run, undo, redo, canUndo, canRedo }`) instead of calling `createEditor()` per canvas. `createEditor()` stays as the headless composition root; per-editor instances arrive in Step 9 (see the "Step 9 landed" marker below). **Step 9 resolves this:** `EditorProvider` now mounts one `createEditor()` directly and `makeEditor`/`src/bridge/editor.ts` are deleted.
 
 ### 8.2 useSyncExternalStore, and delete the duplicate state
 
@@ -831,7 +831,7 @@ Known Step 8 deltas / deferred verification:
 - `LayersPanel`'s click-select and the container/label logic were preserved, but drag-on-canvas and multi-step panel editing have not been manually smoke-tested yet.
 - `EngineStateStore.subscribe`/`notify` still exist (used by engine tests and `LayersPanel`'s predecessor); nothing live calls `notify()` now.
 
-Next up: Step 9 (per-editor instances).
+Next up: Step 9 (per-editor instances) — **landed**, see the "Step 9 landed" marker below.
 
 ---
 
@@ -998,7 +998,7 @@ This is the largest step and the one that needs the most discipline. Use a stran
 
 **Verify:** render two `EditorProvider`s side by side in a scratch route. Draw in both. They should not interfere. Delete the scratch route afterwards or keep it as a dev page.
 
-**Step 9 landed:** module-level singletons are gone except `CanvasKitResources`. `DependencyManager` exports `class ServiceContainer` (no module singleton); `EngineStateStore(doc)` and `new SnapManager()` are per-editor; `createEditor()` is the full headless composition root (paint manager/shape modifier are built lazily inside `attach()` so it never touches WASM); `Canvas.tsx` is a mount point calling `editor.attach(el)` after a once-per-process `CanvasKitResources` boot; `EditorProvider` mounts one editor per instance. `src/engine/__tests__/perEditorIsolation.test.ts` proves two `createEditor()` instances are fully independent. The two-side-by-side `EditorProvider`s UI smoke check is still deferred.
+**Step 9 landed:** module-level singletons are gone except `CanvasKitResources`. `src/lib/core/DependencyManager.ts` (`class ServiceContainer`) was **deleted** — everything is constructor-injected: `EngineStateStore(doc)` and `new SnapManager()` are per-editor; every `Shape`/primitive/`ContainerNode`/`TextCursor`/`ShapeFactory`/`ShapeModifier`/manager takes its dependency as an argument (`Shape(data, paintManager)`, `ToolManager(cnvs, inputManager, bus, sceneManager, shapeManager, shapeModifier, commandManager, doc)`, ...); `ToolContext` is the only dependency surface for tools. `createEditor()` is the full headless composition root (paint manager/shape modifier are built lazily inside `attach()` so it never touches WASM, then `new CanvasManager(canvas, {doc, store, bus, commandManager, paintManager, shapeModifier, snap})`; `dispose` = `detach()`); `Canvas.tsx` is a mount point calling `editor.attach(el)` after a once-per-process `CanvasKitResources` boot; `EditorProvider` mounts one editor per instance via `useState(() => createEditor())` (`src/bridge/editor.ts` deleted). `src/engine/__tests__/perEditorIsolation.test.ts` proves two `createEditor()` instances are fully independent. The two-side-by-side `EditorProvider`s UI smoke check is still deferred. Suite: 22 files / 378 tests (the 3 `DependencyManager`/`ServiceContainer` tests were deleted).
 
 ---
 
