@@ -3,10 +3,11 @@ import { HandlePos, Coord, InitialTransformState, PathData, PathPoint } from '@l
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import SimpleRect from './SimpleRect'
 import { ShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 
 class Rectangle extends SimpleRect {
-    constructor(data: ShapeData) {
-        super(data)
+    constructor(data: ShapeData, container: ServiceContainer) {
+        super(data, container)
     }
 
     override setBorderRadius(newRadius: number, pos: HandlePos) {
@@ -95,15 +96,18 @@ class Rectangle extends SimpleRect {
         let br = Math.min(borderRadius['bottom-right'] as number, this.getMaxRadius())
 
         const pad = 15
-        tl = tl >= pad ? tl : pad; tr = tr >= pad ? tr : pad
-        bl = bl >= pad ? bl : pad; br = br >= pad ? br : pad
+        tl = tl >= pad ? tl : pad
+        tr = tr >= pad ? tr : pad
+        bl = bl >= pad ? bl : pad
+        br = br >= pad ? br : pad
 
         drawCircle(tl, tl)
         drawCircle(width - tr, tr)
         drawCircle(bl, height - bl)
         drawCircle(width - br, height - br)
 
-        paint.delete(); stroke.delete()
+        paint.delete()
+        stroke.delete()
     }
 
     override hitTestModifierHandle(x: number, y: number): string | null {
@@ -116,10 +120,14 @@ class Rectangle extends SimpleRect {
         if (!borderRadius) return null
 
         const pad = 15
-        let tl = Math.min(borderRadius['top-left'] as number, this.getMaxRadius()); tl = tl >= pad ? tl : pad
-        let tr = Math.min(borderRadius['top-right'] as number, this.getMaxRadius()); tr = tr >= pad ? tr : pad
-        let bl = Math.min(borderRadius['bottom-left'] as number, this.getMaxRadius()); bl = bl >= pad ? bl : pad
-        let br = Math.min(borderRadius['bottom-right'] as number, this.getMaxRadius()); br = br >= pad ? br : pad
+        let tl = Math.min(borderRadius['top-left'] as number, this.getMaxRadius())
+        tl = tl >= pad ? tl : pad
+        let tr = Math.min(borderRadius['top-right'] as number, this.getMaxRadius())
+        tr = tr >= pad ? tr : pad
+        let bl = Math.min(borderRadius['bottom-left'] as number, this.getMaxRadius())
+        bl = bl >= pad ? bl : pad
+        let br = Math.min(borderRadius['bottom-right'] as number, this.getMaxRadius())
+        br = br >= pad ? br : pad
 
         const s = 10 // hit pad
         if (Math.abs(x - tl) <= s && Math.abs(y - tl) <= s) return 'radius-top-left'
@@ -136,22 +144,28 @@ class Rectangle extends SimpleRect {
             const { width, height } = this.data.properties.size
             const { x, y } = localCurrent
 
-            let distX = 0, distY = 0, newRadius = 0
+            let distX = 0,
+                distY = 0,
+                newRadius = 0
             switch (pos) {
                 case 'top-left':
-                    distX = x; distY = y
+                    distX = x
+                    distY = y
                     if (distX >= 0 && distY >= 0) newRadius = Math.min(distX, distY)
                     break
                 case 'top-right':
-                    distX = x - width; distY = y
+                    distX = x - width
+                    distY = y
                     if (distX <= 0 && distY >= 0) newRadius = Math.min(Math.abs(distX), distY)
                     break
                 case 'bottom-left':
-                    distX = x; distY = y - height
+                    distX = x
+                    distY = y - height
                     if (distX >= 0 && distY <= 0) newRadius = Math.min(distX, Math.abs(distY))
                     break
                 case 'bottom-right':
-                    distX = x - width; distY = y - height
+                    distX = x - width
+                    distY = y - height
                     if (distX <= 0 && distY <= 0) newRadius = Math.min(Math.abs(distX), Math.abs(distY))
                     break
             }
@@ -161,9 +175,7 @@ class Rectangle extends SimpleRect {
 
     hasRadius(): boolean {
         const borderRadius = this.data.properties.borderRadius!
-        return (
-            borderRadius['top-left'] > 0 || borderRadius['top-right'] > 0 || borderRadius['bottom-left'] > 0 || borderRadius['bottom-right'] > 0
-        )
+        return borderRadius['top-left'] > 0 || borderRadius['top-right'] > 0 || borderRadius['bottom-left'] > 0 || borderRadius['bottom-right'] > 0
     }
 
     override getPath(): Path | null {
@@ -329,8 +341,8 @@ class Rectangle extends SimpleRect {
         return { points, closed: true }
     }
 
-    override cleanUp(): void { }
-    override destroy(): void { }
+    override cleanUp(): void {}
+    override destroy(): void {}
 }
 
 export default Rectangle

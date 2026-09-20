@@ -3,14 +3,27 @@ import SceneManager from './SceneManager'
 import Renderer from './Renderer'
 import ToolManager from './ToolManager'
 import ShapeManager from './ShapeManager'
-import EngineStateStore from './EngineStateStore'
-import ShapeModifier from '@lib/modifiers/ShapeModifier'
+import type EngineStateStore from './EngineStateStore'
+import type ShapeModifier from '@lib/modifiers/ShapeModifier'
 import { ToolType } from '@lib/tools/toolTypes'
-import PaintManager from './PaintManager'
-import container from './DependencyManager'
-import { EngineBus } from '@/engine/events/EngineBus'
+import type PaintManager from './PaintManager'
+import type { ServiceContainer } from './DependencyManager'
+import type SnapManager from './SnapManager'
+import type { EngineBus } from '@/engine/events/EngineBus'
 import type { EngineEvents } from './EngineEvents'
-import { CommandManager } from '@/engine/commands/CommandManager'
+import type { CommandManager } from '@/engine/commands/CommandManager'
+import type { DocumentModel } from '@/engine/document/DocumentModel'
+
+export interface CanvasDeps {
+    container: ServiceContainer
+    doc: DocumentModel
+    store: EngineStateStore
+    bus: EngineBus<EngineEvents>
+    commandManager: CommandManager
+    paintManager: PaintManager
+    shapeModifier: ShapeModifier
+    snap: SnapManager
+}
 
 class CanvasManager {
     inputManager: InputManager
@@ -22,36 +35,35 @@ class CanvasManager {
     paintManager: PaintManager
     commandManager: CommandManager
     bus: EngineBus<EngineEvents>
+    private container: ServiceContainer
 
-    constructor(canvas: HTMLCanvasElement) {
-        // Phase 1: Create instances that have no container dependencies
+    constructor(canvas: HTMLCanvasElement, deps: CanvasDeps) {
         // Phase 1: Core foundation (no dependencies)
-        this.bus = new EngineBus<EngineEvents>()
+        this.bus = deps.bus
+        this.paintManager = deps.paintManager
+        this.shapeModifier = deps.shapeModifier
+        this.commandManager = deps.commandManager
+        this.container = deps.container
 
-        this.paintManager = new PaintManager()
-        container.register('paintManager', this.paintManager)
-
-        this.shapeModifier = new ShapeModifier()
-        container.register('shapeModifier', this.shapeModifier)
-
-        this.commandManager = new CommandManager(EngineStateStore.getInstance().getDocument(), this.bus)
-        container.register('commandManager', this.commandManager)
+        this.container.register('paintManager', this.paintManager)
+        this.container.register('shapeModifier', this.shapeModifier)
+        this.container.register('commandManager', this.commandManager)
 
         // Phase 2: Managers requiring explicit orchestration injection
-        this.shapeManager = new ShapeManager(this.shapeModifier, this.bus, this.commandManager)
-        container.register('shapeManager', this.shapeManager)
+        this.shapeManager = new ShapeManager(this.shapeModifier, this.bus, this.commandManager, deps.doc, deps.snap)
+        this.container.register('shapeManager', this.shapeManager)
 
-        this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager, EngineStateStore.getInstance().getDocument())
-        container.register('sceneManager', this.sceneManager)
+        this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager, deps.doc, this.container, deps.store)
+        this.container.register('sceneManager', this.sceneManager)
 
         this.inputManager = new InputManager(canvas)
-        container.register('inputManager', this.inputManager)
+        this.container.register('inputManager', this.inputManager)
 
         this.renderer = new Renderer(canvas, this.sceneManager, this.paintManager, this.inputManager)
-        container.register('renderer', this.renderer)
+        this.container.register('renderer', this.renderer)
 
-        this.toolManager = new ToolManager(canvas, this.inputManager, this.bus)
-        container.register('toolManager', this.toolManager)
+        this.toolManager = new ToolManager(canvas, this.inputManager, this.bus, this.container, deps.doc)
+        this.container.register('toolManager', this.toolManager)
     }
 
     setTool(tool: string): void {
@@ -127,7 +139,7 @@ class CanvasManager {
             this.shapeModifier.destroy()
             this.shapeModifier = null
         }
-        container.clear()
+        this.container.clear()
         this.bus.clear()
         this.bus = null
         if (this.paintManager) {

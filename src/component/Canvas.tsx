@@ -6,7 +6,6 @@ import CanvasKitInit from 'canvaskit-wasm'
 import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url'
 
 import { CanvasKitResources } from '@/lib/core/CanvasKitResource'
-import CanvasManager from '@lib/core/CanvasManager'
 import { textCache } from '@/engine/render/TextCache'
 import { registerResourceCounter, unregisterResourceCounter, startResourceCounterMonitor } from '@/engine/render/ResourceCounter'
 
@@ -14,84 +13,81 @@ import { useToolStore } from '@hooks/useTool'
 import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
 import { useSceneStore } from '@hooks/sceneStore'
 import { connectEngineToStores } from '@/bridge/engineStoreBridge'
+import { useEditor } from '@/bridge/useEditor'
+
+let ckPromise: Promise<unknown> | null = null
+function ensureCanvasKit(): Promise<unknown> {
+    if (!ckPromise) {
+        ckPromise = (async () => {
+            const canvasKit = await CanvasKitInit({ locateFile: () => canvasKitWasmUrl })
+            await CanvasKitResources.loadInterFont()
+            CanvasKitResources.initialize(canvasKit)
+            return canvasKit
+        })().catch(err => {
+            ckPromise = null
+            throw err
+        })
+    }
+    return ckPromise
+}
 
 function Canvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const canvasManagerRef = useRef<CanvasManager>(null)
-    const { canvasManager, setCanvasManager } = useCanvasManagerStore()
-    const canvasResourcesRef = useRef<CanvasKitResources>(null)
     const stopMonitorRef = useRef<(() => void) | null>(null)
+    const { setCanvasManager } = useCanvasManagerStore()
     const { tool } = useToolStore()
     const { gridSize } = useSceneStore()
+    const editor = useEditor()
 
     useEffect(() => {
-        const cleanupExisting = () => {
-            console.log('doing clean up')
-
-            if (stopMonitorRef.current) {
-                stopMonitorRef.current()
-                stopMonitorRef.current = null
-            }
-            unregisterResourceCounter('paragraphs')
-
-            if (canvasManagerRef.current) {
-                canvasManagerRef.current.destroy()
-                canvasManagerRef.current = null
-                setCanvasManager(null)
-            }
-            if (canvasResourcesRef.current) {
-                canvasResourcesRef.current.dispose()
-                canvasResourcesRef.current = null
-            }
-        }
+        if (!editor) return
+        let cancelled = false
 
         const load = async () => {
-            if (!canvasRef.current) return
             try {
-                console.log('starting to load refs')
-                cleanupExisting()
-
-                const canvasKit = await CanvasKitInit({
-                    locateFile: () => canvasKitWasmUrl,
-                })
-
-                await CanvasKitResources.loadInterFont()
-                // is there a better way
-                //why do this line downward run twice withut running cleanupexisting first fixed
-                if (canvasResourcesRef.current || canvasManagerRef.current) return
-
-                canvasResourcesRef.current = CanvasKitResources.initialize(canvasKit)
-                canvasManagerRef.current = new CanvasManager(canvasRef.current)
-                setCanvasManager(canvasManagerRef.current)
-                registerResourceCounter('paragraphs', textCache)
-                stopMonitorRef.current = startResourceCounterMonitor()
-                console.log('Initializing Canvasmanager with CanvasKit')
+                await ensureCanvasKit()
+                if (cancelled) return
+                if (!editor.isAttached() && canvasRef.current) {
+                    const manager = editor.attach(canvasRef.current)
+                    setCanvasManager(manager)
+                    manager.setTool(useToolStore.getState().tool?.toolName ?? 'select')
+                    manager.setGridSize(useSceneStore.getState().gridSize)
+                    registerResourceCounter('paragraphs', textCache)
+                    stopMonitorRef.current = startResourceCounterMonitor()
+                }
             } catch (error) {
                 console.log(error, 'error loading canvaskit')
             }
         }
 
         load()
+
         return () => {
-            console.log('clean up')
-            cleanupExisting()
+            cancelled = true
+            if (stopMonitorRef.current) {
+                stopMonitorRef.current()
+                stopMonitorRef.current = null
+            }
+            unregisterResourceCounter('paragraphs')
+            setCanvasManager(null)
+            if (editor) editor.detach()
         }
-    }, [canvasRef, setCanvasManager])
+    }, [canvasRef, editor, setCanvasManager])
 
     useEffect(() => {
-        if (!canvasManager) return
-        canvasManager.setTool(tool.toolName)
-    }, [canvasManager, tool])
+        if (!editor) return
+        editor.setTool(tool.toolName)
+    }, [editor, tool])
 
     useEffect(() => {
-        if (!canvasManager) return
-        return connectEngineToStores(canvasManager.bus)
-    }, [canvasManager])
+        if (!editor) return
+        return connectEngineToStores(editor.bus)
+    }, [editor])
 
     useEffect(() => {
-        if (!canvasManager) return
-        canvasManager.setGridSize(gridSize)
-    }, [canvasManager, gridSize])
+        if (!editor) return
+        editor.setGridSize(gridSize)
+    }, [editor, gridSize])
 
     return (
         <div className={'canvasContainer'}>

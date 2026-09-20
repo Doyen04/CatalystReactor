@@ -10,40 +10,45 @@ import VectorPath from '../primitives/VectorPath'
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 import type Shape from './Shape'
 import SimpleRect from '../primitives/SimpleRect'
-import EngineStateStore from '@lib/core/EngineStateStore'
+import type EngineStateStore from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 import type { ShapeData } from '@lib/core/EngineStateStore'
 
 export default class ShapeFactory {
-    static createShapeFromData(data: ShapeData, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }): Shape {
+    static createShapeFromData(
+        data: ShapeData,
+        container: ServiceContainer,
+        image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }
+    ): Shape {
         let shape: Shape
 
         switch (data.type) {
             case 'rect':
-                shape = new Rectangle(data)
+                shape = new Rectangle(data, container)
                 break
             case 'plainRect':
-                shape = new SimpleRect(data)
+                shape = new SimpleRect(data, container)
                 break
             case 'oval':
-                shape = new Oval(data)
+                shape = new Oval(data, container)
                 break
             case 'polygon':
-                shape = new Polygon(data)
+                shape = new Polygon(data, container)
                 break
             case 'star':
-                shape = new Star(data)
+                shape = new Star(data, container)
                 break
             case 'text':
-                shape = new PText(data)
+                shape = new PText(data, container)
                 break
             case 'img': {
-                shape = new PImage(data, image)
+                shape = new PImage(data, container, image)
                 break
             }
             case 'line':
             case 'path':
             case 'bezier':
-                shape = new VectorPath(data)
+                shape = new VectorPath(data, container)
                 break
             default:
                 throw new Error(`Unsupported shape type: ${data.type}`)
@@ -51,12 +56,17 @@ export default class ShapeFactory {
         return shape
     }
 
-    static createShape(type: ShapeType, options: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }): Shape {
-        const store = EngineStateStore.getInstance()
+    static createShape(
+        type: ShapeType,
+        options: Coord,
+        container: ServiceContainer,
+        store: EngineStateStore,
+        image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }
+    ): Shape {
         const id = crypto.randomUUID()
         const initialProps = this.getDefaultProperties(type, options)
         const data = store.createShapeData(id, type, initialProps)
-        return this.createShapeFromData(data, image)
+        return this.createShapeFromData(data, container, image)
     }
 
     private static getDefaultProperties(type: ShapeType, pos: Coord): Properties {

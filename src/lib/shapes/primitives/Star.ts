@@ -6,12 +6,13 @@ import clamp from '@lib/helper/clamp'
 import computeRoundedCorner from '@lib/helper/roundingUtil'
 import { arcPointAtFraction } from '@lib/helper/pointInArc'
 import { ShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 
 class Star extends Shape {
     private points: Coord[] = []
 
-    constructor(data: ShapeData) {
-        super(data)
+    constructor(data: ShapeData, container: ServiceContainer) {
+        super(data, container)
         this.points = this.generateStarPoints()
     }
 
@@ -60,7 +61,7 @@ class Star extends Shape {
                 'top-right': newRad,
                 'bottom-left': newRad,
                 'bottom-right': newRad,
-                locked: true
+                locked: true,
             }
         } else {
             this.data.properties.borderRadius['top-left'] = newRad // Using top-left as proxy for star radius
@@ -112,7 +113,7 @@ class Star extends Shape {
     override getDim(): { width: number; height: number } {
         return {
             width: Math.round(this.data.properties.size.width),
-            height: Math.round(this.data.properties.size.height)
+            height: Math.round(this.data.properties.size.height),
         }
     }
 
@@ -141,7 +142,11 @@ class Star extends Shape {
         const rPos = (idx: number) => {
             if (bRadius > 0) {
                 const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
-                    'star', idx, this.points, spikes * 2, Math.min(bRadius, this.getMaxRadius())
+                    'star',
+                    idx,
+                    this.points,
+                    spikes * 2,
+                    Math.min(bRadius, this.getMaxRadius())
                 )
                 const { x, y } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
                 return { x, y }
@@ -157,7 +162,8 @@ class Star extends Shape {
         drawCircle(ratioPt.x, ratioPt.y)
         drawCircle(vertPt.x, vertPt.y)
 
-        paint.delete(); stroke.delete()
+        paint.delete()
+        stroke.delete()
     }
 
     override hitTestModifierHandle(x: number, y: number): string | null {
@@ -171,7 +177,11 @@ class Star extends Shape {
         const rPos = (idx: number) => {
             if (bRadius > 0) {
                 const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
-                    'star', idx, this.points, spikes * 2, Math.min(bRadius, this.getMaxRadius())
+                    'star',
+                    idx,
+                    this.points,
+                    spikes * 2,
+                    Math.min(bRadius, this.getMaxRadius())
                 )
                 const { x, y } = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
                 return { x, y }
@@ -201,8 +211,12 @@ class Star extends Shape {
             const deltaX = localCurrent.x - this.radiusX
             const deltaY = localCurrent.y - this.radiusY
             const deg = Math.atan2(this.radiusX * deltaY, this.radiusY * deltaX)
-            const cos = Math.cos(deg); const sin = Math.sin(deg)
-            const ellAt = Math.sqrt((this.radiusX * this.radiusX * this.radiusY * this.radiusY) / (this.radiusY * this.radiusY * cos * cos + this.radiusX * this.radiusX * sin * sin))
+            const cos = Math.cos(deg)
+            const sin = Math.sin(deg)
+            const ellAt = Math.sqrt(
+                (this.radiusX * this.radiusX * this.radiusY * this.radiusY) /
+                    (this.radiusY * this.radiusY * cos * cos + this.radiusX * this.radiusX * sin * sin)
+            )
             const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
             this.setRatio(Math.min(0.99, dist / ellAt))
         } else if (handleID === 'vertices') {
@@ -361,8 +375,8 @@ class Star extends Shape {
         return { points: pointsArray, closed: true }
     }
 
-    override cleanUp(): void { }
-    override destroy(): void { }
+    override cleanUp(): void {}
+    override destroy(): void {}
 }
 
 export default Star

@@ -2,6 +2,7 @@ import type { Canvas, Path, Path as SkPath } from 'canvaskit-wasm'
 import { Coord, PathPoint } from '@lib/types/shapes'
 import Shape from '../base/Shape'
 import { ShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 
 class VectorPath extends Shape {
     // Preview point shown while drawing (not yet committed)
@@ -13,8 +14,8 @@ class VectorPath extends Shape {
     // Index of the anchor being snapped to (for drawing tools)
     public snapPointIndex: number = -1
 
-    constructor(data: ShapeData) {
-        super(data)
+    constructor(data: ShapeData, container: ServiceContainer) {
+        super(data, container)
     }
 
     get points(): PathPoint[] {
@@ -59,8 +60,14 @@ class VectorPath extends Shape {
         pt.x = x
         pt.y = y
         // Move control points with anchor
-        if (pt.cp1) { pt.cp1.x += dx; pt.cp1.y += dy }
-        if (pt.cp2) { pt.cp2.x += dx; pt.cp2.y += dy }
+        if (pt.cp1) {
+            pt.cp1.x += dx
+            pt.cp1.y += dy
+        }
+        if (pt.cp2) {
+            pt.cp2.x += dx
+            pt.cp2.y += dy
+        }
         this.recomputeBounds()
     }
 
@@ -80,9 +87,7 @@ class VectorPath extends Shape {
             const opposite = which === 'cp1' ? 'cp2' : 'cp1'
             const dx = x - pt.x
             const dy = y - pt.y
-            const dist = pt[opposite]
-                ? Math.sqrt((pt[opposite]!.x - pt.x) ** 2 + (pt[opposite]!.y - pt.y) ** 2)
-                : Math.sqrt(dx * dx + dy * dy)
+            const dist = pt[opposite] ? Math.sqrt((pt[opposite]!.x - pt.x) ** 2 + (pt[opposite]!.y - pt.y) ** 2) : Math.sqrt(dx * dx + dy * dy)
             const len = Math.sqrt(dx * dx + dy * dy)
             if (len > 0) {
                 const nx = -dx / len
@@ -139,18 +144,27 @@ class VectorPath extends Shape {
             return
         }
 
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+        let minX = Infinity,
+            minY = Infinity,
+            maxX = -Infinity,
+            maxY = -Infinity
 
         for (const pt of pts) {
-            minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y)
-            maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y)
+            minX = Math.min(minX, pt.x)
+            minY = Math.min(minY, pt.y)
+            maxX = Math.max(maxX, pt.x)
+            maxY = Math.max(maxY, pt.y)
             if (pt.cp1) {
-                minX = Math.min(minX, pt.cp1.x); minY = Math.min(minY, pt.cp1.y)
-                maxX = Math.max(maxX, pt.cp1.x); maxY = Math.max(maxY, pt.cp1.y)
+                minX = Math.min(minX, pt.cp1.x)
+                minY = Math.min(minY, pt.cp1.y)
+                maxX = Math.max(maxX, pt.cp1.x)
+                maxY = Math.max(maxY, pt.cp1.y)
             }
             if (pt.cp2) {
-                minX = Math.min(minX, pt.cp2.x); minY = Math.min(minY, pt.cp2.y)
-                maxX = Math.max(maxX, pt.cp2.x); maxY = Math.max(maxY, pt.cp2.y)
+                minX = Math.min(minX, pt.cp2.x)
+                minY = Math.min(minY, pt.cp2.y)
+                maxX = Math.max(maxX, pt.cp2.x)
+                maxY = Math.max(maxY, pt.cp2.y)
             }
         }
 
@@ -200,9 +214,16 @@ class VectorPath extends Shape {
         const scaleY = height / oldH
 
         for (const pt of this.points) {
-            pt.x *= scaleX; pt.y *= scaleY
-            if (pt.cp1) { pt.cp1.x *= scaleX; pt.cp1.y *= scaleY }
-            if (pt.cp2) { pt.cp2.x *= scaleX; pt.cp2.y *= scaleY }
+            pt.x *= scaleX
+            pt.y *= scaleY
+            if (pt.cp1) {
+                pt.cp1.x *= scaleX
+                pt.cp1.y *= scaleY
+            }
+            if (pt.cp2) {
+                pt.cp2.x *= scaleX
+                pt.cp2.y *= scaleY
+            }
         }
 
         this.data.properties.size.width = width
@@ -311,10 +332,12 @@ class VectorPath extends Shape {
 
             if (lastPt.cp2) {
                 previewPath.cubicTo(
-                    lastPt.cp2.x, lastPt.cp2.y,
+                    lastPt.cp2.x,
+                    lastPt.cp2.y,
                     this.previewPoint.cp1?.x ?? this.previewPoint.x,
                     this.previewPoint.cp1?.y ?? this.previewPoint.y,
-                    this.previewPoint.x, this.previewPoint.y
+                    this.previewPoint.x,
+                    this.previewPoint.y
                 )
             } else {
                 previewPath.lineTo(this.previewPoint.x, this.previewPoint.y)
@@ -416,9 +439,12 @@ class VectorPath extends Shape {
 
         if (hasCP2 || hasCP1) {
             path.cubicTo(
-                pts[i1].cp2?.x ?? pts[i1].x, pts[i1].cp2?.y ?? pts[i1].y,
-                pts[i2].cp1?.x ?? pts[i2].x, pts[i2].cp1?.y ?? pts[i2].y,
-                pts[i2].x, pts[i2].y
+                pts[i1].cp2?.x ?? pts[i1].x,
+                pts[i1].cp2?.y ?? pts[i1].y,
+                pts[i2].cp1?.x ?? pts[i2].x,
+                pts[i2].cp1?.y ?? pts[i2].y,
+                pts[i2].x,
+                pts[i2].y
             )
         } else {
             path.lineTo(pts[i2].x, pts[i2].y)
@@ -493,9 +519,11 @@ class VectorPath extends Shape {
     private pointInPolygon(x: number, y: number, pts: PathPoint[]): boolean {
         let inside = false
         for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-            const xi = pts[i].x, yi = pts[i].y
-            const xj = pts[j].x, yj = pts[j].y
-            if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+            const xi = pts[i].x,
+                yi = pts[i].y
+            const xj = pts[j].x,
+                yj = pts[j].y
+            if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
                 inside = !inside
             }
         }
@@ -503,8 +531,6 @@ class VectorPath extends Shape {
     }
 
     // ── Modifier handles (for edit mode) ──────────────────────────
-
-
 
     // Find the closest point index to a coordinate
     findClosestPoint(x: number, y: number, threshold = 12): number {
@@ -518,7 +544,7 @@ class VectorPath extends Shape {
     }
 
     // Find the closest control point
-    findClosestControlPoint(x: number, y: number, threshold = 10): { index: number, which: 'cp1' | 'cp2' } | null {
+    findClosestControlPoint(x: number, y: number, threshold = 10): { index: number; which: 'cp1' | 'cp2' } | null {
         const pts = this.points
         for (let i = 0; i < pts.length; i++) {
             if (pts[i].cp1) {
@@ -607,18 +633,12 @@ class VectorPath extends Shape {
         const cpSize = 4
         for (const pt of pts) {
             if (pt.cp1) {
-                const r = CanvasKit.LTRBRect(
-                    pt.cp1.x - cpSize, pt.cp1.y - cpSize,
-                    pt.cp1.x + cpSize, pt.cp1.y + cpSize
-                )
+                const r = CanvasKit.LTRBRect(pt.cp1.x - cpSize, pt.cp1.y - cpSize, pt.cp1.x + cpSize, pt.cp1.y + cpSize)
                 canvas.drawOval(r, cpFill)
                 canvas.drawOval(r, cpStroke)
             }
             if (pt.cp2) {
-                const r = CanvasKit.LTRBRect(
-                    pt.cp2.x - cpSize, pt.cp2.y - cpSize,
-                    pt.cp2.x + cpSize, pt.cp2.y + cpSize
-                )
+                const r = CanvasKit.LTRBRect(pt.cp2.x - cpSize, pt.cp2.y - cpSize, pt.cp2.x + cpSize, pt.cp2.y + cpSize)
                 canvas.drawOval(r, cpFill)
                 canvas.drawOval(r, cpStroke)
             }
@@ -670,7 +690,6 @@ class VectorPath extends Shape {
             diamond.delete()
         }
     }
-
 
     override cleanUp(): void {
         this.previewPoint = null

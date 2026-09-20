@@ -6,6 +6,7 @@ import ShapeNode from '@lib/node/ShapeNode'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import ShapeManager from './ShapeManager'
 import EngineStateStore from './EngineStateStore'
+import type { ServiceContainer } from './DependencyManager'
 import type { Coord, ShapeType } from '@lib/types/shapes'
 import type { EntityId } from '@/engine/document/entity'
 import type { DocumentModel } from '@/engine/document/DocumentModel'
@@ -15,21 +16,25 @@ class SceneManager {
     private scene: ContainerNode
     private shapeModifier: ShapeModifier
     private shapeManager: ShapeManager
+    private container: ServiceContainer
+    private store: EngineStateStore
     private nodeById = new Map<EntityId, SceneNode>()
     private unsubscribe: (() => void) | null = null
 
-    constructor(shapeModifier: ShapeModifier, shapeManager: ShapeManager, doc: DocumentModel) {
+    constructor(shapeModifier: ShapeModifier, shapeManager: ShapeManager, doc: DocumentModel, container: ServiceContainer, store: EngineStateStore) {
         this.doc = doc
-        this.scene = new ContainerNode(null, null)
+        this.scene = new ContainerNode(null, null, container)
         this.shapeModifier = shapeModifier
         this.shapeManager = shapeManager
+        this.container = container
+        this.store = store
         this.unsubscribe = doc.subscribeJournal(entry => {
             if (entry.kind !== 'props') this.sync()
         })
     }
 
     addShapeToScene(type: ShapeType, pos: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }): SceneNode {
-        const shape = ShapeFactory.createShape(type, pos, image)
+        const shape = ShapeFactory.createShape(type, pos, this.container, this.store, image)
 
         const existing = this.nodeById.get(shape.data.id)
         if (existing) {
@@ -37,7 +42,7 @@ class SceneManager {
             this.nodeById.delete(shape.data.id)
         }
 
-        const node = type === 'plainRect' ? new ContainerNode(shape, { type: 'none' }) : new ShapeNode(shape)
+        const node = type === 'plainRect' ? new ContainerNode(shape, { type: 'none' }, this.container) : new ShapeNode(shape)
         this.nodeById.set(shape.data.id, node)
 
         this.sync()
@@ -71,10 +76,10 @@ class SceneManager {
             currentIds.add(record.id)
             if (this.nodeById.has(record.id)) continue
 
-            const data = EngineStateStore.getInstance().getShapeData(record.id)
+            const data = this.store.getShapeData(record.id)
             if (!data) continue
-            const shape = ShapeFactory.createShapeFromData(data)
-            const node = record.type === 'plainRect' ? new ContainerNode(shape, { type: 'none' }) : new ShapeNode(shape)
+            const shape = ShapeFactory.createShapeFromData(data, this.container)
+            const node = record.type === 'plainRect' ? new ContainerNode(shape, { type: 'none' }, this.container) : new ShapeNode(shape)
             this.nodeById.set(record.id, node)
         }
 

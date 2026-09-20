@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
-import type { EditorHandle } from './editor'
+import type { Editor } from '@/engine/createEditor'
 
-export const EditorContext = createContext<EditorHandle | null>(null)
+export const EditorContext = createContext<Editor | null>(null)
 
 export const useEditor = () => {
     return useContext(EditorContext)

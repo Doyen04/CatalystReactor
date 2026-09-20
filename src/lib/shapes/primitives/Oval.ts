@@ -4,12 +4,13 @@ import { ArcHandleState, ArcSegment, Coord, InitialTransformState, PathData, Pat
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import { normalizeAngle } from '@lib/helper/normalise'
 import { ShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 
 class Oval extends Shape {
     private arcHandleState: ArcHandleState
 
-    constructor(data: ShapeData) {
-        super(data)
+    constructor(data: ShapeData, container: ServiceContainer) {
+        super(data, container)
         const arcSegment = this.data.properties.arcSegment || { startAngle: 0, sweep: 2 * Math.PI, ratio: 0 }
         this.arcHandleState = {
             dragDirection: arcSegment.sweep >= 0 ? 1 : -1,
@@ -64,9 +65,9 @@ class Oval extends Shape {
     }
 
     override getDim(): { width: number; height: number } {
-        return { 
-            width: Math.round(this.data.properties.size.width), 
-            height: Math.round(this.data.properties.size.height) 
+        return {
+            width: Math.round(this.data.properties.size.width),
+            height: Math.round(this.data.properties.size.height),
         }
     }
 
@@ -85,11 +86,11 @@ class Oval extends Shape {
     override drawModifierHandles(canvas: Canvas, resource: CanvasKitResources): void {
         super.drawModifierHandles(canvas, resource) // draw size and rotation
         const cw = resource.canvasKit
-        
+
         const paint = new cw.Paint()
         paint.setColor(cw.Color(255, 255, 255, 1))
         paint.setStyle(cw.PaintStyle.Fill)
-        
+
         const stroke = new cw.Paint()
         stroke.setColor(cw.Color(0, 0, 255, 1))
         stroke.setStyle(cw.PaintStyle.Stroke)
@@ -104,7 +105,7 @@ class Oval extends Shape {
         const arc = this.arcSegment
         const innerRadiusX = this.radiusX * arc.ratio
         const innerRadiusY = this.radiusY * arc.ratio
-        
+
         if (arc.ratio === 0) {
             drawCircle(this.radiusX, this.radiusY)
         } else {
@@ -120,17 +121,18 @@ class Oval extends Shape {
             const ry = arc.ratio === 0 ? this.radiusY * 0.8 : (this.radiusY + innerRadiusY) / 2
             return {
                 x: this.radiusX + rx * Math.cos(theta),
-                y: this.radiusY + ry * Math.sin(theta)
+                y: this.radiusY + ry * Math.sin(theta),
             }
         }
-        
+
         const arcStartCenter = getArcCenter(arc.startAngle, arc.ratio)
         const arcEndCenter = getArcCenter(arc.startAngle + arc.sweep, arc.ratio)
 
         drawCircle(arcStartCenter.x, arcStartCenter.y)
         drawCircle(arcEndCenter.x, arcEndCenter.y)
 
-        paint.delete(); stroke.delete()
+        paint.delete()
+        stroke.delete()
     }
 
     override hitTestModifierHandle(x: number, y: number): string | null {
@@ -142,11 +144,11 @@ class Oval extends Shape {
         const innerRadiusY = this.radiusY * arc.ratio
 
         const s = 10 // pad
-        
+
         const handleAngle = arc.startAngle + this.getSweep() / 2
         const ratioX = arc.ratio === 0 ? this.radiusX : this.radiusX + innerRadiusX * Math.cos(handleAngle)
         const ratioY = arc.ratio === 0 ? this.radiusY : this.radiusY + innerRadiusY * Math.sin(handleAngle)
-        
+
         if (Math.abs(x - ratioX) <= s && Math.abs(y - ratioY) <= s) return 'c-ratio'
 
         const getArcCenter = (theta: number) => {
@@ -154,13 +156,13 @@ class Oval extends Shape {
             const ry = arc.ratio === 0 ? this.radiusY * 0.8 : (this.radiusY + innerRadiusY) / 2
             return {
                 x: this.radiusX + rx * Math.cos(theta),
-                y: this.radiusY + ry * Math.sin(theta)
+                y: this.radiusY + ry * Math.sin(theta),
             }
         }
 
         const aStart = getArcCenter(arc.startAngle)
         const aEnd = getArcCenter(arc.startAngle + arc.sweep)
-        
+
         if (Math.abs(x - aStart.x) <= s && Math.abs(y - aStart.y) <= s) return 'arc-start'
         if (Math.abs(x - aEnd.x) <= s && Math.abs(y - aEnd.y) <= s) return 'arc-end'
 
@@ -171,7 +173,7 @@ class Oval extends Shape {
         const { width, height } = this.data.properties.size
         const radiusX = width / 2
         const radiusY = height / 2
-        
+
         if (handleID === 'c-ratio') {
             const ratio = this.calculateRatioFromMousePosition(localCurrent, radiusX, radiusY, width, height)
             this.setRatio(ratio)
@@ -180,7 +182,7 @@ class Oval extends Shape {
             const deltaX = localCurrent.x - radiusX
             const deltaY = localCurrent.y - radiusY
             const pointerAngle = normalizeAngle(Math.atan2(radiusX * deltaY, radiusY * deltaX))
-            
+
             if (handleID === 'arc-start') {
                 const newStart = normalizeAngle(pointerAngle)
                 const currentState = this.ensureArcEndState(this.arcHandleState, sweep, newStart)
@@ -203,7 +205,9 @@ class Oval extends Shape {
         const deg = Math.atan2(deltaY, deltaX)
         const cos = Math.cos(deg)
         const sin = Math.sin(deg)
-        const ellipseRadiusAtAngle = Math.sqrt((radiusX * radiusX * radiusY * radiusY) / (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin))
+        const ellipseRadiusAtAngle = Math.sqrt(
+            (radiusX * radiusX * radiusY * radiusY) / (radiusY * radiusY * cos * cos + radiusX * radiusX * sin * sin)
+        )
         const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
         return Math.min(0.99, distanceFromCenter / ellipseRadiusAtAngle)
     }
@@ -235,12 +239,12 @@ class Oval extends Shape {
         if (pointerDelta > EPS && diffCW + EPS < prevDiff) dragDirection *= -1
         else if (pointerDelta < -EPS && diffCW > prevDiff + EPS) dragDirection *= -1
 
-        const sweepCandidate = (dragDirection >= 0) ? diffCW : diffCW - TWO_PI
+        const sweepCandidate = dragDirection >= 0 ? diffCW : diffCW - TWO_PI
         const sweep = Math.max(-SWEEP_LIMIT, Math.min(SWEEP_LIMIT, sweepCandidate))
 
-        return { 
+        return {
             state: { ...state, dragDirection, dragLastDiff: diffCW, dragPrevPointer: pointerAngle },
-            sweep 
+            sweep,
         }
     }
 
@@ -406,7 +410,7 @@ class Oval extends Shape {
         const ry = height / 2
         const cx = rx
         const cy = ry
-        
+
         // Exact cubic Bézier constant for a circle/ellipse
         const k = 0.552284749831
         const dx = rx * k
@@ -416,14 +420,14 @@ class Oval extends Shape {
             { x: cx, y: 0, cp1: { x: cx - dx, y: 0 }, cp2: { x: cx + dx, y: 0 }, smooth: true }, // Top
             { x: width, y: cy, cp1: { x: width, y: cy - dy }, cp2: { x: width, y: cy + dy }, smooth: true }, // Right
             { x: cx, y: height, cp1: { x: cx + dx, y: height }, cp2: { x: cx - dx, y: height }, smooth: true }, // Bottom
-            { x: 0, y: cy, cp1: { x: 0, y: cy + dy }, cp2: { x: 0, y: cy - dy }, smooth: true } // Left
+            { x: 0, y: cy, cp1: { x: 0, y: cy + dy }, cp2: { x: 0, y: cy - dy }, smooth: true }, // Left
         ]
 
         return { points, closed: true }
     }
 
-    override cleanUp(): void { }
-    override destroy(): void { }
+    override cleanUp(): void {}
+    override destroy(): void {}
 }
 
 export default Oval

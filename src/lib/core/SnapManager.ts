@@ -24,22 +24,14 @@ export interface SnapResult {
 }
 
 export class SnapManager {
-    private static instance: SnapManager
     private snapDistance: number = 8 // pixels
     private gridSize: number = 10
     private enableGrid: boolean = true
     private enableShapes: boolean = true
 
-    private constructor() {}
+    constructor() {}
 
-    public static getInstance(): SnapManager {
-        if (!SnapManager.instance) {
-            SnapManager.instance = new SnapManager()
-        }
-        return SnapManager.instance
-    }
-
-    setConfiguration(config: { gridSize?: number, enableGrid?: boolean, enableShapes?: boolean, snapDistance?: number }) {
+    setConfiguration(config: { gridSize?: number; enableGrid?: boolean; enableShapes?: boolean; snapDistance?: number }) {
         if (config.gridSize !== undefined) this.gridSize = config.gridSize
         if (config.enableGrid !== undefined) this.enableGrid = config.enableGrid
         if (config.enableShapes !== undefined) this.enableShapes = config.enableShapes
@@ -85,7 +77,7 @@ export class SnapManager {
         if (this.enableShapes) {
             for (const node of nodes) {
                 if (node.id === excludeId) continue
-                
+
                 const snapPoints = this.getNodesSnapPoints(node)
                 for (const pt of snapPoints) {
                     const distH = Math.abs(targetX - pt.x)
@@ -129,7 +121,7 @@ export class SnapManager {
             x: bestX,
             y: bestY,
             guides,
-            indicators
+            indicators,
         }
     }
 
@@ -147,16 +139,16 @@ export class SnapManager {
 
         // Generate points in the node's local space (origin at 0,0)
         // then transform to world space via node.localToWorld()
-        const localPoints: { lx: number, ly: number, type: SnapPoint['type'] }[] = [
-            { lx: 0, ly: 0, type: 'corner' },              // Top-left
-            { lx: width, ly: 0, type: 'corner' },           // Top-right
-            { lx: 0, ly: height, type: 'corner' },          // Bottom-left
-            { lx: width, ly: height, type: 'corner' },      // Bottom-right
+        const localPoints: { lx: number; ly: number; type: SnapPoint['type'] }[] = [
+            { lx: 0, ly: 0, type: 'corner' }, // Top-left
+            { lx: width, ly: 0, type: 'corner' }, // Top-right
+            { lx: 0, ly: height, type: 'corner' }, // Bottom-left
+            { lx: width, ly: height, type: 'corner' }, // Bottom-right
             { lx: width / 2, ly: height / 2, type: 'center' }, // Center
-            { lx: width / 2, ly: 0, type: 'edge' },         // Top-mid
-            { lx: width / 2, ly: height, type: 'edge' },    // Bottom-mid
-            { lx: 0, ly: height / 2, type: 'edge' },        // Left-mid
-            { lx: width, ly: height / 2, type: 'edge' },    // Right-mid
+            { lx: width / 2, ly: 0, type: 'edge' }, // Top-mid
+            { lx: width / 2, ly: height, type: 'edge' }, // Bottom-mid
+            { lx: 0, ly: height / 2, type: 'edge' }, // Left-mid
+            { lx: width, ly: height / 2, type: 'edge' }, // Right-mid
         ]
 
         return localPoints.map(p => {
@@ -167,4 +159,3 @@ export class SnapManager {
 }
 
 export default SnapManager
-

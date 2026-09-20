@@ -15,8 +15,8 @@ import { requestRender } from '@/engine/render/renderRequest'
 import type { EngineBus } from '@/engine/events/EngineBus'
 import type { EngineEvents } from './EngineEvents'
 import type { ToolContext } from '@lib/tools/ToolContext'
-import container from './DependencyManager'
-import EngineStateStore from './EngineStateStore'
+import type { ServiceContainer } from './DependencyManager'
+import type { DocumentModel } from '@/engine/document/DocumentModel'
 
 class ToolManager {
     currentTool: Tool
@@ -29,7 +29,7 @@ class ToolManager {
 
     private inputCallbacks?: InputCallbacks
 
-    constructor(cnvs: HTMLCanvasElement, inputManager: InputManager, bus: EngineBus<EngineEvents>) {
+    constructor(cnvs: HTMLCanvasElement, inputManager: InputManager, bus: EngineBus<EngineEvents>, container: ServiceContainer, doc: DocumentModel) {
         this.cnvsElm = cnvs
         this.inputManager = inputManager
         this.bus = bus
@@ -54,7 +54,7 @@ class ToolManager {
         }
         this.currentToolType = 'select'
         this.currentTool = new SelectTool(this.cnvsElm, this.ctx)
-        this.keyboardTool = new KeyboardTool(this.ctx.shapeManager, this.ctx.commandManager, EngineStateStore.getInstance().getDocument())
+        this.keyboardTool = new KeyboardTool(this.ctx.shapeManager, this.ctx.commandManager, doc)
         this.setUpEvent()
     }
 

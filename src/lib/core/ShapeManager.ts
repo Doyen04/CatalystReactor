@@ -4,7 +4,6 @@ import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 import ShapeNode from '@lib/node/ShapeNode'
-import EngineStateStore from './EngineStateStore'
 import SnapManager, { SnapResult } from './SnapManager'
 import CanvasKitResources from './CanvasKitResource'
 import { requestRender } from '@/engine/render/renderRequest'
@@ -26,17 +25,20 @@ class ShapeManager {
     private snapGuidePaint: Paint | null = null
     private snapGuideDash: PathEffect | null = null
     private dragTransactionActive = false
+    private snap: SnapManager
 
-    constructor(shapeModifier: ShapeModifier, bus: EngineBus<EngineEvents>, commandManager: CommandManager) {
+    constructor(shapeModifier: ShapeModifier, bus: EngineBus<EngineEvents>, commandManager: CommandManager, doc: DocumentModel, snap: SnapManager) {
         this.scene = null
         this.shapeModifier = shapeModifier
         this.bus = bus
         this.commandManager = commandManager
-        this.doc = EngineStateStore.getInstance().getDocument()
+        this.doc = doc
+        this.snap = snap
     }
 
     setGridSize(size: number): void {
         this.gridSize = size
+        this.snap.setConfiguration({ gridSize: size })
     }
 
     drawShape(dragStart: Coord, e: MouseEvent) {
@@ -69,7 +71,7 @@ class ShapeManager {
         let mouseY = e.offsetY
 
         // Handle snapping
-        this.activeSnapResult = SnapManager.getInstance().getSnapResult(this.scene, { x: mouseX, y: mouseY }, this.gridSize)
+        this.activeSnapResult = this.snap.getSnapResult(this.scene, { x: mouseX, y: mouseY }, this.gridSize)
 
         if (this.activeSnapResult && this.activeSnapResult.snapped) {
             mouseX = this.activeSnapResult.x

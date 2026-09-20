@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import EngineStateStore from '../core/EngineStateStore'
+import { ServiceContainer } from '../core/DependencyManager'
 import SText from '../shapes/primitives/SText'
 import { CanvasKitResources } from '../core/CanvasKitResource'
 import type { Properties } from '../types/shapes'
@@ -11,34 +12,38 @@ import { CommandManager } from '@/engine/commands/CommandManager'
 import { UpdateProperties } from '@/engine/commands/UpdateProperties'
 import { TranslateNodes } from '@/engine/commands/TranslateNodes'
 
-const engineState = () => EngineStateStore.getInstance()
-
 const props = (marker: string) => ({ marker }) as unknown as Properties
 
 describe('EngineStateStore', () => {
+    let store: EngineStateStore
+
+    beforeEach(() => {
+        store = new EngineStateStore(new DocumentModel())
+    })
+
     it('createShapeData stores and returns the data; getShapeData and getAllShapeData include it', () => {
         const id = 'ess-stores-1'
-        const shape = engineState().createShapeData(id, 'rect', props('initial'))
+        const shape = store.createShapeData(id, 'rect', props('initial'))
 
         expect(shape).toEqual({ id, type: 'rect', properties: props('initial') })
-        expect(engineState().getShapeData(id)).toEqual(shape)
-        expect(engineState().getAllShapeData()).toContainEqual(shape)
+        expect(store.getShapeData(id)).toEqual(shape)
+        expect(store.getAllShapeData()).toContainEqual(shape)
     })
 
     it('getShapeData returns undefined for an unknown id', () => {
-        expect(engineState().getShapeData('ess-unknown-' + Date.now())).toBeUndefined()
+        expect(store.getShapeData('ess-unknown-' + Date.now())).toBeUndefined()
     })
 
     it('removeShapeData deletes the data and notifies subscribers with an undefined argument', () => {
         const id = 'ess-removes-1'
-        const shape = engineState().createShapeData(id, 'rect', props('initial'))
+        const shape = store.createShapeData(id, 'rect', props('initial'))
         const listener = vi.fn()
-        const unsubscribe = engineState().subscribe(listener)
+        const unsubscribe = store.subscribe(listener)
 
-        engineState().removeShapeData(id)
+        store.removeShapeData(id)
 
-        expect(engineState().getShapeData(id)).toBeUndefined()
-        expect(engineState().getAllShapeData()).not.toContainEqual(shape)
+        expect(store.getShapeData(id)).toBeUndefined()
+        expect(store.getAllShapeData()).not.toContainEqual(shape)
         expect(listener).toHaveBeenCalledTimes(1)
         expect(listener).toHaveBeenCalledWith(undefined)
         unsubscribe()
@@ -46,14 +51,14 @@ describe('EngineStateStore', () => {
 
     it('subscribe returns an unsubscribe that detaches the listener', () => {
         const id = 'ess-unsub-1'
-        engineState().createShapeData(id, 'rect', props('initial'))
+        store.createShapeData(id, 'rect', props('initial'))
         const listener = vi.fn()
-        const unsubscribe = engineState().subscribe(listener)
+        const unsubscribe = store.subscribe(listener)
 
         unsubscribe()
 
-        engineState().notify(id)
-        engineState().removeShapeData(id)
+        store.notify(id)
+        store.removeShapeData(id)
         expect(listener).not.toHaveBeenCalled()
     })
 
@@ -61,10 +66,10 @@ describe('EngineStateStore', () => {
         const id = 'ess-notify-1'
         const first = vi.fn()
         const second = vi.fn()
-        const unsubFirst = engineState().subscribe(first)
-        const unsubSecond = engineState().subscribe(second)
+        const unsubFirst = store.subscribe(first)
+        const unsubSecond = store.subscribe(second)
 
-        engineState().notify(id)
+        store.notify(id)
 
         expect(first).toHaveBeenCalledTimes(1)
         expect(first).toHaveBeenCalledWith(id)
@@ -77,19 +82,19 @@ describe('EngineStateStore', () => {
     it('shape text setters route through the store view and journal into the document', () => {
         const getInstanceSpy = vi.spyOn(CanvasKitResources, 'getInstance').mockReturnValue(null as never)
         const id = `ess-stext-${Date.now()}`
-        const data = engineState().createShapeData(id, 'text', {
+        const data = store.createShapeData(id, 'text', {
             text: 'initial',
             transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, anchorPoint: null },
             size: { width: 0, height: 0 },
         } as Properties)
-        const doc = engineState().getDocument()
+        const doc = store.getDocument()
         const before = doc.journalLength
 
-        const shape = new SText(data)
+        const shape = new SText(data, new ServiceContainer())
         shape.setText('hello world')
 
         expect(doc.get(id)!.properties.text).toBe('hello world')
-        expect(engineState().getShapeData(id)!.properties.text).toBe('hello world')
+        expect(store.getShapeData(id)!.properties.text).toBe('hello world')
         expect(doc.journalLength).toBe(before + 1)
         getInstanceSpy.mockRestore()
     })

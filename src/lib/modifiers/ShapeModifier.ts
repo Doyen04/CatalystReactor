@@ -5,6 +5,7 @@ import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
 import { Coord, HandlePos, InitialTransformState, PTextStyle } from '@lib/types/shapes'
 import { ShapeData as StoreShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
 import { getOppositeHandle, getHandleLocalPoint } from '@lib/helper/handleUtil'
 
@@ -25,12 +26,14 @@ class ShapeModifier {
     private font: SText | null = null
     private _editMode: boolean = false
     private _suppressHandles: boolean = false
+    private container: ServiceContainer
 
-    constructor() {
+    constructor(container: ServiceContainer) {
+        this.container = container
         this.scene = null
         this.isHovered = false
         this.selectedModifierHandle = null
-        
+
         const dummyData: StoreShapeData = {
             id: 'dimension-label',
             type: 'text',
@@ -39,7 +42,7 @@ class ShapeModifier {
                 size: { width: 0, height: 0 },
                 style: {
                     fill: { color: { type: 'solid', color: [1, 1, 1, 1] }, opacity: 1 },
-                    stroke: { color: { type: 'solid', color: [0, 0, 0, 1] }, opacity: 1, width: 0 }
+                    stroke: { color: { type: 'solid', color: [0, 0, 0, 1] }, opacity: 1, width: 0 },
                 },
                 textStyle: {
                     textFill: { color: { type: 'solid' as const, color: [1, 1, 1, 1] }, opacity: 1 },
@@ -48,10 +51,10 @@ class ShapeModifier {
                     fontFamilies: ['Inter', 'sans-serif'],
                     lineHeight: 1.2,
                     textAlign: 'left' as const,
-                } satisfies PTextStyle
-            }
+                } satisfies PTextStyle,
+            },
         }
-        this.font = new SText(dummyData)
+        this.font = new SText(dummyData, container)
     }
 
     attachShape(scene: SceneNode) {
@@ -115,14 +118,14 @@ class ShapeModifier {
 
         const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
         const hitID = this.scene.shape.hitTestModifierHandle(tx, ty)
-        
+
         this.selectedModifierHandle = hitID
         return hitID
     }
 
     handleModifierDrag(dragStart: Coord, e: MouseEvent) {
         if (!this.selectedModifierHandle || !this.scene) return
-        
+
         if (this.selectedModifierHandle.startsWith('size-')) {
             this.updateShapeDim(this.selectedModifierHandle, dragStart, e)
         } else if (this.selectedModifierHandle === 'angle') {
@@ -140,7 +143,7 @@ class ShapeModifier {
     private updateShapeDim(handleID: string, dragStart: Coord, e: MouseEvent) {
         if (!this.scene || !this.initialShapeData) return
         const initial = this.initialShapeData
-        
+
         const localStart = transformPoint(initial.inverseWorldTransform, dragStart.x, dragStart.y, this.resource)
         const localCurrent = transformPoint(initial.inverseWorldTransform, e.offsetX, e.offsetY, this.resource)
 
@@ -152,14 +155,34 @@ class ShapeModifier {
         const pos = handleID.replace('size-', '')
 
         switch (pos) {
-            case 'top-left': newWidth -= dx; newHeight -= dy; break
-            case 'top-right': newWidth += dx; newHeight -= dy; break
-            case 'bottom-left': newWidth -= dx; newHeight += dy; break
-            case 'bottom-right': newWidth += dx; newHeight += dy; break
-            case 'top': newHeight -= dy; break
-            case 'bottom': newHeight += dy; break
-            case 'left': newWidth -= dx; break
-            case 'right': newWidth += dx; break
+            case 'top-left':
+                newWidth -= dx
+                newHeight -= dy
+                break
+            case 'top-right':
+                newWidth += dx
+                newHeight -= dy
+                break
+            case 'bottom-left':
+                newWidth -= dx
+                newHeight += dy
+                break
+            case 'bottom-right':
+                newWidth += dx
+                newHeight += dy
+                break
+            case 'top':
+                newHeight -= dy
+                break
+            case 'bottom':
+                newHeight += dy
+                break
+            case 'left':
+                newWidth -= dx
+                break
+            case 'right':
+                newWidth += dx
+                break
         }
 
         const MIN_SIZE = 2
@@ -172,7 +195,7 @@ class ShapeModifier {
         const fixedHandleKey = getOppositeHandle(pos as HandlePos)
         const fixedLocal = getHandleLocalPoint(fixedHandleKey, initial.dimension.width, initial.dimension.height)
         const fixedWorld = transformPoint(initial.localTransform, fixedLocal.x, fixedLocal.y, this.resource)
-        
+
         const handleNewLocal = getHandleLocalPoint(fixedHandleKey, absW, absH)
         const zeroTransform = this.scene.buildZeroTransform(absW, absH, initial.rotation, { x: scaleX, y: scaleY }, initial.rotationAnchor)
 
@@ -201,7 +224,7 @@ class ShapeModifier {
         const currentMouseAngle = Math.atan2(e.offsetY - center.y, e.offsetX - center.x)
         const startMouseAngle = initial.initialMouseAngle ?? currentMouseAngle
         const delta = currentMouseAngle - startMouseAngle
-        
+
         this.scene.setAngle(initial.rotation + delta)
     }
 
@@ -267,7 +290,6 @@ class ShapeModifier {
         this.initialShapeData = null
     }
     setHover(bool: boolean) {
-
         this.isHovered = bool
     }
     hovered(): boolean {

@@ -19,10 +19,10 @@ export interface ServiceRegistry {
     commandManager: CommandManager
 }
 
-class Container {
+export class ServiceContainer {
     private readonly services = new Map<string, unknown>()
 
-    register<K extends keyof ServiceRegistry>(key: K, instance: ServiceRegistry[K]) {
+    register<K extends keyof ServiceRegistry>(key: K, instance: ServiceRegistry[K]): void {
         this.services.set(key, instance)
     }
 
@@ -38,7 +38,3 @@ class Container {
         this.services.clear()
     }
 }
-
-const container = new Container()
-
-export default container

@@ -1,11 +1,10 @@
-
 import { Canvas, Paint, Rect } from 'canvaskit-wasm'
 import SceneNode from './Scene'
 import type Shape from '@lib/shapes/base/Shape'
 import { FlexLayout, GridLayout, LayoutConstraints } from './nodeTypes'
 import { applyColumnLayout, applyGridLayout, applyRowLayout } from './LayoutEngine'
 import PaintManager from '@lib/core/PaintManager'
-import container from '@lib/core/DependencyManager'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 import type { Properties } from '@lib/types/shapes'
 
 class ContainerNode extends SceneNode {
@@ -13,7 +12,7 @@ class ContainerNode extends SceneNode {
     layoutConstraints: LayoutConstraints
     paintManager: PaintManager
 
-    constructor(shape: Shape | null, layoutConstraints: LayoutConstraints) {
+    constructor(shape: Shape | null, layoutConstraints: LayoutConstraints, container: ServiceContainer) {
         super()
         this.shape = shape
         this.children = []
@@ -63,7 +62,7 @@ class ContainerNode extends SceneNode {
         if (props) {
             return {
                 ...props,
-                layoutConstraints: this.layoutConstraints
+                layoutConstraints: this.layoutConstraints,
             }
         }
 
@@ -72,7 +71,7 @@ class ContainerNode extends SceneNode {
             transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 },
             size: { width: 0, height: 0 },
             style: { fill: { color: '', opacity: 1 }, stroke: { color: '', opacity: 1, width: 0 } },
-            layoutConstraints: this.layoutConstraints
+            layoutConstraints: this.layoutConstraints,
         } as unknown as Properties
     }
 

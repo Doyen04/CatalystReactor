@@ -2,10 +2,11 @@ import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { Coord } from '@lib/types/shapes'
 import Shape from '../base/Shape'
 import { ShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 
 class SimpleRect extends Shape {
-    constructor(data: ShapeData) {
-        super(data)
+    constructor(data: ShapeData, container: ServiceContainer) {
+        super(data, container)
     }
 
     override setDim(width: number, height: number): void {
@@ -24,8 +25,6 @@ class SimpleRect extends Shape {
             height: Math.round(this.data.properties.size.height),
         }
     }
-
-
 
     override getPath(): Path | null {
         if (!this.resource) return null
@@ -72,8 +71,8 @@ class SimpleRect extends Shape {
         return x >= 0 && x <= width && y >= 0 && y <= height
     }
 
-    override cleanUp(): void { }
-    override destroy(): void { }
+    override cleanUp(): void {}
+    override destroy(): void {}
 }
 
 export default SimpleRect

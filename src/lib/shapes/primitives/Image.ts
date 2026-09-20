@@ -2,10 +2,15 @@ import Rectangle from './Rect'
 import { ImageFill, SolidFill } from '@lib/types/shapes'
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 import { ShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 
 class PImage extends Rectangle {
-    constructor(data: ShapeData, imageElem?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }) {
-        super(data)
+    constructor(
+        data: ShapeData,
+        container: ServiceContainer,
+        imageElem?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }
+    ) {
+        super(data, container)
 
         if (imageElem) {
             this.paintManager.imageCache.set(imageElem.name, imageElem.CanvasKitImage)

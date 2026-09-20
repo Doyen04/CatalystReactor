@@ -6,12 +6,13 @@ import clamp from '@lib/helper/clamp'
 import computeRoundedCorner from '@lib/helper/roundingUtil'
 import { arcPointAtFraction } from '@lib/helper/pointInArc'
 import { ShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 
 class Polygon extends Shape {
     private points: Coord[] = []
 
-    constructor(data: ShapeData) {
-        super(data)
+    constructor(data: ShapeData, container: ServiceContainer) {
+        super(data, container)
         this.points = this.generateRegularPolygon()
     }
 
@@ -44,7 +45,7 @@ class Polygon extends Shape {
                 'top-right': newRad,
                 'bottom-left': newRad,
                 'bottom-right': newRad,
-                locked: true
+                locked: true,
             }
         } else {
             this.data.properties.borderRadius['top-left'] = newRad
@@ -77,9 +78,9 @@ class Polygon extends Shape {
     }
 
     override getDim(): { width: number; height: number } {
-        return { 
-            width: Math.round(this.data.properties.size.width), 
-            height: Math.round(this.data.properties.size.height) 
+        return {
+            width: Math.round(this.data.properties.size.width),
+            height: Math.round(this.data.properties.size.height),
         }
     }
 
@@ -87,12 +88,12 @@ class Polygon extends Shape {
         super.drawModifierHandles(canvas, resource)
 
         if (this.points.length < 2) return
-        
+
         const cw = resource.canvasKit
         const paint = new cw.Paint()
         paint.setColor(cw.Color(255, 255, 255, 1))
         paint.setStyle(cw.PaintStyle.Fill)
-        
+
         const stroke = new cw.Paint()
         stroke.setColor(cw.Color(0, 0, 255, 1))
         stroke.setStyle(cw.PaintStyle.Stroke)
@@ -102,16 +103,20 @@ class Polygon extends Shape {
             canvas.drawCircle(x, y, 4, paint)
             canvas.drawCircle(x, y, 4, stroke)
         }
-        
+
         const bRadius = this.bRadius
         const spikes = this.sides
-        
+
         const radiusY = this.points[0].y + (bRadius > 0 ? bRadius : 10)
-        
+
         let vertPt = this.points[1]
         if (bRadius > 0) {
             const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
-                'polygon', 1, this.points, spikes, Math.min(bRadius, this.getMaxRadius())
+                'polygon',
+                1,
+                this.points,
+                spikes,
+                Math.min(bRadius, this.getMaxRadius())
             )
             vertPt = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
         }
@@ -119,7 +124,8 @@ class Polygon extends Shape {
         drawCircle(this.points[0].x, radiusY)
         drawCircle(vertPt.x, vertPt.y)
 
-        paint.delete(); stroke.delete()
+        paint.delete()
+        stroke.delete()
     }
 
     override hitTestModifierHandle(x: number, y: number): string | null {
@@ -130,13 +136,17 @@ class Polygon extends Shape {
 
         const bRadius = this.bRadius
         const spikes = this.sides
-        
+
         const radiusY = this.points[0].y + (bRadius > 0 ? bRadius : 10)
         let vertPt = this.points[1]
-        
+
         if (bRadius > 0) {
             const { startPoint, endPoint, arcCenter, currentRadius, turnSign } = computeRoundedCorner(
-                'polygon', 1, this.points, spikes, Math.min(bRadius, this.getMaxRadius())
+                'polygon',
+                1,
+                this.points,
+                spikes,
+                Math.min(bRadius, this.getMaxRadius())
             )
             vertPt = arcPointAtFraction(startPoint, endPoint, arcCenter, currentRadius, turnSign, 0.5)
         }
@@ -150,7 +160,7 @@ class Polygon extends Shape {
 
     override dragModifierHandle(handleID: string, localCurrent: Coord, _localStart: Coord, _initialShapeData: InitialTransformState): void {
         const { width: _width, height: _height } = this.data.properties.size
-        
+
         if (handleID === 'radius-top') {
             const distY = localCurrent.y - 0
             if (distY >= 0) this.setBorderRadius(Math.abs(distY), 'top')
@@ -165,7 +175,7 @@ class Polygon extends Shape {
 
             const { x: px, y: py } = this.getVertex(prev, 1)
             const { x: nx, y: ny } = this.getVertex(next, 1)
-            
+
             if (vy < ny && (Math.abs(vx - nx) < GAP || Math.abs(vy - ny) < GAP)) {
                 this.setVertexCount(next)
             } else if (vy > py && (Math.abs(vx - px) < GAP || Math.abs(vy - py) < GAP)) {
@@ -320,15 +330,15 @@ class Polygon extends Shape {
         const pointsArray: PathPoint[] = []
         for (let i = 0; i < this.points.length; i++) {
             const { x, y } = this.points[i]
-            // Note: Bypassing parametric border radius rendering for raw points. 
+            // Note: Bypassing parametric border radius rendering for raw points.
             // Users can use EditTool bezier smoothing manually on the raw nodes.
             pointsArray.push({ x, y, smooth: false })
         }
         return { points: pointsArray, closed: true }
     }
 
-    override cleanUp(): void { }
-    override destroy(): void { }
+    override cleanUp(): void {}
+    override destroy(): void {}
 }
 
 export default Polygon

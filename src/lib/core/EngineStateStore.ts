@@ -9,18 +9,12 @@ export interface ShapeData {
 }
 
 class EngineStateStore {
-    private static instance: EngineStateStore
-    private doc = new DocumentModel()
+    private doc: DocumentModel
     private views: Map<string, ShapeData> = new Map()
     private listeners: Set<(shapeId?: string) => void> = new Set()
 
-    private constructor() {}
-
-    public static getInstance(): EngineStateStore {
-        if (!EngineStateStore.instance) {
-            EngineStateStore.instance = new EngineStateStore()
-        }
-        return EngineStateStore.instance
+    constructor(doc: DocumentModel) {
+        this.doc = doc
     }
 
     private makeView(id: string, type: ShapeType): ShapeData {

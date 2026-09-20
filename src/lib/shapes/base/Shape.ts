@@ -1,17 +1,8 @@
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
-import {
-    ArcHandleState,
-    BoundingRect,
-    Coord,
-    HandlePos,
-    InitialTransformState,
-    PathData,
-    Properties,
-    ShapeType,
-} from '@lib/types/shapes'
+import { ArcHandleState, BoundingRect, Coord, HandlePos, InitialTransformState, PathData, Properties, ShapeType } from '@lib/types/shapes'
 import type { Canvas, Path as SkPath, Rect } from 'canvaskit-wasm'
 import PaintManager from '@lib/core/PaintManager'
-import container from '@lib/core/DependencyManager'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
 abstract class Shape {
@@ -23,10 +14,10 @@ abstract class Shape {
     public data: ShapeData
     public matrixDirty: boolean = false
 
-    constructor(data: ShapeData) {
+    constructor(data: ShapeData, container: ServiceContainer) {
         if (new.target === Shape) throw new Error('Shape is abstract; extend it!')
         this.data = data
-        this.paintManager = container.resolve("paintManager");
+        this.paintManager = container.resolve('paintManager')
     }
 
     abstract getCenterCoord(): Coord
@@ -109,15 +100,13 @@ abstract class Shape {
             left: 0,
             top: 0,
             right: width,
-            bottom: height
+            bottom: height,
         }
     }
 
     getRotationAnchorPoint() {
         return this.rotationAnchorPosition
     }
-
-
 
     getCoord(): Coord {
         return { x: this.data.properties.transform.x, y: this.data.properties.transform.y }
@@ -166,7 +155,7 @@ abstract class Shape {
     }
 
     // ── DELEGATION MODIFIER METHODS ───────────────
-    // These methods replace the legacy Handles array system and allow 
+    // These methods replace the legacy Handles array system and allow
     // shapes to natively calculate hit tests and draw their own smart UI overlays.
 
     drawModifierHandles(canvas: Canvas, resource: CanvasKitResources): void {
@@ -176,14 +165,14 @@ abstract class Shape {
         const paint = new cw.Paint()
         paint.setColor(cw.Color(255, 255, 255, 1))
         paint.setStyle(cw.PaintStyle.Fill)
-        
+
         const stroke = new cw.Paint()
         stroke.setColor(cw.Color(0, 0, 255, 1))
         stroke.setStyle(cw.PaintStyle.Stroke)
         stroke.setStrokeWidth(1.5)
 
         const drawHandle = (x: number, y: number, s: number = 8) => {
-            const rect = cw.XYWHRect(x - s/2, y - s/2, s, s)
+            const rect = cw.XYWHRect(x - s / 2, y - s / 2, s, s)
             canvas.drawRect(rect, paint)
             canvas.drawRect(rect, stroke)
         }
@@ -200,17 +189,19 @@ abstract class Shape {
 
         // Draw Rotation Handle
         drawHandle(width / 2, -25)
-        
+
         // Draw Rotation Line
         const linePath = new cw.Path()
         linePath.moveTo(width / 2, 0)
         linePath.lineTo(width / 2, -21)
         canvas.drawPath(linePath, stroke)
-        
-        paint.delete(); stroke.delete(); linePath.delete()
+
+        paint.delete()
+        stroke.delete()
+        linePath.delete()
     }
-    
-    hitTestModifierHandle(x: number, y: number): string | null { 
+
+    hitTestModifierHandle(x: number, y: number): string | null {
         const { width, height } = this.getDim()
         const s = 10 // hit pad
 
@@ -225,16 +216,18 @@ abstract class Shape {
         if (Math.abs(x - 0) <= s && Math.abs(y - height) <= s) return 'size-bottom-left'
         if (Math.abs(x - width) <= s && Math.abs(y - height) <= s) return 'size-bottom-right'
 
-        return null 
+        return null
     }
-    
+
     dragModifierHandle(
         _handleID: string,
         _localCurrent: Coord,
         _localStart: Coord,
         _initialShapeData: InitialTransformState,
         _sceneUpdate?: () => void
-    ): void { /* no-op by default for base */ }
+    ): void {
+        /* no-op by default for base */
+    }
 
     // ── FLATTEN METHOD ───────────────
     // Converts mathematically parameterized primitive data into explicit points
@@ -243,34 +236,80 @@ abstract class Shape {
     }
 
     // ── Virtual methods with default no-op implementations ───────────────
-    
-    getArcAngles(): { start: number; sweep: number } | null { return null }
-    isArc(): boolean { return false }
-    setArc(_start: number, _end: number): void { /* no-op */ }
-    getArcHandleState(): ArcHandleState | null { return null }
-    getSweep(): number | null { return null }
-    setArcHandleState(_state: Partial<ArcHandleState>, _replace?: boolean): void { /* no-op */ }
-    toDegree(_rad: number): number | undefined { return undefined }
 
-    getVertexCount(): number | null { return null }
-    setVertexCount(_count: number): void { /* no-op */ }
-    getVertex(_prev: number, _vertex: number): { x: number; y: number } | null { return null }
+    getArcAngles(): { start: number; sweep: number } | null {
+        return null
+    }
+    isArc(): boolean {
+        return false
+    }
+    setArc(_start: number, _end: number): void {
+        /* no-op */
+    }
+    getArcHandleState(): ArcHandleState | null {
+        return null
+    }
+    getSweep(): number | null {
+        return null
+    }
+    setArcHandleState(_state: Partial<ArcHandleState>, _replace?: boolean): void {
+        /* no-op */
+    }
+    toDegree(_rad: number): number | undefined {
+        return undefined
+    }
 
-    setRatio(_ratio: number): void { /* no-op */ }
+    getVertexCount(): number | null {
+        return null
+    }
+    setVertexCount(_count: number): void {
+        /* no-op */
+    }
+    getVertex(_prev: number, _vertex: number): { x: number; y: number } | null {
+        return null
+    }
 
-    setBorderRadius(_radius: number, _position: HandlePos): void { /* no-op */ }
+    setRatio(_ratio: number): void {
+        /* no-op */
+    }
 
-    canEdit(): boolean { return false }
-    insertText(_char: string, _shiftKey: boolean): void { /* no-op */ }
-    startEditing(): void { /* no-op */ }
-    selectAll(): void { /* no-op */ }
-    setCursorPosFromCoord(_x: number, _y: number): void { /* no-op */ }
-    deleteText(_direc: 'forward' | 'backward'): void { /* no-op */ }
-    moveCursor(_direc: 'right' | 'left' | 'up' | 'down', _shiftKey: boolean): void { /* no-op */ }
-    protected drawHoverEffect(_canvas: Canvas, _rect?: Rect): void { /* no-op */ }
-    setFontSize(_size: number): void { /* no-op */ }
-    setFontFamily(_fontFamily: string): void { /* no-op */ }
-    getMaxRadius(): number { return Infinity }
+    setBorderRadius(_radius: number, _position: HandlePos): void {
+        /* no-op */
+    }
+
+    canEdit(): boolean {
+        return false
+    }
+    insertText(_char: string, _shiftKey: boolean): void {
+        /* no-op */
+    }
+    startEditing(): void {
+        /* no-op */
+    }
+    selectAll(): void {
+        /* no-op */
+    }
+    setCursorPosFromCoord(_x: number, _y: number): void {
+        /* no-op */
+    }
+    deleteText(_direc: 'forward' | 'backward'): void {
+        /* no-op */
+    }
+    moveCursor(_direc: 'right' | 'left' | 'up' | 'down', _shiftKey: boolean): void {
+        /* no-op */
+    }
+    protected drawHoverEffect(_canvas: Canvas, _rect?: Rect): void {
+        /* no-op */
+    }
+    setFontSize(_size: number): void {
+        /* no-op */
+    }
+    setFontFamily(_fontFamily: string): void {
+        /* no-op */
+    }
+    getMaxRadius(): number {
+        return Infinity
+    }
 
     abstract destroy(): void
 }

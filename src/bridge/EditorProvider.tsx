@@ -1,11 +1,9 @@
-import { useMemo, type ReactNode } from 'react'
-import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
-import { makeEditor } from './editor'
+import { useEffect, useState, type ReactNode } from 'react'
+import { createEditor, type Editor } from '@/engine/createEditor'
 import { EditorContext } from './useEditor'
 
 export const EditorProvider = ({ children }: { children: ReactNode }) => {
-    const { canvasManager } = useCanvasManagerStore()
-    const editor = useMemo(() => (canvasManager ? makeEditor(canvasManager) : null), [canvasManager])
-
+    const [editor] = useState<Editor>(() => createEditor())
+    useEffect(() => () => editor.dispose(), [editor])
     return <EditorContext.Provider value={editor}>{children}</EditorContext.Provider>
 }

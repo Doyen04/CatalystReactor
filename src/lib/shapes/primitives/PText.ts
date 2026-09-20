@@ -3,6 +3,7 @@ import TextCursor from '../base/TextCursor'
 import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, Path, TextStyle } from 'canvaskit-wasm'
 import { Coord, PaintStyle, PTextStyle } from '@lib/types/shapes'
 import { ShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 import { textCache } from '@/engine/render/TextCache'
 
 class PText extends Shape {
@@ -18,10 +19,10 @@ class PText extends Shape {
     private paragraphVersion: number = 0
     private lastLayoutWidth: number = 0
 
-    constructor(data: ShapeData) {
-        super(data)
+    constructor(data: ShapeData, container: ServiceContainer) {
+        super(data, container)
         this.cacheId = this.data.id
-        this.cursor = new TextCursor(this.data.properties.transform.x, this.data.properties.transform.y, 0)
+        this.cursor = new TextCursor(this.data.properties.transform.x, this.data.properties.transform.y, 0, container)
 
         if (!this.data.properties.text) {
             this.data.properties = { ...this.data.properties, text: '' }

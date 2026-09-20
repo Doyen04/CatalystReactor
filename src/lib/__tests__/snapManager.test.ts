@@ -6,7 +6,7 @@ const node = { id: 'target', getParent: () => null } as unknown as SceneNode
 
 describe('SnapManager grid snapping', () => {
     it('snaps to the grid when within snap distance', () => {
-        const snap = SnapManager.getInstance()
+        const snap = new SnapManager()
         snap.setConfiguration({ enableGrid: true, enableShapes: false, snapDistance: 8 })
 
         const result = snap.getSnapResult(node, { x: 23, y: 47 }, 10)
@@ -21,7 +21,7 @@ describe('SnapManager grid snapping', () => {
     })
 
     it('does not snap when out of range', () => {
-        const snap = SnapManager.getInstance()
+        const snap = new SnapManager()
         snap.setConfiguration({ enableGrid: true, enableShapes: false, snapDistance: 2 })
 
         const result = snap.getSnapResult(node, { x: 25, y: 25 }, 10)
@@ -34,7 +34,7 @@ describe('SnapManager grid snapping', () => {
     })
 
     it('does not snap to the grid when the grid is disabled', () => {
-        const snap = SnapManager.getInstance()
+        const snap = new SnapManager()
         snap.setConfiguration({ enableGrid: false, enableShapes: false, snapDistance: 20 })
 
         const result = snap.getSnapResult(node, { x: 33, y: 44 }, 10)
@@ -46,7 +46,7 @@ describe('SnapManager grid snapping', () => {
     })
 
     it('keeps the position when already on a grid line', () => {
-        const snap = SnapManager.getInstance()
+        const snap = new SnapManager()
         snap.setConfiguration({ enableGrid: true, enableShapes: false, snapDistance: 8 })
 
         const result = snap.getSnapResult(node, { x: 30, y: 40 }, 10)
@@ -59,7 +59,7 @@ describe('SnapManager grid snapping', () => {
     })
 
     it('respects a custom grid size', () => {
-        const snap = SnapManager.getInstance()
+        const snap = new SnapManager()
         snap.setConfiguration({ enableGrid: true, enableShapes: false, snapDistance: 8 })
 
         const result = snap.getSnapResult(node, { x: 23, y: 47 }, 25)

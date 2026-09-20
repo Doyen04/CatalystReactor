@@ -1,6 +1,7 @@
 import Shape from '../base/Shape'
 import type { Canvas, Font, Typeface, Path } from 'canvaskit-wasm'
 import type { ShapeData } from '@lib/core/EngineStateStore'
+import type { ServiceContainer } from '@lib/core/DependencyManager'
 
 interface SimpleTextStyle {
     textColor: number[]
@@ -25,8 +26,8 @@ class SText extends Shape {
         fontFamily: ['Inter', 'sans-serif'],
     }
 
-    constructor(data: ShapeData) {
-        super(data)
+    constructor(data: ShapeData, container: ServiceContainer) {
+        super(data, container)
 
         if (!this.data) {
             console.warn('SText: data is missing')

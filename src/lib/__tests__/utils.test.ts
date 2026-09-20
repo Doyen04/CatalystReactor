@@ -1,27 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ServiceContainer } from '@lib/core/DependencyManager'
 import type { ServiceRegistry } from '@lib/core/DependencyManager'
-import DependencyManager from '@lib/core/DependencyManager'
 import { ResizeCursor } from '@lib/tools/ResizeCursor'
 import { isPrintableCharUnicode } from '@util/textUtil'
 
 describe('DependencyManager', () => {
     beforeEach(() => {
-        DependencyManager.clear()
         vi.restoreAllMocks()
     })
 
     it('round-trips a registered fake service through register into resolve', () => {
+        const container = new ServiceContainer()
         const fakePaintManager = { kind: 'paint', draw: () => 'drew' } as unknown as ServiceRegistry['paintManager']
 
-        DependencyManager.register('paintManager', fakePaintManager)
+        container.register('paintManager', fakePaintManager)
 
-        expect(DependencyManager.resolve('paintManager')).toBe(fakePaintManager)
+        expect(container.resolve('paintManager')).toBe(fakePaintManager)
     })
 
     it('resolves an unregistered key to null and warns via console.warn', () => {
+        const container = new ServiceContainer()
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-        const result = DependencyManager.resolve('renderer')
+        const result = container.resolve('renderer')
 
         expect(result).toBeNull()
         expect(warnSpy).toHaveBeenCalledTimes(1)
@@ -29,13 +30,14 @@ describe('DependencyManager', () => {
     })
 
     it('clear() empties the container so a previously registered key resolves to null again', () => {
-        DependencyManager.register('shapeManager', {} as unknown as ServiceRegistry['shapeManager'])
-        expect(DependencyManager.resolve('shapeManager')).not.toBeNull()
+        const container = new ServiceContainer()
+        container.register('shapeManager', {} as unknown as ServiceRegistry['shapeManager'])
+        expect(container.resolve('shapeManager')).not.toBeNull()
 
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-        DependencyManager.clear()
+        container.clear()
 
-        expect(DependencyManager.resolve('shapeManager')).toBeNull()
+        expect(container.resolve('shapeManager')).toBeNull()
         expect(warnSpy).toHaveBeenCalledTimes(1)
     })
 })

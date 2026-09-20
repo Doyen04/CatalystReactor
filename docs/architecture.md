@@ -624,7 +624,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
 The one legitimate exception is `CanvasKitResources`: the WASM module and fonts are expensive, process-wide, and genuinely shared. Initialise it once, outside any editor, and document why in a comment so nobody "fixes" it later.
 
-**Step 8 status:** the live app has one canvas, so for now `EditorProvider` wraps the existing `CanvasManager` via `makeEditor(canvasManager)` (exposing `{ doc, bus, run, undo, redo, canUndo, canRedo }`) instead of calling `createEditor()` per canvas. `createEditor()` stays as the headless composition root; per-editor instances arrive in Step 9.
+**Step 8 status:** the live app has one canvas, so for now `EditorProvider` wraps the existing `CanvasManager` via `makeEditor(canvasManager)` (exposing `{ doc, bus, run, undo, redo, canUndo, canRedo }`) instead of calling `createEditor()` per canvas. `createEditor()` stays as the headless composition root; per-editor instances arrive in Step 9 (see the "Step 9 landed" marker below).
 
 ### 8.2 useSyncExternalStore, and delete the duplicate state
 
@@ -997,6 +997,8 @@ This is the largest step and the one that needs the most discipline. Use a stran
 - `Canvas.tsx` becomes a mount point, `editor.attach(el)`.
 
 **Verify:** render two `EditorProvider`s side by side in a scratch route. Draw in both. They should not interfere. Delete the scratch route afterwards or keep it as a dev page.
+
+**Step 9 landed:** module-level singletons are gone except `CanvasKitResources`. `DependencyManager` exports `class ServiceContainer` (no module singleton); `EngineStateStore(doc)` and `new SnapManager()` are per-editor; `createEditor()` is the full headless composition root (paint manager/shape modifier are built lazily inside `attach()` so it never touches WASM); `Canvas.tsx` is a mount point calling `editor.attach(el)` after a once-per-process `CanvasKitResources` boot; `EditorProvider` mounts one editor per instance. `src/engine/__tests__/perEditorIsolation.test.ts` proves two `createEditor()` instances are fully independent. The two-side-by-side `EditorProvider`s UI smoke check is still deferred.
 
 ---
 
