@@ -184,9 +184,14 @@ src/
       EngineBus.ts           typed emitter, engine -> outside world
 
   bridge/                    the ONLY place react meets the engine
-    EditorProvider.tsx       creates one Editor per canvas
+    editor.ts                EditorHandle facade, makeEditor(canvasManager)
+    EditorProvider.tsx       provides the editor via React context
     useEditor.ts
-    useEntity.ts             useSyncExternalStore on the bus
+    useEntity.ts             subscribed snapshot of one entity
+    useEntityThrottled.ts    ~50ms throttled entity re-render
+    useDocumentRevision.ts   throttled re-render on any doc change
+    propertyPatch.ts         pure patch builders for the property panel
+    engineStoreBridge.ts     the only bus<->Zustand seam
     useSelection.ts
     useHistoryState.ts
 
@@ -619,6 +624,8 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 
 The one legitimate exception is `CanvasKitResources`: the WASM module and fonts are expensive, process-wide, and genuinely shared. Initialise it once, outside any editor, and document why in a comment so nobody "fixes" it later.
 
+**Step 8 status:** the live app has one canvas, so for now `EditorProvider` wraps the existing `CanvasManager` via `makeEditor(canvasManager)` (exposing `{ doc, bus, run, undo, redo, canUndo, canRedo }`) instead of calling `createEditor()` per canvas. `createEditor()` stays as the headless composition root; per-editor instances arrive in Step 9.
+
 ### 8.2 useSyncExternalStore, and delete the duplicate state
 
 This is the piece that removes `EngineStateStore` plus `useSceneStore.currentShapeProperties` as separate copies of the same data.
@@ -642,6 +649,8 @@ export function useEntity(id: EntityId | null): EntityRecord | null {
 
 React reads from the document directly. There is no second copy to drift. `PropertyBar` becomes a controlled component over engine state, and the bug where a UI edit never reaches the engine becomes structurally impossible rather than fixed-by-vigilance.
 
+**Snapshots caveat (why the shipped `useEntity` does not use `useSyncExternalStore`):** `DocumentModel` mutates live `EntityRecord`s in place — `doc.get(id)` returns the same object reference across writes, only `version` bumps. `useSyncExternalStore` skips re-render when `getSnapshot()` returns a value equal under `Object.is`, so the sketch above would never update during a drag. The shipped hook (same API, `EntityRecord | null`) therefore subscribes to the filtered bus event and drives a `useReducer` force-re-render, then reads `doc.get(id)` fresh on each render. Idle drags re-read the same mutated object, so no copy is ever created.
+
 ### 8.3 Throttle at the bridge, not in the engine
 
 During a drag the engine emits `document:changed` on every frame. React does not need sixty property-panel repaints per second.
@@ -651,6 +660,8 @@ During a drag the engine emits `document:changed` on every frame. React does not
 ```
 
 Throttle here, in the bridge. The engine stays exact, and the UI decides how often it wants to look. This is the right place for that decision, and it removes the throttle from `ShapeManager` where it currently sits.
+
+Landed in `useEntityThrottled.ts` (50ms trailing) and `useDocumentRevision.ts` (100ms trailing, used by `LayersPanel`); `ShapeManager` now emits `document:changed` once per frame with the touched id instead of throttling itself.
 
 ### 8.4 Canvas becomes dumb
 
@@ -768,7 +779,7 @@ No step depends on a later step. You can stop after any of them and be in a bett
 Step 5 specifically added:
 
 - `src/engine/events/EngineBus.ts` - a typed emitter, the engine's outbound seam.
-- `src/lib/core/EngineEvents.ts` - the `tool:changed` / `selection:changed` / `properties:changed` event map.
+- `src/lib/core/EngineEvents.ts` - the `tool:changed` / `selection:changed` / `document:changed` / `history:changed` event map (`document:changed` replaced `properties:changed` in Step 8).
 - `src/lib/tools/ToolContext.ts` - the constructor dependency tools receive (`sceneManager`, `shapeManager`, `defaultTool`, `setTool`, `setCursor`, `requestRender`).
 - `src/bridge/engineStoreBridge.ts` - `connectEngineToStores(bus)`, the only place the bus meets Zustand. `Canvas.tsx` calls it and pushes `gridSize` into `CanvasManager.setGridSize`.
 
@@ -802,7 +813,25 @@ Known Step 7 deltas / deferred verification:
 - `CreateShape`'s headless defaults are minimal (the plan's §2.2 snippet predates the nested `Properties` shape, so `x/y/width/height` live under `transform`/`size`); the real draw tools still go through `SceneManager.addShapeToScene` and are not yet command-backed.
 - Container drags still do not create history (pre-existing `instanceof ShapeNode` guard preserved).
 
-Next up: Step 8 (cut React over, delete the duplicates).
+Step 7 landed journal-backed commands: as described above; the manual smoke checks are still deferred. Test count at the end of Step 7: 20 files / 354 tests.
+
+Step 8 landed "cut React over, delete the duplicates":
+
+- **`document:changed` replaces `properties:changed`**: `EngineEvents` now has `document:changed: { ids: string[] }`. `ShapeManager` emits it once per frame with the touched id during draws/drags/moves (no engine throttle). `CommandManager` emits it with the full touched set on `commit()` and with the transaction's ids on `undo()`/`redo()` (each also `requestRender()`), so panel edits, undo, and redo all notify subscribers.
+- **Bridge hooks**: `src/bridge/{editor,useEditor,EditorProvider,useEntity,useEntityThrottled,useDocumentRevision,propertyPatch}.ts(x)`. `makeEditor(canvasManager)` exposes `{ doc, bus, run, undo, redo, canUndo, canRedo }` (doc from `EngineStateStore.getDocument()`, commands from the per-canvas `CommandManager`) and `EditorProvider` provides it under the existing `CanvasManagerProvider`. `useEntity(id)` / `useEntityThrottled(id)` subscribe to filtered `document:changed` and read `doc.get(id)` fresh (see the snapshots caveat in 8.2); `propertyPatch` contains the pure, unit-tested patch builders.
+- **`PropertyBar`**: reads `selectedShapeId` from `useSceneStore`, gets the live record via `useEntityThrottled(selectedShapeId)`, and writes with `commands.run(new UpdateProperties(id, null, patch))` — merging each touched top-level section via `propertyPatch`. The old `shapeManager.update*` calls are gone.
+- **`LayersPanel`**: builds its tree from `doc` (`childrenOf(rootId)` recursively; container = `type === 'plainRect'` or has children; layout type read from `layoutConstraints.type`), refreshes via `useDocumentRevision()`, auto-expands via `doc.ancestorsOf(selectedShapeId)`, and selects via `sceneManager.getNode(id)` → `shapeManager.attachNode`. The `EngineStateStore.subscribe` re-render hack is gone.
+- **Deleted**: `useSceneStore.currentShapeProperties`/`setCurrentShapeProperties`/`clearProperties` plus the `EngineStateStore.subscribe` side-effect sync in `sceneStore.tsx`; `ShapeManager.throttledUpdate`/`updateProperty`/`updateSubProperty`/`updateStyle`/`updateBorderRadius`/`updateRadiusLock` and its `EngineStateStore.notify()` calls; the `properties:changed` mapping in `engineStoreBridge.ts`; the whole `src/lib/types/engine.ts` file. The drag throttle now lives entirely at the bridge.
+- **Verify (from the plan):** edit a property in the panel → canvas updates; drag on canvas → panel updates (throttled); undo → panel and canvas both update. The undo case is the one that was broken (propagating twice) before.
+- Tests: `src/lib/__tests__/propertyPatch.test.ts` (24) added; `engineStoreBridge.test.ts` resized to stop asserting `currentShapeProperties`. Totals: 21 files / 379 tests.
+
+Known Step 8 deltas / deferred verification:
+
+- The live app still goes through `CanvasManager` (per-editor instances are Step 9), so `EditorProvider`/`makeEditor` wrap the single existing manager rather than calling `createEditor()`.
+- `LayersPanel`'s click-select and the container/label logic were preserved, but drag-on-canvas and multi-step panel editing have not been manually smoke-tested yet.
+- `EngineStateStore.subscribe`/`notify` still exist (used by engine tests and `LayersPanel`'s predecessor); nothing live calls `notify()` now.
+
+Next up: Step 9 (per-editor instances).
 
 ---
 
@@ -943,7 +972,7 @@ This is the largest step and the one that needs the most discipline. Use a stran
 
 ---
 
-### Step 8: cut React over, delete the duplicates
+### Step 8: cut React over, delete the duplicates  *(landed)*
 
 **Goal:** no second copy of shape state.
 

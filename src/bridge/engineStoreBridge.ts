@@ -15,13 +15,8 @@ export function connectEngineToStores(bus: EngineBus<EngineEvents>): () => void 
         useSceneStore.getState().setSelectedShapeId(id)
     })
 
-    const offProperties = bus.on('properties:changed', ({ properties }) => {
-        useSceneStore.getState().setCurrentShapeProperties(properties)
-    })
-
     return () => {
         offTool()
         offSelection()
-        offProperties()
     }
 }

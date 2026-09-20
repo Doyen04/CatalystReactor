@@ -1,7 +1,6 @@
 import type { Canvas, Paint, PathEffect } from 'canvaskit-wasm'
 import { Coord, Properties } from '@lib/types/shapes'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
-import throttle from '@lib/helper/throttle'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 import ShapeNode from '@lib/node/ShapeNode'
@@ -21,7 +20,6 @@ class ShapeManager {
     private bus: EngineBus<EngineEvents>
     private commandManager: CommandManager
     private doc: DocumentModel
-    private throttledUpdate: (properties: Properties) => void
     private gridSize = 10
     private initialProps: Properties | null = null
     private activeSnapResult: SnapResult | null = null
@@ -35,10 +33,6 @@ class ShapeManager {
         this.bus = bus
         this.commandManager = commandManager
         this.doc = EngineStateStore.getInstance().getDocument()
-
-        this.throttledUpdate = throttle((properties: unknown) => {
-            this.bus.emit('properties:changed', { id: this.scene?.shape?.data.id ?? null, properties: properties as Properties })
-        })
     }
 
     setGridSize(size: number): void {
@@ -51,8 +45,7 @@ class ShapeManager {
         this.scene.drawOnDrag(dragStart, e)
 
         this.shapeModifier?.update()
-        const props = this.scene.getProperties()
-        if (props) this.throttledUpdate(props)
+        this.emitDocumentChanged()
     }
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
@@ -95,8 +88,7 @@ class ShapeManager {
         }
 
         this.shapeModifier?.update()
-        const props = this.scene.getProperties()
-        if (props) this.throttledUpdate(props)
+        this.emitDocumentChanged()
     }
 
     moveScene(dx: number, dy: number) {
@@ -104,8 +96,7 @@ class ShapeManager {
         this.scene.move(dx, dy)
 
         this.shapeModifier?.update()
-        const props = this.scene.getProperties()
-        if (props) this.throttledUpdate(props)
+        this.emitDocumentChanged()
     }
 
     finishDrag() {
@@ -123,7 +114,6 @@ class ShapeManager {
         this.shapeModifier?.update()
 
         const finalProps = this.scene.getProperties()
-        if (finalProps) this.throttledUpdate(finalProps)
 
         // Record history
         if (this.initialProps && this.scene instanceof ShapeNode && this.scene.shape) {
@@ -139,8 +129,7 @@ class ShapeManager {
                 this.commandManager.abort()
             }
         }
-        //remeber this line
-        EngineStateStore.getInstance().notify()
+        this.emitDocumentChanged()
         this.initialProps = null
         this.activeSnapResult = null
         this.dragTransactionActive = false
@@ -157,9 +146,8 @@ class ShapeManager {
             this.commandManager.abort()
             this.shapeModifier?.handleRemoveModiferHandle()
             this.shapeModifier?.update()
-            if (finalProps) this.throttledUpdate(finalProps)
+            this.emitDocumentChanged()
         }
-        EngineStateStore.getInstance().notify()
         this.initialProps = null
         this.activeSnapResult = null
         this.dragTransactionActive = false
@@ -181,8 +169,7 @@ class ShapeManager {
         }
 
         this.shapeModifier?.update()
-        const props = this.scene.getProperties()
-        if (props) this.throttledUpdate(props)
+        this.emitDocumentChanged()
     }
 
     get currentScene(): SceneNode | null {
@@ -203,8 +190,7 @@ class ShapeManager {
             this.bus.emit('selection:changed', { id: this.scene.shape.data.id })
         }
 
-        const props = this.scene.getProperties()
-        if (props) this.throttledUpdate(props)
+        this.emitDocumentChanged()
         requestRender()
     }
 
@@ -229,114 +215,9 @@ class ShapeManager {
         }
     }
 
-    updateProperty<K extends keyof Properties>(key: K, value: Properties[K]) {
-        if (!this.scene) throw new Error('No shape attached')
-
-        const oldProps = structuredClone(this.scene.getProperties())
-        const newProps = {
-            ...oldProps,
-            [key]: value,
-        }
-
-        this.scene.setProperties(newProps as Properties)
-        this.shapeModifier?.update()
-
-        const finalProps = this.scene.getProperties()
-        if (finalProps) this.throttledUpdate(finalProps)
-
-        // Record history for property bar updates
-        if (this.scene && this.scene.shape) {
-            this.commandManager.run(new UpdateProperties(this.scene.shape.data.id, oldProps as Properties, structuredClone(finalProps as Properties)))
-            EngineStateStore.getInstance().notify(this.scene.shape.data.id)
-            requestRender()
-        }
-    }
-
-    updateBorderRadius(value: number, pos?: string) {
-        if (!this.scene) return
-        const props = this.scene.getProperties()
-        if (!props || !props.borderRadius) return
-
-        const newBorderRadius = { ...props.borderRadius }
-        const validKeys = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
-
-        if (newBorderRadius.locked) {
-            newBorderRadius['top-left'] = value
-            newBorderRadius['top-right'] = value
-            newBorderRadius['bottom-left'] = value
-            newBorderRadius['bottom-right'] = value
-        } else if (pos && validKeys.includes(pos)) {
-            ;(newBorderRadius as Record<string, number | boolean>)[pos] = value
-        }
-
-        this.updateProperty('borderRadius', newBorderRadius)
-    }
-
-    updateRadiusLock(locked: boolean) {
-        if (!this.scene) return
-        const props = this.scene.getProperties()
-        if (!props || !props.borderRadius) return
-
-        let newBorderRadius
-        if (locked) {
-            const br = props.borderRadius
-            const maxRadius = Math.max(br['top-left'], br['top-right'], br['bottom-left'], br['bottom-right'])
-            newBorderRadius = {
-                'top-left': maxRadius,
-                'top-right': maxRadius,
-                'bottom-left': maxRadius,
-                'bottom-right': maxRadius,
-                locked: true,
-            }
-        } else {
-            newBorderRadius = { ...props.borderRadius, locked: false }
-        }
-
-        this.updateProperty('borderRadius', newBorderRadius)
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updateStyle(key: 'fill' | 'strokeColor', value: any) {
-        if (!this.scene) return
-        const style = this.scene.getProperties()?.style
-        if (!style) return
-
-        const newStyle = { ...style }
-        if (key === 'fill') {
-            newStyle.fill = value
-        } else if (key === 'strokeColor') {
-            newStyle.stroke = {
-                ...style.stroke,
-                color: value.color,
-                opacity: value.opacity,
-            }
-        }
-
-        this.updateProperty('style', newStyle)
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updateSubProperty(section: keyof Properties, key: string, value: any): void {
-        if (!this.scene) return
-        const props = this.scene.getProperties()
-        if (!props) return
-        const target = props[section]
-        if (!target || typeof target !== 'object') return
-
-        // Handle nested paths like 'stroke.width'
-        const keys = key.split('.')
-        const newSectionProps = JSON.parse(JSON.stringify(target))
-        let current = newSectionProps
-
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (!current[keys[i]]) {
-                current[keys[i]] = {}
-            }
-            current = current[keys[i]]
-        }
-        current[keys[keys.length - 1]] = value
-
-        this.updateProperty(section, newSectionProps as Properties[keyof Properties])
+    private emitDocumentChanged(): void {
+        const id = this.scene?.shape?.data.id
+        if (id) this.bus.emit('document:changed', { ids: [id] })
     }
 
     handleHover(x: number, y: number): string | null {

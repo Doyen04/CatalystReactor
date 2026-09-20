@@ -198,7 +198,7 @@ describe('CommandManager', () => {
         commands.run(new CreateShape('rect', rectProps()))
         expect(history).toHaveBeenCalledTimes(1)
         expect(history).toHaveBeenLastCalledWith({ canUndo: true, canRedo: false })
-        expect(render).toHaveBeenCalledTimes(1)
+        expect(render).toHaveBeenCalledTimes(2)
 
         commands.undo()
         expect(history).toHaveBeenCalledTimes(2)

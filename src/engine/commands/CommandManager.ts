@@ -27,7 +27,10 @@ export class CommandManager {
     private lastCanUndo = false
     private lastCanRedo = false
 
-    constructor(private doc: DocumentModel, private bus: EngineBus<EngineEvents>) {
+    constructor(
+        private doc: DocumentModel,
+        private bus: EngineBus<EngineEvents>
+    ) {
         this.ctx = { doc }
     }
 
@@ -71,6 +74,7 @@ export class CommandManager {
         }
         this.redoStack.length = 0
         this.emitHistoryState()
+        this.emitDocumentChanged(open.touched)
     }
 
     abort(): void {
@@ -88,6 +92,8 @@ export class CommandManager {
         }
         this.redoStack.push(top)
         this.emitHistoryState()
+        this.emitDocumentChanged(new Set(top.entries.map(entryId)))
+        requestRender()
     }
 
     redo(): void {
@@ -98,6 +104,8 @@ export class CommandManager {
         }
         this.undoStack.push(top)
         this.emitHistoryState()
+        this.emitDocumentChanged(new Set(top.entries.map(entryId)))
+        requestRender()
     }
 
     get canUndo(): boolean {
@@ -115,6 +123,13 @@ export class CommandManager {
         this.lastCanUndo = canUndo
         this.lastCanRedo = canRedo
         this.bus.emit('history:changed', { canUndo, canRedo })
+        requestRender()
+    }
+
+    private emitDocumentChanged(touched: Set<EntityId>): void {
+        const ids = [...touched]
+        if (ids.length === 0) return
+        this.bus.emit('document:changed', { ids })
         requestRender()
     }
 }

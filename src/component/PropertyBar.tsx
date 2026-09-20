@@ -1,9 +1,11 @@
-
 import React, { useState } from 'react'
 import { useSceneStore } from '@hooks/sceneStore'
 import { ColorProps } from '@lib/types/shapes'
 import Input from '@ui/Input'
-import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
+import { useEditor } from '@/bridge/useEditor'
+import { useEntityThrottled } from '@/bridge/useEntityThrottled'
+import { patchProperty, patchRadiusLock, patchStyle } from '@/bridge/propertyPatch'
+import { UpdateProperties } from '@/engine/commands/UpdateProperties'
 import { Hexagon } from 'lucide-react'
 import { Section, GRID2X2 } from '@ui/Section'
 import LockButton from '@ui/LockedButton'
@@ -14,82 +16,36 @@ import Tabs from '@ui/Tabs'
 import DropDownPicker from '@ui/DropDownPicker'
 
 function PropertyBar() {
-    const { currentShapeProperties } = useSceneStore()
-    const { shapeManager } = useCanvasManagerStore()
+    const selectedShapeId = useSceneStore(s => s.selectedShapeId)
+    const editor = useEditor()
+    const entity = useEntityThrottled(selectedShapeId)
     const [activeTab, setActiveTab] = useState('design')
 
     const tabs = [
         { id: 'design', label: 'Design' },
-        { id: 'advanced', label: 'Advanced' }
+        { id: 'advanced', label: 'Advanced' },
     ]
 
-
     const handlePropertyChange = (key: string, value: number | string | number[] | string[] | ColorProps): void => {
-        if (!shapeManager || !currentShapeProperties) return
-        const { transform, size, spikesRatio, arcSegment, sides, style, textStyle } = currentShapeProperties
-
-        if (key === 'top-left' || key === 'top-right' || key === 'bottom-left' || key === 'bottom-right' || key === 'radii') {
-            shapeManager.updateBorderRadius(value as number, key)
-            return
-        }
-
-        // Transform properties (including rotation, scale, anchor)
-        if (transform && (key === 'x' || key === 'y' || key === 'rotation' || key === 'scaleX' || key === 'scaleY')) {
-            shapeManager.updateSubProperty('transform', key, value)
-        }
-        // Anchor point support
-        else if (transform && (key === 'anchorPoint_x' || key === 'anchorPoint_y')) {
-            const anchorKey = key.replace('anchorPoint_', '')
-            if (transform.anchorPoint) {
-                const newAnchor = { ...transform.anchorPoint, [anchorKey]: value }
-                shapeManager.updateSubProperty('transform', 'anchorPoint', newAnchor)
-            }
-        }
-        // Size properties
-        else if (size && key in size) {
-            shapeManager.updateSubProperty('size', key, value)
-        }
-        // Stroke properties
-        else if (style && key.startsWith('stroke_')) {
-            const strokeKey = key.replace('stroke_', '')
-            shapeManager.updateSubProperty('style', `stroke.${strokeKey}`, value)
-        }
-        // Text style properties
-        else if (textStyle && key.startsWith('text_')) {
-            const textKey = key.replace('text_', '')
-            shapeManager.updateSubProperty('textStyle', textKey, value)
-        }
-        // Layout properties (stored separately on container nodes)
-        else if (key.startsWith('layout_')) {
-            const layoutKey = key.replace('layout_', '')
-            if (layoutKey.startsWith('padding_')) {
-                const paddingKey = layoutKey.replace('padding_', '')
-                shapeManager.updateSubProperty('layoutConstraints', `padding.${paddingKey}`, value)
-            } else {
-                shapeManager.updateSubProperty('layoutConstraints', layoutKey, value)
-            }
-        }
-        // Other properties  
-        else if (spikesRatio && key in spikesRatio) {
-            shapeManager.updateSubProperty('spikesRatio', key, value)
-        } else if (arcSegment && key in arcSegment) {
-            shapeManager.updateSubProperty('arcSegment', key, value)
-        } else if (sides && key in sides) {
-            shapeManager.updateSubProperty('sides', key, value)
-        }
+        if (!entity || !editor) return
+        const patch = patchProperty(entity.properties, key, value)
+        if (patch) editor.run(new UpdateProperties(entity.id, null, patch))
     }
 
     const toggle = (e: React.MouseEvent<HTMLButtonElement>, key: string, value: boolean): void => {
-        if (key === 'locked') {
-            shapeManager?.updateRadiusLock(value)
+        if (key === 'locked' && entity && editor) {
+            const patch = patchRadiusLock(entity.properties.borderRadius, value)
+            if (patch) editor.run(new UpdateProperties(entity.id, null, patch))
         }
     }
 
     const handleColorChange = (key: string, value: ColorProps) => {
-        shapeManager?.updateStyle(key as 'fill' | 'strokeColor', value)
+        if (!entity || !editor) return
+        const patch = patchStyle(entity.properties.style, key as 'fill' | 'strokeColor', value)
+        if (patch) editor.run(new UpdateProperties(entity.id, null, patch))
     }
 
-    if (!currentShapeProperties) {
+    if (!entity) {
         return (
             <div className="propertybar">
                 <div className="propertybar-header text-xs text-gray-500 justify-center">Selection</div>
@@ -100,15 +56,16 @@ function PropertyBar() {
         )
     }
 
-    const transform = currentShapeProperties?.transform
-    const size = currentShapeProperties?.size
-    const style = currentShapeProperties?.style
-    const arcSegment = currentShapeProperties?.arcSegment
-    const sides = currentShapeProperties?.sides
-    const spikesRatio = currentShapeProperties?.spikesRatio
-    const textStyle = currentShapeProperties?.textStyle
-    const borderRadius = currentShapeProperties?.borderRadius
-    const layoutConstraints = currentShapeProperties?.layoutConstraints
+    const properties = entity.properties
+    const transform = properties.transform
+    const size = properties.size
+    const style = properties.style
+    const arcSegment = properties.arcSegment
+    const sides = properties.sides
+    const spikesRatio = properties.spikesRatio
+    const textStyle = properties.textStyle
+    const borderRadius = properties.borderRadius
+    const layoutConstraints = properties.layoutConstraints
 
     return (
         <div className="propertybar">
@@ -133,7 +90,10 @@ function PropertyBar() {
                         {style && (
                             <GRID2X2 title="Style">
                                 <ColorInput fill={style.fill} onChange={fill => handleColorChange('fill', fill)} />
-                                <ColorInput fill={{ color: style.stroke.color, opacity: style.stroke.opacity } as ColorProps} onChange={strokeColor => handleColorChange('strokeColor', strokeColor)} />
+                                <ColorInput
+                                    fill={{ color: style.stroke.color, opacity: style.stroke.opacity } as ColorProps}
+                                    onChange={strokeColor => handleColorChange('strokeColor', strokeColor)}
+                                />
                             </GRID2X2>
                         )}
 
@@ -141,18 +101,43 @@ function PropertyBar() {
                         {transform && (transform.rotation !== undefined || transform.scaleX !== undefined || transform.anchorPoint !== undefined) && (
                             <GRID2X2 title="Transform (Scale/Rotate)">
                                 {transform.rotation !== undefined && (
-                                    <Input type="number" title="Rotation" value={transform.rotation} onChange={value => handlePropertyChange('rotation', value)} />
+                                    <Input
+                                        type="number"
+                                        title="Rotation"
+                                        value={transform.rotation}
+                                        onChange={value => handlePropertyChange('rotation', value)}
+                                    />
                                 )}
                                 {transform.scaleX !== undefined && (
-                                    <Input type="number" title="Scale X" value={transform.scaleX} onChange={value => handlePropertyChange('scaleX', value)} />
+                                    <Input
+                                        type="number"
+                                        title="Scale X"
+                                        value={transform.scaleX}
+                                        onChange={value => handlePropertyChange('scaleX', value)}
+                                    />
                                 )}
                                 {transform.scaleY !== undefined && (
-                                    <Input type="number" title="Scale Y" value={transform.scaleY} onChange={value => handlePropertyChange('scaleY', value)} />
+                                    <Input
+                                        type="number"
+                                        title="Scale Y"
+                                        value={transform.scaleY}
+                                        onChange={value => handlePropertyChange('scaleY', value)}
+                                    />
                                 )}
                                 {transform.anchorPoint && (
                                     <>
-                                        <Input type="number" title="Anchor X" value={transform.anchorPoint.x} onChange={value => handlePropertyChange('anchorPoint_x', value)} />
-                                        <Input type="number" title="Anchor Y" value={transform.anchorPoint.y} onChange={value => handlePropertyChange('anchorPoint_y', value)} />
+                                        <Input
+                                            type="number"
+                                            title="Anchor X"
+                                            value={transform.anchorPoint.x}
+                                            onChange={value => handlePropertyChange('anchorPoint_x', value)}
+                                        />
+                                        <Input
+                                            type="number"
+                                            title="Anchor Y"
+                                            value={transform.anchorPoint.y}
+                                            onChange={value => handlePropertyChange('anchorPoint_y', value)}
+                                        />
                                     </>
                                 )}
                             </GRID2X2>
@@ -162,7 +147,12 @@ function PropertyBar() {
                         {style && style.stroke && (
                             <Section title="Stroke Properties">
                                 <div className="space-y-3">
-                                    <Input type="number" title="Width" value={style.stroke.width ?? 1} onChange={value => handlePropertyChange('stroke_width', value)} />
+                                    <Input
+                                        type="number"
+                                        title="Width"
+                                        value={style.stroke.width ?? 1}
+                                        onChange={value => handlePropertyChange('stroke_width', value)}
+                                    />
                                     {style.stroke.lineCap && (
                                         <div>
                                             <label className="text-xs text-gray-600">Line Cap</label>
@@ -171,7 +161,7 @@ function PropertyBar() {
                                                 values={[
                                                     { value: 'butt', label: 'Butt' },
                                                     { value: 'round', label: 'Round' },
-                                                    { value: 'square', label: 'Square' }
+                                                    { value: 'square', label: 'Square' },
                                                 ]}
                                                 onValueChange={(value: string) => handlePropertyChange('stroke_lineCap', value)}
                                             />
@@ -185,7 +175,7 @@ function PropertyBar() {
                                                 values={[
                                                     { value: 'miter', label: 'Miter' },
                                                     { value: 'round', label: 'Round' },
-                                                    { value: 'bevel', label: 'Bevel' }
+                                                    { value: 'bevel', label: 'Bevel' },
                                                 ]}
                                                 onValueChange={(value: string) => handlePropertyChange('stroke_lineJoin', value)}
                                             />
@@ -199,8 +189,11 @@ function PropertyBar() {
                                                 placeholder="e.g., 5,5 or 10,5,2,5"
                                                 defaultValue={style.stroke.dashArray.join(',')}
                                                 className="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs text-white"
-                                                onChange={(e) => {
-                                                    const dashes = e.currentTarget.value.split(',').map(v => parseFloat(v.trim())).filter((v: number) => !isNaN(v))
+                                                onChange={e => {
+                                                    const dashes = e.currentTarget.value
+                                                        .split(',')
+                                                        .map(v => parseFloat(v.trim()))
+                                                        .filter((v: number) => !isNaN(v))
                                                     handlePropertyChange('stroke_dashArray', dashes)
                                                 }}
                                             />
@@ -218,16 +211,34 @@ function PropertyBar() {
                                         <ColorInput fill={textStyle.textFill} onChange={fill => handlePropertyChange('text_textFill', fill)} />
                                     )}
                                     {textStyle.textStroke && (
-                                        <ColorInput fill={{ color: textStyle.textStroke.color, opacity: textStyle.textStroke.opacity } as ColorProps} onChange={stroke => handlePropertyChange('text_textStroke', stroke)} />
+                                        <ColorInput
+                                            fill={{ color: textStyle.textStroke.color, opacity: textStyle.textStroke.opacity } as ColorProps}
+                                            onChange={stroke => handlePropertyChange('text_textStroke', stroke)}
+                                        />
                                     )}
                                     {textStyle.fontSize && (
-                                        <Input type="number" title="Font Size" value={textStyle.fontSize} onChange={value => handlePropertyChange('text_fontSize', value)} />
+                                        <Input
+                                            type="number"
+                                            title="Font Size"
+                                            value={textStyle.fontSize}
+                                            onChange={value => handlePropertyChange('text_fontSize', value)}
+                                        />
                                     )}
                                     {textStyle.fontWeight && (
-                                        <Input type="number" title="Font Weight" value={textStyle.fontWeight} onChange={value => handlePropertyChange('text_fontWeight', value)} />
+                                        <Input
+                                            type="number"
+                                            title="Font Weight"
+                                            value={textStyle.fontWeight}
+                                            onChange={value => handlePropertyChange('text_fontWeight', value)}
+                                        />
                                     )}
                                     {textStyle.lineHeight && (
-                                        <Input type="number" title="Line Height" value={textStyle.lineHeight} onChange={value => handlePropertyChange('text_lineHeight', value)} />
+                                        <Input
+                                            type="number"
+                                            title="Line Height"
+                                            value={textStyle.lineHeight}
+                                            onChange={value => handlePropertyChange('text_lineHeight', value)}
+                                        />
                                     )}
                                     {textStyle.textAlign && (
                                         <div>
@@ -238,7 +249,7 @@ function PropertyBar() {
                                                     { value: 'left', label: 'Left' },
                                                     { value: 'center', label: 'Center' },
                                                     { value: 'right', label: 'Right' },
-                                                    { value: 'justify', label: 'Justify' }
+                                                    { value: 'justify', label: 'Justify' },
                                                 ]}
                                                 onValueChange={(value: string) => handlePropertyChange('text_textAlign', value)}
                                             />
@@ -255,10 +266,18 @@ function PropertyBar() {
                                         </div>
                                     )}
                                     {textStyle.backgroundColor && (
-                                        <ColorInput fill={textStyle.backgroundColor} onChange={fill => handlePropertyChange('text_backgroundColor', fill)} />
+                                        <ColorInput
+                                            fill={textStyle.backgroundColor}
+                                            onChange={fill => handlePropertyChange('text_backgroundColor', fill)}
+                                        />
                                     )}
                                     {textStyle.backgroundStroke && (
-                                        <ColorInput fill={{ color: textStyle.backgroundStroke.color, opacity: textStyle.backgroundStroke.opacity } as ColorProps} onChange={stroke => handlePropertyChange('text_backgroundStroke', stroke)} />
+                                        <ColorInput
+                                            fill={
+                                                { color: textStyle.backgroundStroke.color, opacity: textStyle.backgroundStroke.opacity } as ColorProps
+                                            }
+                                            onChange={stroke => handlePropertyChange('text_backgroundStroke', stroke)}
+                                        />
                                     )}
                                 </div>
                             </Section>
@@ -269,7 +288,7 @@ function PropertyBar() {
                             <Section title="Layout">
                                 {(() => {
                                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    const lc = layoutConstraints as any;
+                                    const lc = layoutConstraints as any
                                     return (
                                         <div className="space-y-3">
                                             {lc.type === 'row' || lc.type === 'column' ? (
@@ -281,7 +300,7 @@ function PropertyBar() {
                                                                 value={{ value: lc.flexDirection, label: lc.flexDirection }}
                                                                 values={[
                                                                     { value: 'row', label: 'Row' },
-                                                                    { value: 'column', label: 'Column' }
+                                                                    { value: 'column', label: 'Column' },
                                                                 ]}
                                                                 onValueChange={(value: string) => handlePropertyChange('layout_flexDirection', value)}
                                                             />
@@ -294,7 +313,7 @@ function PropertyBar() {
                                                                 value={{ value: lc.flexWrap, label: lc.flexWrap }}
                                                                 values={[
                                                                     { value: 'nowrap', label: 'No Wrap' },
-                                                                    { value: 'wrap', label: 'Wrap' }
+                                                                    { value: 'wrap', label: 'Wrap' },
                                                                 ]}
                                                                 onValueChange={(value: string) => handlePropertyChange('layout_flexWrap', value)}
                                                             />
@@ -303,20 +322,49 @@ function PropertyBar() {
                                                 </>
                                             ) : null}
                                             {lc.gap !== undefined && (
-                                                <Input type="number" title="Gap" value={lc.gap} onChange={value => handlePropertyChange('layout_gap', value)} />
+                                                <Input
+                                                    type="number"
+                                                    title="Gap"
+                                                    value={lc.gap}
+                                                    onChange={value => handlePropertyChange('layout_gap', value)}
+                                                />
                                             )}
-                                            {lc.padding !== undefined && (
-                                                typeof lc.padding === 'number' ? (
-                                                    <Input type="number" title="Padding" value={lc.padding} onChange={value => handlePropertyChange('layout_padding', value)} />
+                                            {lc.padding !== undefined &&
+                                                (typeof lc.padding === 'number' ? (
+                                                    <Input
+                                                        type="number"
+                                                        title="Padding"
+                                                        value={lc.padding}
+                                                        onChange={value => handlePropertyChange('layout_padding', value)}
+                                                    />
                                                 ) : (
                                                     <div className="grid grid-cols-2 gap-2">
-                                                        <Input type="number" title="Pad Top" value={lc.padding?.top ?? 0} onChange={value => handlePropertyChange('layout_padding_top', value)} />
-                                                        <Input type="number" title="Pad Right" value={lc.padding?.right ?? 0} onChange={value => handlePropertyChange('layout_padding_right', value)} />
-                                                        <Input type="number" title="Pad Bottom" value={lc.padding?.bottom ?? 0} onChange={value => handlePropertyChange('layout_padding_bottom', value)} />
-                                                        <Input type="number" title="Pad Left" value={lc.padding?.left ?? 0} onChange={value => handlePropertyChange('layout_padding_left', value)} />
+                                                        <Input
+                                                            type="number"
+                                                            title="Pad Top"
+                                                            value={lc.padding?.top ?? 0}
+                                                            onChange={value => handlePropertyChange('layout_padding_top', value)}
+                                                        />
+                                                        <Input
+                                                            type="number"
+                                                            title="Pad Right"
+                                                            value={lc.padding?.right ?? 0}
+                                                            onChange={value => handlePropertyChange('layout_padding_right', value)}
+                                                        />
+                                                        <Input
+                                                            type="number"
+                                                            title="Pad Bottom"
+                                                            value={lc.padding?.bottom ?? 0}
+                                                            onChange={value => handlePropertyChange('layout_padding_bottom', value)}
+                                                        />
+                                                        <Input
+                                                            type="number"
+                                                            title="Pad Left"
+                                                            value={lc.padding?.left ?? 0}
+                                                            onChange={value => handlePropertyChange('layout_padding_left', value)}
+                                                        />
                                                     </div>
-                                                )
-                                            )}
+                                                ))}
                                             {lc.mainAlign && (
                                                 <div>
                                                     <label className="text-xs text-gray-600">Main Align</label>
@@ -326,7 +374,7 @@ function PropertyBar() {
                                                             { value: 'start', label: 'Start' },
                                                             { value: 'center', label: 'Center' },
                                                             { value: 'end', label: 'End' },
-                                                            { value: 'space-between', label: 'Space Between' }
+                                                            { value: 'space-between', label: 'Space Between' },
                                                         ]}
                                                         onValueChange={(value: string) => handlePropertyChange('layout_mainAlign', value)}
                                                     />
@@ -340,7 +388,7 @@ function PropertyBar() {
                                                         values={[
                                                             { value: 'start', label: 'Start' },
                                                             { value: 'center', label: 'Center' },
-                                                            { value: 'end', label: 'End' }
+                                                            { value: 'end', label: 'End' },
                                                         ]}
                                                         onValueChange={(value: string) => handlePropertyChange('layout_crossAlign', value)}
                                                     />
@@ -349,10 +397,20 @@ function PropertyBar() {
                                             {lc.type === 'grid' && (
                                                 <>
                                                     {lc.gridRowGap !== undefined && (
-                                                        <Input type="number" title="Row Gap" value={lc.gridRowGap} onChange={value => handlePropertyChange('layout_gridRowGap', value)} />
+                                                        <Input
+                                                            type="number"
+                                                            title="Row Gap"
+                                                            value={lc.gridRowGap}
+                                                            onChange={value => handlePropertyChange('layout_gridRowGap', value)}
+                                                        />
                                                     )}
                                                     {lc.gridColumnGap !== undefined && (
-                                                        <Input type="number" title="Column Gap" value={lc.gridColumnGap} onChange={value => handlePropertyChange('layout_gridColumnGap', value)} />
+                                                        <Input
+                                                            type="number"
+                                                            title="Column Gap"
+                                                            value={lc.gridColumnGap}
+                                                            onChange={value => handlePropertyChange('layout_gridColumnGap', value)}
+                                                        />
                                                     )}
                                                     {lc.gridAutoFlow && (
                                                         <div>
@@ -361,7 +419,7 @@ function PropertyBar() {
                                                                 value={{ value: lc.gridAutoFlow, label: lc.gridAutoFlow }}
                                                                 values={[
                                                                     { value: 'row', label: 'Row' },
-                                                                    { value: 'column', label: 'Column' }
+                                                                    { value: 'column', label: 'Column' },
                                                                 ]}
                                                                 onValueChange={(value: string) => handlePropertyChange('layout_gridAutoFlow', value)}
                                                             />
@@ -370,15 +428,25 @@ function PropertyBar() {
                                                 </>
                                             )}
                                         </div>
-                                    );
+                                    )
                                 })()}
                             </Section>
                         )}
 
                         {spikesRatio && (
                             <GRID2X2 title="Spikes-Ratio">
-                                <Input type="number" title="Spikes" value={spikesRatio.spikes} onChange={value => handlePropertyChange('spikes', value)} />
-                                <Input type="number" title="Ratio" value={spikesRatio.ratio} onChange={value => handlePropertyChange('ratio', value)} />
+                                <Input
+                                    type="number"
+                                    title="Spikes"
+                                    value={spikesRatio.spikes}
+                                    onChange={value => handlePropertyChange('spikes', value)}
+                                />
+                                <Input
+                                    type="number"
+                                    title="Ratio"
+                                    value={spikesRatio.ratio}
+                                    onChange={value => handlePropertyChange('ratio', value)}
+                                />
                             </GRID2X2>
                         )}
 
@@ -390,13 +458,13 @@ function PropertyBar() {
                                     value={arcSegment.startAngle}
                                     onChange={value => handlePropertyChange('startAngle', value)}
                                 />
+                                <Input type="number" title="End" value={arcSegment.sweep} onChange={value => handlePropertyChange('sweep', value)} />
                                 <Input
                                     type="number"
-                                    title="End"
-                                    value={arcSegment.sweep}
-                                    onChange={value => handlePropertyChange('sweep', value)}
+                                    title="Ratio"
+                                    value={arcSegment.ratio}
+                                    onChange={value => handlePropertyChange('ratio', value)}
                                 />
-                                <Input type="number" title="Ratio" value={arcSegment.ratio} onChange={value => handlePropertyChange('ratio', value)} />
                             </GRID2X2>
                         )}
 
@@ -463,9 +531,9 @@ function PropertyBar() {
                 ) : (
                     <div className="space-y-4">
                         <Section title="Path Data">
-                            {currentShapeProperties?.pathData ? (
+                            {properties.pathData ? (
                                 <div className="text-[10px] font-mono text-gray-400 bg-black/30 p-2 rounded border border-[#333] whitespace-pre-wrap">
-                                    {JSON.stringify(currentShapeProperties.pathData, null, 2)}
+                                    {JSON.stringify(properties.pathData, null, 2)}
                                 </div>
                             ) : (
                                 <div className="text-gray-600 text-xs">No path data available</div>
@@ -475,7 +543,7 @@ function PropertyBar() {
                             <button
                                 className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-xs transition-colors"
                                 onClick={() => {
-                                    console.log(currentShapeProperties)
+                                    console.log(properties)
                                     alert('Properties logged to console')
                                 }}
                             >
@@ -490,4 +558,3 @@ function PropertyBar() {
 }
 
 export default PropertyBar
-

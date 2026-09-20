@@ -4,7 +4,6 @@ import type { EngineEvents } from '@lib/core/EngineEvents'
 import { connectEngineToStores } from '@/bridge/engineStoreBridge'
 import { useToolStore } from '@hooks/useTool'
 import { useSceneStore } from '@hooks/sceneStore'
-import type { Properties } from '@lib/types/shapes'
 
 function makeBus() {
     return new EngineBus<EngineEvents>()
@@ -12,7 +11,7 @@ function makeBus() {
 
 beforeEach(() => {
     useToolStore.setState({ tool: null, defaultTool: { toolName: 'select', icon: null, tip: '' } })
-    useSceneStore.setState({ selectedShapeId: null, currentShapeProperties: null })
+    useSceneStore.setState({ selectedShapeId: null })
 })
 
 describe('connectEngineToStores', () => {
@@ -33,16 +32,6 @@ describe('connectEngineToStores', () => {
         bus.emit('selection:changed', { id: 'shape-42' })
 
         expect(useSceneStore.getState().selectedShapeId).toBe('shape-42')
-    })
-
-    it('maps properties:changed to the scene store currentShapeProperties', () => {
-        const bus = makeBus()
-        connectEngineToStores(bus)
-        const properties = { id: 'shape-1', width: 50 } as unknown as Properties
-
-        bus.emit('properties:changed', { id: 'shape-1', properties })
-
-        expect(useSceneStore.getState().currentShapeProperties).toEqual(properties)
     })
 
     it('tool:changed matching the default tool returns the tool store to its default', () => {
@@ -72,12 +61,10 @@ describe('connectEngineToStores', () => {
         disconnect()
 
         bus.emit('selection:changed', { id: 'shape-9' })
-        bus.emit('properties:changed', { id: null, properties: {} as Properties })
         useToolStore.setState({ tool: { toolName: 'rect', icon: null, tip: '' } })
         bus.emit('tool:changed', { tool: 'select' })
 
         expect(useSceneStore.getState().selectedShapeId).toBeNull()
-        expect(useSceneStore.getState().currentShapeProperties).toBeNull()
         expect(useToolStore.getState().tool?.toolName).toBe('rect')
     })
 

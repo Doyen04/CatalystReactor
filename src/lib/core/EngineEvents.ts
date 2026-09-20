@@ -1,8 +1,6 @@
-import type { Properties } from '@lib/types/shapes'
-
 export type EngineEvents = {
     'tool:changed': { tool: string }
     'selection:changed': { id: string | null }
-    'properties:changed': { id: string | null; properties: Properties }
+    'document:changed': { ids: string[] }
     'history:changed': { canUndo: boolean; canRedo: boolean }
 }

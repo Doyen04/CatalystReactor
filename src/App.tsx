@@ -4,6 +4,7 @@ import Canvas from './component/Canvas'
 import PropertyBar from './component/PropertyBar'
 import SideBar from './component/SideBar'
 import { CanvasManagerProvider } from './hooks/useCanvasManager'
+import { EditorProvider } from './bridge/EditorProvider'
 
 function App() {
     return (
@@ -15,11 +16,13 @@ function App() {
                 </div>
             </header>
             <CanvasManagerProvider>
-                <main className={'workspace'}>
-                    <SideBar />
-                    <Canvas />
-                    <PropertyBar />
-                </main>
+                <EditorProvider>
+                    <main className={'workspace'}>
+                        <SideBar />
+                        <Canvas />
+                        <PropertyBar />
+                    </main>
+                </EditorProvider>
             </CanvasManagerProvider>
         </div>
     )
