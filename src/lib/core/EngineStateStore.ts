@@ -1,14 +1,17 @@
-import { Properties, ShapeType } from "@lib/types/shapes"
+import type { Properties, ShapeType } from '@lib/types/shapes'
+import { DocumentModel } from '@/engine/document/DocumentModel'
+import type { EntityRecord } from '@/engine/document/entity'
 
 export interface ShapeData {
     id: string
     type: ShapeType
-    properties: Properties // Will be specialized for each shape
+    properties: Properties
 }
 
 class EngineStateStore {
     private static instance: EngineStateStore
-    private shapeDataMap: Map<string, ShapeData> = new Map()
+    private doc = new DocumentModel()
+    private views: Map<string, ShapeData> = new Map()
     private listeners: Set<(shapeId?: string) => void> = new Set()
 
     private constructor() {}
@@ -20,22 +23,61 @@ class EngineStateStore {
         return EngineStateStore.instance
     }
 
+    private makeView(id: string, type: ShapeType): ShapeData {
+        const doc = this.doc
+        const view = {
+            id,
+            type,
+            get properties() {
+                return doc.get(id)!.properties
+            },
+            set properties(next: Properties) {
+                doc.setProperties(id, next)
+            },
+        }
+        return view
+    }
+
     createShapeData(id: string, type: ShapeType, properties: Properties): ShapeData {
-        const data: ShapeData = { id, type, properties }
-        this.shapeDataMap.set(id, data)
-        return data
+        const record: EntityRecord = { id, type, properties: structuredClone(properties), parentId: this.doc.rootId, version: 1 }
+        this.doc.insert(record, this.doc.rootId)
+        const view = this.makeView(id, type)
+        this.views.set(id, view)
+        return view
     }
 
     getShapeData(id: string): ShapeData | undefined {
-        return this.shapeDataMap.get(id)
+        if (!this.doc.has(id)) return undefined
+        let view = this.views.get(id)
+        if (!view) {
+            const type = this.doc.get(id)!.type
+            view = this.makeView(id, type)
+            this.views.set(id, view)
+        }
+        return view
+    }
+
+    getDocument(): DocumentModel {
+        return this.doc
     }
 
     getAllShapeData(): ShapeData[] {
-        return Array.from(this.shapeDataMap.values())
+        return Array.from(this.doc.all(), rec => this.getShapeData(rec.id)!)
     }
 
     public removeShapeData(id: string) {
-        this.shapeDataMap.delete(id)
+        const view = this.views.get(id)
+        if (view) {
+            const last = this.doc.has(id) ? this.doc.get(id)!.properties : undefined
+            Object.defineProperty(view, 'properties', {
+                value: last,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+            })
+        }
+        if (this.doc.has(id)) this.doc.remove(id)
+        this.views.delete(id)
         this.notify()
     }
 

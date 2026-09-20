@@ -3,6 +3,7 @@ import SceneManager from './SceneManager'
 import Renderer from './Renderer'
 import ToolManager from './ToolManager'
 import ShapeManager from './ShapeManager'
+import EngineStateStore from './EngineStateStore'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import { ToolType } from '@lib/tools/toolTypes'
 import PaintManager from './PaintManager'
@@ -38,7 +39,7 @@ class CanvasManager {
         this.shapeManager = new ShapeManager(this.shapeModifier, this.bus)
         container.register('shapeManager', this.shapeManager)
 
-        this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager)
+        this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager, EngineStateStore.getInstance().getDocument())
         container.register('sceneManager', this.sceneManager)
 
         this.inputManager = new InputManager(canvas)
@@ -138,7 +139,7 @@ class CanvasManager {
         }
     }
 
-    render() { }
+    render() {}
 }
 
 export default CanvasManager

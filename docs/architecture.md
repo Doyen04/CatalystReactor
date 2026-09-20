@@ -763,7 +763,7 @@ The ordering principle here is different from the plan you were given. Each step
 
 No step depends on a later step. You can stop after any of them and be in a better place than you started. That property is what prevents a half-finished refactor from becoming a worse codebase.
 
-**Status on `refactor/engine-architecture`:** Steps 1-5 are landed. Step 1 (leak fixes) introduced `src/engine/render/{PaintCache,TextCache,ResourceScope,ResourceCounter}`; Step 2 quarantined the dead files into `to-be-deleted/`; Step 3 added Vitest (`npm run test`); Step 4 added `FrameScheduler` + `requestRender` and removed the continuous loop; Step 5 removed Zustand from the engine tier.
+**Status on `refactor/engine-architecture`:** Steps 1-6 are landed. Step 1 (leak fixes) introduced `src/engine/render/{PaintCache,TextCache,ResourceScope,ResourceCounter}`; Step 2 quarantined the dead files into `to-be-deleted/`; Step 3 added Vitest (`npm run test`); Step 4 added `FrameScheduler` + `requestRender` and removed the continuous loop; Step 5 removed Zustand from the engine tier; Step 6 added the `DocumentModel` (headless document, journal, serialization) and strangler-migrated the shape pipeline onto it behind the existing facade API.
 
 Step 5 specifically added:
 
@@ -773,6 +773,22 @@ Step 5 specifically added:
 - `src/bridge/engineStoreBridge.ts` - `connectEngineToStores(bus)`, the only place the bus meets Zustand. `Canvas.tsx` calls it and pushes `gridSize` into `CanvasManager.setGridSize`.
 
 `ToolManager` now builds the `ToolContext` and owns `setTool` (which emits `tool:changed`); `Tool` and its subclasses no longer resolve from `DependencyManager` or import stores. `ShapeManager` takes `gridSize` via `setGridSize` and emits `properties:changed` / `selection:changed` instead of writing to `useSceneStore`. Acceptance check: `useToolStore`/`useSceneStore`/`zustand` appear nowhere under `src/lib` or `src/engine`. Next up: Step 6.
+
+Step 6 landed its five sub-steps:
+
+- **6.1 `DocumentModel` + journal, headless**: `src/engine/document/{entity,journal,DocumentModel,serialize}.ts`. `EntityRecord = { id, type, properties, parentId, version }`; journal entries are `props | insert | remove | reparent`; `setProperties` journals each changed key (in-place mutation, version bump, `Object.is` skip), `reorder` deliberately journals nothing, `remove` is leaf-only, out-of-range indices are clamped and the clamped index is journaled. `toJSON`/`fromJSON` carry `formatVersion: 1`. Tests: `src/engine/__tests__/{documentModel,journal}.test.ts` (45 tests).
+- **6.2 `EngineStateStore` facade**: it now owns one private `DocumentModel` (shared via `getDocument()`), keeps its old public methods unchanged (`createShapeData`, `getShapeData`, `getAllShapeData`, `removeShapeData`, `subscribe`, `notify`), and hands out live write-through `{ id, type, properties }` views whose setters route into `doc.setProperties`. Existing callers (ShapeFactory, HistoryManager, panels) work unchanged.
+- **6.3 SceneManager derives the tree**: `SceneManager` takes the `DocumentModel` in its constructor, keeps a stable `nodeById` map (one projection per entity id), subscribes a journal listener that re-runs reconciliation on every non-`props` entry, and materializes nodes via `ShapeFactory.createShapeFromData`. New API: `addShapeToScene(type, pos, image?)`, `insertNode(node, parentId, index?)`, `removeNode(id)`, `reorderNode(id, index)`, `getNode(id)`. `CanvasManager` constructs it with `EngineStateStore.getInstance().getDocument()`.
+- **6.4 ShapeFactory projection**: `createShapeFromData(data, image?)` builds a `Shape` from an existing `ShapeData` without registering anything or generating an id (pure type->class switch, `Unsupported shape type` on unknown types); `createShape` still registers via the store and delegates.
+- **6.5 Tools rewired**: `ShapeTool`, `LineTool`, `PenTool`, `BezierTool`, `ImageTool`, `GroupTool`, `SelectTool`, `EditTool` no longer do `new ShapeNode`/`scene.addChildNode`/`parent.removeChildNode`; they write through the SceneManager API. `EditTool` flatten now inserts the replacement at the old node's index (previously appended on top) and removes the old entity record from the doc.
+
+Known Step 6 behaviour deltas to verify by hand:
+
+- A shape drawn while a container is under the cursor now registers at the doc root instead of nesting inside that container (containers are applied via GroupTool/SelectTool capture, as before).
+- Property writes (`props` journal entries) do not re-run tree reconciliation — they mutate the live shared properties object directly.
+- `to-be-deleted/*` does not yet have its matching file cross-checked against the new pyramid until Step 7; the `Handles.ts` legacy paint getters are still the only users of the legacy `paint`/`stroke` getters.
+
+Next up: Step 7 (journal-backed commands).
 
 ---
 

@@ -1,5 +1,4 @@
 import Tool from './Tool'
-import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 import { ContainerType, LayoutConstraints } from '@lib/node/nodeTypes'
@@ -21,18 +20,16 @@ class GroupTool extends Tool {
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-        const shape = ShapeFactory.createShape('plainRect', {
+        const containerNode = this.sceneManager.addShapeToScene('plainRect', {
             x: x,
             y: y,
-        })
+        }) as ContainerNode
 
-        if (shape) {
+        if (containerNode) {
             const layoutConstraints = this.getLayoutConstraints(this.shapeType)
-            const shapenode = new ContainerNode(shape, layoutConstraints)
+            containerNode.setLayoutConstraints(layoutConstraints)
 
-            scene.addChildNode(shapenode)
-            this.shapeManager.attachNode(shapenode)
-            // this.currentContainer = shapenode
+            this.shapeManager.attachNode(containerNode)
         }
     }
 
@@ -86,14 +83,10 @@ class GroupTool extends Tool {
             coord = parent.localToWorld(coord.x, coord.y)
             const localCoord = currentContainer.worldToLocal(coord.x, coord.y)
 
-            // Remove from current parent
-            parent.removeChildNode(node)
-
-            // Update position to be relative to container
+            // Remove from current parent and re-parent into the container via the document
             node.setPosition(localCoord.x, localCoord.y)
 
-            // Add as child to container
-            currentContainer!.addChildNode(node)
+            this.sceneManager.insertNode(node, currentContainer.id)
         })
     }
 

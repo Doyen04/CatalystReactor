@@ -1,8 +1,6 @@
 import { ShapeType } from '@lib/types/shapes'
 import Tool from './Tool'
-import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import ShapeNode from '@lib/node/ShapeNode'
-import SceneNode from '@lib/node/Scene'
 import type { ToolContext } from './ToolContext'
 
 class ShapeTool extends Tool {
@@ -19,16 +17,13 @@ class ShapeTool extends Tool {
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-        const shape = ShapeFactory.createShape(this.shapeType, {
+        const shapeNode = this.sceneManager.addShapeToScene(this.shapeType, {
             x: x,
             y: y,
-        })
+        }) as ShapeNode
 
-        if (shape) {
-            const shapenode: SceneNode = new ShapeNode(shape)
-
-            scene.addChildNode(shapenode)
-            this.shapeManager.attachNode(shapenode)
+        if (shapeNode) {
+            this.shapeManager.attachNode(shapeNode)
         }
     }
     override handlePointerMove(e: MouseEvent): void {

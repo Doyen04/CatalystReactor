@@ -1,6 +1,4 @@
 import Tool from './Tool'
-import ShapeFactory from '@lib/shapes/base/ShapeFactory'
-import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
 
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
@@ -136,11 +134,9 @@ class ImageTool extends Tool {
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-        const shape = ShapeFactory.createShape('img', { x, y }, preloadedImage)
+        const shapeNode = this.sceneManager.addShapeToScene('img', { x, y }, preloadedImage) as ShapeNode
 
-        if (shape) {
-            const shapeNode: SceneNode = new ShapeNode(shape)
-            scene.addChildNode(shapeNode)
+        if (shapeNode) {
             this.shapeManager.attachNode(shapeNode)
         }
     }

@@ -249,10 +249,8 @@ class SelectTool extends Tool {
 
         const localCoord = scene.worldToLocal(coord.x, coord.y)
 
-        parent.removeChildNode(current)
-
         current.setPosition(localCoord.x, localCoord.y)
-        scene.addChildNode(current)
+        this.sceneManager.insertNode(current, scene.id)
     }
 
     override handlePointerUp(e: MouseEvent) {

@@ -11,17 +11,13 @@ import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 import type Shape from './Shape'
 import SimpleRect from '../primitives/SimpleRect'
 import EngineStateStore from '@lib/core/EngineStateStore'
+import type { ShapeData } from '@lib/core/EngineStateStore'
 
 export default class ShapeFactory {
-    static createShape(type: ShapeType, options: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer, name:string }): Shape {
-        const store = EngineStateStore.getInstance()
-        const id = crypto.randomUUID()
-        const initialProps = this.getDefaultProperties(type, options)
-        const data = store.createShapeData(id, type, initialProps)
-        
+    static createShapeFromData(data: ShapeData, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }): Shape {
         let shape: Shape
 
-        switch (type) {
+        switch (data.type) {
             case 'rect':
                 shape = new Rectangle(data)
                 break
@@ -50,16 +46,24 @@ export default class ShapeFactory {
                 shape = new VectorPath(data)
                 break
             default:
-                throw new Error(`Unsupported shape type: ${type}`)
+                throw new Error(`Unsupported shape type: ${data.type}`)
         }
         return shape
+    }
+
+    static createShape(type: ShapeType, options: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }): Shape {
+        const store = EngineStateStore.getInstance()
+        const id = crypto.randomUUID()
+        const initialProps = this.getDefaultProperties(type, options)
+        const data = store.createShapeData(id, type, initialProps)
+        return this.createShapeFromData(data, image)
     }
 
     private static getDefaultProperties(type: ShapeType, pos: Coord): Properties {
         const defaultStyle = {
             fill: { color: { type: 'solid' as const, color: '#D9D9D9' }, opacity: 1 },
             stroke: { color: { type: 'solid' as const, color: '#000000' }, opacity: 1, width: 1 },
-        };
+        }
 
         const props: Properties = {
             transform: {
@@ -72,21 +76,20 @@ export default class ShapeFactory {
             },
             size: { width: 0, height: 0 },
             style: defaultStyle,
-        };
+        }
 
-        // Add type-specific defaults
         if (type === 'rect' || type === 'plainRect' || type == 'img') {
-            props.borderRadius = { 'top-left': 0, 'top-right': 0, 'bottom-left': 0, 'bottom-right': 0, locked: false };
+            props.borderRadius = { 'top-left': 0, 'top-right': 0, 'bottom-left': 0, 'bottom-right': 0, locked: false }
         } else if (type === 'star') {
-            props.spikesRatio = { spikes: 5, ratio: 0.5 };
-            props.borderRadius = { 'top-left': 0, 'top-right': 0, 'bottom-left': 0, 'bottom-right': 0, locked: true };
+            props.spikesRatio = { spikes: 5, ratio: 0.5 }
+            props.borderRadius = { 'top-left': 0, 'top-right': 0, 'bottom-left': 0, 'bottom-right': 0, locked: true }
         } else if (type === 'polygon') {
-            props.sides = { sides: 5 };
-            props.borderRadius = { 'top-left': 0, 'top-right': 0, 'bottom-left': 0, 'bottom-right': 0, locked: true };
+            props.sides = { sides: 5 }
+            props.borderRadius = { 'top-left': 0, 'top-right': 0, 'bottom-left': 0, 'bottom-right': 0, locked: true }
         } else if (type === 'oval') {
-            props.arcSegment = { startAngle: 0, sweep: 2 * Math.PI, ratio: 0 };
+            props.arcSegment = { startAngle: 0, sweep: 2 * Math.PI, ratio: 0 }
         } else if (type === 'text') {
-            props.text = "Double click to edit";
+            props.text = 'Double click to edit'
             props.textStyle = {
                 textFill: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
                 textAlign: 'left',
@@ -95,21 +98,21 @@ export default class ShapeFactory {
                 fontFamilies: ['Antonio', 'sans-serif'],
                 lineHeight: 1.2,
                 backgroundColor: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
-            };
+            }
         } else if (type === 'line') {
             props.pathData = {
                 points: [],
                 closed: false,
-            };
-            props.style.stroke.width = 2;
+            }
+            props.style.stroke.width = 2
         } else if (type === 'path' || type === 'bezier') {
             props.pathData = {
                 points: [],
                 closed: false,
-            };
-            props.style.stroke.width = 2;
+            }
+            props.style.stroke.width = 2
         }
 
-        return props;
+        return props
     }
 }

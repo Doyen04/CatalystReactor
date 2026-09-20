@@ -1,5 +1,4 @@
 import Tool from './Tool'
-import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import ShapeNode from '@lib/node/ShapeNode'
 import SceneNode from '@lib/node/Scene'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
@@ -36,13 +35,12 @@ class LineTool extends Tool {
 
             const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-            const shape = ShapeFactory.createShape('line', { x: 0, y: 0 })
+            const shapeNode = this.sceneManager.addShapeToScene('line', { x: 0, y: 0 }) as ShapeNode
+            const shape = shapeNode.shape
 
             if (shape && shape instanceof VectorPath) {
                 this.activeShape = shape
 
-                const shapeNode: SceneNode = new ShapeNode(shape)
-                scene.addChildNode(shapeNode)
                 shapeNode.setPosition(x, y)
                 // Force matrix update so worldToLocal works immediately
                 shapeNode.updateWorldMatrix(scene.getWorldMatrix() || undefined)

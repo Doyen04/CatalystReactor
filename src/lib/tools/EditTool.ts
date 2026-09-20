@@ -3,7 +3,6 @@ import VectorPath from '@lib/shapes/primitives/VectorPath'
 import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
-import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import type { ToolContext } from './ToolContext'
 
 type EditState = 'idle' | 'dragging-anchor' | 'dragging-control'
@@ -103,7 +102,7 @@ class EditTool extends Tool {
                     return
                 }
                 
-                // Single click on segment — allow dragging the segment (moves both points)
+                // Single click on segment â€” allow dragging the segment (moves both points)
                 this.state = 'idle'
                 this.dragTarget = { type: 'segment', index: segIdx }
                 this.lastLocalPos = { x, y }
@@ -121,7 +120,7 @@ class EditTool extends Tool {
                 return
             }
 
-            // Clicked outside the path — exit edit mode
+            // Clicked outside the path â€” exit edit mode
             this.exitEditMode()
 
             // Try selecting another shape
@@ -133,7 +132,7 @@ class EditTool extends Tool {
             return
         }
 
-        // Not in edit mode — try to select and enter edit mode
+        // Not in edit mode â€” try to select and enter edit mode
         const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
 
         if (scene) {
@@ -236,30 +235,32 @@ class EditTool extends Tool {
 
         // Generate new VectorPath replacement
         const pos = currentScene.getCoord()
-        const newShape = ShapeFactory.createShape('path', { x: pos.x, y: pos.y })
-        
+        const newNode = this.sceneManager.addShapeToScene('path', { x: pos.x, y: pos.y }) as ShapeNode
+        const newShape = newNode.shape
+
         // Map the properties exactly over
         const oldProps = shape.getProperties()
         const newProps = newShape.getProperties()
-        
+
         newProps.style = JSON.parse(JSON.stringify(oldProps.style))
         newProps.transform = JSON.parse(JSON.stringify(oldProps.transform))
         newProps.pathData = pathData
-        
+
         // Size bounds are now dictated by path, but we keep transform scaling
-        
-        const newNode = new ShapeNode(newShape)
-        
+
         // Swap shapes in the tree
         const parent = currentScene.getParent()
         if (parent) {
-            parent.addChildNode(newNode)
-            currentScene.destroy()
-            
+            const oldParentId = parent.id
+            const oldIndex = parent.getChildren().indexOf(currentScene)
+
+            this.sceneManager.insertNode(newNode, oldParentId, oldIndex)
+            this.sceneManager.removeNode(currentScene.id)
+
             // Attach tool to new node
             this.shapeManager.detachShape()
             this.shapeManager.attachNode(newNode)
-            
+
             this.editingShape = newShape as VectorPath
             this.editingNode = newNode
             this.cnvsElm.style.cursor = 'crosshair'
