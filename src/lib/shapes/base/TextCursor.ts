@@ -1,4 +1,5 @@
 // TextCursor.ts
+import { requestRender } from '@/engine/render/renderRequest'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import container from '@lib/core/DependencyManager'
 import type PaintManager from '@lib/core/PaintManager'
@@ -241,8 +242,7 @@ class TextCursor {
         this.visible = true
         this.blinkInterval = setInterval(() => {
             this.visible = !this.visible
-            // Trigger a redraw here - depends on your rendering system
-            // this.requestRedraw();
+            requestRender()
         }, this.blinkSpeed)
     }
 

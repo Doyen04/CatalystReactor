@@ -11,6 +11,7 @@ import HistoryManager, { UpdateShapeAction } from './HistoryManager'
 import EngineStateStore from './EngineStateStore'
 import SnapManager, { SnapResult } from './SnapManager'
 import CanvasKitResources from './CanvasKitResource'
+import { requestRender } from '@/engine/render/renderRequest'
 
 class ShapeManager {
     private scene: SceneNode | null = null
@@ -161,6 +162,7 @@ class ShapeManager {
 
         const props = this.scene.getProperties()
         if (props) this.throttledUpdate(props)
+        requestRender()
     }
 
     detachShape() {
@@ -171,6 +173,7 @@ class ShapeManager {
         this.shapeModifier?.detachShape()
         useSceneStore.getState().setSelectedShapeId(null)
         useSceneStore.getState().clearProperties()
+        requestRender()
     }
 
     destroy(): void {
@@ -205,6 +208,7 @@ class ShapeManager {
                 new UpdateShapeAction(this.scene.shape.data.id, oldProps as Properties, structuredClone(finalProps as Properties))
             )
             EngineStateStore.getInstance().notify(this.scene.shape.data.id)
+            requestRender()
         }
     }
 

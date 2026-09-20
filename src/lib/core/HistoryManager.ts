@@ -1,5 +1,6 @@
 import EngineStateStore from './EngineStateStore'
 import { Properties } from '@lib/types/shapes'
+import { requestRender } from '@/engine/render/renderRequest'
 
 export interface Action {
     type: string
@@ -53,6 +54,7 @@ class HistoryManager {
         this.undoStack.push(action)
         // Clear redo stack on a new action
         this.redoStack = []
+        requestRender()
     }
 
     public undo() {
@@ -60,6 +62,7 @@ class HistoryManager {
         if (action) {
             action.undo()
             this.redoStack.push(action)
+            requestRender()
         }
     }
 
@@ -68,6 +71,7 @@ class HistoryManager {
         if (action) {
             action.redo()
             this.undoStack.push(action)
+            requestRender()
         }
     }
     

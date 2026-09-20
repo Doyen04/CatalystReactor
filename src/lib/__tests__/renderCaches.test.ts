@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { CanvasKit } from 'canvaskit-wasm'
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest'
+import type { CanvasKit, Paragraph } from 'canvaskit-wasm'
 import { PaintCache, type PaintRequest } from '@engine/render/PaintCache'
 import { ResourceScope } from '@engine/render/ResourceScope'
 import { registerResourceCounter, startResourceCounterMonitor, unregisterResourceCounter } from '@engine/render/ResourceCounter'
@@ -21,6 +21,10 @@ type FakePaint = ReturnType<typeof makeFakePaint>
 
 function makeShader() {
     return { delete: vi.fn() }
+}
+
+function makeParagraphBuild() {
+    return vi.fn(() => ({ delete: vi.fn() }) as unknown as Paragraph)
 }
 
 function makeFakeCanvasKit() {
@@ -108,7 +112,7 @@ describe('ResourceScope', () => {
 describe('TextCache', () => {
     it('returns the cached paragraph for the same id, version and width', () => {
         const cache = new TextCache()
-        const build = vi.fn(() => makeShader())
+        const build = makeParagraphBuild()
         const first = cache.getParagraph('text', 1, 100, build)
         const second = cache.getParagraph('text', 1, 100, build)
         expect(second).toBe(first)
@@ -118,7 +122,7 @@ describe('TextCache', () => {
 
     it('rebuilds and deletes the stale paragraph when the version changes', () => {
         const cache = new TextCache()
-        const build = vi.fn(() => makeShader())
+        const build = makeParagraphBuild()
         const old = cache.getParagraph('text', 1, 100, build)
         const newer = cache.getParagraph('text', 2, 100, build)
         expect(newer).not.toBe(old)
@@ -129,7 +133,7 @@ describe('TextCache', () => {
 
     it('rebuilds and deletes the stale paragraph when the width changes', () => {
         const cache = new TextCache()
-        const build = vi.fn(() => makeShader())
+        const build = makeParagraphBuild()
         const old = cache.getParagraph('text', 1, 100, build)
         const wider = cache.getParagraph('text', 1, 200, build)
         expect(wider).not.toBe(old)
@@ -139,7 +143,7 @@ describe('TextCache', () => {
 
     it('invalidate deletes the paragraph once and forces a rebuild on the next get', () => {
         const cache = new TextCache()
-        const build = vi.fn(() => makeShader())
+        const build = makeParagraphBuild()
         const first = cache.getParagraph('text', 1, 100, build)
         cache.invalidate('text')
         expect(first.delete).toHaveBeenCalledTimes(1)
@@ -152,7 +156,7 @@ describe('TextCache', () => {
 
     it('delete removes the entry and deletes the paragraph exactly once', () => {
         const cache = new TextCache()
-        const build = vi.fn(() => makeShader())
+        const build = makeParagraphBuild()
         const first = cache.getParagraph('text', 1, 100, build)
         cache.delete('text')
         expect(first.delete).toHaveBeenCalledTimes(1)
@@ -163,7 +167,7 @@ describe('TextCache', () => {
 
     it('dispose deletes every cached paragraph once and clears the cache', () => {
         const cache = new TextCache()
-        const build = vi.fn(() => makeShader())
+        const build = makeParagraphBuild()
         const a = cache.getParagraph('a', 1, 100, build)
         const b = cache.getParagraph('b', 1, 100, build)
         cache.dispose()
@@ -285,7 +289,7 @@ describe('PaintCache', () => {
             size: { width: 50, height: 100 },
         }
         const paint = rawPaint(cache.get(request))
-        const make = ck.Shader.MakeLinearGradient
+        const make = ck.Shader.MakeLinearGradient as unknown as Mock<(...args: unknown[]) => unknown>
         expect(make).toHaveBeenCalledTimes(1)
         expect(make.mock.calls[0][0]).toEqual([0, 0])
         expect(make.mock.calls[0][1]).toEqual([50, 100])

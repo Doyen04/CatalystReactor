@@ -11,6 +11,7 @@ import BezierTool from '@lib/tools/BezierTool'
 import EditTool from '@lib/tools/EditTool'
 import type InputManager from './InputManager'
 import type { InputCallbacks } from './InputManager'
+import { requestRender } from '@/engine/render/renderRequest'
 
 class ToolManager {
     currentTool: Tool
@@ -88,13 +89,23 @@ class ToolManager {
         const boundToolKeyDown = this.currentTool.handleKeyDown.bind(this.currentTool)
 
         this.inputCallbacks = {
-            onPointerDown: this.currentTool.handlePointerDown.bind(this.currentTool),
-            onPointerMove: this.currentTool.handlePointerMove.bind(this.currentTool),
-            onPointerUp: this.currentTool.handlePointerUp.bind(this.currentTool),
+            onPointerDown: (e: MouseEvent) => {
+                this.currentTool.handlePointerDown(e)
+                requestRender()
+            },
+            onPointerMove: (e: MouseEvent) => {
+                this.currentTool.handlePointerMove(e)
+                requestRender()
+            },
+            onPointerUp: (e: MouseEvent) => {
+                this.currentTool.handlePointerUp(e)
+                requestRender()
+            },
             onKeyDown: (e: KeyboardEvent) => {
                 this.keyboardTool.handleKeyDown(e)
                 // Forward to the current tool (PenTool, BezierTool, EditTool, etc.)
                 boundToolKeyDown(e)
+                requestRender()
             },
             onKeyUp: this.keyboardTool.handleKeyUp.bind(this.keyboardTool),
         }

@@ -4,6 +4,8 @@ import CanvasKitResources from './CanvasKitResource'
 import PaintManager from './PaintManager'
 import type InputManager from './InputManager'
 import type { InputCallbacks } from './InputManager'
+import { FrameScheduler } from '@/engine/render/FrameScheduler'
+import { setRenderRequest } from '@/engine/render/renderRequest'
 
 class Renderer {
     sceneManager: SceneManager
@@ -14,12 +16,10 @@ class Renderer {
     dpr: number = window.devicePixelRatio || 1
     skCnvs: Canvas
 
-    private isRunning = false
-    private lastTimestamp = 0
-    private fpsInterval = 1000 / 60
-    private animationId: number
-    private canrender: boolean = false
     private paintManager: PaintManager
+    private scheduler: FrameScheduler
+    private bootRafId: number | null = null
+    private destroyed = false
 
     private inputCallbacks?: InputCallbacks
 
@@ -27,14 +27,17 @@ class Renderer {
         this.canvasEl = canvasEl
         this.sceneManager = sceneManager
         this.surf = null
-        this.animationId = null
         this.paintManager = paintManager
         this.inputManager = inputManager
+
+        this.scheduler = new FrameScheduler(this.drawFrame)
+        setRenderRequest(this.requestRender)
 
         this.setUpEvent()
 
         this.setUpRendering()
     }
+
     setUpEvent() {
         this.removeEvent()
         this.addEvent()
@@ -49,15 +52,14 @@ class Renderer {
             this.inputCallbacks = undefined
         }
     }
+
     addEvent() {
         this.inputCallbacks = {
             onResize: this.boundSetUpRendering,
         }
         this.inputManager.subscribe(this.inputCallbacks)
     }
-    setCanRender() {
-        this.canrender = true
-    }
+
     get resource(): CanvasKitResources {
         const resources = CanvasKitResources.getInstance()
         if (resources) {
@@ -70,13 +72,15 @@ class Renderer {
     }
 
     setUpRendering() {
-        console.log('setuprendering')
-
-        this.stopLoop()
-
-        requestAnimationFrame(() => {
+        this.scheduler.stop()
+        if (this.bootRafId !== null) {
+            cancelAnimationFrame(this.bootRafId)
+        }
+        this.bootRafId = requestAnimationFrame(() => {
+            this.bootRafId = null
+            if (this.destroyed) return
             this.makeSurface()
-            this.startLoop()
+            this.scheduler.start()
         })
     }
 
@@ -86,6 +90,8 @@ class Renderer {
 
             return
         }
+
+        this.dpr = window.devicePixelRatio || 1
 
         const { width, height } = getComputedStyle(this.canvasEl)
         console.log(width, height)
@@ -136,37 +142,13 @@ class Renderer {
         }
     }
 
-    private drawFrame = (canvas: Canvas) => {
-        if (!this.isRunning) {
-            console.log('not running render')
-
-            return
-        }
-
-        const now = performance.now()
-        const elapsed = now - this.lastTimestamp
-        if (elapsed >= this.fpsInterval) {
-            this.lastTimestamp = now - (elapsed % this.fpsInterval)
-            this.render(canvas)
-        }
-        if (this.isRunning) {
-            this.animationId = this.surf?.requestAnimationFrame(this.drawFrame)
-        }
+    requestRender = () => {
+        this.scheduler.request()
     }
 
-    public stopLoop() {
-        this.isRunning = false
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId)
-            this.animationId = null
-        }
-    }
-
-    startLoop(fps: number = 60) {
-        this.fpsInterval = 1000 / fps
-        this.lastTimestamp = performance.now()
-        this.isRunning = true
-        this.animationId = this.surf?.requestAnimationFrame(this.drawFrame)
+    private drawFrame = () => {
+        if (this.destroyed) return
+        this.render()
     }
 
     render(skCnvs?: Canvas) {
@@ -209,7 +191,13 @@ class Renderer {
     }
 
     destroy() {
-        this.stopLoop()
+        this.destroyed = true
+        this.scheduler.stop()
+        if (this.bootRafId !== null) {
+            cancelAnimationFrame(this.bootRafId)
+            this.bootRafId = null
+        }
+        setRenderRequest(null)
 
         // Clean up surface
         if (this.surf) {
@@ -218,7 +206,6 @@ class Renderer {
         }
         this.canvasEl = null
         this.sceneManager = null
-        this.animationId = null
         this.removeEvent()
     }
 }
