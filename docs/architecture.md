@@ -1043,7 +1043,9 @@ Rules for not destroying working code, which was the stated concern and is the r
 
 **One branch per step.** Merge to main only when the app runs and the smoke test passes. Never have two steps in flight.
 
-**dont use inline ignore script to avoid what you can fix by just following the insturction the error specified
+**Dont use inline ignore script to avoid what you can fix by just following the insturction the error specified
+
+**Remember the year we are may not be the same with your own internal date so thing may have changes since you were last updated so be sure it the best decision as at this current year
 
 **Tag before you start.** `git tag pre-refactor` already gives you an escape hatch. Tag before each large step too.
 

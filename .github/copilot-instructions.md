@@ -91,7 +91,7 @@
 - Dev: `npm run dev`
 - Build: `npm run build` (`tsc -b && vite build` — typecheck happens here; `tsc -b` writes `tsconfig.tsbuildinfo`, which is committed)
 - Lint: `npm run lint` (`eslint .`; enforces `import/no-cycle` with `maxDepth: Infinity`)
-- No tests. Stack: React 19, Vite 6, TS 5.8 (strict, `noUnusedLocals`, `erasableSyntaxOnly`), CanvasKit, Zustand, Tailwind 4 (CSS-first, no `tailwind.config.js`).
+- Test: `npm run test` (`vitest run`); watch: `npm run test:watch` (`vitest`). Stack: React 19, Vite 6, TS 5.8 (strict, `noUnusedLocals`, `erasableSyntaxOnly`), CanvasKit, Zustand, Tailwind 4 (CSS-first, no `tailwind.config.js`).
 
 ## Import and Code Style Conventions
 
@@ -106,6 +106,8 @@
 - `SceneNode.destroy()` / `ContainerNode.destroy()` cascade to children; `ContainerNode.destroy()` deliberately clears children itself. Watch out for double-destroy when removing nodes manually.
 - The preserved dead/reference files are **quarantined** under `to-be-deleted/` (`to-be-deleted/lib/modifiers/{Handles,modifier,modifierUtility}.ts`, `to-be-deleted/lib/core/{toImplement,PathOperator,EventQueue,BooleanAction}.ts`). They are excluded from tsconfig and eslint and are kept as working references whose new homes are not yet verified. Never import them from `src/`; delete the quarantine copy once the replacement is verified. `InputManager` subscribers are the only input path.
 - `index.html` title is still "Vite + React + TS" (cosmetic).
+- **Deferred tests:** matrix compose/invert, world-to-local round trips, and rect intersection are NOT tested yet because that math still lives behind the CanvasKit `Matrix` in `Scene.ts`/`Shape.ts`; add the tests once the math is extracted to the target `src/core` tier (Steps 5-6 of the plan).
+- **Running note (deliberately not fixed):** `LayoutEngine` handles numeric `gridTemplateColumns`/`gridTemplateRows` at runtime but `nodeTypes.ts` `GridLayout` types them without `number` (callers cast); `SnapManager.getSnapResult`'s third `gridSize` argument overwrites the value set via `setConfiguration`; `roundingUtil` clamps the star corner radius on odd indices but not even ones (source marks it unfinished); `TextEditor.splitAt` never updates the matching `indexMap` entry's `end`, so middle `insertText`/`deleteRange`/`applyStyle` use stale bounds and `deleteRange` can shrink `getLength()` without removing text (deliberately NOT pinned by tests); `throttle` initializes `lastCall = 0`, dropping the first call near the epoch; `PCache.set` with `limit <= 0` inserts over capacity; `getGradientPreview` sorts `gradient.stops` in place, mutating the caller's fill; `EngineStateStore` has no `clear()` and `removeShapeData` notifies with `undefined`; `ResizeCursor` keys its cache by the unnormalized angle.
 
 ## When Adding Features
 
@@ -125,10 +127,11 @@
 ## Architecture Boundary and Resource Ownership (refactor in progress)
 
 - Target tiers, with imports pointing one way only: `ui/` -> `bridge/` -> `engine/` -> `core/`. `src/engine/**` must stay headless (never import React, Zustand, `src/hooks`, or `src/component`); `src/core/**` must not import CanvasKit. Information flows back up as events.
-- Use `@/*` (in `tsconfig.json` paths) or relative paths for tier imports. Do NOT use the auto-generated `@<folder>` aliases (e.g. `@engine/...`) — they are not in `tsconfig.json` paths and break typechecking.
+- Use `@/*`, `@engine/...` (both in `tsconfig.json` paths), or relative paths for tier imports. Only auto-generated `@<folder>` aliases that are NOT in `tsconfig.json` paths are unsafe — they break typechecking.
 - New WASM-owning helpers live in `src/engine/render/`: `PaintCache` (descriptor -> immutable `Paint`), `TextCache` (`Paragraph` keyed by version+width), `ResourceScope` (reverse-order disposal), `ResourceCounter` (dev-only `[skia]` log). CanvasKit resources are not garbage collected.
 - Obtain paints via `PaintManager.getPaint({ color, opacity, size, stroke?, strokeWidth? })` (or `initFillPaint`/`initStrokePaint`). They return cached paints: **never** call `.setColor`/`.setShader`/`.setStrokeWidth` on the result — request a new descriptor instead. The legacy `paint`/`stroke` getters remain only for the quarantined `Handles.ts` reference (`to-be-deleted/lib/modifiers/Handles.ts`); nothing live uses them.
 - Already landed in Step 1: PText paragraphs cached and deleted by version, SText font/typeface and ShapeManager snap paints destroyed on teardown, ImageTool deletes unplaced preloaded images.
+- Step 3 (the test harness) landed: Vitest added as a devDependency; root `vitest.config.ts` derives its `resolve.alias` from `tsconfig.json` `compilerOptions.paths`/`baseUrl` (deliberately no `vite-aliases` plugin — it spawns filesystem watchers that delay shutdown). Tests live in `src/lib/__tests__/*.test.ts` in a `node` environment (no CanvasKit/React/DOM): vector math, `clamp`/`normalizeAngle`/`handleUtil`/`pointInArc`, `roundingUtil`, `LayoutEngine` row/column/grid (padding/align/auto-resize), `SnapManager` grid, `PCache`, `debounce`/`throttle`, `EngineStateStore`/`HistoryManager`, `getBackgroundFill`, `DependencyManager`/`ResizeCursor`/`textUtil`, `TextEditor`, and the engine render caches via lightweight fakes — 12 files, 244 tests passing. Add tests alongside each subsequent step.
 
 ## Copilot Expectations for This Repo
 

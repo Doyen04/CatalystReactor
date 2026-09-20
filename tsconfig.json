@@ -43,8 +43,14 @@
             ],
             "@node/*": [
                 "src/lib/node/*"
+            ],
+            "@engine/*": [
+                "src/engine/*"
             ]
         }
     },
-    "exclude": ["node_modules", "to-be-deleted"]
+    "exclude": [
+        "node_modules",
+        "to-be-deleted"
+    ]
 }
