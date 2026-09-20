@@ -76,7 +76,7 @@ function Canvas() {
 
     useEffect(() => {
         if (!editor) return
-        editor.setTool(tool.toolName)
+        editor.setTool(tool?.toolName ?? 'select')
     }, [editor, tool])
 
     useEffect(() => {
