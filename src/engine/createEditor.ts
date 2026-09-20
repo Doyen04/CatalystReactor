@@ -11,11 +11,15 @@ import PaintManager from '@lib/core/PaintManager'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import CanvasManager from '@lib/core/CanvasManager'
 import type { ToolType } from '@lib/tools/toolTypes'
+import type ShapeManager from '@lib/core/ShapeManager'
+import type SceneManager from '@lib/core/SceneManager'
 
 export interface Editor {
     doc: DocumentModel
     bus: EngineBus<EngineEvents>
     store: EngineStateStore
+    sceneManager(): SceneManager | null
+    shapeManager(): ShapeManager | null
     isAttached(): boolean
     attach(canvas: HTMLCanvasElement): CanvasManager
     detach(): void
@@ -55,6 +59,8 @@ export function createEditor(): Editor {
         doc,
         bus,
         store,
+        sceneManager: () => live?.sceneManager ?? null,
+        shapeManager: () => live?.shapeManager ?? null,
         isAttached: () => live !== null,
         attach,
         detach,

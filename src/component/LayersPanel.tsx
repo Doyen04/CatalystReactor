@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { useSceneStore } from '@hooks/sceneStore'
-import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
 import { useEditor } from '@/bridge/useEditor'
 import { useDocumentRevision } from '@/bridge/useDocumentRevision'
 import { Square, Circle, Star, Type, MousePointer2, Layers, ChevronDown, ChevronRight } from 'lucide-react'
@@ -39,7 +38,6 @@ const ShapeIcon = ({ type }: { type: string }) => {
 
 const LayersPanel: React.FC = () => {
     const { selectedShapeId } = useSceneStore()
-    const { canvasManager } = useCanvasManagerStore()
     const editor = useEditor()
     useDocumentRevision()
 
@@ -75,10 +73,9 @@ const LayersPanel: React.FC = () => {
     }
 
     const handleLayerClick = (id: string) => {
-        if (!canvasManager) return
-        const node = canvasManager.sceneManager.getNode(id)
+        const node = editor?.sceneManager()?.getNode(id)
         if (node) {
-            canvasManager.shapeManager.attachNode(node)
+            editor?.shapeManager()?.attachNode(node)
         }
     }
 

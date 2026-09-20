@@ -3,7 +3,6 @@ import './App.css'
 import Canvas from './component/Canvas'
 import PropertyBar from './component/PropertyBar'
 import SideBar from './component/SideBar'
-import { CanvasManagerProvider } from './hooks/useCanvasManager'
 import { EditorProvider } from './bridge/EditorProvider'
 
 function App() {
@@ -15,15 +14,13 @@ function App() {
                     <span>Catalyst Reactor</span>
                 </div>
             </header>
-            <CanvasManagerProvider>
-                <EditorProvider>
-                    <main className={'workspace'}>
-                        <SideBar />
-                        <Canvas />
-                        <PropertyBar />
-                    </main>
-                </EditorProvider>
-            </CanvasManagerProvider>
+            <EditorProvider>
+                <main className={'workspace'}>
+                    <SideBar />
+                    <Canvas />
+                    <PropertyBar />
+                </main>
+            </EditorProvider>
         </div>
     )
 }

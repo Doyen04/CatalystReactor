@@ -10,7 +10,6 @@ import { textCache } from '@/engine/render/TextCache'
 import { registerResourceCounter, unregisterResourceCounter, startResourceCounterMonitor } from '@/engine/render/ResourceCounter'
 
 import { useToolStore } from '@hooks/useTool'
-import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
 import { useSceneStore } from '@hooks/sceneStore'
 import { connectEngineToStores } from '@/bridge/engineStoreBridge'
 import { useEditor } from '@/bridge/useEditor'
@@ -34,7 +33,6 @@ function ensureCanvasKit(): Promise<unknown> {
 function Canvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const stopMonitorRef = useRef<(() => void) | null>(null)
-    const { setCanvasManager } = useCanvasManagerStore()
     const { tool } = useToolStore()
     const { gridSize } = useSceneStore()
     const editor = useEditor()
@@ -49,7 +47,6 @@ function Canvas() {
                 if (cancelled) return
                 if (!editor.isAttached() && canvasRef.current) {
                     const manager = editor.attach(canvasRef.current)
-                    setCanvasManager(manager)
                     manager.setTool(useToolStore.getState().tool?.toolName ?? 'select')
                     manager.setGridSize(useSceneStore.getState().gridSize)
                     registerResourceCounter('paragraphs', textCache)
@@ -69,10 +66,9 @@ function Canvas() {
                 stopMonitorRef.current = null
             }
             unregisterResourceCounter('paragraphs')
-            setCanvasManager(null)
             if (editor) editor.detach()
         }
-    }, [canvasRef, editor, setCanvasManager])
+    }, [canvasRef, editor])
 
     useEffect(() => {
         if (!editor) return
