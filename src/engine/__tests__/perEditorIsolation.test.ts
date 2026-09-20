@@ -19,6 +19,8 @@ describe('per-editor instances', () => {
         expect(a.store).not.toBe(b.store)
         expect(a.bus).not.toBe(b.bus)
         expect(a.isAttached()).toBe(false)
+        expect(a.sceneManager()).toBeNull()
+        expect(a.shapeManager()).toBeNull()
     })
 
     test('two editors have independent documents and command stacks', () => {
