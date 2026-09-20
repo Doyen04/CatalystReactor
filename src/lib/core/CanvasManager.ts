@@ -10,6 +10,7 @@ import PaintManager from './PaintManager'
 import container from './DependencyManager'
 import { EngineBus } from '@/engine/events/EngineBus'
 import type { EngineEvents } from './EngineEvents'
+import { CommandManager } from '@/engine/commands/CommandManager'
 
 class CanvasManager {
     inputManager: InputManager
@@ -19,10 +20,8 @@ class CanvasManager {
     shapeManager: ShapeManager
     shapeModifier: ShapeModifier | null
     paintManager: PaintManager
+    commandManager: CommandManager
     bus: EngineBus<EngineEvents>
-
-    undoStack: never[]
-    redoStack: never[]
 
     constructor(canvas: HTMLCanvasElement) {
         // Phase 1: Create instances that have no container dependencies
@@ -35,8 +34,11 @@ class CanvasManager {
         this.shapeModifier = new ShapeModifier()
         container.register('shapeModifier', this.shapeModifier)
 
+        this.commandManager = new CommandManager(EngineStateStore.getInstance().getDocument(), this.bus)
+        container.register('commandManager', this.commandManager)
+
         // Phase 2: Managers requiring explicit orchestration injection
-        this.shapeManager = new ShapeManager(this.shapeModifier, this.bus)
+        this.shapeManager = new ShapeManager(this.shapeModifier, this.bus, this.commandManager)
         container.register('shapeManager', this.shapeManager)
 
         this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager, EngineStateStore.getInstance().getDocument())
@@ -50,9 +52,6 @@ class CanvasManager {
 
         this.toolManager = new ToolManager(canvas, this.inputManager, this.bus)
         container.register('toolManager', this.toolManager)
-
-        this.undoStack = []
-        this.redoStack = []
     }
 
     setTool(tool: string): void {
@@ -70,21 +69,19 @@ class CanvasManager {
     }
 
     undo() {
-        // if (this.undoStack.length > 1) {
-        //     this.redoStack.push(this.undoStack.pop());
-        //     const prev = this.undoStack[this.undoStack.length - 1];
-        //     this.scene = Node.fromJSON(prev);
-        //     this.render();
-        // }
+        this.commandManager.undo()
     }
 
     redo() {
-        // if (this.redoStack.length > 0) {
-        //     const next = this.redoStack.pop();
-        //     this.undoStack.push(next);
-        //     this.scene = Node.fromJSON(next);
-        //     this.render();
-        // }
+        this.commandManager.redo()
+    }
+
+    get canUndo(): boolean {
+        return this.commandManager.canUndo
+    }
+
+    get canRedo(): boolean {
+        return this.commandManager.canRedo
     }
 
     clear() {

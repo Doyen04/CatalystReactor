@@ -763,7 +763,7 @@ The ordering principle here is different from the plan you were given. Each step
 
 No step depends on a later step. You can stop after any of them and be in a better place than you started. That property is what prevents a half-finished refactor from becoming a worse codebase.
 
-**Status on `refactor/engine-architecture`:** Steps 1-6 are landed. Step 1 (leak fixes) introduced `src/engine/render/{PaintCache,TextCache,ResourceScope,ResourceCounter}`; Step 2 quarantined the dead files into `to-be-deleted/`; Step 3 added Vitest (`npm run test`); Step 4 added `FrameScheduler` + `requestRender` and removed the continuous loop; Step 5 removed Zustand from the engine tier; Step 6 added the `DocumentModel` (headless document, journal, serialization) and strangler-migrated the shape pipeline onto it behind the existing facade API.
+**Status on `refactor/engine-architecture`:** Steps 1-7 are landed. Step 1 (leak fixes) introduced `src/engine/render/{PaintCache,TextCache,ResourceScope,ResourceCounter}`; Step 2 quarantined the dead files into `to-be-deleted/`; Step 3 added Vitest (`npm run test`); Step 4 added `FrameScheduler` + `requestRender` and removed the continuous loop; Step 5 removed Zustand from the engine tier; Step 6 added the `DocumentModel` (headless document, journal, serialization) and strangler-migrated the shape pipeline onto it behind the existing facade API; Step 7 added journal-backed commands and journal-derived undo.
 
 Step 5 specifically added:
 
@@ -776,7 +776,7 @@ Step 5 specifically added:
 
 Step 6 landed its five sub-steps:
 
-- **6.1 `DocumentModel` + journal, headless**: `src/engine/document/{entity,journal,DocumentModel,serialize}.ts`. `EntityRecord = { id, type, properties, parentId, version }`; journal entries are `props | insert | remove | reparent`; `setProperties` journals each changed key (in-place mutation, version bump, `Object.is` skip), `reorder` deliberately journals nothing, `remove` is leaf-only, out-of-range indices are clamped and the clamped index is journaled. `toJSON`/`fromJSON` carry `formatVersion: 1`. Tests: `src/engine/__tests__/{documentModel,journal}.test.ts` (45 tests).
+- **6.1 `DocumentModel` + journal, headless**: `src/engine/document/{entity,journal,DocumentModel,serialize}.ts`. `EntityRecord = { id, type, properties, parentId, version }`; journal entries are `props | insert | remove | reparent`; `setProperties` journals each changed key (in-place mutation, version bump, `Object.is` skip), `reorder` journals a same-parent `reparent` entry (no-op moves skip recording), `remove` is leaf-only, out-of-range indices are clamped and the clamped index is journaled. `toJSON`/`fromJSON` carry `formatVersion: 1`. Tests: `src/engine/__tests__/{documentModel,journal}.test.ts` (45 tests).
 - **6.2 `EngineStateStore` facade**: it now owns one private `DocumentModel` (shared via `getDocument()`), keeps its old public methods unchanged (`createShapeData`, `getShapeData`, `getAllShapeData`, `removeShapeData`, `subscribe`, `notify`), and hands out live write-through `{ id, type, properties }` views whose setters route into `doc.setProperties`. Existing callers (ShapeFactory, HistoryManager, panels) work unchanged.
 - **6.3 SceneManager derives the tree**: `SceneManager` takes the `DocumentModel` in its constructor, keeps a stable `nodeById` map (one projection per entity id), subscribes a journal listener that re-runs reconciliation on every non-`props` entry, and materializes nodes via `ShapeFactory.createShapeFromData`. New API: `addShapeToScene(type, pos, image?)`, `insertNode(node, parentId, index?)`, `removeNode(id)`, `reorderNode(id, index)`, `getNode(id)`. `CanvasManager` constructs it with `EngineStateStore.getInstance().getDocument()`.
 - **6.4 ShapeFactory projection**: `createShapeFromData(data, image?)` builds a `Shape` from an existing `ShapeData` without registering anything or generating an id (pure type->class switch, `Unsupported shape type` on unknown types); `createShape` still registers via the store and delegates.
@@ -786,9 +786,23 @@ Known Step 6 behaviour deltas to verify by hand:
 
 - A shape drawn while a container is under the cursor now registers at the doc root instead of nesting inside that container (containers are applied via GroupTool/SelectTool capture, as before).
 - Property writes (`props` journal entries) do not re-run tree reconciliation — they mutate the live shared properties object directly.
-- `to-be-deleted/*` does not yet have its matching file cross-checked against the new pyramid until Step 7; the `Handles.ts` legacy paint getters are still the only users of the legacy `paint`/`stroke` getters.
+- `to-be-deleted/*` does not yet have its matching file cross-checked against the new pyramid; the `Handles.ts` legacy paint getters are still the only users of the legacy `paint`/`stroke` getters.
 
-Next up: Step 7 (journal-backed commands).
+Step 7 landed journal-backed commands:
+
+- **Transactions on `DocumentModel`**: `beginTransaction` / `commitTransaction` (returns the journalled entries) / `abortTransaction` (replays the inverted entries in reverse to revert), plus `applyEntry(entry)` (replays an entry's state effect — including notifying listeners so projected trees stay in sync — without journaling again) and `setPropertiesExplicit(id, before, after)` (journals the diff between two property snapshots, for mutations that already happened in place on the live properties object). While a transaction is open, `record()` buffers into the pending list and does not grow the flat journal until commit.
+- **`CommandManager`** (`src/engine/commands/CommandManager.ts`): `constructor(doc, bus)`; `run(cmd)` (begin+apply+commit), `begin(label, mergeKey?)`, `apply(cmd)`, `commit()`, `abort()`; `undo()` / `redo()` replay journal inversions through `doc.applyEntry` (no hand-written `undo()`); `canUndo`/`canRedo`; undo stack capped at 200, consecutive same-`mergeKey` transactions coalesce into one entry; emits `history:changed` and `requestRender()` when the flags flip.
+- **Commands** (`src/engine/commands/{CreateShape,TranslateNodes,UpdateProperties,DeleteNodes,ReparentNodes,ReorderNodes,EditPath}.ts`): all describe only forward mutations; undo falls out of the journal. `CreateShape` generates its own id and exposes `resultId`; `UpdateProperties(id, oldProps | null, newProps)` uses `setPropertiesExplicit` when given snapshots (drag path) and plain `setProperties` otherwise (property-panel path); `ReorderNodes` delegates to `doc.reorder`, which journals the same-parent `reparent` itself.
+- **Headless editor**: `src/engine/createEditor.ts` builds `{ doc, run, undo, redo, canUndo, canRedo }` with no canvas/React/Zustand; the §2.2 acceptance test lives in `src/engine/__tests__/headless.test.ts`.
+- **Live wiring**: `CanvasManager` creates one `CommandManager` (registered in the container) and wires `undo()`/`redo()` to it (stubs deleted). `ShapeManager` drags now `begin('Move', ...)` on drag start and `commit()` (or `abort()` if unchanged) on release; `cancelDrag()` reverts a mid-drag Escape; `updateProperty` runs `UpdateProperties`. `ToolContext.commandManager` is injected from the container; `KeyboardTool` does Ctrl+Z/Ctrl+Y via the command manager and Escape via `shapeManager.cancelDrag()` when `doc.isTransactionOpen`. `HistoryManager.ts` (and `UpdateShapeAction`) moved to `to-be-deleted/lib/core/HistoryManager.ts` after its coverage was replaced with CommandManager tests in `src/lib/__tests__/engineState.test.ts`.
+
+Known Step 7 deltas / deferred verification:
+
+- Manual smoke tests (create, group, reparent, edit a path, edit text, undo all in reverse; Escape mid-drag revert) are still pending — only the headless + node tests are green (20 files / 354 tests).
+- `CreateShape`'s headless defaults are minimal (the plan's §2.2 snippet predates the nested `Properties` shape, so `x/y/width/height` live under `transform`/`size`); the real draw tools still go through `SceneManager.addShapeToScene` and are not yet command-backed.
+- Container drags still do not create history (pre-existing `instanceof ShapeNode` guard preserved).
+
+Next up: Step 8 (cut React over, delete the duplicates).
 
 ---
 

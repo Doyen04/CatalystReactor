@@ -16,6 +16,7 @@ import type { EngineBus } from '@/engine/events/EngineBus'
 import type { EngineEvents } from './EngineEvents'
 import type { ToolContext } from '@lib/tools/ToolContext'
 import container from './DependencyManager'
+import EngineStateStore from './EngineStateStore'
 
 class ToolManager {
     currentTool: Tool
@@ -35,11 +36,13 @@ class ToolManager {
         const sceneManager = container.resolve('sceneManager')
         const shapeManager = container.resolve('shapeManager')
         const shapeModifier = container.resolve('shapeModifier')
+        const commandManager = container.resolve('commandManager')
         this.ctx = {
             defaultTool: 'select',
             sceneManager,
             shapeManager,
             shapeModifier,
+            commandManager,
             setTool: (tool: ToolType) => {
                 this.setCurrentTool(tool)
                 this.bus.emit('tool:changed', { tool })
@@ -51,7 +54,7 @@ class ToolManager {
         }
         this.currentToolType = 'select'
         this.currentTool = new SelectTool(this.cnvsElm, this.ctx)
-        this.keyboardTool = new KeyboardTool(this.ctx.shapeManager)
+        this.keyboardTool = new KeyboardTool(this.ctx.shapeManager, this.ctx.commandManager, EngineStateStore.getInstance().getDocument())
         this.setUpEvent()
     }
 

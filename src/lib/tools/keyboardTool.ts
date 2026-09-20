@@ -1,17 +1,21 @@
 import { isPrintableCharUnicode } from '@/util/textUtil'
 import ShapeManager from '@lib/core/ShapeManager'
 import SceneNode from '@lib/node/Scene'
-import HistoryManager from '@lib/core/HistoryManager'
+import type { CommandManager } from '@/engine/commands/CommandManager'
+import type { DocumentModel } from '@/engine/document/DocumentModel'
 
 class KeyboardTool {
     private shapeManager: ShapeManager
+    private commandManager: CommandManager
+    private doc: DocumentModel
 
-    constructor(shapeManager: ShapeManager) {
+    constructor(shapeManager: ShapeManager, commandManager: CommandManager, doc: DocumentModel) {
         this.shapeManager = shapeManager
+        this.commandManager = commandManager
+        this.doc = doc
     }
 
     handleKeyDown(e: KeyboardEvent) {
-
         switch (e.key) {
             case 'Delete':
             case 'Backspace':
@@ -37,10 +41,10 @@ class KeyboardTool {
                 if (e.ctrlKey || e.metaKey) {
                     if (e.key === 'z') {
                         e.preventDefault()
-                        HistoryManager.getInstance().undo()
+                        this.commandManager.undo()
                     } else if (e.key === 'y' || (e.key === 'Z' && e.shiftKey)) {
                         e.preventDefault()
-                        HistoryManager.getInstance().redo()
+                        this.commandManager.redo()
                     }
                 }
 
@@ -86,7 +90,11 @@ class KeyboardTool {
             }
         }
     }
-    private handleEscape() {}
+    private handleEscape() {
+        if (this.doc.isTransactionOpen) {
+            this.shapeManager.cancelDrag()
+        }
+    }
 
     private handleTab(e: KeyboardEvent) {
         console.log(e)

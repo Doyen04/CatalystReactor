@@ -24,18 +24,21 @@ class PText extends Shape {
         this.cursor = new TextCursor(this.data.properties.transform.x, this.data.properties.transform.y, 0)
 
         if (!this.data.properties.text) {
-            this.data.properties.text = ''
+            this.data.properties = { ...this.data.properties, text: '' }
         }
 
         if (!this.data.properties.textStyle) {
-            this.data.properties.textStyle = {
-                textFill: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
-                textAlign: 'left',
-                fontSize: 18,
-                fontWeight: 500,
-                fontFamilies: ['Antonio', 'sans-serif'],
-                lineHeight: 1.2,
-                backgroundColor: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
+            this.data.properties = {
+                ...this.data.properties,
+                textStyle: {
+                    textFill: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
+                    textAlign: 'left',
+                    fontSize: 18,
+                    fontWeight: 500,
+                    fontFamilies: ['Antonio', 'sans-serif'],
+                    lineHeight: 1.2,
+                    backgroundColor: { color: { color: [0, 0, 0, 1], type: 'solid' }, opacity: 1 },
+                },
             }
         }
 
@@ -50,7 +53,7 @@ class PText extends Shape {
     }
 
     set text(val: string) {
-        this.data.properties.text = val
+        this.data.properties = { ...this.data.properties, text: val }
     }
 
     get textStyle(): PTextStyle {

@@ -8,11 +8,10 @@ interface SceneStore {
     gridSize: number
     setSelectedShapeId: (id: string | null) => void
     setCurrentShapeProperties: (properties: Properties | null) => void
-    updateProperty: (key: string, value: unknown) => void
     clearProperties: () => void
 }
 
-export const useSceneStore = create<SceneStore>((set) => ({
+export const useSceneStore = create<SceneStore>(set => ({
     selectedShapeId: null,
     currentShapeProperties: null,
     gridSize: 10,
@@ -33,23 +32,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
         set({ currentShapeProperties: properties })
     },
 
-    updateProperty: (key, value) =>
-        set(state => {
-            if (!state.currentShapeProperties) return state
-
-            return {
-                currentShapeProperties: {
-                    ...state.currentShapeProperties,
-                    [key]: value,
-                },
-            }
-        }),
-
     clearProperties: () => set({ selectedShapeId: null, currentShapeProperties: null }),
 }))
 
 // Side effect: listen to EngineStateStore
-EngineStateStore.getInstance().subscribe((shapeId) => {
+EngineStateStore.getInstance().subscribe(shapeId => {
     const state = useSceneStore.getState()
     if (shapeId && shapeId === state.selectedShapeId) {
         const shapeData = EngineStateStore.getInstance().getShapeData(shapeId)

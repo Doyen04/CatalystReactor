@@ -1,11 +1,29 @@
 import type { EntityId, EntityRecord } from './entity'
 import type { Properties } from '@lib/types/shapes'
 import type { JournalEntry, JournalListener } from './journal'
+import { invert } from './journal'
 
 function clampIndex(index: number, length: number): number {
     if (index < 0) return 0
     if (index > length) return length
     return index
+}
+
+function deepEqual(a: unknown, b: unknown): boolean {
+    if (Object.is(a, b)) return true
+    if (typeof a !== typeof b) return false
+    if (a === null || b === null) return false
+    if (typeof a !== 'object') return false
+    const aKeys = Object.keys(a as Record<string, unknown>)
+    const bKeys = Object.keys(b as Record<string, unknown>)
+    if (aKeys.length !== bKeys.length) return false
+    const entries = a as Record<string, unknown>
+    const other = b as Record<string, unknown>
+    for (const key of aKeys) {
+        if (!Object.prototype.hasOwnProperty.call(other, key)) return false
+        if (!deepEqual(entries[key], other[key])) return false
+    }
+    return true
 }
 
 export class DocumentModel {
@@ -14,6 +32,7 @@ export class DocumentModel {
     readonly rootId: EntityId = 'root'
     private journal: JournalEntry[] = []
     private journalListeners = new Set<JournalListener>()
+    private pending: JournalEntry[] | null = null
 
     get(id: EntityId): EntityRecord | undefined {
         return this.entities.get(id)
@@ -142,6 +161,131 @@ export class DocumentModel {
         order.splice(oldIndex, 1)
         const at = clampIndex(index, order.length)
         order.splice(at, 0, id)
+        if (at !== oldIndex) {
+            this.record({ kind: 'reparent', id, from: [parentId, oldIndex], to: [parentId, at] })
+        }
+    }
+
+    /**
+     * Journals the diff between an OLD and NEW property snapshot rather than
+     * diffing against the current live props. Necessary because shapes mutate
+     * their in-place `properties` object during a drag, so a no-op guard
+     * against "current" would silently drop the change.
+     */
+    setPropertiesExplicit(id: EntityId, before: Partial<Properties>, after: Partial<Properties>): void {
+        const rec = this.entities.get(id)
+        if (!rec) return
+        const props = rec.properties as unknown as Record<string, unknown>
+        const beforeOf = before as unknown as Record<string, unknown>
+        const afterOf = after as unknown as Record<string, unknown>
+        const beforePatch: Record<string, unknown> = {}
+        const afterPatch: Record<string, unknown> = {}
+
+        for (const key of new Set([...Object.keys(beforeOf), ...Object.keys(afterOf)])) {
+            if (deepEqual(beforeOf[key], afterOf[key])) continue
+            beforePatch[key] = beforeOf[key]
+            afterPatch[key] = afterOf[key]
+        }
+        for (const key of Object.keys(afterOf)) {
+            props[key] = afterOf[key]
+        }
+
+        if (Object.keys(afterPatch).length === 0) return
+
+        rec.version++
+        this.record({
+            kind: 'props',
+            id,
+            before: beforePatch as Partial<Properties>,
+            after: afterPatch as Partial<Properties>,
+        })
+    }
+
+    /**
+     * Applies a journal entry's state effect WITHOUT recording it to the
+     * journal or the pending transaction buffer. Used to replay undo/redo/
+     * abort. Listeners are notified so projected trees (SceneManager) stay in
+     * sync.
+     */
+    applyEntry(entry: JournalEntry): void {
+        switch (entry.kind) {
+            case 'props': {
+                const rec = this.entities.get(entry.id)
+                if (!rec) return
+                const props = rec.properties as unknown as Record<string, unknown>
+                for (const key of Object.keys(entry.after as unknown as Record<string, unknown>)) {
+                    props[key] = (entry.after as unknown as Record<string, unknown>)[key]
+                }
+                rec.version++
+                break
+            }
+            case 'insert': {
+                let order = this.order.get(entry.parentId)
+                if (!order) {
+                    order = []
+                    this.order.set(entry.parentId, order)
+                }
+                const existing = order.indexOf(entry.record.id)
+                const at = existing === -1 ? clampIndex(entry.index, order.length) : existing
+                if (existing === -1) {
+                    order.splice(at, 0, entry.record.id)
+                    this.entities.set(entry.record.id, entry.record)
+                }
+                break
+            }
+            case 'remove': {
+                this.entities.delete(entry.record.id)
+                const order = this.order.get(entry.parentId)
+                if (!order) return
+                const existing = order.indexOf(entry.record.id)
+                if (existing !== -1) order.splice(existing, 1)
+                break
+            }
+            case 'reparent': {
+                for (const [, children] of this.order) {
+                    const existing = children.indexOf(entry.id)
+                    if (existing !== -1) {
+                        children.splice(existing, 1)
+                        break
+                    }
+                }
+                let newOrder = this.order.get(entry.to[0])
+                if (!newOrder) {
+                    newOrder = []
+                    this.order.set(entry.to[0], newOrder)
+                }
+                const at = clampIndex(entry.to[1], newOrder.length)
+                newOrder.splice(at, 0, entry.id)
+                break
+            }
+        }
+        for (const listener of [...this.journalListeners]) listener(entry)
+    }
+
+    beginTransaction(): void {
+        if (this.pending !== null) throw new Error('A transaction is already open')
+        this.pending = []
+    }
+
+    commitTransaction(): JournalEntry[] {
+        if (this.pending === null) throw new Error('No open transaction')
+        const entries = this.pending
+        this.pending = null
+        for (const entry of entries) this.journal.push(entry)
+        return entries
+    }
+
+    abortTransaction(): void {
+        if (this.pending === null) return
+        const entries = this.pending
+        this.pending = null
+        for (let i = entries.length - 1; i >= 0; i--) {
+            this.applyEntry(invert(entries[i]))
+        }
+    }
+
+    get isTransactionOpen(): boolean {
+        return this.pending !== null
     }
 
     subscribeJournal(listener: JournalListener): () => void {
@@ -156,7 +300,11 @@ export class DocumentModel {
     }
 
     private record(entry: JournalEntry): void {
-        this.journal.push(entry)
+        if (this.pending !== null) {
+            this.pending.push(entry)
+        } else {
+            this.journal.push(entry)
+        }
         for (const listener of [...this.journalListeners]) listener(entry)
     }
 

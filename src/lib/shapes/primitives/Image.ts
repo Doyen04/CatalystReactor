@@ -4,20 +4,23 @@ import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 import { ShapeData } from '@lib/core/EngineStateStore'
 
 class PImage extends Rectangle {
-    constructor(data: ShapeData, imageElem?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer, name: string }) {
+    constructor(data: ShapeData, imageElem?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }) {
         super(data)
 
         if (imageElem) {
             this.paintManager.imageCache.set(imageElem.name, imageElem.CanvasKitImage)
             const fill: ImageFill = { type: 'image', imageData: { imageBuffer: imageElem.imageBuffer, name: imageElem.name }, scaleMode: 'fit' }
             const stroke: SolidFill = { type: 'solid', color: '#000' }
-            
-            this.data.properties.style = {
-                fill: { color: fill, opacity: 1 },
-                stroke: { color: stroke, opacity: 1, width: 1 },
+
+            this.data.properties = {
+                ...this.data.properties,
+                style: {
+                    fill: { color: fill, opacity: 1 },
+                    stroke: { color: stroke, opacity: 1, width: 1 },
+                },
             }
         }
-        
+
         this.maintainAspectRatio = true
         this.setupImage()
     }
@@ -50,7 +53,7 @@ class PImage extends Rectangle {
         return `${simplifiedWidth}:${simplifiedHeight}`
     }
 
-    override cleanUp(): void { }
+    override cleanUp(): void {}
     override destroy(): void {
         // Cleaning up any specific PImage state if needed
     }

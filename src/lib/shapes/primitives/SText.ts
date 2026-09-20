@@ -48,7 +48,7 @@ class SText extends Shape {
         // It is intentionally separate from data.properties.textStyle (PTextStyle).
 
         if (this.data.properties.text === undefined) {
-            this.data.properties.text = ''
+            this.data.properties = { ...this.data.properties, text: '' }
         }
 
         if (this.resource && this.resource.canvasKit && this.resource.fontData && this.resource.fontData[0]) {
@@ -74,7 +74,7 @@ class SText extends Shape {
     }
 
     setText(text: string): void {
-        this.data.properties.text = text
+        this.data.properties = { ...this.data.properties, text }
         this.calculateTextDim()
     }
 

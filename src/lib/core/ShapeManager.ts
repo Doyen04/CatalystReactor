@@ -1,4 +1,3 @@
-
 import type { Canvas, Paint, PathEffect } from 'canvaskit-wasm'
 import { Coord, Properties } from '@lib/types/shapes'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
@@ -6,30 +5,37 @@ import throttle from '@lib/helper/throttle'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 import ShapeNode from '@lib/node/ShapeNode'
-import HistoryManager, { UpdateShapeAction } from './HistoryManager'
 import EngineStateStore from './EngineStateStore'
 import SnapManager, { SnapResult } from './SnapManager'
 import CanvasKitResources from './CanvasKitResource'
 import { requestRender } from '@/engine/render/renderRequest'
 import type { EngineBus } from '@/engine/events/EngineBus'
 import type { EngineEvents } from './EngineEvents'
+import { CommandManager } from '@/engine/commands/CommandManager'
+import { UpdateProperties } from '@/engine/commands/UpdateProperties'
+import type { DocumentModel } from '@/engine/document/DocumentModel'
 
 class ShapeManager {
     private scene: SceneNode | null = null
     private shapeModifier: ShapeModifier | null
     private bus: EngineBus<EngineEvents>
+    private commandManager: CommandManager
+    private doc: DocumentModel
     private throttledUpdate: (properties: Properties) => void
     private gridSize = 10
     private initialProps: Properties | null = null
     private activeSnapResult: SnapResult | null = null
     private snapGuidePaint: Paint | null = null
     private snapGuideDash: PathEffect | null = null
+    private dragTransactionActive = false
 
-    constructor(shapeModifier: ShapeModifier, bus: EngineBus<EngineEvents>) {
+    constructor(shapeModifier: ShapeModifier, bus: EngineBus<EngineEvents>, commandManager: CommandManager) {
         this.scene = null
         this.shapeModifier = shapeModifier
         this.bus = bus
-        
+        this.commandManager = commandManager
+        this.doc = EngineStateStore.getInstance().getDocument()
+
         this.throttledUpdate = throttle((properties: unknown) => {
             this.bus.emit('properties:changed', { id: this.scene?.shape?.data.id ?? null, properties: properties as Properties })
         })
@@ -59,15 +65,18 @@ class ShapeManager {
     drag(dragStart: Coord, e: MouseEvent) {
         if (!this.scene) return
 
+        if (!this.dragTransactionActive) {
+            if (this.scene instanceof ShapeNode && this.scene.shape) {
+                this.commandManager.begin('Move', `translate:${this.scene.shape.data.id}`)
+                this.dragTransactionActive = true
+            }
+        }
+
         let mouseX = e.offsetX
         let mouseY = e.offsetY
 
         // Handle snapping
-        this.activeSnapResult = SnapManager.getInstance().getSnapResult(
-            this.scene,
-            { x: mouseX, y: mouseY },
-            this.gridSize
-        )
+        this.activeSnapResult = SnapManager.getInstance().getSnapResult(this.scene, { x: mouseX, y: mouseY }, this.gridSize)
 
         if (this.activeSnapResult && this.activeSnapResult.snapped) {
             mouseX = this.activeSnapResult.x
@@ -101,7 +110,7 @@ class ShapeManager {
 
     finishDrag() {
         if (!this.scene) return
-        
+
         const parent = this.scene.getParent()
         if (this.scene instanceof ContainerNode) {
             this.scene.applyLayout()
@@ -112,7 +121,7 @@ class ShapeManager {
 
         this.shapeModifier?.handleRemoveModiferHandle()
         this.shapeModifier?.update()
-        
+
         const finalProps = this.scene.getProperties()
         if (finalProps) this.throttledUpdate(finalProps)
 
@@ -120,17 +129,41 @@ class ShapeManager {
         if (this.initialProps && this.scene instanceof ShapeNode && this.scene.shape) {
             const shapeId = this.scene.shape.data.id
             const hasChanged = JSON.stringify(this.initialProps) !== JSON.stringify(finalProps)
-            
+
             if (hasChanged) {
-                HistoryManager.getInstance().pushAction(
-                    new UpdateShapeAction(shapeId, this.initialProps, structuredClone(finalProps as Properties))
+                this.commandManager.apply(
+                    new UpdateProperties(shapeId, structuredClone(this.initialProps), structuredClone(finalProps as Properties))
                 )
+                this.commandManager.commit()
+            } else {
+                this.commandManager.abort()
             }
         }
         //remeber this line
         EngineStateStore.getInstance().notify()
         this.initialProps = null
         this.activeSnapResult = null
+        this.dragTransactionActive = false
+    }
+
+    cancelDrag() {
+        if (this.dragTransactionActive && this.initialProps && this.scene instanceof ShapeNode && this.scene.shape) {
+            const finalProps = this.scene.getProperties()
+            if (finalProps) {
+                this.commandManager.apply(
+                    new UpdateProperties(this.scene.shape.data.id, structuredClone(this.initialProps), structuredClone(finalProps as Properties))
+                )
+            }
+            this.commandManager.abort()
+            this.shapeModifier?.handleRemoveModiferHandle()
+            this.shapeModifier?.update()
+            if (finalProps) this.throttledUpdate(finalProps)
+        }
+        EngineStateStore.getInstance().notify()
+        this.initialProps = null
+        this.activeSnapResult = null
+        this.dragTransactionActive = false
+        requestRender()
     }
 
     handleTinyShapes(): void {
@@ -138,7 +171,7 @@ class ShapeManager {
 
         const dim = this.scene.getDim()
         if (!dim) return
-        
+
         const { height, width } = dim
         const minSize = 5
 
@@ -165,7 +198,7 @@ class ShapeManager {
 
         this.scene = scene
         this.shapeModifier?.attachShape(scene)
-        
+
         if (this.scene && this.scene.shape) {
             this.bus.emit('selection:changed', { id: this.scene.shape.data.id })
         }
@@ -198,24 +231,22 @@ class ShapeManager {
 
     updateProperty<K extends keyof Properties>(key: K, value: Properties[K]) {
         if (!this.scene) throw new Error('No shape attached')
-        
+
         const oldProps = structuredClone(this.scene.getProperties())
         const newProps = {
             ...oldProps,
             [key]: value,
         }
-        
+
         this.scene.setProperties(newProps as Properties)
         this.shapeModifier?.update()
-        
+
         const finalProps = this.scene.getProperties()
         if (finalProps) this.throttledUpdate(finalProps)
 
         // Record history for property bar updates
         if (this.scene && this.scene.shape) {
-            HistoryManager.getInstance().pushAction(
-                new UpdateShapeAction(this.scene.shape.data.id, oldProps as Properties, structuredClone(finalProps as Properties))
-            )
+            this.commandManager.run(new UpdateProperties(this.scene.shape.data.id, oldProps as Properties, structuredClone(finalProps as Properties)))
             EngineStateStore.getInstance().notify(this.scene.shape.data.id)
             requestRender()
         }
@@ -228,14 +259,14 @@ class ShapeManager {
 
         const newBorderRadius = { ...props.borderRadius }
         const validKeys = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
-        
+
         if (newBorderRadius.locked) {
             newBorderRadius['top-left'] = value
             newBorderRadius['top-right'] = value
             newBorderRadius['bottom-left'] = value
             newBorderRadius['bottom-right'] = value
         } else if (pos && validKeys.includes(pos)) {
-            (newBorderRadius as Record<string, number | boolean>)[pos] = value
+            ;(newBorderRadius as Record<string, number | boolean>)[pos] = value
         }
 
         this.updateProperty('borderRadius', newBorderRadius)
@@ -296,7 +327,7 @@ class ShapeManager {
         const keys = key.split('.')
         const newSectionProps = JSON.parse(JSON.stringify(target))
         let current = newSectionProps
-        
+
         for (let i = 0; i < keys.length - 1; i++) {
             if (!current[keys[i]]) {
                 current[keys[i]] = {}
@@ -351,7 +382,7 @@ class ShapeManager {
 
     private drawSnapGuides(canvas: Canvas) {
         if (!this.activeSnapResult || !this.activeSnapResult.snapped) return
-        
+
         const ck = CanvasKitResources.getInstance()?.canvasKit
         if (!ck) return
 
@@ -361,7 +392,7 @@ class ShapeManager {
             this.snapGuidePaint.setStyle(ck.PaintStyle.Stroke)
             this.snapGuidePaint.setStrokeWidth(1)
             this.snapGuidePaint.setAntiAlias(true)
-            
+
             this.snapGuideDash = ck.PathEffect.MakeDash([5, 5], 0)
             this.snapGuidePaint.setPathEffect(this.snapGuideDash)
         }
@@ -386,7 +417,7 @@ class ShapeManager {
             if (guide.type === 'center') continue
 
             this.snapGuidePaint.setColor(guide.isGrid ? ck.Color(0, 255, 255, 0.4) : ck.Color(255, 0, 255, 0.7))
-            
+
             const path = new ck.Path()
             if (guide.orientation === 'horizontal') {
                 path.moveTo(-20000, guide.pos)
