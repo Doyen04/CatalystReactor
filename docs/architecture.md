@@ -104,6 +104,8 @@ Not because it is badly written. Because of a handful of specific imports that q
 
 Every one of these is a small, local fix. None require rewriting the scene graph, the layout engine, the shapes, or the tools' actual logic. That is the good news and the reason this refactor is worth doing.
 
+All eight rows are now resolved: Steps 5-9 removed every Zustand/store/container/singleton import from the engine tier, made the document the single mutation path, dirty-gated rendering, and tore down the last module-level singletons. The table above is kept as the historical starting point the plan was written against.
+
 ### 2.4 The dependency rule
 
 ```
@@ -184,9 +186,10 @@ src/
       EngineBus.ts           typed emitter, engine -> outside world
 
   bridge/                    the ONLY place react meets the engine
-    editor.ts                EditorHandle facade, makeEditor(canvasManager)
     EditorProvider.tsx       provides the editor via React context
-    useEditor.ts
+    useEditor.ts             returns the Editor from engine/createEditor
+                             (bridge/editor.ts was deleted in Step 9; the UI
+                             imports the Editor type + createEditor directly)
     useEntity.ts             subscribed snapshot of one entity
     useEntityThrottled.ts    ~50ms throttled entity re-render
     useDocumentRevision.ts   throttled re-render on any doc change
@@ -620,7 +623,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
 }
 ```
 
-`createEditor()` builds its own `DocumentModel`, `CommandManager`, `SnapManager`, and `SceneManager` — all wired by explicit constructor arguments, no DI container. No module-level singletons. Two providers means two fully independent editors, which is what makes tests isolated and multi-canvas possible.
+`createEditor()` builds its own `DocumentModel`, `CommandManager`, and `SnapManager` (headless); the CanvasKit-bound managers (`ShapeModifier` → `ShapeManager` → `SceneManager` → `ToolManager`) are constructed by `CanvasManager` inside `attach()`. Everything is wired by explicit constructor arguments, no DI container. No module-level singletons. Two providers means two fully independent editors, which is what makes tests isolated and multi-canvas possible.
 
 The one legitimate exception is `CanvasKitResources`: the WASM module and fonts are expensive, process-wide, and genuinely shared. Initialise it once, outside any editor, and document why in a comment so nobody "fixes" it later.
 
@@ -774,7 +777,7 @@ The ordering principle here is different from the plan you were given. Each step
 
 No step depends on a later step. You can stop after any of them and be in a better place than you started. That property is what prevents a half-finished refactor from becoming a worse codebase.
 
-**Status on `refactor/engine-architecture`:** Steps 1-7 are landed. Step 1 (leak fixes) introduced `src/engine/render/{PaintCache,TextCache,ResourceScope,ResourceCounter}`; Step 2 quarantined the dead files into `to-be-deleted/`; Step 3 added Vitest (`npm run test`); Step 4 added `FrameScheduler` + `requestRender` and removed the continuous loop; Step 5 removed Zustand from the engine tier; Step 6 added the `DocumentModel` (headless document, journal, serialization) and strangler-migrated the shape pipeline onto it behind the existing facade API; Step 7 added journal-backed commands and journal-derived undo.
+**Status on `refactor/engine-architecture`:** Steps 1-9 are landed. Step 1 (leak fixes) introduced `src/engine/render/{PaintCache,TextCache,ResourceScope,ResourceCounter}`; Step 2 quarantined the dead files into `to-be-deleted/`; Step 3 added Vitest (`npm run test`); Step 4 added `FrameScheduler` + `requestRender` and removed the continuous loop; Step 5 removed Zustand from the engine tier; Step 6 added the `DocumentModel` (headless document, journal, serialization) and strangler-migrated the shape pipeline onto it behind the existing facade API; Step 7 added journal-backed commands and journal-derived undo; Step 8 cut React over to the document (bridge hooks, `PropertyBar`/`LayersPanel` reading `doc`, duplicates deleted); Step 9 made everything per-editor with constructor injection (no `DependencyManager`/`ServiceContainer`, no `useCanvasManagerStore` context, `Editor` = `createEditor()` mounted by `EditorProvider`). Suite: 22 files / 378 tests.
 
 Step 5 specifically added:
 

@@ -122,7 +122,7 @@ class Renderer {
             // Try fallback to CPU surface
             try {
                 console.log('Attempting gl v1 surface fallback...')
-                this.surf = this.resource.canvasKit.MakeWebGLCanvasSurface(this.canvasEl, null, {
+                this.surf = this.resource.canvasKit.MakeWebGLCanvasSurface(this.canvasEl, undefined, {
                     majorVersion: 1,
                     minorVersion: 1,
                 })

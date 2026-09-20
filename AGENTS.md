@@ -80,7 +80,7 @@ Rendering is dirty-gated: `Renderer` owns a `FrameScheduler` and only draws when
 - Engine live-accessors — the `Editor` handle (via `useEditor()`) exposes `sceneManager()` / `shapeManager()` (nullable while unattached) alongside `doc`/`bus`/`store`; there is no `useCanvasManagerStore`/context anymore. `LayersPanel` reads the managers from `useEditor()`.
 - `useSceneStore` (Zustand) — `selectedShapeId`, `gridSize` (pushed to `ShapeManager.setGridSize`); `selectedShapeId` is updated from the engine only through `src/bridge/engineStoreBridge.ts`. Selection/panel content follows the engine via the `EditorProvider` bridge hooks (`useEntity`/`useEntityThrottled`), not a property copy.
 - `EngineStateStore` (per-editor, `new EngineStateStore(doc)` built by `createEditor()`) — shape data map keyed by id; the shared source of truth bridges the canvas engine and React panels. **Any shape created via `ShapeFactory` registers here.**
-- Undo/redo now lives in the engine: `CanvasManager.commandManager` (one `CommandManager` per editor, registered in the container). `CanvasManager.undo/redo` delegate to it; Ctrl+Z/Ctrl+Y are handled by `KeyboardTool`. The old `HistoryManager` is quarantined at `to-be-deleted/lib/core/HistoryManager.ts` (working reference copy; nothing under `src/` may import it).
+- Undo/redo now lives in the engine: `CanvasManager.commandManager` (one `CommandManager` per editor, built in `createEditor()` and passed through `attach`). `CanvasManager.undo/redo` delegate to it; Ctrl+Z/Ctrl+Y are handled by `KeyboardTool`. The old `HistoryManager` is quarantined at `to-be-deleted/lib/core/HistoryManager.ts` (working reference copy; nothing under `src/` may import it).
 
 ## Gotchas
 
