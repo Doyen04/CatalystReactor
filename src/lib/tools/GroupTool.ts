@@ -3,12 +3,13 @@ import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import SceneNode from '@lib/node/Scene'
 import ContainerNode from '@lib/node/ContainerNode'
 import { ContainerType, LayoutConstraints } from '@lib/node/nodeTypes'
+import type { ToolContext } from './ToolContext'
 
 class GroupTool extends Tool {
     shapeType: ContainerType
     // currentContainer: ContainerNode | null
-    constructor(shape: ContainerType, cnvs: HTMLCanvasElement) {
-        super( cnvs)
+    constructor(shape: ContainerType, cnvs: HTMLCanvasElement, ctx: ToolContext) {
+        super(cnvs, ctx)
         this.shapeType = shape
         // this.currentContainer = null
     }

@@ -1,6 +1,7 @@
 import Tool from './Tool'
 import SceneNode from '@lib/node/Scene'
 import ResizeCursor from './ResizeCursor'
+import type { ToolContext } from './ToolContext'
 
 class SelectTool extends Tool {
     private hoveredScene: SceneNode | null = null
@@ -9,8 +10,8 @@ class SelectTool extends Tool {
     private lastClickTime: number = 0
     private doubleClickDelay: number = 300 // milliseconds
 
-    constructor(cnvs: HTMLCanvasElement) {
-        super(cnvs)
+    constructor(cnvs: HTMLCanvasElement, ctx: ToolContext) {
+        super(cnvs, ctx)
     }
 
     override handlePointerDown(e: MouseEvent) {

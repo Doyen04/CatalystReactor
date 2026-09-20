@@ -12,6 +12,8 @@ import { registerResourceCounter, unregisterResourceCounter, startResourceCounte
 
 import { useToolStore } from '@hooks/useTool'
 import { useCanvasManagerStore } from '@hooks/useCanvasManagerStore'
+import { useSceneStore } from '@hooks/sceneStore'
+import { connectEngineToStores } from '@/bridge/engineStoreBridge'
 
 function Canvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -20,6 +22,7 @@ function Canvas() {
     const canvasResourcesRef = useRef<CanvasKitResources>(null)
     const stopMonitorRef = useRef<(() => void) | null>(null)
     const { tool } = useToolStore()
+    const { gridSize } = useSceneStore()
 
     useEffect(() => {
         const cleanupExisting = () => {
@@ -79,6 +82,16 @@ function Canvas() {
         if (!canvasManager) return
         canvasManager.setTool(tool.toolName)
     }, [canvasManager, tool])
+
+    useEffect(() => {
+        if (!canvasManager) return
+        return connectEngineToStores(canvasManager.bus)
+    }, [canvasManager])
+
+    useEffect(() => {
+        if (!canvasManager) return
+        canvasManager.setGridSize(gridSize)
+    }, [canvasManager, gridSize])
 
     return (
         <div className={'canvasContainer'}>

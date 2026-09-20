@@ -22,6 +22,7 @@
 - `ToolManager` and `Renderer` each hold an explicit `inputCallbacks` object, `unsubscribe` it in `removeEvent()`, and re-`subscribe` in `addEvent()`. Keep this idempotent pattern when editing wiring.
 - `ToolManager.setCurrentTool(tool)` creates a fresh tool instance per switch (`SelectTool`, `ShapeTool`, `GroupTool`, `ImageTool`, `LineTool`, `PenTool`, `BezierTool`, `EditTool`), calls `currentTool.toolChange()` on the outgoing one, and re-binds events. Key events forward to both the singleton `KeyboardTool` and the current tool.
 - The old `EventQueue` bus is **removed**; only a quarantine copy remains at `to-be-deleted/lib/core/EventQueue.ts` (excluded from tsconfig/eslint) for reference. `InputManager` direct subscribers are the only input path. Do not import it from `src/` and do not add new flow through it.
+- Outbound (engine -> UI) flow is the typed `EngineBus` (`src/engine/events/EngineBus.ts`) with the `EngineEvents` map (`src/lib/core/EngineEvents.ts`). `CanvasManager` owns one `bus` and passes it to `ShapeManager` and `ToolManager`. `EngineBus.on` returns an unsubscribe function and `emit` iterates a snapshot of the listener set. The bus is the engine tier's seam: it never imports Zustand/React. The only place it meets the stores is `src/bridge/engineStoreBridge.ts` (`connectEngineToStores(bus)`), which `Canvas.tsx` calls and disconnects on cleanup.
 
 ## Scene Graph and Transform Rules
 
@@ -46,8 +47,8 @@
 
 ## Tools
 
-- Base class is `src/lib/tools/Tool.ts`. All tools `container.resolve('sceneManager')` / `('shapeManager')` in the constructor.
-- Default reset: base `Tool.handlePointerUp()` returns to the default select tool via `useToolStore. setDefaultTool()`. Path-drawing tools intentionally do NOT call super on pointer-up (they finish on Enter/Esc/double-click via `setDefaultTool()` themselves).
+- Base class is `src/lib/tools/Tool.ts`. Every tool's constructor is `(cnvs, ctx: ToolContext)`; it reads `ctx.sceneManager` / `ctx.shapeManager` and stores `ctx` as `protected ctx`. Tools must NOT `container.resolve(...)` or import any store. `ToolContext` (`src/lib/tools/ToolContext.ts`) is built once by `ToolManager` and exposes `defaultTool`, `sceneManager`, `shapeManager`, `shapeModifier`, `setTool`, `setCursor`, `requestRender`.
+- Default reset: base `Tool.handlePointerUp()` returns to the default select tool via `ctx.setTool(ctx.defaultTool)`, which emits `tool:changed`. Path-drawing tools intentionally do NOT call super on pointer-up (they finish on Enter/Esc/double-click via `ctx.setTool(...)` themselves).
 - Current tools:
     - `SelectTool`: `getCollidedScene` selection (deep with Ctrl/Cmd+meta), modifier handle drag/resize/rotate, hover cursor updates (see `ResizeCursor`), single-click text cursor placement, double-click text editing, and reparent-on-drop via `repositionShape()`.
     - `ShapeTool`: creates rect/oval/star/polygon/text via `ShapeFactory`, sizes on drag, `handleTinyShapes()` guards < 5px results.
@@ -55,20 +56,20 @@
     - `ImageTool`: opens a file picker on construction, preloads via `createImageBitmap` + `MakeImageFromCanvasImageSource`, then places one image per click until the queue empties. `toolChange()` clears the preloaded cache.
     - `LineTool` / `PenTool` / `BezierTool`: draw `VectorPath`s by incrementally adding points; snap to existing path anchors (`Tool.findSnapPoint`); close by clicking the first point; Exit/Esc/Enter finishes.
     - `EditTool`: anchor/control-point/segment editing on `VectorPath`; double-click toggles smooth/corner or inserts a point; `Delete` removes a point; non-path shapes are flattened via `shape.convertToPathData()` into a `VectorPath` before editing.
-    - `KeyboardTool` (singleton): printable chars/Enter/arrows/Delete/Backspace route to the text-capable selected shape, arrows also nudge the selected shape, and Ctrl+Z / Ctrl+Y drive `HistoryManager`.
+    - `KeyboardTool` (singleton, constructed by `ToolManager` with the `ctx.shapeManager` — no container resolution): printable chars/Enter/arrows/Delete/Backspace route to the text-capable selected shape, arrows also nudge the selected shape, and Ctrl+Z / Ctrl+Y drive `HistoryManager`.
 
 ## Shapes and Property Pipeline
 
 - Shape creation goes through `ShapeFactory.createShape(type, pos, image?)` with `ShapeType` values; a `ShapeData` is registered in `EngineStateStore` (source of truth `shapeDataMap`, keyed by `crypto.randomUUID()` id).
 - Shape-to-Node types: `ShapeNode` (leaf) and `ContainerNode` (group/layout). `type 'line'|'path'|'bezier'` all instantiate `VectorPath`; `'plainRect'` is the group/container backing shape; `SText`/`PText` cover text.
-- Scene attachment and modifier ownership are handled by `ShapeManager.attachNode` / `detachShape` (which updates `useSceneStore.selectedShapeId` and `currentShapeProperties`). `ShapeManager.draw()` renders modifier handles + snap guides onto the canvas.
+- Scene attachment and modifier ownership are handled by `ShapeManager.attachNode` / `detachShape`; they emit `selection:changed` on the bus rather than writing to `useSceneStore` (the bridge performs the store write). `ShapeManager` also emits `properties:changed` (throttled) for property-panel sync, and `ShapeManager.draw()` renders modifier handles + snap guides onto the canvas.
 - Property editing loop:
     - UI edits in `PropertyBar` (transform/size/style/text/layout/arc/star/polygon/border-radius controls) call `shapeManager.updateProperty/updateSubProperty/updateStyle/updateBorderRadius/updateRadiusLock`.
     - `ShapeManager` pushes an `UpdateShapeAction` to `HistoryManager` and notifies `EngineStateStore` on every change; property sync to the store is throttled during drags (`throttle`, ~100ms).
     - `SceneNode.setProperties` delegates to the shape implementation.
 - Any new editable property must be wired through: shape `getProperties`/`setProperties`, `Properties` in `src/lib/types/shapes.ts`, `PropertyBar` controls, and the `ShapeManager` update path above.
 - `ShapeModifier` renders selection handles via each shape's native `drawModifierHandles(canvas, resource)` + `hitTestModifierHandle(...)` (replaces the legacy `Handles` array system), and shows a `SText` dimension label ("W x H") under the selection.
-- Snapping: `SnapManager` singleton computes grid + shape-edge snap (`getSnapResult`, `snapDistance` 8px default) using `useSceneStore.gridSize`; `ShapeManager.drag()` patched the mouse event with snapped coords and `ShapeManager.drawSnapGuides()` renders indicators/guides (cached paint + dash are lazily created and per-`ShapeManager`).
+- Snapping: `SnapManager` singleton computes grid + shape-edge snap (`getSnapResult`, `snapDistance` 8px default). The grid size is no longer read from `useSceneStore`: `Canvas.tsx` pushes it via `CanvasManager.setGridSize` -> `ShapeManager.setGridSize`, and `ShapeManager.drag()` passes it to `getSnapResult` and patches the mouse event with snapped coords. `ShapeManager.drawSnapGuides()` renders indicators/guides (cached paint + dash are lazily created and per-`ShapeManager`).
 
 ## Rendering and Resource Lifecycle
 
@@ -82,7 +83,8 @@
 
 - `useToolStore` (Zustand): active `tool`, `defaultTool` (select), per-group remembered tool via `setTool(tool, groupId)`.
 - `useCanvasManagerStore`: **React Context** (`CanvasManagerProvider` in `App.tsx`, hook `useCanvasManagerStore`) exposing `canvasManager` and its `shapeManager`. Not a Zustand store.
-- `useSceneStore` (Zustand): `selectedShapeId`, `currentShapeProperties` (the mutable `PropertyBar` model), `gridSize` (snap grid). Subscribes to `EngineStateStore` to refresh the selected shape's props.
+- `useSceneStore` (Zustand): `selectedShapeId`, `currentShapeProperties` (the mutable `PropertyBar` model), `gridSize` (snap grid). It is updated from the engine **only** through `src/bridge/engineStoreBridge.ts` (`selection:changed` / `properties:changed`); it also subscribes to `EngineStateStore` to refresh the selected shape's props.
+- `src/bridge/engineStoreBridge.ts`: the single React/Zustand seam over the `EngineBus`. `connectEngineToStores(bus)` maps `tool:changed` (reset to default), `selection:changed`, and `properties:changed` onto the stores and returns a disconnect that unsubscribes all three. Any new engine->UI event must be handled here, not inside the engine.
 - `EngineStateStore` (singleton): `createShapeData` / `getShapeData` / `getAllShapeData` / `subscribe` / `notify`. Bridges engine and React.
 - `HistoryManager` (singleton): `pushAction` / `undo` / `redo` of `Action` objects; `UpdateShapeAction` mutates `EngineStateStore` data and notifies. `CanvasManager.undo/redo` are still stubbed — use `HistoryManager`.
 
@@ -107,7 +109,7 @@
 - `SceneNode.destroy()` / `ContainerNode.destroy()` cascade to children; `ContainerNode.destroy()` deliberately clears children itself. Watch out for double-destroy when removing nodes manually.
 - The preserved dead/reference files are **quarantined** under `to-be-deleted/` (`to-be-deleted/lib/modifiers/{Handles,modifier,modifierUtility}.ts`, `to-be-deleted/lib/core/{toImplement,PathOperator,EventQueue,BooleanAction}.ts`). They are excluded from tsconfig and eslint and are kept as working references whose new homes are not yet verified. Never import them from `src/`; delete the quarantine copy once the replacement is verified. `InputManager` subscribers are the only input path.
 - `index.html` title is still "Vite + React + TS" (cosmetic).
-- **Deferred tests:** matrix compose/invert, world-to-local round trips, and rect intersection are NOT tested yet because that math still lives behind the CanvasKit `Matrix` in `Scene.ts`/`Shape.ts`; add the tests once the math is extracted to the target `src/core` tier (Steps 5-6 of the plan).
+- **Deferred tests:** matrix compose/invert, world-to-local round trips, and rect intersection are NOT tested yet because that math still lives behind the CanvasKit `Matrix` in `Scene.ts`/`Shape.ts`; add the tests once the math is extracted to the target `src/core` tier (Step 6 of the plan).
 - **Running note (deliberately not fixed):** `LayoutEngine` handles numeric `gridTemplateColumns`/`gridTemplateRows` at runtime but `nodeTypes.ts` `GridLayout` types them without `number` (callers cast); `SnapManager.getSnapResult`'s third `gridSize` argument overwrites the value set via `setConfiguration`; `roundingUtil` clamps the star corner radius on odd indices but not even ones (source marks it unfinished); `TextEditor.splitAt` never updates the matching `indexMap` entry's `end`, so middle `insertText`/`deleteRange`/`applyStyle` use stale bounds and `deleteRange` can shrink `getLength()` without removing text (deliberately NOT pinned by tests); `throttle` initializes `lastCall = 0`, dropping the first call near the epoch; `PCache.set` with `limit <= 0` inserts over capacity; `getGradientPreview` sorts `gradient.stops` in place, mutating the caller's fill; `EngineStateStore` has no `clear()`, `removeShapeData` notifies with `undefined`, and `createShapeData` silently overwrites an existing id; `ResizeCursor` keys its cache by the unnormalized angle; `LayoutEngine` grid auto-resize is effectively dead (`requiredWidth`/`requiredHeight` equal the container size, so a grid never grows to fit children), its auto-resize totals add a phantom gap when the first child has no `dim`, and `space-around`/`space-evenly`/`space-between` divide by `children.length` instead of the real-child count; `getBackgroundStyleFromFillValue` returns `{ backgroundColor: null }` for a numeric `solid.color` and treats a `pattern` as an image `scaleMode: 'fill'` (ignoring `repeat`); `isPrintableCharUnicode` accepts a lone surrogate.
 
 ## When Adding Features

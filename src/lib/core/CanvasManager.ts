@@ -7,6 +7,8 @@ import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import { ToolType } from '@lib/tools/toolTypes'
 import PaintManager from './PaintManager'
 import container from './DependencyManager'
+import { EngineBus } from '@/engine/events/EngineBus'
+import type { EngineEvents } from './EngineEvents'
 
 class CanvasManager {
     inputManager: InputManager
@@ -16,6 +18,7 @@ class CanvasManager {
     shapeManager: ShapeManager
     shapeModifier: ShapeModifier | null
     paintManager: PaintManager
+    bus: EngineBus<EngineEvents>
 
     undoStack: never[]
     redoStack: never[]
@@ -23,6 +26,8 @@ class CanvasManager {
     constructor(canvas: HTMLCanvasElement) {
         // Phase 1: Create instances that have no container dependencies
         // Phase 1: Core foundation (no dependencies)
+        this.bus = new EngineBus<EngineEvents>()
+
         this.paintManager = new PaintManager()
         container.register('paintManager', this.paintManager)
 
@@ -30,7 +35,7 @@ class CanvasManager {
         container.register('shapeModifier', this.shapeModifier)
 
         // Phase 2: Managers requiring explicit orchestration injection
-        this.shapeManager = new ShapeManager(this.shapeModifier)
+        this.shapeManager = new ShapeManager(this.shapeModifier, this.bus)
         container.register('shapeManager', this.shapeManager)
 
         this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager)
@@ -42,7 +47,7 @@ class CanvasManager {
         this.renderer = new Renderer(canvas, this.sceneManager, this.paintManager, this.inputManager)
         container.register('renderer', this.renderer)
 
-        this.toolManager = new ToolManager(canvas, this.inputManager)
+        this.toolManager = new ToolManager(canvas, this.inputManager, this.bus)
         container.register('toolManager', this.toolManager)
 
         this.undoStack = []
@@ -51,6 +56,10 @@ class CanvasManager {
 
     setTool(tool: string): void {
         this.toolManager.setCurrentTool(tool as ToolType)
+    }
+
+    setGridSize(size: number): void {
+        this.shapeManager.setGridSize(size)
     }
 
     pushHistory() {
@@ -121,6 +130,8 @@ class CanvasManager {
             this.shapeModifier = null
         }
         container.clear()
+        this.bus.clear()
+        this.bus = null
         if (this.paintManager) {
             this.paintManager.destroy()
             this.paintManager = null

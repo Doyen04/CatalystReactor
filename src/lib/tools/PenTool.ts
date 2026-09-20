@@ -3,7 +3,7 @@ import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import ShapeNode from '@lib/node/ShapeNode'
 import SceneNode from '@lib/node/Scene'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
-import { useToolStore } from '@hooks/useTool'
+import type { ToolContext } from './ToolContext'
 
 type PenState = 'idle' | 'placing' | 'dragging-handle'
 
@@ -15,8 +15,8 @@ class PenTool extends Tool {
     private parentScene: SceneNode | null = null
     private lastSnapShape: VectorPath | null = null
 
-    constructor(cnvs: HTMLCanvasElement) {
-        super(cnvs)
+    constructor(cnvs: HTMLCanvasElement, ctx: ToolContext) {
+        super(cnvs, ctx)
         this.handleKeyDown = this.handleKeyDown.bind(this)
     }
 
@@ -190,8 +190,7 @@ class PenTool extends Tool {
         this.parentScene = null
         this.state = 'idle'
 
-        const { setDefaultTool } = useToolStore.getState()
-        setDefaultTool()
+        this.ctx.setTool(this.ctx.defaultTool)
     }
 
     override toolChange(): void {

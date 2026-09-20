@@ -1,5 +1,4 @@
 
-import { useSceneStore } from '@hooks/sceneStore'
 import type { Canvas, Paint, PathEffect } from 'canvaskit-wasm'
 import { Coord, Properties } from '@lib/types/shapes'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
@@ -12,21 +11,32 @@ import EngineStateStore from './EngineStateStore'
 import SnapManager, { SnapResult } from './SnapManager'
 import CanvasKitResources from './CanvasKitResource'
 import { requestRender } from '@/engine/render/renderRequest'
+import type { EngineBus } from '@/engine/events/EngineBus'
+import type { EngineEvents } from './EngineEvents'
 
 class ShapeManager {
     private scene: SceneNode | null = null
     private shapeModifier: ShapeModifier | null
+    private bus: EngineBus<EngineEvents>
     private throttledUpdate: (properties: Properties) => void
+    private gridSize = 10
     private initialProps: Properties | null = null
     private activeSnapResult: SnapResult | null = null
     private snapGuidePaint: Paint | null = null
     private snapGuideDash: PathEffect | null = null
 
-    constructor(shapeModifier: ShapeModifier) {
+    constructor(shapeModifier: ShapeModifier, bus: EngineBus<EngineEvents>) {
         this.scene = null
         this.shapeModifier = shapeModifier
+        this.bus = bus
         
-        this.throttledUpdate = throttle(useSceneStore.getState().setCurrentShapeProperties as (props: unknown) => void)
+        this.throttledUpdate = throttle((properties: unknown) => {
+            this.bus.emit('properties:changed', { id: this.scene?.shape?.data.id ?? null, properties: properties as Properties })
+        })
+    }
+
+    setGridSize(size: number): void {
+        this.gridSize = size
     }
 
     drawShape(dragStart: Coord, e: MouseEvent) {
@@ -56,7 +66,7 @@ class ShapeManager {
         this.activeSnapResult = SnapManager.getInstance().getSnapResult(
             this.scene,
             { x: mouseX, y: mouseY },
-            useSceneStore.getState().gridSize
+            this.gridSize
         )
 
         if (this.activeSnapResult && this.activeSnapResult.snapped) {
@@ -157,7 +167,7 @@ class ShapeManager {
         this.shapeModifier?.attachShape(scene)
         
         if (this.scene && this.scene.shape) {
-            useSceneStore.getState().setSelectedShapeId(this.scene.shape.data.id)
+            this.bus.emit('selection:changed', { id: this.scene.shape.data.id })
         }
 
         const props = this.scene.getProperties()
@@ -171,8 +181,7 @@ class ShapeManager {
         this.scene?.cleanUp()
         this.scene = null
         this.shapeModifier?.detachShape()
-        useSceneStore.getState().setSelectedShapeId(null)
-        useSceneStore.getState().clearProperties()
+        this.bus.emit('selection:changed', { id: null })
         requestRender()
     }
 

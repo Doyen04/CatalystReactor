@@ -6,6 +6,7 @@ import ShapeNode from '@lib/node/ShapeNode'
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 import { FilePicker } from '@/util/fileOpener'
 import { loadImage } from '@/util/loadFile'
+import type { ToolContext } from './ToolContext'
 
 class ImageTool extends Tool {
     private isLoading: boolean = false
@@ -13,8 +14,8 @@ class ImageTool extends Tool {
     private preloadedImages: Map<string, CanvasKitImage> = new Map()
     private consumedImageNames: Set<string> = new Set()
 
-    constructor(cnvs: HTMLCanvasElement) {
-        super(cnvs)
+    constructor(cnvs: HTMLCanvasElement, ctx: ToolContext) {
+        super(cnvs, ctx)
         console.log('image tool')
         this.imageData = null
         this.isLoading = true

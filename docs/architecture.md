@@ -763,6 +763,17 @@ The ordering principle here is different from the plan you were given. Each step
 
 No step depends on a later step. You can stop after any of them and be in a better place than you started. That property is what prevents a half-finished refactor from becoming a worse codebase.
 
+**Status on `refactor/engine-architecture`:** Steps 1-5 are landed. Step 1 (leak fixes) introduced `src/engine/render/{PaintCache,TextCache,ResourceScope,ResourceCounter}`; Step 2 quarantined the dead files into `to-be-deleted/`; Step 3 added Vitest (`npm run test`); Step 4 added `FrameScheduler` + `requestRender` and removed the continuous loop; Step 5 removed Zustand from the engine tier.
+
+Step 5 specifically added:
+
+- `src/engine/events/EngineBus.ts` - a typed emitter, the engine's outbound seam.
+- `src/lib/core/EngineEvents.ts` - the `tool:changed` / `selection:changed` / `properties:changed` event map.
+- `src/lib/tools/ToolContext.ts` - the constructor dependency tools receive (`sceneManager`, `shapeManager`, `defaultTool`, `setTool`, `setCursor`, `requestRender`).
+- `src/bridge/engineStoreBridge.ts` - `connectEngineToStores(bus)`, the only place the bus meets Zustand. `Canvas.tsx` calls it and pushes `gridSize` into `CanvasManager.setGridSize`.
+
+`ToolManager` now builds the `ToolContext` and owns `setTool` (which emits `tool:changed`); `Tool` and its subclasses no longer resolve from `DependencyManager` or import stores. `ShapeManager` takes `gridSize` via `setGridSize` and emits `properties:changed` / `selection:changed` instead of writing to `useSceneStore`. Acceptance check: `useToolStore`/`useSceneStore`/`zustand` appear nowhere under `src/lib` or `src/engine`. Next up: Step 6.
+
 ---
 
 ### Step 0: baseline

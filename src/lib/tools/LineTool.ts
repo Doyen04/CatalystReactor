@@ -3,7 +3,7 @@ import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import ShapeNode from '@lib/node/ShapeNode'
 import SceneNode from '@lib/node/Scene'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
-import { useToolStore } from '@hooks/useTool'
+import type { ToolContext } from './ToolContext'
 
 type LineState = 'idle' | 'drawing'
 
@@ -13,8 +13,8 @@ class LineTool extends Tool {
     private state: LineState = 'idle'
     private lastClickTime: number = 0
 
-    constructor(cnvs: HTMLCanvasElement) {
-        super(cnvs)
+    constructor(cnvs: HTMLCanvasElement, ctx: ToolContext) {
+        super(cnvs, ctx)
         this.handleKeyDown = this.handleKeyDown.bind(this)
     }
 
@@ -133,8 +133,7 @@ class LineTool extends Tool {
         this.activeNode = null
         this.state = 'idle'
         
-        const { setDefaultTool } = useToolStore.getState()
-        setDefaultTool()
+        this.ctx.setTool(this.ctx.defaultTool)
     }
 
     override toolChange(): void {

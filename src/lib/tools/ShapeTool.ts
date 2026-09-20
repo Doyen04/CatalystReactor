@@ -3,11 +3,12 @@ import Tool from './Tool'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import ShapeNode from '@lib/node/ShapeNode'
 import SceneNode from '@lib/node/Scene'
+import type { ToolContext } from './ToolContext'
 
 class ShapeTool extends Tool {
     shapeType: ShapeType
-    constructor(shape: ShapeType, cnvs: HTMLCanvasElement) {
-        super(cnvs)
+    constructor(shape: ShapeType, cnvs: HTMLCanvasElement, ctx: ToolContext) {
+        super(cnvs, ctx)
         this.shapeType = shape
     }
 

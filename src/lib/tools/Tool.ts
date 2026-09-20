@@ -1,24 +1,25 @@
-import { useToolStore } from '@hooks/useTool'
 import CanvasKitResources from '@lib/core/CanvasKitResource'
-import container from '@lib/core/DependencyManager'
-import SceneManager from '@lib/core/SceneManager'
-import ShapeManager from '@lib/core/ShapeManager'
+import type SceneManager from '@lib/core/SceneManager'
+import type ShapeManager from '@lib/core/ShapeManager'
 import { Coord } from '@lib/types/shapes'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
 import ShapeNode from '@lib/node/ShapeNode'
 import SceneNode from '@lib/node/Scene'
+import type { ToolContext } from './ToolContext'
 
 abstract class Tool {
     sceneManager: SceneManager | null = null
     shapeManager: ShapeManager | null = null
     cnvsElm: HTMLCanvasElement
+    protected ctx: ToolContext
     protected isPointerDown: boolean
     protected isDragging: boolean
     protected dragStart: Coord
 
-    constructor(cnvs: HTMLCanvasElement) {
-        this.sceneManager = container.resolve('sceneManager')
-        this.shapeManager = container.resolve('shapeManager')
+    constructor(cnvs: HTMLCanvasElement, ctx: ToolContext) {
+        this.ctx = ctx
+        this.sceneManager = ctx.sceneManager
+        this.shapeManager = ctx.shapeManager
         this.cnvsElm = cnvs
         this.isPointerDown = false
         this.isDragging = false
@@ -37,8 +38,7 @@ abstract class Tool {
     }
 
     handlePointerUp(_e: MouseEvent) {
-        const { setDefaultTool } = useToolStore.getState()
-        setDefaultTool()
+        this.ctx.setTool(this.ctx.defaultTool)
         this.isPointerDown = false
         this.dragStart = null
         this.isDragging = false

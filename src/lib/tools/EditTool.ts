@@ -2,9 +2,9 @@ import Tool from './Tool'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
 import SceneNode from '@lib/node/Scene'
 import ShapeNode from '@lib/node/ShapeNode'
-import container from '@lib/core/DependencyManager'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
+import type { ToolContext } from './ToolContext'
 
 type EditState = 'idle' | 'dragging-anchor' | 'dragging-control'
 type DragTarget = {
@@ -31,9 +31,9 @@ class EditTool extends Tool {
     private lastLocalPos: { x: number; y: number } | null = null
     private lastWorldPos: { x: number; y: number } | null = null
 
-    constructor(cnvs: HTMLCanvasElement) {
-        super(cnvs)
-        this.shapeModifier = container.resolve('shapeModifier')
+    constructor(cnvs: HTMLCanvasElement, ctx: ToolContext) {
+        super(cnvs, ctx)
+        this.shapeModifier = ctx.shapeModifier
     }
 
     private getActiveVectorPath(): VectorPath | null {
