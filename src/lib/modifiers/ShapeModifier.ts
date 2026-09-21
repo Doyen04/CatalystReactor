@@ -73,9 +73,16 @@ class ShapeModifier {
     storeShapeInitialShapeData() {
         if (!this.scene) return
 
-        const Matrix = this.resource.canvasKit.Matrix
         const dimension = this.scene.getDim()
         const position = this.scene.getCoord()
+        const worldMat = this.scene.getWorldMatrix()
+        const localMat = this.scene.getLocalMatrix()
+
+        if (!dimension || !position || !worldMat || !localMat) return
+
+        const Matrix = this.resource.canvasKit.Matrix
+        const inverseWorldTransform = Matrix.invert(worldMat)
+        if (!inverseWorldTransform) return
 
         const scale = this.scene.getScale()
         const rotation = this.scene.getRotationAngle()
@@ -83,19 +90,17 @@ class ShapeModifier {
         const arcAngle = this.scene.getArcAngles()
 
         if (this.initialShapeData === null) {
-            const initialShapeData = {
+            this.initialShapeData = {
                 position,
                 dimension,
                 scale,
                 rotation,
                 rotationAnchor,
-                localTransform: [...this.scene.getLocalMatrix()],
-                worldTransform: [...this.scene.getWorldMatrix()],
-                inverseWorldTransform: Matrix.invert([...this.scene.getWorldMatrix()]),
+                localTransform: [...localMat],
+                worldTransform: [...worldMat],
+                inverseWorldTransform: [...inverseWorldTransform],
                 arcAngle,
             }
-
-            this.initialShapeData = initialShapeData
         }
     }
 
@@ -106,7 +111,7 @@ class ShapeModifier {
     }
 
     selectModifier(x: number, y: number) {
-        if (!this.scene) return null
+        if (!this.scene || !this.scene.shape) return null
 
         const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
         const hitID = this.scene.shape.hitTestModifierHandle(tx, ty)
@@ -116,14 +121,13 @@ class ShapeModifier {
     }
 
     handleModifierDrag(dragStart: Coord, e: MouseEvent) {
-        if (!this.selectedModifierHandle || !this.scene) return
+        if (!this.selectedModifierHandle || !this.scene || !this.scene.shape || !this.initialShapeData) return
 
         if (this.selectedModifierHandle.startsWith('size-')) {
             this.updateShapeDim(this.selectedModifierHandle, dragStart, e)
         } else if (this.selectedModifierHandle === 'angle') {
             this.updateShapeAngle(e)
         } else {
-            if (!this.initialShapeData || !this.initialShapeData.inverseWorldTransform || !this.resource) return
             // Transform pointer to local space before delegating
             const localCurrent = transformPoint(this.initialShapeData.inverseWorldTransform, e.offsetX, e.offsetY, this.resource)
             const localDragStart = transformPoint(this.initialShapeData.inverseWorldTransform, dragStart.x, dragStart.y, this.resource)
@@ -222,7 +226,7 @@ class ShapeModifier {
     }
 
     handleModifierDown(dragStart: Coord, e: MouseEvent) {
-        if (!this.scene || !this.selectedModifierHandle || !this.resource || !this.initialShapeData || !this.initialShapeData.dimension || !this.initialShapeData.rotationAnchor) return
+        if (!this.scene || !this.selectedModifierHandle || !this.initialShapeData) return
 
         if (this.selectedModifierHandle === 'angle') {
             const Matrix = this.resource.canvasKit.Matrix
@@ -345,7 +349,9 @@ class ShapeModifier {
         canvas.concat(worldMat)
 
         // Delegate native rendering!
-        this.scene.shape.drawModifierHandles(canvas, this.resource)
+        if (this.scene.shape) {
+            this.scene.shape.drawModifierHandles(canvas, this.resource)
+        }
 
         canvas.restore()
 

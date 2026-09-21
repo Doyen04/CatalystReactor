@@ -221,6 +221,8 @@ class ContainerNode extends SceneNode {
         if (gap <= 0) return
 
         const containerBounds = this.shape?.getDim()
+        if (!containerBounds) return
+
         const paddingLeft = padding?.left || 0
         const paddingRight = padding?.right || 0
         const paddingTop = padding?.top || 0
@@ -236,7 +238,9 @@ class ContainerNode extends SceneNode {
             const currentPos = currentChild.getCoord()
             const nextPos = nextChild.getCoord()
 
-            let gapRect: Rect
+            if (!currentBounds || !currentPos || !nextPos) continue
+
+            let gapRect: Rect | undefined
 
             if (type === 'row') {
                 // Horizontal gap between children - spans full height of container content area

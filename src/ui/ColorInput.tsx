@@ -87,7 +87,7 @@ const ColorInput = forwardRef<HTMLDivElement, ColorInputProps>(({ showTab = true
              hover:border-gray-500 
              transition-colors ${className}`)}
             >
-                <p onClick={() => setIsOpen(!isOpen)} className="font-semibold text-gray-700 h-4 w-4 rounded-xs" style={{ ...backgroundStyle }}></p>
+                <p onClick={() => setIsOpen(!isOpen)} className="font-semibold text-gray-700 h-4 w-4 rounded-xs" style={backgroundStyle as React.CSSProperties}></p>
                 <div
                     ref={ref}
                     className="px-1 py-1 h-full bg-transparent text-[#e0e0e0] text-xs text-left font-mono border-r-1 border-r-gray-300 focus:outline-none"
