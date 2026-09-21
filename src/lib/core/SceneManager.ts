@@ -20,10 +20,11 @@ class SceneManager {
     private store: EngineStateStore
     private nodeById = new Map<EntityId, SceneNode>()
     private unsubscribe: (() => void) | null = null
+    private destroyed = false
 
     constructor(shapeModifier: ShapeModifier, shapeManager: ShapeManager, doc: DocumentModel, paintManager: PaintManager, store: EngineStateStore) {
         this.doc = doc
-        this.scene = new ContainerNode(null as any, null as any, paintManager)
+        this.scene = new ContainerNode(null, { type: 'none' }, paintManager)
         this.shapeModifier = shapeModifier
         this.shapeManager = shapeManager
         this.paintManager = paintManager
@@ -187,18 +188,17 @@ class SceneManager {
     }
 
     draw(skCnvs: Canvas) {
-        if (!this.scene) return
         this.scene.updateWorldMatrix()
         this.scene.draw(skCnvs)
         this.shapeManager.draw(skCnvs)
     }
 
     destroy() {
+        if (this.destroyed) return
+        this.destroyed = true
         this.unsubscribe?.()
         this.unsubscribe = null
-        if (this.scene) {
-            this.scene.destroy()
-        }
+        this.scene.destroy()
         this.nodeById.clear()
     }
 }

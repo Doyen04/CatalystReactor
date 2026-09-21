@@ -10,6 +10,7 @@ export interface InputCallbacks {
 
 class InputManager {
     private canvasEl: HTMLCanvasElement
+    private destroyed = false
 
     // Direct subscribers — the only input path, 1:1 routing
     private subscribers: Set<InputCallbacks> = new Set()
@@ -80,6 +81,8 @@ class InputManager {
     }
 
     destroy() {
+        if (this.destroyed) return
+        this.destroyed = true
         this.removeEventListeners()
         this.subscribers.clear()
     }

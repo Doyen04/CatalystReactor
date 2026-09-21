@@ -36,7 +36,7 @@ class EditTool extends Tool {
     }
 
     private getActiveVectorPath(): VectorPath | null {
-        const scene = this.shapeManager.currentScene
+        const scene = this.ctx.shapeManager.currentScene
         if (!scene) return null
         if (scene instanceof ShapeNode && scene.shape instanceof VectorPath) {
             return scene.shape
@@ -124,32 +124,32 @@ class EditTool extends Tool {
             this.exitEditMode()
 
             // Try selecting another shape
-            const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
+            const scene = this.ctx.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
             if (scene) {
-                this.shapeManager.attachNode(scene)
+                this.ctx.shapeManager.attachNode(scene)
                 this.tryEnterEditMode()
             }
             return
         }
 
         // Not in edit mode â€” try to select and enter edit mode
-        const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
+        const scene = this.ctx.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
 
         if (scene) {
-            const currentSelection = this.shapeManager.currentScene
+            const currentSelection = this.ctx.shapeManager.currentScene
             if (scene !== currentSelection) {
-                this.shapeManager.detachShape()
-                this.shapeManager.attachNode(scene)
+                this.ctx.shapeManager.detachShape()
+                this.ctx.shapeManager.attachNode(scene)
             }
             this.tryEnterEditMode()
         } else {
-            this.shapeManager.detachShape()
+            this.ctx.shapeManager.detachShape()
             this.exitEditMode()
         }
     }
 
     override handlePointerMove(e: MouseEvent): void {
-        if (!this.isPointerDown || !this.editingShape || !this.dragTarget) {
+        if (!this.isPointerDown || !this.editingShape || !this.dragTarget || !this.editingNode || !this.lastWorldPos) {
             // Hover cursor
             if (this.editingShape) {
                 this.cnvsElm.style.cursor = 'crosshair'
@@ -195,7 +195,7 @@ class EditTool extends Tool {
 
     override handlePointerUp(_e: MouseEvent): void {
         if (this.isDragging && this.editingShape) {
-            this.shapeManager.finishDrag()
+            this.ctx.shapeManager.finishDrag()
         }
 
         this.state = 'idle'
@@ -211,7 +211,7 @@ class EditTool extends Tool {
         const vp = this.getActiveVectorPath()
         if (vp) {
             this.editingShape = vp
-            this.editingNode = this.shapeManager.currentScene
+            this.editingNode = this.ctx.shapeManager.currentScene
             this.cnvsElm.style.cursor = 'crosshair'
             this.shapeModifier?.setEditMode(true)
         } else {
@@ -221,11 +221,11 @@ class EditTool extends Tool {
     }
 
     private flattenShapeToVectorPath(): void {
-        const currentScene = this.shapeManager?.currentScene
+        const currentScene = this.ctx.shapeManager.currentScene
         if (!currentScene || !(currentScene instanceof ShapeNode)) return
 
         const shape = currentScene.shape
-        if (shape instanceof VectorPath) return // Already a vector path
+        if (!shape || shape instanceof VectorPath) return // Already a vector path
         
         // Ensure it has a conversion method
         if (!('convertToPathData' in shape) || typeof shape.convertToPathData !== 'function') return
@@ -235,8 +235,10 @@ class EditTool extends Tool {
 
         // Generate new VectorPath replacement
         const pos = currentScene.getCoord()
-        const newNode = this.sceneManager.addShapeToScene('path', { x: pos.x, y: pos.y }) as ShapeNode
+        if (!pos) return
+        const newNode = this.ctx.sceneManager.addShapeToScene('path', { x: pos.x, y: pos.y }) as ShapeNode
         const newShape = newNode.shape
+        if (!newShape) return
 
         // Map the properties exactly over
         const oldProps = shape.getProperties()
@@ -254,12 +256,12 @@ class EditTool extends Tool {
             const oldParentId = parent.id
             const oldIndex = parent.getChildren().indexOf(currentScene)
 
-            this.sceneManager.insertNode(newNode, oldParentId, oldIndex)
-            this.sceneManager.removeNode(currentScene.id)
+            this.ctx.sceneManager.insertNode(newNode, oldParentId, oldIndex)
+            this.ctx.sceneManager.removeNode(currentScene.id)
 
             // Attach tool to new node
-            this.shapeManager.detachShape()
-            this.shapeManager.attachNode(newNode)
+            this.ctx.shapeManager.detachShape()
+            this.ctx.shapeManager.attachNode(newNode)
 
             this.editingShape = newShape as VectorPath
             this.editingNode = newNode

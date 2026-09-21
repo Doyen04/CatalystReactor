@@ -31,6 +31,7 @@ class ToolManager {
     private currentToolType: ToolType | null = null
 
     private inputCallbacks?: InputCallbacks
+    private destroyed = false
 
     constructor(
         cnvs: HTMLCanvasElement,
@@ -162,6 +163,8 @@ class ToolManager {
     }
 
     destroy() {
+        if (this.destroyed) return
+        this.destroyed = true
         this.removeEvent()
     }
 }

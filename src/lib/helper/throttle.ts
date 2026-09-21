@@ -1,6 +1,6 @@
 function throttle<T extends (...args: unknown[]) => void>(fn: T, limit = 100) {
     let lastCall = 0
-    return function (this: any, ...args: Parameters<T>) {
+    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
         const now = Date.now()
         if (now - lastCall >= limit) {
             lastCall = now

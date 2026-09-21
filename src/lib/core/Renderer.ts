@@ -14,7 +14,7 @@ class Renderer {
     inputManager: InputManager
 
     dpr: number = window.devicePixelRatio || 1
-    skCnvs!: Canvas
+    skCnvs?: Canvas
 
     private paintManager: PaintManager
     private scheduler: FrameScheduler
@@ -137,9 +137,8 @@ class Renderer {
                 console.log('gl v1 surface created successfully as fallback')
             } catch (fallbackError) {
                 console.error('Both WebGL and CPU surface creation failed:', fallbackError)
-                const err = error as Error
-                const fErr = fallbackError as Error
-                throw new Error(`Could not create CanvasKit surface: WebGL failed (${err.message}), CPU fallback failed (${fErr.message})`)
+                const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e))
+                throw new Error(`Could not create CanvasKit surface: WebGL failed (${errMsg(error)}), CPU fallback failed (${errMsg(fallbackError)})`)
             }
         }
     }
@@ -162,12 +161,12 @@ class Renderer {
         }
 
         skCnvs.clear(this.resource.canvasKit.TRANSPARENT)
-        skCnvs!.save()
+        skCnvs.save()
         skCnvs.scale(this.dpr, this.dpr)
 
         const rect = this.resource.canvasKit.LTRBRect(10, 10, 250, 100)
         const size = { width: 240, height: 90 }
-        skCnvs!.drawRect(
+        skCnvs.drawRect(
             rect,
             this.paintManager.getPaint({
                 color: { type: 'solid', color: [60, 0, 0, 0.3] },
@@ -175,7 +174,7 @@ class Renderer {
                 size,
             })
         )
-        skCnvs!.drawRect(
+        skCnvs.drawRect(
             rect,
             this.paintManager.getPaint({
                 color: { type: 'solid', color: [0, 255, 0, 1] },
@@ -188,7 +187,7 @@ class Renderer {
 
         this.sceneManager.draw(skCnvs)
 
-        skCnvs!.restore()
+        skCnvs.restore()
         this.surf.flush()
     }
 

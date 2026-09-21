@@ -157,8 +157,8 @@ describe('getBackgroundStyleFromFillValue', () => {
         expect(getBackgroundStyleFromFillValue({ type: 'solid', color: '#abcdef' })).toEqual({ backgroundColor: '#abcdef' })
     })
 
-    it('maps a solid numeric color to backgroundColor: null (documented source bug)', () => {
-        expect(getBackgroundStyleFromFillValue({ type: 'solid', color: [1, 0, 0] })).toEqual({ backgroundColor: null })
+    it('maps a solid numeric color to no backgroundColor (undefined, not null)', () => {
+        expect(getBackgroundStyleFromFillValue({ type: 'solid', color: [1, 0, 0] })).toEqual({ backgroundColor: undefined })
     })
 
     it('falls back to #808080 for image/pattern without a url', () => {

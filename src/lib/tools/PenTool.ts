@@ -26,13 +26,13 @@ class PenTool extends Tool {
 
         if (this.state === 'idle') {
             // Start a new path
-            let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
-            if (!scene) scene = this.sceneManager.getRootContainer()
+            let scene = this.ctx.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+            if (!scene) scene = this.ctx.sceneManager.getRootContainer()
             this.parentScene = scene
 
             const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-            const shapeNode = this.sceneManager.addShapeToScene('path', { x: 0, y: 0 }) as ShapeNode
+            const shapeNode = this.ctx.sceneManager.addShapeToScene('path', { x: 0, y: 0 }) as ShapeNode
             const shape = shapeNode.shape
             if (shape && shape instanceof VectorPath) {
                 this.activeShape = shape
@@ -43,8 +43,8 @@ class PenTool extends Tool {
                 
                 shape.addPoint({ x: 0, y: 0 })
 
-                this.shapeManager.attachNode(shapeNode)
-                this.shapeManager.setSuppressHandles(true)
+                this.ctx.shapeManager.attachNode(shapeNode)
+                this.ctx.shapeManager.setSuppressHandles(true)
                 this.activeNode = shapeNode
 
                 this.state = 'placing'
@@ -172,15 +172,15 @@ class PenTool extends Tool {
 
     private finishPath(): void {
         if (this.activeShape) {
-            this.shapeManager.setSuppressHandles(false)
+            this.ctx.shapeManager.setSuppressHandles(false)
             // If only one point, remove the path
             if (this.activeShape.points.length < 2) {
                 if (this.activeNode) {
                     this.activeNode.destroy()
                 }
-                this.shapeManager.detachShape()
+                this.ctx.shapeManager.detachShape()
             } else {
-                this.shapeManager.finishDrag()
+                this.ctx.shapeManager.finishDrag()
             }
         }
         this.activeShape = null
@@ -196,7 +196,7 @@ class PenTool extends Tool {
         if (this.activeShape && this.state !== 'idle') {
             this.activeShape.previewPoint = null
             if (this.activeShape.points.length >= 2) {
-                this.shapeManager.finishDrag()
+                this.ctx.shapeManager.finishDrag()
             }
         }
         if (this.lastSnapShape) {

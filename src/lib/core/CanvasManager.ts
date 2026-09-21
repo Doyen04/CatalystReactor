@@ -33,6 +33,7 @@ class CanvasManager {
     paintManager: PaintManager
     commandManager: CommandManager
     bus: EngineBus<EngineEvents>
+    private destroyed = false
 
     constructor(canvas: HTMLCanvasElement, deps: CanvasDeps) {
         // Phase 1: Core foundation (no dependencies)
@@ -109,30 +110,18 @@ class CanvasManager {
         // return skMatrix;
     }
     destroy() {
+        if (this.destroyed) return
+        this.destroyed = true
         console.log('removing all event and doing clean up')
 
-        if (this.inputManager) {
-            this.inputManager.destroy()
-        }
-        if (this.renderer) {
-            this.renderer.destroy()
-        }
-        if (this.sceneManager) {
-            this.sceneManager.destroy()
-        }
-        if (this.toolManager) {
-            this.toolManager.destroy()
-        }
-        if (this.shapeManager) {
-            this.shapeManager.destroy()
-        }
-        if (this.shapeModifier) {
-            this.shapeModifier.destroy()
-        }
+        this.inputManager.destroy()
+        this.renderer.destroy()
+        this.sceneManager.destroy()
+        this.toolManager.destroy()
+        this.shapeManager.destroy()
+        this.shapeModifier.destroy()
         this.bus.clear()
-        if (this.paintManager) {
-            this.paintManager.destroy()
-        }
+        this.paintManager.destroy()
     }
 
     render() { }

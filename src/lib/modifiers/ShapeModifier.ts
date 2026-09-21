@@ -77,17 +77,16 @@ class ShapeModifier {
         const position = this.scene.getCoord()
         const worldMat = this.scene.getWorldMatrix()
         const localMat = this.scene.getLocalMatrix()
+        const scale = this.scene.getScale()
+        const rotation = this.scene.getRotationAngle()
+        const rotationAnchor = this.scene.getRotationAnchorPoint()
+        const arcAngle = this.scene.getArcAngles() ?? undefined
 
-        if (!dimension || !position || !worldMat || !localMat) return
+        if (!dimension || !position || !worldMat || !localMat || !scale || !rotation || !rotationAnchor) return
 
         const Matrix = this.resource.canvasKit.Matrix
         const inverseWorldTransform = Matrix.invert(worldMat)
         if (!inverseWorldTransform) return
-
-        const scale = this.scene.getScale()
-        const rotation = this.scene.getRotationAngle()
-        const rotationAnchor = this.scene.getRotationAnchorPoint()
-        const arcAngle = this.scene.getArcAngles()
 
         if (this.initialShapeData === null) {
             this.initialShapeData = {

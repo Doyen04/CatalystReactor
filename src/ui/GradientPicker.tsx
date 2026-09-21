@@ -25,7 +25,8 @@ const GradientPicker: React.FC<GradientPickerProps> = ({ value, onGradientChange
     }
 
     const handleTypeChange = (newTypeStr: string) => {
-        const newType = newTypeStr as Gradient
+        if (newTypeStr !== 'linear' && newTypeStr !== 'radial') return
+        const newType = newTypeStr
         if (newType === gradient.type) return
 
         // Preserve existing color stops when switching types

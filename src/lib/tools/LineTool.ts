@@ -30,12 +30,12 @@ class LineTool extends Tool {
         this.lastClickTime = now
 
         if (this.state === 'idle') {
-            let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
-            if (!scene) scene = this.sceneManager.getRootContainer()
+            let scene = this.ctx.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+            if (!scene) scene = this.ctx.sceneManager.getRootContainer()
 
             const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-            const shapeNode = this.sceneManager.addShapeToScene('line', { x: 0, y: 0 }) as ShapeNode
+            const shapeNode = this.ctx.sceneManager.addShapeToScene('line', { x: 0, y: 0 }) as ShapeNode
             const shape = shapeNode.shape
 
             if (shape && shape instanceof VectorPath) {
@@ -48,8 +48,8 @@ class LineTool extends Tool {
                 // Add the FIRST point at origin
                 shape.addPoint({ x: 0, y: 0 })
                 
-                this.shapeManager.attachNode(shapeNode)
-                this.shapeManager.setSuppressHandles(true)
+                this.ctx.shapeManager.attachNode(shapeNode)
+                this.ctx.shapeManager.setSuppressHandles(true)
                 this.activeNode = shapeNode
                 this.state = 'drawing'
             }
@@ -117,14 +117,14 @@ class LineTool extends Tool {
 
     private finishLine() {
         if (this.activeShape) {
-            this.shapeManager.setSuppressHandles(false)
+            this.ctx.shapeManager.setSuppressHandles(false)
             this.activeShape.previewPoint = null
             // If only one point, destroy it
             if (this.activeShape.points.length < 2) {
                 if (this.activeNode) this.activeNode.destroy()
-                this.shapeManager.detachShape()
+                this.ctx.shapeManager.detachShape()
             } else {
-                this.shapeManager.finishDrag()
+                this.ctx.shapeManager.finishDrag()
             }
         }
         this.activeShape = null
