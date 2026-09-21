@@ -1,11 +1,11 @@
 import { getGradientPreview } from '@/util/getBackgroundFill'
-import { GradientStop, PRESET_LINEAR_GRADIENTS, PRESET_RADIAL_GRADIENTS } from '@lib/types/shapes'
+import { GradientStop, PresetLinearGradient, PresetRadialGradient } from '@lib/types/shapes'
 import { Key } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 interface PresetGradientProps {
     className?: string
-    gradients: typeof PRESET_RADIAL_GRADIENTS | typeof PRESET_LINEAR_GRADIENTS
+    gradients: PresetLinearGradient[] | PresetRadialGradient[]
     applyPreset: (presetStops: GradientStop[]) => void
 }
 

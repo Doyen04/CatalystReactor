@@ -1,7 +1,15 @@
 import type { TextFontVariations } from 'canvaskit-wasm'
 import { ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, ArrowUpLeft, ArrowUpRight, Circle } from 'lucide-react'
 
-export const PRESET_LINEAR_GRADIENTS = [
+export interface PresetLinearGradient extends LinearGradient {
+    name: string
+}
+
+export interface PresetRadialGradient extends RadialGradient {
+    name: string
+}
+
+export const PRESET_LINEAR_GRADIENTS: PresetLinearGradient[] = [
     {
         name: 'Sunset',
         type: 'linear',
@@ -102,7 +110,7 @@ export const LINEAR_PRESET_DIRECTIONS = [
     },
 ]
 
-export const PRESET_RADIAL_GRADIENTS = [
+export const PRESET_RADIAL_GRADIENTS: PresetRadialGradient[] = [
     {
         name: 'Sunset',
         type: 'radial',

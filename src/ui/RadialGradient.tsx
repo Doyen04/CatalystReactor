@@ -47,7 +47,8 @@ const RadialGradientPicker: React.FC<RadialGradientPickerProps> = ({ value, onGr
         updateGradient({ ...gradient, stops: [...gradient.stops, newStop] })
     }
 
-    const applyPosition = (preset: (typeof RADIAL_PRESET_DIRECTIONS)[0]) => {
+    const applyPosition = (preset: (typeof RADIAL_PRESET_DIRECTIONS)[number]) => {
+        if (!preset) return
         updateGradient({ ...gradient, cx: preset.cx, cy: preset.cy })
     }
 

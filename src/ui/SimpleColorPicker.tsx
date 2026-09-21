@@ -38,7 +38,10 @@ const SimpleColorInput = forwardRef<HTMLDivElement, SimpleColorInputProps>(({ on
                             opacity={1}
                             isOpen={isOpen}
                             onColorChange={color => {
-                                onChange(colorValue(color.color))
+                                const val = colorValue(color.color)
+                                if (val !== null) {
+                                    onChange(val)
+                                }
                             }}
                         />
                     </div>

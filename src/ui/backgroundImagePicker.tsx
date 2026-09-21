@@ -31,7 +31,7 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, im
         }
     }, [value.scaleMode, value.imageData])
 
-    const handleFileSelect = async (files: FileList) => {
+    const handleFileSelect = async (files: FileList | null) => {
         if (files && files.length > 0) {
             try {
                 if (imageUrl) URL.revokeObjectURL(imageUrl)
@@ -58,7 +58,8 @@ const BackgroundImagePicker: React.FC<BackgroundImagePickerProps> = ({ value, im
         }
     }
 
-    const handleScaleModeChange = (newScaleMode: ScaleMode) => {
+    const handleScaleModeChange = (value: string) => {
+        const newScaleMode = value as ScaleMode
         setScaleMode(newScaleMode)
         if (currentImageData) {
             const imageFill: ImageFill = {

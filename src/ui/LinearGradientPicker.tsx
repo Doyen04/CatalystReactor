@@ -46,7 +46,8 @@ const LinearGradientPicker: React.FC<LinearGradientPickerProps> = ({ value, onGr
         updateGradient({ ...gradient, stops: newStops })
     }
 
-    const applyDirection = (direction: (typeof LINEAR_PRESET_DIRECTIONS)[0]) => {
+    const applyDirection = (direction: (typeof LINEAR_PRESET_DIRECTIONS)[number]) => {
+        if (!direction) return
         updateGradient({
             ...gradient,
             x1: direction.x1,
