@@ -4,7 +4,7 @@ import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, Path, TextS
 import { Coord, PaintStyle, PTextStyle } from '@lib/types/shapes'
 import { ShapeData } from '@lib/core/EngineStateStore'
 import type PaintManager from '@lib/core/PaintManager'
-import { textCache } from '@/engine/render/TextCache'
+import { textCache } from '@/lib/engine/render/TextCache'
 
 class PText extends Shape {
     private TWidth: number = 0
@@ -156,12 +156,12 @@ class PText extends Shape {
         const fill = this.paintManager.getPaint({ color: textStyle.textFill.color, opacity: textStyle.textFill.opacity, size: dim })
         const stroke = textStyle.textStroke
             ? this.paintManager.getPaint({
-                  color: textStyle.textStroke.color,
-                  opacity: textStyle.textStroke.opacity,
-                  size: dim,
-                  stroke: true,
-                  strokeWidth: textStyle.textStroke.width,
-              })
+                color: textStyle.textStroke.color,
+                opacity: textStyle.textStroke.opacity,
+                size: dim,
+                stroke: true,
+                strokeWidth: textStyle.textStroke.width,
+            })
             : fill
         const backgroundPaint = this.paintManager.getPaint({ color: background, opacity: 1, size: dim })
 

@@ -1,10 +1,10 @@
-import { DocumentModel } from '@/engine/document/DocumentModel'
-import type { CommandContext } from '@/engine/commands/CommandContext'
-import type { Command } from '@/engine/commands/Command'
-import type { EntityId } from '@/engine/document/entity'
-import { invert, type JournalEntry } from '@/engine/document/journal'
-import { requestRender } from '@/engine/render/renderRequest'
-import type { EngineBus } from '@/engine/events/EngineBus'
+import { DocumentModel } from '@/lib/engine/document/DocumentModel'
+import type { CommandContext } from '@/lib/engine/commands/CommandContext'
+import type { Command } from '@/lib/engine/commands/Command'
+import type { EntityId } from '@/lib/engine/document/entity'
+import { invert, type JournalEntry } from '@/lib/engine/document/journal'
+import { requestRender } from '@/lib/engine/render/renderRequest'
+import type { EngineBus } from '@/lib/engine/events/EngineBus'
 import type { EngineEvents } from '@lib/core/EngineEvents'
 
 export interface Transaction {

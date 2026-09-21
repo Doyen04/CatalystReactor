@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { DocumentModel } from '@/engine/document/DocumentModel'
-import { FORMAT_VERSION, fromJSON, toJSON } from '@/engine/document/serialize'
-import type { EntityRecord } from '@/engine/document/entity'
-import { invert, type JournalEntry } from '@/engine/document/journal'
+import { DocumentModel } from '@/lib/engine/document/DocumentModel'
+import { FORMAT_VERSION, fromJSON, toJSON } from '@/lib/engine/document/serialize'
+import type { EntityRecord } from '@/lib/engine/document/entity'
+import { invert, type JournalEntry } from '@/lib/engine/document/journal'
 import type { Properties } from '@lib/types/shapes'
 
 function baseProperties(overrides: Partial<Properties> = {}): Properties {

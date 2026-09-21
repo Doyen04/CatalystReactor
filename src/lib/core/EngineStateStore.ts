@@ -1,6 +1,6 @@
 import type { Properties, ShapeType } from '@lib/types/shapes'
-import { DocumentModel } from '@/engine/document/DocumentModel'
-import type { EntityRecord } from '@/engine/document/entity'
+import { DocumentModel } from '@/lib/engine/document/DocumentModel'
+import type { EntityRecord } from '@/lib/engine/document/entity'
 
 export interface ShapeData {
     id: string

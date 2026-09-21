@@ -8,8 +8,8 @@ import ShapeManager from './ShapeManager'
 import EngineStateStore from './EngineStateStore'
 import type PaintManager from './PaintManager'
 import type { Coord, ShapeType } from '@lib/types/shapes'
-import type { EntityId } from '@/engine/document/entity'
-import type { DocumentModel } from '@/engine/document/DocumentModel'
+import type { EntityId } from '@/lib/engine/document/entity'
+import type { DocumentModel } from '@/lib/engine/document/DocumentModel'
 
 class SceneManager {
     private doc: DocumentModel

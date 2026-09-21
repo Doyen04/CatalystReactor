@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef } from 'react'
-import type { EntityRecord } from '@/engine/document/entity'
+import type { EntityRecord } from '@/lib/engine/document/entity'
 import { useEditor } from './useEditor'
 
 export function useEntityThrottled(id: string | null, interval = 50): EntityRecord | null {

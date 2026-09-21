@@ -6,12 +6,12 @@ import ContainerNode from '@lib/node/ContainerNode'
 import ShapeNode from '@lib/node/ShapeNode'
 import SnapManager, { SnapResult } from './SnapManager'
 import CanvasKitResources from './CanvasKitResource'
-import { requestRender } from '@/engine/render/renderRequest'
-import type { EngineBus } from '@/engine/events/EngineBus'
+import { requestRender } from '@/lib/engine/render/renderRequest'
+import type { EngineBus } from '@/lib/engine/events/EngineBus'
 import type { EngineEvents } from './EngineEvents'
-import { CommandManager } from '@/engine/commands/CommandManager'
-import { UpdateProperties } from '@/engine/commands/UpdateProperties'
-import type { DocumentModel } from '@/engine/document/DocumentModel'
+import { CommandManager } from '@/lib/engine/commands/CommandManager'
+import { UpdateProperties } from '@/lib/engine/commands/UpdateProperties'
+import type { DocumentModel } from '@/lib/engine/document/DocumentModel'
 
 class ShapeManager {
     private scene: SceneNode | null = null

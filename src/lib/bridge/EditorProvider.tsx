@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { createEditor, type Editor } from '@/engine/createEditor'
+import { createEditor, type Editor } from '@/lib/engine/createEditor'
 import { EditorContext } from './useEditor'
 
 export const EditorProvider = ({ children }: { children: ReactNode }) => {

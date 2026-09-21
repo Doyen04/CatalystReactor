@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from 'react'
-import type { EntityRecord } from '@/engine/document/entity'
+import type { EntityRecord } from '@/lib/engine/document/entity'
 import { useEditor } from './useEditor'
 
 export function useEntity(id: string | null): EntityRecord | null {

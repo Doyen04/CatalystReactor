@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { invert } from '@/engine/document/journal'
-import type { JournalEntry } from '@/engine/document/journal'
-import type { EntityRecord } from '@/engine/document/entity'
+import { invert } from '@/lib/engine/document/journal'
+import type { JournalEntry } from '@/lib/engine/document/journal'
+import type { EntityRecord } from '@/lib/engine/document/entity'
 import type { Properties } from '@lib/types/shapes'
 
 function baseProperties(overrides: Partial<Properties> = {}): Properties {

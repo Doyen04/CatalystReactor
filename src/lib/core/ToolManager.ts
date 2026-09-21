@@ -14,12 +14,12 @@ import type { InputCallbacks } from './InputManager'
 import type SceneManager from './SceneManager'
 import type ShapeManager from './ShapeManager'
 import type ShapeModifier from '@lib/modifiers/ShapeModifier'
-import { requestRender } from '@/engine/render/renderRequest'
-import type { EngineBus } from '@/engine/events/EngineBus'
+import { requestRender } from '@/lib/engine/render/renderRequest'
+import type { EngineBus } from '@/lib/engine/events/EngineBus'
 import type { EngineEvents } from './EngineEvents'
 import type { ToolContext } from '@lib/tools/ToolContext'
-import type { CommandManager } from '@/engine/commands/CommandManager'
-import type { DocumentModel } from '@/engine/document/DocumentModel'
+import type { CommandManager } from '@/lib/engine/commands/CommandManager'
+import type { DocumentModel } from '@/lib/engine/document/DocumentModel'
 
 class ToolManager {
     currentTool: Tool

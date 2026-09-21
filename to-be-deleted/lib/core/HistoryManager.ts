@@ -1,6 +1,6 @@
 import EngineStateStore from './EngineStateStore'
 import { Properties } from '@lib/types/shapes'
-import { requestRender } from '@/engine/render/renderRequest'
+import { requestRender } from '@/lib/engine/render/renderRequest'
 
 export interface Action {
     type: string
@@ -15,7 +15,7 @@ export class UpdateShapeAction implements Action {
         public readonly shapeId: string,
         private readonly oldState: Properties, // snapshot of old properties
         private readonly newState: Properties  // snapshot of new properties
-    ) {}
+    ) { }
 
     undo() {
         const store = EngineStateStore.getInstance()
@@ -41,7 +41,7 @@ class HistoryManager {
     private undoStack: Action[] = []
     private redoStack: Action[] = []
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): HistoryManager {
         if (!HistoryManager.instance) {
@@ -74,7 +74,7 @@ class HistoryManager {
             requestRender()
         }
     }
-    
+
     public clear() {
         this.undoStack = []
         this.redoStack = []

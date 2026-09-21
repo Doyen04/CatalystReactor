@@ -1,5 +1,5 @@
 // TextCursor.ts
-import { requestRender } from '@/engine/render/renderRequest'
+import { requestRender } from '@/lib/engine/render/renderRequest'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import type PaintManager from '@lib/core/PaintManager'
 import type { Canvas, LineMetrics, Paragraph } from 'canvaskit-wasm'

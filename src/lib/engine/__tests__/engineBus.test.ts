@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { EngineBus } from '@/engine/events/EngineBus'
+import { EngineBus } from '@/lib/engine/events/EngineBus'
 
 type TestEvents = {
     ping: { n: number }
@@ -88,7 +88,7 @@ describe('EngineBus', () => {
     it('a listener removed during emit still receives the in-flight payload (snapshot)', () => {
         const bus = new EngineBus<TestEvents>()
         const second = vi.fn()
-        let offSecond = () => {}
+        let offSecond = () => { }
         bus.on('ping', () => offSecond())
         offSecond = bus.on('ping', second)
 

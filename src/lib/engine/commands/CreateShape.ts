@@ -1,7 +1,7 @@
-import type { DocumentModel } from '@/engine/document/DocumentModel'
-import type { CommandContext } from '@/engine/commands/CommandContext'
-import type { Command } from '@/engine/commands/Command'
-import type { EntityId, EntityRecord } from '@/engine/document/entity'
+import type { DocumentModel } from '@/lib/engine/document/DocumentModel'
+import type { CommandContext } from '@/lib/engine/commands/CommandContext'
+import type { Command } from '@/lib/engine/commands/Command'
+import type { EntityId, EntityRecord } from '@/lib/engine/document/entity'
 import type { Properties, ShapeType } from '@lib/types/shapes'
 
 let nextShapeId = 1

@@ -6,13 +6,13 @@ import CanvasKitInit from 'canvaskit-wasm'
 import canvasKitWasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url'
 
 import { CanvasKitResources } from '@/lib/core/CanvasKitResource'
-import { textCache } from '@/engine/render/TextCache'
-import { registerResourceCounter, unregisterResourceCounter, startResourceCounterMonitor } from '@/engine/render/ResourceCounter'
+import { textCache } from '@/lib/engine/render/TextCache'
+import { registerResourceCounter, unregisterResourceCounter, startResourceCounterMonitor } from '@/lib/engine/render/ResourceCounter'
 
 import { useToolStore } from '@hooks/useTool'
 import { useSceneStore } from '@hooks/sceneStore'
-import { connectEngineToStores } from '@/bridge/engineStoreBridge'
-import { useEditor } from '@/bridge/useEditor'
+import { connectEngineToStores } from '@/lib/bridge/engineStoreBridge'
+import { useEditor } from '@/lib/bridge/useEditor'
 
 let ckPromise: Promise<unknown> | null = null
 function ensureCanvasKit(): Promise<unknown> {

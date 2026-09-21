@@ -1,8 +1,8 @@
 import { isPrintableCharUnicode } from '@/util/textUtil'
 import ShapeManager from '@lib/core/ShapeManager'
 import SceneNode from '@lib/node/Scene'
-import type { CommandManager } from '@/engine/commands/CommandManager'
-import type { DocumentModel } from '@/engine/document/DocumentModel'
+import type { CommandManager } from '@/lib/engine/commands/CommandManager'
+import type { DocumentModel } from '@/lib/engine/document/DocumentModel'
 
 class KeyboardTool {
     private shapeManager: ShapeManager

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { EngineBus } from '@/engine/events/EngineBus'
+import { EngineBus } from '@/lib/engine/events/EngineBus'
 import type { EngineEvents } from '@lib/core/EngineEvents'
-import { connectEngineToStores } from '@/bridge/engineStoreBridge'
+import { connectEngineToStores } from '@/lib/bridge/engineStoreBridge'
 import { useToolStore } from '@hooks/useTool'
 import { useSceneStore } from '@hooks/sceneStore'
 

@@ -4,8 +4,8 @@ import CanvasKitResources from './CanvasKitResource'
 import PaintManager from './PaintManager'
 import type InputManager from './InputManager'
 import type { InputCallbacks } from './InputManager'
-import { FrameScheduler } from '@/engine/render/FrameScheduler'
-import { setRenderRequest } from '@/engine/render/renderRequest'
+import { FrameScheduler } from '@/lib/engine/render/FrameScheduler'
+import { setRenderRequest } from '@/lib/engine/render/renderRequest'
 
 class Renderer {
     sceneManager: SceneManager

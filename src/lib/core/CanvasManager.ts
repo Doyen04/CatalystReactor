@@ -8,10 +8,10 @@ import type ShapeModifier from '@lib/modifiers/ShapeModifier'
 import { ToolType } from '@lib/tools/toolTypes'
 import type PaintManager from './PaintManager'
 import type SnapManager from './SnapManager'
-import type { EngineBus } from '@/engine/events/EngineBus'
+import type { EngineBus } from '@/lib/engine/events/EngineBus'
 import type { EngineEvents } from './EngineEvents'
-import type { CommandManager } from '@/engine/commands/CommandManager'
-import type { DocumentModel } from '@/engine/document/DocumentModel'
+import type { CommandManager } from '@/lib/engine/commands/CommandManager'
+import type { DocumentModel } from '@/lib/engine/document/DocumentModel'
 
 export interface CanvasDeps {
     doc: DocumentModel
@@ -143,7 +143,7 @@ class CanvasManager {
         }
     }
 
-    render() {}
+    render() { }
 }
 
 export default CanvasManager

@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "noEmit": true,
+        "strict": true,
         "resolveJsonModule": true,
         "moduleResolution": "bundler",
         "module": "preserve",

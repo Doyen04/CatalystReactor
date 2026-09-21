@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSceneStore } from '@hooks/sceneStore'
-import { useEditor } from '@/bridge/useEditor'
-import { useDocumentRevision } from '@/bridge/useDocumentRevision'
+import { useEditor } from '@/lib/bridge/useEditor'
+import { useDocumentRevision } from '@/lib/bridge/useDocumentRevision'
 import { Square, Circle, Star, Type, MousePointer2, Layers, ChevronDown, ChevronRight } from 'lucide-react'
 
 interface LayerItem {
@@ -140,11 +140,10 @@ const LayersPanel: React.FC = () => {
                     layers.map(layer => (
                         <div
                             key={layer.id}
-                            className={`flex items-center gap-1.5 py-1.5 px-2 rounded cursor-pointer transition-all border-l-2 text-xs ${
-                                selectedShapeId === layer.id
+                            className={`flex items-center gap-1.5 py-1.5 px-2 rounded cursor-pointer transition-all border-l-2 text-xs ${selectedShapeId === layer.id
                                     ? 'bg-[#3b82f6]/10 border-[#3b82f6] text-[#3b82f6] font-medium'
                                     : 'border-transparent hover:bg-[#252525] text-gray-300'
-                            }`}
+                                }`}
                             style={{ paddingLeft: `${layer.depth * 14 + 6}px` }}
                             onClick={() => handleLayerClick(layer.id)}
                         >

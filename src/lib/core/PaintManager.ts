@@ -2,9 +2,9 @@ import type { Color, Shader, Image as CanvasKitImage, Paint } from 'canvaskit-wa
 import CanvasKitResources from './CanvasKitResource'
 import type { SolidFill, LinearGradient, RadialGradient, ImageFill, Size, ScaleMode, PaintStyle, ColorProps, Stroke } from '@lib/types/shapes'
 import { PCache } from './Cache'
-import type { PaintRequest } from '@/engine/render/PaintCache'
-import { PaintCache } from '@/engine/render/PaintCache'
-import { registerResourceCounter, unregisterResourceCounter } from '@/engine/render/ResourceCounter'
+import type { PaintRequest } from '@/lib/engine/render/PaintCache'
+import { PaintCache } from '@/lib/engine/render/PaintCache'
+import { registerResourceCounter, unregisterResourceCounter } from '@/lib/engine/render/ResourceCounter'
 
 class PaintManager {
     private fillPaint: Paint | null = null

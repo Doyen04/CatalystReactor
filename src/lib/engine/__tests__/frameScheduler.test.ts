@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { FrameScheduler } from '@/engine/render/FrameScheduler'
-import { requestRender, setRenderRequest } from '@/engine/render/renderRequest'
+import { FrameScheduler } from '@/lib/engine/render/FrameScheduler'
+import { requestRender, setRenderRequest } from '@/lib/engine/render/renderRequest'
 
 interface PendingFrame {
     id: number

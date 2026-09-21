@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { patchProperty, patchBorderRadius, patchRadiusLock, patchStyle } from '@/bridge/propertyPatch'
+import { patchProperty, patchBorderRadius, patchRadiusLock, patchStyle } from '@/lib/bridge/propertyPatch'
 import type { ColorProps, Properties } from '@lib/types/shapes'
 
 const base = {

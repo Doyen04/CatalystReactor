@@ -1,4 +1,4 @@
-import type { EngineBus } from '@/engine/events/EngineBus'
+import type { EngineBus } from '@/lib/engine/events/EngineBus'
 import type { EngineEvents } from '@lib/core/EngineEvents'
 import { useSceneStore } from '@hooks/sceneStore'
 import { useToolStore } from '@hooks/useTool'

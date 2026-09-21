@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
-import { createEditor } from '@/engine/createEditor'
-import { CreateShape } from '@/engine/commands/CreateShape'
-import { TranslateNodes } from '@/engine/commands/TranslateNodes'
+import { createEditor } from '@/lib/engine/createEditor'
+import { CreateShape } from '@/lib/engine/commands/CreateShape'
+import { TranslateNodes } from '@/lib/engine/commands/TranslateNodes'
 import type { Properties } from '@lib/types/shapes'
 
 const RECT: Partial<Properties> = {
