@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { DEFAULT_LINEAR_GRADIENT, DEFAULT_RADIAL_GRADIENT, Gradient, GradientFill, LinearGradient, RadialGradient } from '@lib/types/shapes'
+import { DEFAULT_LINEAR_GRADIENT, DEFAULT_RADIAL_GRADIENT, GradientFill, LinearGradient, RadialGradient } from '@lib/types/shapes'
 import { twMerge } from 'tailwind-merge'
 import LinearGradientPicker from './LinearGradientPicker'
 import RadialGradientPicker from './RadialGradient'
