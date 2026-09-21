@@ -15,6 +15,7 @@ import { connectEngineToStores } from '@/lib/bridge/engineStoreBridge'
 import { useEditor } from '@/lib/bridge/useEditor'
 
 let ckPromise: Promise<unknown> | null = null
+
 function ensureCanvasKit(): Promise<unknown> {
     if (!ckPromise) {
         ckPromise = (async () => {
