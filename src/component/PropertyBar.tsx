@@ -14,6 +14,7 @@ import BorderRadiusAll from '@ui/BorderRadiusAll'
 import ColorInput from '@ui/ColorInput'
 import Tabs from '@ui/Tabs'
 import DropDownPicker from '@ui/DropDownPicker'
+import { FlexLayout, GridLayout } from '@lib/node/nodeTypes';
 
 function PropertyBar() {
     const selectedShapeId = useSceneStore(s => s.selectedShapeId)
@@ -287,25 +288,22 @@ function PropertyBar() {
                         {layoutConstraints && (
                             <Section title="Layout">
                                 {(() => {
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    const lc = layoutConstraints as any
+                                    const lc = layoutConstraints as FlexLayout
                                     return (
                                         <div className="space-y-3">
                                             {lc.type === 'row' || lc.type === 'column' ? (
                                                 <>
-                                                    {lc.flexDirection && (
-                                                        <div>
-                                                            <label className="text-xs text-gray-600">Direction</label>
-                                                            <DropDownPicker
-                                                                value={{ value: lc.flexDirection, label: lc.flexDirection }}
-                                                                values={[
-                                                                    { value: 'row', label: 'Row' },
-                                                                    { value: 'column', label: 'Column' },
-                                                                ]}
-                                                                onValueChange={(value: string) => handlePropertyChange('layout_flexDirection', value)}
-                                                            />
-                                                        </div>
-                                                    )}
+                                                    <div>
+                                                        <label className="text-xs text-gray-600">Direction</label>
+                                                        <DropDownPicker
+                                                            value={{ value: lc.type, label: lc.type }}
+                                                            values={[
+                                                                { value: 'row', label: 'Row' },
+                                                                { value: 'column', label: 'Column' },
+                                                            ]}
+                                                            onValueChange={(value: string) => handlePropertyChange('layout_type', value)}
+                                                        />
+                                                    </div>
                                                     {lc.flexWrap && (
                                                         <div>
                                                             <label className="text-xs text-gray-600">Wrap</label>
@@ -394,39 +392,43 @@ function PropertyBar() {
                                                     />
                                                 </div>
                                             )}
-                                            {lc.type === 'grid' && (
-                                                <>
-                                                    {lc.gridRowGap !== undefined && (
-                                                        <Input
-                                                            type="number"
-                                                            title="Row Gap"
-                                                            value={lc.gridRowGap}
-                                                            onChange={value => handlePropertyChange('layout_gridRowGap', value)}
-                                                        />
-                                                    )}
-                                                    {lc.gridColumnGap !== undefined && (
-                                                        <Input
-                                                            type="number"
-                                                            title="Column Gap"
-                                                            value={lc.gridColumnGap}
-                                                            onChange={value => handlePropertyChange('layout_gridColumnGap', value)}
-                                                        />
-                                                    )}
-                                                    {lc.gridAutoFlow && (
-                                                        <div>
-                                                            <label className="text-xs text-gray-600">Auto Flow</label>
-                                                            <DropDownPicker
-                                                                value={{ value: lc.gridAutoFlow, label: lc.gridAutoFlow }}
-                                                                values={[
-                                                                    { value: 'row', label: 'Row' },
-                                                                    { value: 'column', label: 'Column' },
-                                                                ]}
-                                                                onValueChange={(value: string) => handlePropertyChange('layout_gridAutoFlow', value)}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </>
-                                            )}
+                                            {layoutConstraints.type === 'grid' &&
+                                                (() => {
+                                                    const grid = layoutConstraints as GridLayout
+                                                    return (
+                                                        <>
+                                                            {grid.gridRowGap !== undefined && (
+                                                                <Input
+                                                                    type="number"
+                                                                    title="Row Gap"
+                                                                    value={grid.gridRowGap}
+                                                                    onChange={value => handlePropertyChange('layout_gridRowGap', value)}
+                                                                />
+                                                            )}
+                                                            {grid.gridColumnGap !== undefined && (
+                                                                <Input
+                                                                    type="number"
+                                                                    title="Column Gap"
+                                                                    value={grid.gridColumnGap}
+                                                                    onChange={value => handlePropertyChange('layout_gridColumnGap', value)}
+                                                                />
+                                                            )}
+                                                            {grid.gridAutoFlow && (
+                                                                <div>
+                                                                    <label className="text-xs text-gray-600">Auto Flow</label>
+                                                                    <DropDownPicker
+                                                                        value={{ value: grid.gridAutoFlow, label: grid.gridAutoFlow }}
+                                                                        values={[
+                                                                            { value: 'row', label: 'Row' },
+                                                                            { value: 'column', label: 'Column' },
+                                                                        ]}
+                                                                        onValueChange={(value: string) => handlePropertyChange('layout_gridAutoFlow', value)}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )
+                                                })()}
                                         </div>
                                     )
                                 })()}
