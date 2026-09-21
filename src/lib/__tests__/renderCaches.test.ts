@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi, type Mock } from 'vitest'
 import type { CanvasKit, Paragraph } from 'canvaskit-wasm'
-import { PaintCache, type PaintRequest } from '@engine/render/PaintCache'
-import { ResourceScope } from '@engine/render/ResourceScope'
-import { registerResourceCounter, startResourceCounterMonitor, unregisterResourceCounter } from '@engine/render/ResourceCounter'
-import { TextCache } from '@engine/render/TextCache'
+import { PaintCache, type PaintRequest } from '@/lib/engine/render/PaintCache'
+import { ResourceScope } from '@/lib/engine/render/ResourceScope'
+import { registerResourceCounter, startResourceCounterMonitor, unregisterResourceCounter } from '@/lib/engine/render/ResourceCounter'
+import { TextCache } from '@/lib/engine/render/TextCache'
 
 function makeFakePaint() {
     return {
