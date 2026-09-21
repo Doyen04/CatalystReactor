@@ -1,6 +1,4 @@
 import CanvasKitResources from '@lib/core/CanvasKitResource'
-import type SceneManager from '@lib/core/SceneManager'
-import type ShapeManager from '@lib/core/ShapeManager'
 import { Coord } from '@lib/types/shapes'
 import VectorPath from '@lib/shapes/primitives/VectorPath'
 import ShapeNode from '@lib/node/ShapeNode'
@@ -8,8 +6,6 @@ import SceneNode from '@lib/node/Scene'
 import type { ToolContext } from './ToolContext'
 
 abstract class Tool {
-    sceneManager: SceneManager | null = null
-    shapeManager: ShapeManager | null = null
     cnvsElm: HTMLCanvasElement
     protected ctx: ToolContext
     protected isPointerDown: boolean
@@ -18,8 +14,6 @@ abstract class Tool {
 
     constructor(cnvs: HTMLCanvasElement, ctx: ToolContext) {
         this.ctx = ctx
-        this.sceneManager = ctx.sceneManager
-        this.shapeManager = ctx.shapeManager
         this.cnvsElm = cnvs
         this.isPointerDown = false
         this.isDragging = false
@@ -58,10 +52,10 @@ abstract class Tool {
     handleKeyDown(_e: KeyboardEvent): void { /* no-op */ }
 
     protected findSnapPoint(e: MouseEvent, excludeShape?: VectorPath): { x: number, y: number, shape: VectorPath, index: number } | null {
-        if (!this.sceneManager) return null
+        if (!this.ctx.sceneManager) return null
 
         const SNAP_THRESHOLD = 12
-        const root = this.sceneManager.getRootContainer()
+        const root = this.ctx.sceneManager.getRootContainer()
         if (!root) return null
 
         const snapPoints: { x: number, y: number, shape: VectorPath, index: number }[] = []

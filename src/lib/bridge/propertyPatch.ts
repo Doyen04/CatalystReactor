@@ -90,7 +90,7 @@ export function patchRadiusLock(borderRadius: Properties['borderRadius'], locked
     return { borderRadius: { ...br, locked: false } as unknown as Properties['borderRadius'] }
 }
 
-export function patchStyle(style: Properties['style'], key: 'fill' | 'strokeColor', value: ColorProps): Partial<Properties> | null {
+export function patchStyle(style: Properties['style'] | undefined, key: 'fill' | 'strokeColor', value: ColorProps): Partial<Properties> | null {
     if (!style) return null
     if (key === 'fill') return { style: { ...style, fill: value } }
     return { style: { ...style, stroke: { ...style.stroke, color: value.color, opacity: value.opacity } } }

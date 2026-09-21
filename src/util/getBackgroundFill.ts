@@ -64,7 +64,7 @@ export function getBackgroundStyleFromFillValue( fill: PaintStyle, url?: string|
             
             const value = fill.color
             const color = colorValue(value)
-            return { backgroundColor: color }
+            return { backgroundColor: color || undefined }
         }
         case 'image':
         case 'pattern': {

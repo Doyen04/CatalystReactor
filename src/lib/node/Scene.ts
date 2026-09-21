@@ -4,25 +4,18 @@ import { ArcHandleState, BoundingRect, Coord, HandlePos, Properties, Size } from
 import { Canvas } from 'canvaskit-wasm'
 
 abstract class SceneNode {
-    public shape: Shape | null
-    protected parent: SceneNode | null
-    protected localMatrix: number[] | null
-    protected worldMatrix: number[] | null
+    public shape: Shape | null = null
+    protected parent: SceneNode | null = null
+    protected localMatrix: number[] | null = null
+    protected worldMatrix: number[] | null = null
     protected canComputeMatrix: boolean = false
 
     get id(): string {
         return this.shape?.data.id || 'root'
     }
 
-    get resource(): CanvasKitResources | null {
-        const resources = CanvasKitResources.getInstance()
-        if (resources) {
-            return resources
-        } else {
-            console.log('resources is null')
-
-            return null
-        }
+    get resource(): CanvasKitResources {
+        return CanvasKitResources.getInstance()
     }
 
     setUpMatrix() {
@@ -110,7 +103,9 @@ abstract class SceneNode {
             return { x: 0, y: 0 }
         }
         const Matrix = this.resource.canvasKit.Matrix
+        if (!this.parent.worldMatrix) return { x: 0, y: 0 }
         const inverseMatrix = Matrix.invert(this.parent.worldMatrix)
+        if (!inverseMatrix) return { x: 0, y: 0 }
         const transformedPoint = Matrix.mapPoints(inverseMatrix, [x, y])
         return {
             x: Math.round(transformedPoint[0]),
@@ -125,6 +120,7 @@ abstract class SceneNode {
         }
         const Matrix = this.resource.canvasKit.Matrix
         const inverseMatrix = Matrix.invert(this.worldMatrix)
+        if (!inverseMatrix) return { x: 0, y: 0 }
 
         const transformedPoint = Matrix.mapPoints(inverseMatrix, [x, y])
         return {
@@ -140,6 +136,7 @@ abstract class SceneNode {
         }
         const Matrix = this.resource.canvasKit.Matrix
         const inverseMatrix = Matrix.invert(this.worldMatrix)
+        if (!inverseMatrix) return { x: 0, y: 0 }
         const p1 = Matrix.mapPoints(inverseMatrix, [0, 0])
         const p2 = Matrix.mapPoints(inverseMatrix, [dx, dy])
         return {

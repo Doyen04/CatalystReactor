@@ -251,7 +251,7 @@ class Oval extends Shape {
     override getSweep() {
         const TWO_PI = 2 * Math.PI
         const arc = this.arcSegment
-        const sweep = this.arcHandleState.dragDirection >= 0 ? normalizeAngle(arc.sweep) : normalizeAngle(arc.sweep) - TWO_PI
+        const sweep = (this.arcHandleState?.dragDirection ?? 0) >= 0 ? normalizeAngle(arc.sweep) : normalizeAngle(arc.sweep) - TWO_PI
         return sweep
     }
 

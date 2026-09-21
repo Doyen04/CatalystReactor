@@ -29,7 +29,7 @@ class CanvasManager {
     renderer: Renderer
     toolManager: ToolManager
     shapeManager: ShapeManager
-    shapeModifier: ShapeModifier | null
+    shapeModifier: ShapeModifier
     paintManager: PaintManager
     commandManager: CommandManager
     bus: EngineBus<EngineEvents>
@@ -113,33 +113,25 @@ class CanvasManager {
 
         if (this.inputManager) {
             this.inputManager.destroy()
-            this.inputManager = null
         }
         if (this.renderer) {
             this.renderer.destroy()
-            this.renderer = null
         }
         if (this.sceneManager) {
             this.sceneManager.destroy()
-            this.sceneManager = null
         }
         if (this.toolManager) {
             this.toolManager.destroy()
-            this.toolManager = null
         }
         if (this.shapeManager) {
             this.shapeManager.destroy()
-            this.shapeManager = null
         }
         if (this.shapeModifier) {
             this.shapeModifier.destroy()
-            this.shapeModifier = null
         }
         this.bus.clear()
-        this.bus = null
         if (this.paintManager) {
             this.paintManager.destroy()
-            this.paintManager = null
         }
     }
 

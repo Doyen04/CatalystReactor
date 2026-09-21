@@ -7,7 +7,6 @@
         "module": "preserve",
         "target": "ESNext",
         "jsx": "react-jsx",
-        "baseUrl": ".",
         "paths": {
             "@assets/*": [
                 "src/assets/*"

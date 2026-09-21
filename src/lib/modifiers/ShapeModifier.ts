@@ -67,15 +67,7 @@ class ShapeModifier {
     }
 
     get resource(): CanvasKitResources {
-        const resources = CanvasKitResources.getInstance()
-
-        if (resources) {
-            return resources
-        } else {
-            console.log('resources is null')
-
-            return null
-        }
+        return CanvasKitResources.getInstance()
     }
 
     storeShapeInitialShapeData() {
@@ -131,6 +123,7 @@ class ShapeModifier {
         } else if (this.selectedModifierHandle === 'angle') {
             this.updateShapeAngle(e)
         } else {
+            if (!this.initialShapeData || !this.initialShapeData.inverseWorldTransform || !this.resource) return
             // Transform pointer to local space before delegating
             const localCurrent = transformPoint(this.initialShapeData.inverseWorldTransform, e.offsetX, e.offsetY, this.resource)
             const localDragStart = transformPoint(this.initialShapeData.inverseWorldTransform, dragStart.x, dragStart.y, this.resource)
@@ -229,7 +222,7 @@ class ShapeModifier {
     }
 
     handleModifierDown(dragStart: Coord, e: MouseEvent) {
-        if (!this.scene || !this.selectedModifierHandle) return
+        if (!this.scene || !this.selectedModifierHandle || !this.resource || !this.initialShapeData || !this.initialShapeData.dimension || !this.initialShapeData.rotationAnchor) return
 
         if (this.selectedModifierHandle === 'angle') {
             const Matrix = this.resource.canvasKit.Matrix
@@ -253,6 +246,7 @@ class ShapeModifier {
     }
 
     dragShape(dragStart: Coord, e: MouseEvent) {
+        if (!this.initialShapeData || !this.initialShapeData.position || !this.scene) return
         const { position } = this.initialShapeData
         const newX = position.x + (e.offsetX - dragStart.x)
         const newY = position.y + (e.offsetY - dragStart.y)
@@ -267,9 +261,10 @@ class ShapeModifier {
 
     //local coord
     updateText() {
-        if (!this.font) return
-        const { width, height } = this.scene.getDim()
-        this.font.setText(`${width} X ${height}`)
+        if (!this.font || !this.scene) return
+        const dim = this.scene.getDim()
+        if (!dim) return
+        this.font.setText(`${dim.width} X ${dim.height}`)
     }
 
     handleMouseDown(dragStart: Coord, e: MouseEvent) {
@@ -310,20 +305,22 @@ class ShapeModifier {
 
     canDraw(): boolean {
         if (!this.scene) return false
-        const { width, height } = this.scene.getDim()
+        const dim = this.scene.getDim()
+        if (!dim) return false
 
         // Only block if BOTH are too small (like a single point)
         // or if it's a line, let it draw if it has some length
-        return width < 1 && height < 1
+        return dim.width < 1 && dim.height < 1
     }
 
     collideRect(x: number, y: number): boolean {
         if (!this.scene) return false
 
         const { x: tx, y: ty } = this.scene.worldToLocal(x, y)
-        const { width, height } = this.scene.getDim()
+        const dim = this.scene.getDim()
+        if (!dim) return false
 
-        return tx >= 0 && tx <= width && ty >= 0 && ty <= height
+        return tx >= 0 && tx <= dim.width && ty >= 0 && ty <= dim.height
     }
 
     draw(canvas: Canvas): void {
@@ -331,10 +328,13 @@ class ShapeModifier {
             return
         }
 
+        const worldMat = this.scene.getWorldMatrix()
+        if (!worldMat) return
+
         // In edit mode for VectorPaths, draw the path edit overlay instead
         if (this._editMode && this.scene instanceof ShapeNode && this.scene.shape instanceof VectorPath) {
             canvas.save()
-            canvas.concat(this.scene.getWorldMatrix())
+            canvas.concat(worldMat)
             this.scene.shape.drawEditOverlay(canvas)
             canvas.restore()
             this.drawText(canvas)
@@ -342,7 +342,7 @@ class ShapeModifier {
         }
 
         canvas.save()
-        canvas.concat(this.scene.getWorldMatrix())
+        canvas.concat(worldMat)
 
         // Delegate native rendering!
         this.scene.shape.drawModifierHandles(canvas, this.resource)
@@ -356,6 +356,7 @@ class ShapeModifier {
         if (!this.scene || !this.font) return
 
         const bRect = this.scene.getAbsoluteBoundingRect()
+        if (!bRect) return
 
         canvas.save()
         canvas.translate((bRect.left + bRect.right) / 2, bRect.bottom + 5)

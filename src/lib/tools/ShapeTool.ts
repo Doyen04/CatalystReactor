@@ -12,18 +12,18 @@ class ShapeTool extends Tool {
 
     override handlePointerDown(e: MouseEvent) {
         super.handlePointerDown(e)
-        let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
-        if (!scene) scene = this.sceneManager.getRootContainer()
+        let scene = this.ctx.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        if (!scene) scene = this.ctx.sceneManager.getRootContainer()
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-        const shapeNode = this.sceneManager.addShapeToScene(this.shapeType, {
+        const shapeNode = this.ctx.sceneManager.addShapeToScene(this.shapeType, {
             x: x,
             y: y,
         }) as ShapeNode
 
         if (shapeNode) {
-            this.shapeManager.attachNode(shapeNode)
+            this.ctx.shapeManager.attachNode(shapeNode)
         }
     }
     override handlePointerMove(e: MouseEvent): void {
@@ -32,16 +32,18 @@ class ShapeTool extends Tool {
         }
     }
     override handlePointerUp(e: MouseEvent): void {
-        this.shapeManager.handleTinyShapes()
+        this.ctx.shapeManager.handleTinyShapes()
         if (this.isDragging) {
-            this.shapeManager.finishDrag()
+            this.ctx.shapeManager.finishDrag()
         }
         super.handlePointerUp?.(e)
     }
 
     handlePointerDrag(e: MouseEvent): void {
         this.isDragging = true
-        this.shapeManager.drawShape(this.dragStart, e)
+        if (this.dragStart) {
+            this.ctx.shapeManager.drawShape(this.dragStart, e)
+        }
     }
 
     setShape(shape: ShapeType) {

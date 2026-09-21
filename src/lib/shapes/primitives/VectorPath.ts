@@ -43,12 +43,12 @@ class VectorPath extends Shape {
     }
 
     insertPoint(index: number, point: PathPoint): void {
-        this.data.properties.pathData.points.splice(index, 0, point)
+        this.data.properties.pathData?.points.splice(index, 0, point)
         this.recomputeBounds()
     }
 
     removePoint(index: number): void {
-        this.data.properties.pathData.points.splice(index, 1)
+        this.data.properties.pathData?.points.splice(index, 1)
         this.recomputeBounds()
     }
 

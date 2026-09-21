@@ -1,7 +1,7 @@
 import { HandlePos } from "@lib/types/shapes"
 
 export function getOppositeHandle(pos: HandlePos) {
-        const map = {
+        const map: Record<string, string> = {
             'top-left': 'bottom-right',
             'top-right': 'bottom-left',
             'bottom-left': 'top-right',

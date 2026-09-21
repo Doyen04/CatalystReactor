@@ -26,19 +26,19 @@ class SelectTool extends Tool {
 
     selectionHandler(e: MouseEvent) {
         // 1. Check if we are clicking on handles of current selection
-        const handleHit = this.shapeManager.handleHover(e.offsetX, e.offsetY)
+        const handleHit = this.ctx.shapeManager.handleHover(e.offsetX, e.offsetY)
         if (handleHit) {
-            this.shapeManager.handleMouseDown(this.dragStart, e)
+            if (this.dragStart) this.ctx.shapeManager.handleMouseDown(this.dragStart, e)
             return
         }
 
         const isDeep = e.ctrlKey || e.metaKey
-        const currentSelection = this.shapeManager.currentScene
+        const currentSelection = this.ctx.shapeManager.currentScene
         
         let targetScene: SceneNode | null = null
 
         if (isDeep) {
-            targetScene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY, true)
+            targetScene = this.ctx.sceneManager.getCollidedScene(e.offsetX, e.offsetY, true)
         } else if (currentSelection && currentSelection.getChildren().length > 0 && currentSelection.isCollide(e.offsetX, e.offsetY)) {
             // Drill down: Search within current container
             const children = currentSelection.getChildren()
@@ -52,17 +52,17 @@ class SelectTool extends Tool {
             if (!targetScene) targetScene = currentSelection
         } else {
             // Regular top-level selection
-            targetScene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY, false)
+            targetScene = this.ctx.sceneManager.getCollidedScene(e.offsetX, e.offsetY, false)
         }
 
         if (targetScene !== currentSelection) {
-            this.shapeManager.detachShape()
-            if (targetScene && targetScene !== this.sceneManager.getRootContainer()) {
-                this.shapeManager.attachNode(targetScene)
+            this.ctx.shapeManager.detachShape()
+            if (targetScene && targetScene !== this.ctx.sceneManager.getRootContainer()) {
+                this.ctx.shapeManager.attachNode(targetScene)
             }
         }
 
-        this.shapeManager.handleMouseDown(this.dragStart, e)
+        if (this.dragStart) this.ctx.shapeManager.handleMouseDown(this.dragStart, e)
     }
 
     private handleClickCount(e: MouseEvent) {
@@ -96,9 +96,8 @@ class SelectTool extends Tool {
 
     private handleSingleClick(e: MouseEvent) {
         console.log('click triggered', e)
-        if (this.shapeManager.hasScene()) {
-            const scene = this.shapeManager.currentScene
-
+        const scene = this.ctx.shapeManager.currentScene
+        if (scene) {
             if (scene.canEdit() && scene.isCollide(e.offsetX, e.offsetY)) {
                 scene.setCursorPosFromCoord(e.offsetX, e.offsetY)
             }
@@ -108,9 +107,8 @@ class SelectTool extends Tool {
     private handleDoubleClick(e: MouseEvent) {
         console.log('Double click detected', e)
 
-        if (this.shapeManager.hasScene()) {
-            const scene = this.shapeManager.currentScene
-
+        const scene = this.ctx.shapeManager.currentScene
+        if (scene) {
             if (scene.isCollide(e.offsetX, e.offsetY)) {
                 scene.startEditing()
                 scene.selectAll()
@@ -201,23 +199,23 @@ class SelectTool extends Tool {
     }
 
     moveHandler(e: MouseEvent) {
-        const handle = this.shapeManager.handleHover(e.offsetX, e.offsetY)
-        const cScene = this.shapeManager.currentScene?.getRotationAngle() || 0
+        const handle = this.ctx.shapeManager.handleHover(e.offsetX, e.offsetY)
+        const cScene = this.ctx.shapeManager.currentScene?.getRotationAngle() || 0
         this.setCursorForHandle(handle, cScene)
 
-        const scene = this.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
+        const scene = this.ctx.sceneManager.getCollidedScene(e.offsetX, e.offsetY)
         this.setHoveredShape(scene)
     }
 
-    setHoveredShape(scene: SceneNode) {
+    setHoveredShape(scene: SceneNode | null) {
         if (this.hoveredScene) {
             this.hoveredScene.setHovered(false)
         }
         this.hoveredScene = scene
 
         if (!scene) return
-        this.shapeManager.resetHover(scene)
-        this.hoveredScene.setHovered(true)
+        this.ctx.shapeManager.resetHover(scene)
+        this.hoveredScene?.setHovered(true)
     }
 
     handlePointerDrag(e: MouseEvent): void {
@@ -225,14 +223,14 @@ class SelectTool extends Tool {
             console.log('mousecoord is null')
             return
         }
-        this.shapeManager.drag(this.dragStart, e)
+        this.ctx.shapeManager.drag(this.dragStart, e)
         this.isDragging = true
     }
 
     repositionShape(e: MouseEvent) {
-        let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
-        const root = this.sceneManager.getRootContainer()
-        const current = this.shapeManager.currentScene
+        let scene = this.ctx.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        const root = this.ctx.sceneManager.getRootContainer()
+        const current = this.ctx.shapeManager.currentScene
 
         if (!current) return
         const parent = current.getParent()
@@ -241,7 +239,10 @@ class SelectTool extends Tool {
         if (parent === scene) return
 
         let coord = current.getCoord()
-        coord = parent.localToWorld(coord.x, coord.y)
+        if (!coord) return
+        if (parent) {
+            coord = parent.localToWorld(coord.x, coord.y)
+        }
 
         if (current == scene) {
             return
@@ -250,14 +251,14 @@ class SelectTool extends Tool {
         const localCoord = scene.worldToLocal(coord.x, coord.y)
 
         current.setPosition(localCoord.x, localCoord.y)
-        this.sceneManager.insertNode(current, scene.id)
+        this.ctx.sceneManager.insertNode(current, scene.id)
     }
 
     override handlePointerUp(e: MouseEvent) {
         console.log('up', this.isDragging)
         this.repositionShape(e)
         if (this.isDragging) {
-            this.shapeManager.finishDrag()
+            this.ctx.shapeManager.finishDrag()
         }
         this.isPointerDown = false
         this.dragStart = null

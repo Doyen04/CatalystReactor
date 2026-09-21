@@ -28,7 +28,7 @@ class ImageTool extends Tool {
         console.log('File is fffffff picker opened');
     }
 
-    handleFileSelect = async (files: FileList) => {
+    handleFileSelect = async (files: FileList | null) => {
         if (files && files.length > 0) {
             try {
                 const fileData = Array.from(files).map(file => ({
@@ -129,15 +129,15 @@ class ImageTool extends Tool {
             return
         }
 
-        let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
-        if (!scene) scene = this.sceneManager.getRootContainer()
+        let scene = this.ctx.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        if (!scene) scene = this.ctx.sceneManager.getRootContainer()
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-        const shapeNode = this.sceneManager.addShapeToScene('img', { x, y }, preloadedImage) as ShapeNode
+        const shapeNode = this.ctx.sceneManager.addShapeToScene('img', { x, y }, preloadedImage) as ShapeNode
 
         if (shapeNode) {
-            this.shapeManager.attachNode(shapeNode)
+            this.ctx.shapeManager.attachNode(shapeNode)
         }
     }
 
@@ -148,9 +148,9 @@ class ImageTool extends Tool {
             console.log('Image placement completed, clearing image store')
             super.handlePointerUp(e)
         }
-        this.shapeManager.handleTinyShapes()
+        this.ctx.shapeManager.handleTinyShapes()
         if (this.isDragging) {
-            this.shapeManager.finishDrag()
+            this.ctx.shapeManager.finishDrag()
         }
         super.resetPointerData()
     }
@@ -163,7 +163,9 @@ class ImageTool extends Tool {
     handlePointerDrag(e: MouseEvent): void {
         if (this.isLoading) return
         this.isDragging = true
-        this.shapeManager.drawShape(this.dragStart, e)
+        if (this.dragStart) {
+            this.ctx.shapeManager.drawShape(this.dragStart, e)
+        }
     }
 
     override toolChange(): void {

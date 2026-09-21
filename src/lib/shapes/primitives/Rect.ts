@@ -21,7 +21,9 @@ class Rectangle extends SimpleRect {
             return
         }
 
-        borderRadius[pos] = newRad
+        if (pos === 'top-left' || pos === 'top-right' || pos === 'bottom-left' || pos === 'bottom-right') {
+            borderRadius[pos] = newRad
+        }
     }
 
     private setAllBorderRadius(radius: number): void {

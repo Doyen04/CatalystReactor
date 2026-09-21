@@ -8,12 +8,12 @@ import type { Properties } from '@lib/types/shapes'
 
 class ContainerNode extends SceneNode {
     children: SceneNode[]
-    layoutConstraints: LayoutConstraints
+    layoutConstraints: LayoutConstraints | null
     paintManager: PaintManager
 
-    constructor(shape: Shape | null, layoutConstraints: LayoutConstraints, paintManager: PaintManager) {
+    constructor(shape: Shape | null, layoutConstraints: LayoutConstraints | null, paintManager: PaintManager) {
         super()
-        this.shape = shape
+        this.shape = shape as any
         this.children = []
         this.paintManager = paintManager
         this.parent = null
@@ -109,6 +109,7 @@ class ContainerNode extends SceneNode {
     }
 
     override updateWorldMatrix(parentWorld?: number[]) {
+        if (!this.resource) return
         const Matrix = this.resource.canvasKit.Matrix
 
         const parentMatrix = parentWorld ?? Matrix.identity()
@@ -118,14 +119,16 @@ class ContainerNode extends SceneNode {
             this.canComputeMatrix = false
         }
 
+        if (!this.localMatrix) return
         this.worldMatrix = Matrix.multiply(parentMatrix, this.localMatrix)
 
         for (const c of this.children) {
-            c.updateWorldMatrix(this.worldMatrix)
+            if (this.worldMatrix) c.updateWorldMatrix(this.worldMatrix)
         }
     }
 
     override draw(canvas: Canvas): void {
+        if (!this.localMatrix) return
         canvas.save()
         canvas.concat(this.localMatrix)
 
@@ -133,18 +136,22 @@ class ContainerNode extends SceneNode {
             this.shape.draw(canvas)
             this.drawPaddingAndGap(canvas)
             const bounds = this.shape.getDim()
-            const clipRect = this.resource.canvasKit.XYWHRect(0, 0, bounds.width, bounds.height)
-            canvas.clipRect(clipRect, this.resource.canvasKit.ClipOp.Intersect, true)
+            if (this.resource && bounds) {
+                const clipRect = this.resource.canvasKit.XYWHRect(0, 0, bounds.width, bounds.height)
+                canvas.clipRect(clipRect, this.resource.canvasKit.ClipOp.Intersect, true)
+            }
         }
         this.children.forEach(node => node.draw(canvas))
         canvas.restore()
     }
 
     private drawPaddingAndGap(canvas: Canvas): void {
+        if (!this.layoutConstraints || !this.resource || !this.shape) return
         const { padding } = this.layoutConstraints
 
         if (!padding) return
         const bounds = this.shape.getDim()
+        if (!bounds) return
 
         const fillPaint = this.paintManager.getPaint({
             color: { type: 'solid', color: [255, 200, 100, 0.3] },
@@ -229,9 +236,9 @@ class ContainerNode extends SceneNode {
             const currentPos = currentChild.getCoord()
             const nextPos = nextChild.getCoord()
 
-            let gapRect: Rect
+            let gapRect: Rect | null = null
 
-            if (type === 'row') {
+            if (type === 'row' && currentPos && currentBounds && nextPos && containerBounds && this.resource) {
                 // Horizontal gap between children - spans full height of container content area
                 const gapX = currentPos.x + currentBounds.width
                 const gapWidth = nextPos.x - gapX
@@ -239,7 +246,7 @@ class ContainerNode extends SceneNode {
                 const gapHeight = containerBounds.height - paddingTop - paddingBottom
 
                 gapRect = this.resource.canvasKit.XYWHRect(gapX, gapY, gapWidth, gapHeight)
-            } else if (type === 'column') {
+            } else if (type === 'column' && currentPos && currentBounds && nextPos && containerBounds && this.resource) {
                 // Vertical gap between children - spans full width of container content area
                 const gapY = currentPos.y + currentBounds.height
                 const gapHeight = nextPos.y - gapY

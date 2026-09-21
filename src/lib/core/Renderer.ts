@@ -8,13 +8,13 @@ import { FrameScheduler } from '@/lib/engine/render/FrameScheduler'
 import { setRenderRequest } from '@/lib/engine/render/renderRequest'
 
 class Renderer {
-    sceneManager: SceneManager
+    sceneManager: SceneManager | null
     surf: Surface | null
-    canvasEl: HTMLCanvasElement
+    canvasEl: HTMLCanvasElement | null
     inputManager: InputManager
 
     dpr: number = window.devicePixelRatio || 1
-    skCnvs: Canvas
+    skCnvs!: Canvas
 
     private paintManager: PaintManager
     private scheduler: FrameScheduler
@@ -60,7 +60,7 @@ class Renderer {
         this.inputManager.subscribe(this.inputCallbacks)
     }
 
-    get resource(): CanvasKitResources {
+    get resource(): CanvasKitResources | null {
         const resources = CanvasKitResources.getInstance()
         if (resources) {
             return resources
@@ -85,7 +85,7 @@ class Renderer {
     }
 
     makeSurface() {
-        if (!this.resource) {
+        if (!this.resource || !this.canvasEl) {
             console.log('resoures not found in renderer')
 
             return
@@ -137,7 +137,9 @@ class Renderer {
                 console.log('gl v1 surface created successfully as fallback')
             } catch (fallbackError) {
                 console.error('Both WebGL and CPU surface creation failed:', fallbackError)
-                throw new Error(`Could not create CanvasKit surface: WebGL failed (${error.message}), CPU fallback failed (${fallbackError.message})`)
+                const err = error as Error
+                const fErr = fallbackError as Error
+                throw new Error(`Could not create CanvasKit surface: WebGL failed (${err.message}), CPU fallback failed (${fErr.message})`)
             }
         }
     }
@@ -153,7 +155,7 @@ class Renderer {
 
     render(skCnvs?: Canvas) {
         skCnvs = skCnvs ? skCnvs : this.skCnvs
-        if (!this.resource.canvasKit || !this.surf || !skCnvs) {
+        if (!this.resource || !this.resource.canvasKit || !this.surf || !skCnvs || !this.sceneManager) {
             console.log('log error with surface')
 
             return

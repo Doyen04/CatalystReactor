@@ -82,7 +82,6 @@ class InputManager {
     destroy() {
         this.removeEventListeners()
         this.subscribers.clear()
-        this.canvasEl = null
     }
 }
 

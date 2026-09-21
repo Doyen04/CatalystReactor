@@ -30,9 +30,11 @@ class PImage extends Rectangle {
         const fill = this.data.properties.style.fill.color
         if (fill && typeof fill === 'object' && 'type' in fill && fill.type === 'image') {
             const imageFill = fill as ImageFill
-            const cnvsImage = this.paintManager.imageCache.get(imageFill.imageData.name)
-            if (cnvsImage) {
-                this.aspectRatio = this.calculateAspectRatio(cnvsImage.width(), cnvsImage.height())
+            if (imageFill.imageData) {
+                const cnvsImage = this.paintManager.imageCache.get(imageFill.imageData.name)
+                if (cnvsImage) {
+                    this.aspectRatio = this.calculateAspectRatio(cnvsImage.width(), cnvsImage.height())
+                }
             }
         }
     }

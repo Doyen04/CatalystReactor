@@ -118,11 +118,15 @@ class PaintManager {
             }
             case 'image': {
                 const { imageData, scaleMode } = fill as ImageFill
+                if (!imageData) return null
                 let cnvsImage = this.imageCache.get(imageData.name)
 
                 if (!cnvsImage && imageData.imageBuffer) {
-                    cnvsImage = this.createCanvasKitImage(imageData.imageBuffer)
-                    this.imageCache.set(imageData.name, cnvsImage)
+                    const created = this.createCanvasKitImage(imageData.imageBuffer)
+                    if (created) {
+                        cnvsImage = created
+                        this.imageCache.set(imageData.name, created)
+                    }
                 }
                 if (!cnvsImage) return null
 

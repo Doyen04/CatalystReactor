@@ -15,12 +15,12 @@ class GroupTool extends Tool {
 
     override handlePointerDown(e: MouseEvent) {
         super.handlePointerDown(e)
-        let scene = this.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
-        if (!scene) scene = this.sceneManager.getRootContainer()
+        let scene = this.ctx.sceneManager.getContainerNodeUnderMouse(e.offsetX, e.offsetY)
+        if (!scene) scene = this.ctx.sceneManager.getRootContainer()
 
         const { x, y } = scene.worldToLocal(e.offsetX, e.offsetY)
 
-        const containerNode = this.sceneManager.addShapeToScene('plainRect', {
+        const containerNode = this.ctx.sceneManager.addShapeToScene('plainRect', {
             x: x,
             y: y,
         }) as ContainerNode
@@ -29,7 +29,7 @@ class GroupTool extends Tool {
             const layoutConstraints = this.getLayoutConstraints(this.shapeType)
             containerNode.setLayoutConstraints(layoutConstraints)
 
-            this.shapeManager.attachNode(containerNode)
+            this.ctx.shapeManager.attachNode(containerNode)
         }
     }
 
@@ -45,13 +45,14 @@ class GroupTool extends Tool {
             case 'frame':
                 return { type: 'frame', padding: padding }
             default:
-                return null
+                throw new Error(`Unsupported container type: ${shapeType}`);
         }
     }
 
     private fullyContains(container: SceneNode, shape: SceneNode): boolean {
         const containerCoord = container.getAbsoluteBoundingRect()
         const shapeCoord = shape.getAbsoluteBoundingRect()
+        if (!containerCoord || !shapeCoord) return false
         return (
             shapeCoord.left >= containerCoord.left &&
             shapeCoord.top >= containerCoord.top &&
@@ -61,12 +62,12 @@ class GroupTool extends Tool {
     }
 
     private captureContainedShapes(): void {
-        const currentContainer = this.shapeManager.currentScene
+        const currentContainer = this.ctx.shapeManager.currentScene
         if (!currentContainer) return
 
         // Find all nodes that are fully contained within the group
         const containedNodes: SceneNode[] = []
-        const allScenes = this.sceneManager.getAllScene()
+        const allScenes = this.ctx.sceneManager.getAllScene()
 
         allScenes.forEach(scene => {
             if (scene !== currentContainer && scene) {
@@ -80,13 +81,16 @@ class GroupTool extends Tool {
         containedNodes.forEach(node => {
             const parent = node.getParent()
             let coord = node.getCoord()
-            coord = parent.localToWorld(coord.x, coord.y)
+            if (!coord) return
+            if (parent) {
+                coord = parent.localToWorld(coord.x, coord.y)
+            }
             const localCoord = currentContainer.worldToLocal(coord.x, coord.y)
 
             // Remove from current parent and re-parent into the container via the document
             node.setPosition(localCoord.x, localCoord.y)
 
-            this.sceneManager.insertNode(node, currentContainer.id)
+            this.ctx.sceneManager.insertNode(node, currentContainer.id)
         })
     }
 
@@ -97,17 +101,19 @@ class GroupTool extends Tool {
     }
 
     override handlePointerUp(e: MouseEvent): void {
-        this.shapeManager.handleTinyShapes()
+        this.ctx.shapeManager.handleTinyShapes()
         this.captureContainedShapes()
         if (this.isDragging) {
-            this.shapeManager.finishDrag()
+            this.ctx.shapeManager.finishDrag()
         }
         super.handlePointerUp?.(e)
     }
 
     handlePointerDrag(e: MouseEvent): void {
         this.isDragging = true
-        this.shapeManager.drawShape(this.dragStart, e)
+        if (this.dragStart) {
+            this.ctx.shapeManager.drawShape(this.dragStart, e)
+        }
     }
 
     setShape(shape: ContainerType) {

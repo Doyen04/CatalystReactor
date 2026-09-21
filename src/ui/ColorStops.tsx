@@ -7,7 +7,7 @@ import { Minus, Plus } from 'lucide-react'
 interface ColorStopProps {
     className?: string
     gradient: GradientFill
-    removeStop(index: number)
+    removeStop: (index: number) => void
     handleStopChange: (index: number, field: keyof GradientStop, value: string | number) => void
     addStop: () => void
 }

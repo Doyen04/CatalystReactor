@@ -163,7 +163,6 @@ class ToolManager {
 
     destroy() {
         this.removeEvent()
-        this.currentTool = null
     }
 }
 

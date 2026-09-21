@@ -61,18 +61,16 @@ class KeyboardTool {
     }
 
     private handleTextKey(e: KeyboardEvent) {
-        if (this.shapeManager.hasScene()) {
-            const scene = this.shapeManager.currentScene
-
+        const scene = this.shapeManager.currentScene
+        if (scene) {
             if (scene.canEdit()) {
                 scene.insertText(e.key, e.shiftKey)
             }
         }
     }
     private deleteSelected(e: KeyboardEvent) {
-        if (this.shapeManager.hasScene()) {
-            const scene = this.shapeManager.currentScene
-
+        const scene = this.shapeManager.currentScene
+        if (scene) {
             if (scene.canEdit()) {
                 switch (e.key) {
                     case 'Delete':
@@ -100,18 +98,16 @@ class KeyboardTool {
         console.log(e)
     }
     private handleEnter(e: KeyboardEvent) {
-        if (this.shapeManager.hasScene()) {
-            const scene = this.shapeManager.currentScene
-
+        const scene = this.shapeManager.currentScene
+        if (scene) {
             if (scene.canEdit()) {
                 scene.insertText('\n', e.shiftKey)
             }
         }
     }
     private handleArrowKeys(e: KeyboardEvent) {
-        if (this.shapeManager.hasScene()) {
-            const scene = this.shapeManager.currentScene
-
+        const scene = this.shapeManager.currentScene
+        if (scene) {
             if (scene.canEdit()) {
                 this.moveTextCursor(e, scene)
             } else {

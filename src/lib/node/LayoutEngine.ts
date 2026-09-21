@@ -265,7 +265,7 @@ export function applyGridLayout(shape: Shape, children: SceneNode[], layoutConst
 
         // Optionally resize child to fit cell (stretch behavior)
         const childBounds = child.getDim()
-        if (childBounds.width > cellWidth || childBounds.height > cellHeight) {
+        if (childBounds && (childBounds.width > cellWidth || childBounds.height > cellHeight)) {
             child.setDimension(Math.min(childBounds.width, cellWidth), Math.min(childBounds.height, cellHeight))
         }
     })

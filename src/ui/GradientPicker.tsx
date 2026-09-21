@@ -24,7 +24,8 @@ const GradientPicker: React.FC<GradientPickerProps> = ({ value, onGradientChange
         onGradientChange(gradient)
     }
 
-    const handleTypeChange = (newType: Gradient) => {
+    const handleTypeChange = (newTypeStr: string) => {
+        const newType = newTypeStr as Gradient
         if (newType === gradient.type) return
 
         // Preserve existing color stops when switching types

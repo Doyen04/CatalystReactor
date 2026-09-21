@@ -23,7 +23,7 @@ class SceneManager {
 
     constructor(shapeModifier: ShapeModifier, shapeManager: ShapeManager, doc: DocumentModel, paintManager: PaintManager, store: EngineStateStore) {
         this.doc = doc
-        this.scene = new ContainerNode(null, null, paintManager)
+        this.scene = new ContainerNode(null as any, null as any, paintManager)
         this.shapeModifier = shapeModifier
         this.shapeManager = shapeManager
         this.paintManager = paintManager
@@ -175,7 +175,7 @@ class SceneManager {
         return this.scene
     }
 
-    getContainerNodeUnderMouse(x: number, y: number): SceneNode {
+    getContainerNodeUnderMouse(x: number, y: number): SceneNode | null {
         const flattened = this.getAllContainerNode().reverse() //work on this
 
         for (const node of flattened) {
@@ -187,6 +187,7 @@ class SceneManager {
     }
 
     draw(skCnvs: Canvas) {
+        if (!this.scene) return
         this.scene.updateWorldMatrix()
         this.scene.draw(skCnvs)
         this.shapeManager.draw(skCnvs)
@@ -197,7 +198,6 @@ class SceneManager {
         this.unsubscribe = null
         if (this.scene) {
             this.scene.destroy()
-            this.scene = null
         }
         this.nodeById.clear()
     }
