@@ -589,6 +589,45 @@ A discriminated union instead of scattered booleans. It makes illegal states unr
 
 `LineTool`, `PenTool`, and `BezierTool` are near-duplicates. One `PathTool` base with a mode parameter removes three copies of the same snap, close-path, and finish logic. This is not architecture, it is just cheaper maintenance, but it is worth doing while you are in the file anyway.
 
+### 7.3.1 Vector draw unification + journaled draws — Step 10 (landed: 23 files / 384 tests)
+
+**Measured duplication (current branch).** `PenTool` (214 lines) and `BezierTool` (206 lines) are clones: the only differences are the `addShapeToScene` type (`'path'` vs `'bezier'`), `smooth: true` on the first point and on `addPoint`, and a missing `handleKeyDown` bind in Bezier's constructor. Snap-n-close, click-near-first close, handle mirroring, preview, finish, and `toolChange` are byte-for-byte identical. `LineTool` (148 lines) shares the skeleton but is genuinely different: polyline semantics, double-click (300ms) finish, Shift-45° lock, and no snap/close/handle math. The "do this late" condition in §7.3 is met: steps 1-9 landed, all tools are stable on `ToolContext`/`SceneManager`.
+
+**Part A — one `PathTool`.**
+
+- `src/lib/tools/PathTool.ts`: `class PathTool extends Tool` with `constructor(cnvs, ctx, mode: PathMode)`, `type PathMode = 'line' | 'path' | 'bezier'` (subset of `ToolType`). One implementation of the state machine; a `modeConfig` table drives the deltas:
+
+  | mode | smoothOnAdd | closeEnabled | shiftLock45 | doubleClickFinish |
+  |------|-------------|--------------|-------------|-------------------|
+  | line | false       | false        | true        | true              |
+  | path | false       | true         | false       | false             |
+  | bezier | true      | true         | false       | false             |
+
+  (path keeps sharp corners unless the user drags to create handles — existing pen behavior.)
+
+- Delete `LineTool.ts` / `PenTool.ts` / `BezierTool.ts`. `ToolManager.setCurrentTool` routes `'line' | 'path' | 'bezier'` to `new PathTool(tool, cnvs, ctx)`. The `ToolType` union, toolbar entries, and per-group remembered tools stay unchanged — three UI tools, one implementation.
+- Folded-in fixes: Bezier's unbound `handleKeyDown` dies with the clone; `toolChange` is unified on Line's cleanup, so an in-progress path with <2 points no longer leaves a ghost doc record (current pen/bezier `toolChange` only calls `finishDrag()` for >=2 points and leaks the rest).
+
+**Part B — journaled draws (one undoable Create).**
+
+Current reality (verified): `SceneManager.addShapeToScene` inserts the doc record immediately with no transaction open; every `addPoint`/`recomputeBounds`/`closed` write mutates `data.properties.pathData` in place without `doc.setProperties` — no journal entry, no version bump; and `ShapeManager.finishDrag` only records history when `initialProps` was set by `handleMouseDown`, which the path tools never call. Net result today: **drawn lines/paths have no undo at all**, and an aborted <2-point draw leaves a record the user never sees. The old status note at Step 6.5/7 ("real draw tools ... not yet command-backed") flagged exactly this.
+
+Design (reuses the proven drag pattern; no new command types):
+
+- **Start** (`idle → placing`, first click): `ctx.commandManager.begin(\`Draw ${mode}\`, null)`. mergeKey is **null** deliberately — consecutive paths must be separate undo steps, never coalesced (the `translate:<id>`/`props:<id>` coalescing keys are per-id; `draw:line` would wrongly merge two creations). Then `addShapeToScene(mode, {x:0,y:0})` — its `doc.insert` is now journaled because the transaction is open. Snapshot `initialProps = structuredClone(shape.getProperties())` *before* the first `addPoint`.
+- **Mid-draw**: keep the in-place `addPoint`/`recomputeBounds`/`closed =` mutations. No per-point journaling — the whole session is diffed once at finish, exactly like a shape drag (Step 7 pattern).
+- **Finish** (points >= 2): `apply(new UpdateProperties(id, initialProps, finalProps))` then `commit()` → one transaction `[insert, propsDiff]`, one undo step removes the whole path. Undo/redo fall out of the journal (`invert`), no hand-written inverse.
+- **Cancel** (<2 points, or Escape with <2): `commandManager.abort()` — the journaled insert is inverted, the record vanishes, `SceneManager` reconciliation tears down the projected node. No ghost, no undo step. Order: abort → `detachShape()` → `setTool(default)` (same UX as today).
+
+**Part C — tests + docs.**
+
+- Headless test `src/engine/__tests__/pathDrawJournal.test.ts` driving a real `DocumentModel` + `CommandManager` through the exact sequence — begin → insert inside txn → in-place point mutation → `UpdateProperties` + commit (undo removes the path; redo restores) and abort (record gone) — no CanvasKit required.
+- Verification notes for implementation: (a) confirm `doc.abortTransaction` notifies listeners so reconciliation removes the projected node on the abort path; if it reverts silently, the tool must `removeNode` explicitly after abort; (b) Escape during a draw: `KeyboardTool` (transaction open → `cancelDrag`, which no-ops because `dragTransactionActive` is false) then `PathTool.handleKeyDown` runs `finishPath` — ordering is safe.
+- `tsc -b` catches any straggler imports of the deleted tool files; suite stays headless-green (22 files / 378 tests + new).
+- Docs: mark §7.3 and the Step 6.5/7 "not command-backed" note resolved; add this to AGENTS.md refactor status as Step 10 once landed. Canvas smoke check (draw all three, undo each individually, Escape mid-draw) still deferred, consistent with the rest of the plan.
+
+**Landed (Step 10).** `src/lib/tools/PathTool.ts` ships the mode-driven merger (`line`/`path`/`bezier` via `PATH_MODE_CONFIG`); `LineTool`/`PenTool`/`BezierTool` are deleted and `ToolManager` routes all three `ToolType`s to `new PathTool(cnvs, ctx, tool)`. Draws are now journaled: `PathTool.startPath` opens `begin(\`Draw ${mode}\`, null)` before the `addShapeToScene` insert, snapshots `initialProps` before the first point, mutations stay in-place, and finish commits `[insert, propsDiff]` (one undo step removes the whole path) while <2-point finishes / aborts revert via `commandManager.abort()` — no ghost records, no undo noise. `abortTransaction` replays inverted entries through `applyEntry`, which notifies listeners, so `SceneManager` reconciliation tears down the projected node. New headless test `src/engine/__tests__/pathDrawJournal.test.ts` drives the exact sequence (commit/undo/redo, abort-incomplete, no-nested-transaction, distinct undo steps for consecutive draws, exact diff restore). The `commands.test.ts` suite still exercises `TranslateNodes`/`EditPath`/etc. as building blocks for headless use; the interactive app path continues to funnel through `UpdateProperties` snapshots.
+
 ### 7.4 Registry
 
 ```ts
@@ -813,7 +852,7 @@ Step 7 landed journal-backed commands:
 Known Step 7 deltas / deferred verification:
 
 - Manual smoke tests (create, group, reparent, edit a path, edit text, undo all in reverse; Escape mid-drag revert) are still pending — only the headless + node tests are green (20 files / 354 tests).
-- `CreateShape`'s headless defaults are minimal (the plan's §2.2 snippet predates the nested `Properties` shape, so `x/y/width/height` live under `transform`/`size`); the real draw tools still go through `SceneManager.addShapeToScene` and are not yet command-backed.
+- `CreateShape`'s headless defaults are minimal (the plan's §2.2 snippet predates the nested `Properties` shape, so `x/y/width/height` live under `transform`/`size`); the real draw tools went through `SceneManager.addShapeToScene` and were not yet command-backed — **resolved in Step 10** (the path tools now draw inside a journaled `begin`/`commit` transaction; `ShapeTool`/`ImageTool` still register via `addShapeToScene`, see Step 10 status in §7.3.1).
 - Container drags still do not create history (pre-existing `instanceof ShapeNode` guard preserved).
 
 Step 7 landed journal-backed commands: as described above; the manual smoke checks are still deferred. Test count at the end of Step 7: 20 files / 354 tests.

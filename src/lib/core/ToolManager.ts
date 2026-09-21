@@ -5,9 +5,7 @@ import ImageTool from '@lib/tools/ImageTool'
 import KeyboardTool from '@lib/tools/keyboardTool'
 import { ToolType } from '@lib/tools/toolTypes'
 import GroupTool from '@lib/tools/GroupTool'
-import LineTool from '@lib/tools/LineTool'
-import PenTool from '@lib/tools/PenTool'
-import BezierTool from '@lib/tools/BezierTool'
+import PathTool from '@lib/tools/PathTool'
 import EditTool from '@lib/tools/EditTool'
 import type InputManager from './InputManager'
 import type { InputCallbacks } from './InputManager'
@@ -91,13 +89,9 @@ class ToolManager {
                 currentTool = new ImageTool(this.cnvsElm, this.ctx)
                 break
             case 'line':
-                currentTool = new LineTool(this.cnvsElm, this.ctx)
-                break
             case 'path':
-                currentTool = new PenTool(this.cnvsElm, this.ctx)
-                break
             case 'bezier':
-                currentTool = new BezierTool(this.cnvsElm, this.ctx)
+                currentTool = new PathTool(this.cnvsElm, this.ctx, tool)
                 break
             case 'edit':
                 currentTool = new EditTool(this.cnvsElm, this.ctx)
