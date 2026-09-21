@@ -8,12 +8,12 @@ import type { Properties } from '@lib/types/shapes'
 
 class ContainerNode extends SceneNode {
     children: SceneNode[]
-    layoutConstraints: LayoutConstraints | null
+    layoutConstraints: LayoutConstraints
     paintManager: PaintManager
 
-    constructor(shape: Shape | null, layoutConstraints: LayoutConstraints | null, paintManager: PaintManager) {
+    constructor(shape: Shape | null, layoutConstraints: LayoutConstraints, paintManager: PaintManager) {
         super()
-        this.shape = shape as any
+        this.shape = shape
         this.children = []
         this.paintManager = paintManager
         this.parent = null
@@ -220,7 +220,7 @@ class ContainerNode extends SceneNode {
 
         if (gap <= 0) return
 
-        const containerBounds = this.shape.getDim()
+        const containerBounds = this.shape?.getDim()
         const paddingLeft = padding?.left || 0
         const paddingRight = padding?.right || 0
         const paddingTop = padding?.top || 0
@@ -236,9 +236,9 @@ class ContainerNode extends SceneNode {
             const currentPos = currentChild.getCoord()
             const nextPos = nextChild.getCoord()
 
-            let gapRect: Rect | null = null
+            let gapRect: Rect
 
-            if (type === 'row' && currentPos && currentBounds && nextPos && containerBounds && this.resource) {
+            if (type === 'row') {
                 // Horizontal gap between children - spans full height of container content area
                 const gapX = currentPos.x + currentBounds.width
                 const gapWidth = nextPos.x - gapX
@@ -246,7 +246,7 @@ class ContainerNode extends SceneNode {
                 const gapHeight = containerBounds.height - paddingTop - paddingBottom
 
                 gapRect = this.resource.canvasKit.XYWHRect(gapX, gapY, gapWidth, gapHeight)
-            } else if (type === 'column' && currentPos && currentBounds && nextPos && containerBounds && this.resource) {
+            } else if (type === 'column') {
                 // Vertical gap between children - spans full width of container content area
                 const gapY = currentPos.y + currentBounds.height
                 const gapHeight = nextPos.y - gapY
