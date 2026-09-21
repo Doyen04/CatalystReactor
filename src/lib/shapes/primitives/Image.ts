@@ -24,6 +24,11 @@ class PImage extends Rectangle {
 
         this.maintainAspectRatio = true
         this.setupImage()
+        this.modelVersion = this.dataVersion
+    }
+
+    protected override onPropertiesChanged(): void {
+        this.setupImage()
     }
 
     private setupImage() {

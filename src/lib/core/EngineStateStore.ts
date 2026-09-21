@@ -6,6 +6,8 @@ export interface ShapeData {
     id: string
     type: ShapeType
     properties: Properties
+    /** Document entity version; bumped on every journaled property change. Absent on plain (non-store) data. */
+    readonly version?: number
 }
 
 class EngineStateStore {
@@ -29,7 +31,14 @@ class EngineStateStore {
                 doc.setProperties(id, next)
             },
         }
-        return view
+        // version is intentionally non-enumerable so the view keeps looking
+        // like a plain {id, type, properties} shape (the old facade contract).
+        Object.defineProperty(view, 'version', {
+            enumerable: false,
+            configurable: true,
+            get: () => (doc.has(id) ? doc.get(id)!.version : -1),
+        })
+        return view as ShapeData
     }
 
     createShapeData(id: string, type: ShapeType, properties: Properties): ShapeData {

@@ -8,15 +8,17 @@ abstract class Shape {
     protected aspectRatio: number = 1
     protected maintainAspectRatio: boolean = false
     protected isHover: boolean = false
-    protected rotationAnchorPosition: Coord = { x: 0.5, y: 0.5 }
     protected paintManager: PaintManager
     public data: ShapeData
     public matrixDirty: boolean = false
+    /** Last doc entity version this projection has derived its caches from. */
+    protected modelVersion: number = -1
 
     constructor(data: ShapeData, paintManager: PaintManager) {
         if (new.target === Shape) throw new Error('Shape is abstract; extend it!')
         this.data = data
         this.paintManager = paintManager
+        this.modelVersion = this.dataVersion
     }
 
     abstract getCenterCoord(): Coord
@@ -42,6 +44,7 @@ abstract class Shape {
     }
 
     setSize(dragStart: { x: number; y: number }, mx: number, my: number, shiftKey: boolean): void {
+        this.ensureModelSynced()
         const deltaX = mx - dragStart.x
         const deltaY = my - dragStart.y
 
@@ -97,8 +100,9 @@ abstract class Shape {
         }
     }
 
-    getRotationAnchorPoint() {
-        return this.rotationAnchorPosition
+    getRotationAnchorPoint(): Coord {
+        const anchor = this.data.properties.transform.anchorPoint
+        return anchor ? anchor : { x: 0.5, y: 0.5 }
     }
 
     getCoord(): Coord {
@@ -127,7 +131,7 @@ abstract class Shape {
     }
 
     setAnchorPoint(anchor: Coord): void {
-        console.log('not yet implemented', anchor)
+        this.data.properties.transform.anchorPoint = anchor
     }
 
     setScale(x: number, y: number): void {
@@ -142,6 +146,21 @@ abstract class Shape {
     setProperties(prop: Properties): void {
         this.data.properties = prop
     }
+
+    protected get dataVersion(): number {
+        return this.data.version ?? -1
+    }
+
+    protected ensureModelSynced(): void {
+        const version = this.dataVersion
+        if (version !== this.modelVersion) {
+            this.modelVersion = version
+            this.onPropertiesChanged()
+        }
+    }
+
+    /** Override to regenerate derived caches when the doc record changes from outside this shape (panel edits, undo/redo). */
+    protected onPropertiesChanged(): void {}
 
     setHovered(bool: boolean) {
         this.isHover = bool

@@ -48,6 +48,7 @@ class PText extends Shape {
         this.setUpParagraph()
         this.calculateTextDim()
         this.startEditing()
+        this.modelVersion = this.dataVersion
     }
 
     get text(): string {
@@ -89,10 +90,20 @@ class PText extends Shape {
     }
 
     override getDim(): { width: number; height: number } {
+        this.ensureModelSynced()
         const { width, height } = this.data.properties.size
         return {
             width: width > 0 ? width : this.TWidth,
             height: height > 0 ? height : this.THeight,
+        }
+    }
+
+    protected override onPropertiesChanged(): void {
+        this.setUpParagraph()
+        this.calculateTextDim()
+        if (this.paragraph) {
+            this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
+            this.cursor.setCoord(this.data.properties.transform.x, this.data.properties.transform.y)
         }
     }
 
@@ -184,7 +195,9 @@ class PText extends Shape {
     }
 
     override draw(canvas: Canvas): void {
-        if (!this.resource || !this.paragraph) return
+        if (!this.resource) return
+        this.ensureModelSynced()
+        if (!this.paragraph) return
 
         try {
             canvas.drawParagraph(this.paragraph, 0, 0)

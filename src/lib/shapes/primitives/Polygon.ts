@@ -9,11 +9,18 @@ import { ShapeData } from '@lib/core/EngineStateStore'
 import type PaintManager from '@lib/core/PaintManager'
 
 class Polygon extends Shape {
-    private points: Coord[] = []
+    private _points: Coord[] = []
+
+    // Derived geometry cache. Backed by the live doc properties; regenerated
+    // lazily when the document entity version changes (panel edits, undo/redo).
+    private get points(): Coord[] {
+        this.ensureModelSynced()
+        return this._points
+    }
 
     constructor(data: ShapeData, paintManager: PaintManager) {
         super(data, paintManager)
-        this.points = this.generateRegularPolygon()
+        this._points = this.generateRegularPolygon()
     }
 
     get radiusX(): number {
@@ -56,7 +63,7 @@ class Polygon extends Shape {
     override setDim(width: number, height: number) {
         this.data.properties.size.width = width
         this.data.properties.size.height = height
-        this.points = this.generateRegularPolygon()
+        this._points = this.generateRegularPolygon()
     }
 
     override setVertexCount(sides: number) {
@@ -66,7 +73,11 @@ class Polygon extends Shape {
         } else {
             this.data.properties.sides.sides = s
         }
-        this.points = this.generateRegularPolygon()
+        this._points = this.generateRegularPolygon()
+    }
+
+    protected override onPropertiesChanged(): void {
+        this._points = this.generateRegularPolygon()
     }
 
     override getCenterCoord(): Coord {

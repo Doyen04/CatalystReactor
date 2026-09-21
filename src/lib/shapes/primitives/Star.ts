@@ -9,11 +9,18 @@ import { ShapeData } from '@lib/core/EngineStateStore'
 import type PaintManager from '@lib/core/PaintManager'
 
 class Star extends Shape {
-    private points: Coord[] = []
+    private _points: Coord[] = []
+
+    // Derived geometry cache. Backed by the live doc properties; regenerated
+    // lazily when the document entity version changes (panel edits, undo/redo).
+    private get points(): Coord[] {
+        this.ensureModelSynced()
+        return this._points
+    }
 
     constructor(data: ShapeData, paintManager: PaintManager) {
         super(data, paintManager)
-        this.points = this.generateStarPoints()
+        this._points = this.generateStarPoints()
     }
 
     get radiusX(): number {
@@ -72,7 +79,7 @@ class Star extends Shape {
     override setDim(width: number, height: number) {
         this.data.properties.size.width = width
         this.data.properties.size.height = height
-        this.points = this.generateStarPoints()
+        this._points = this.generateStarPoints()
     }
 
     override setVertexCount(points: number): void {
@@ -81,7 +88,7 @@ class Star extends Shape {
         } else {
             this.data.properties.spikesRatio.spikes = clamp(points, 3, 60)
         }
-        this.points = this.generateStarPoints()
+        this._points = this.generateStarPoints()
     }
 
     override setRatio(rat: number) {
@@ -90,7 +97,11 @@ class Star extends Shape {
         } else {
             this.data.properties.spikesRatio.ratio = rat
         }
-        this.points = this.generateStarPoints()
+        this._points = this.generateStarPoints()
+    }
+
+    protected override onPropertiesChanged(): void {
+        this._points = this.generateStarPoints()
     }
 
     override getVertex(sides: number, index: number, startAngle = -Math.PI / 2): { x: number; y: number } {

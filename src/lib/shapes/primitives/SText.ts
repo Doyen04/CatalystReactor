@@ -5,7 +5,7 @@ import type PaintManager from '@lib/core/PaintManager'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 
 interface SimpleTextStyle {
-    textColor: number[]
+    textColor: string | number[]
     fontSize: number
     fontFamily: string[]
 }
@@ -21,6 +21,11 @@ class SText extends Shape {
     private padding: number = 2
     private TWidth: number = 0
     private THeight: number = 0
+
+    // _style is a TRANSIENT render cache for the internal label overlay. It is NOT
+    // document data: the document's data.properties.textStyle is the source of truth,
+    // and this copy exists only because Font/Typeface measurement takes a plain style.
+    // It is initialized from the doc when present so the two never diverge.
     private _style: SimpleTextStyle = {
         textColor: [1, 1, 1, 1],
         fontSize: 10,
@@ -46,12 +51,11 @@ class SText extends Shape {
             }
         }
 
-        // _style is the private rendering style for this internal text label.
-        // It is intentionally separate from data.properties.textStyle (PTextStyle).
-
         if (this.data.properties.text === undefined) {
             this.data.properties = { ...this.data.properties, text: '' }
         }
+
+        this.syncStyleFromDoc()
 
         const resource = CanvasKitResources.optionalInstance()
         if (resource && resource.canvasKit && resource.fontData && resource.fontData[0]) {
@@ -65,6 +69,17 @@ class SText extends Shape {
 
     get text(): string {
         return this.data.properties.text || ''
+    }
+
+    private syncStyleFromDoc(): void {
+        const docStyle = this.data.properties.textStyle
+        if (!docStyle) return
+        const fill = docStyle.textFill?.color
+        if (fill && typeof fill === 'object' && 'type' in fill && fill.type === 'solid') {
+            this._style.textColor = fill.color
+        }
+        this._style.fontSize = docStyle.fontSize ?? this._style.fontSize
+        if (docStyle.fontFamilies?.length) this._style.fontFamily = [...docStyle.fontFamilies]
     }
 
     get textStyle(): SimpleTextStyle {
