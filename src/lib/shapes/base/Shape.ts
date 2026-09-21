@@ -27,14 +27,8 @@ abstract class Shape {
     abstract getDim(): { width: number; height: number }
     abstract cleanUp(): void
 
-    get resource(): CanvasKitResources | null {
-        const resources = CanvasKitResources.getInstance()
-        if (resources) {
-            return resources
-        } else {
-            console.log('resources is null')
-            return null
-        }
+    get resource(): CanvasKitResources {
+        return CanvasKitResources.getInstance()
     }
 
     moveShape(mx: number, my: number): void {

@@ -5,6 +5,7 @@ import { Coord, PaintStyle, PTextStyle } from '@lib/types/shapes'
 import { ShapeData } from '@lib/core/EngineStateStore'
 import type PaintManager from '@lib/core/PaintManager'
 import { textCache } from '@/lib/engine/render/TextCache'
+import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 
 class PText extends Shape {
     private TWidth: number = 0
@@ -113,7 +114,7 @@ class PText extends Shape {
 
         this.setUpParagraph()
         this.calculateTextDim()
-        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
+        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph!)
     }
 
     override setCoord(x: number, y: number): void {
@@ -197,7 +198,7 @@ class PText extends Shape {
 
     override setCursorPosFromCoord(x: number, y: number) {
         this.clearSelection()
-        this.cursor.setCursorPositionFromCoord(this.paragraph, this.text, this.textStyle.fontSize, this.textStyle.lineHeight, x, y)
+        this.cursor.setCursorPositionFromCoord(this.paragraph!, this.text, this.textStyle.fontSize, this.textStyle.lineHeight, x, y)
         this.setUpParagraph()
     }
 
@@ -229,7 +230,7 @@ class PText extends Shape {
         this.setUpParagraph()
         this.calculateTextDim()
         this.cursor.updateCursorPosIndex(char.length)
-        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
+        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph!)
     }
 
     override deleteText(direction: 'forward' | 'backward'): void {
@@ -244,7 +245,7 @@ class PText extends Shape {
 
         this.setUpParagraph()
         this.calculateTextDim()
-        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
+        this.cursor.calculateCursorCoord(this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph!)
     }
 
     copyText() {
@@ -261,9 +262,10 @@ class PText extends Shape {
     }
 
     private setUpBuilder() {
-        if (!this.resource || this.resource.fontData.length == 0) return
+        const resource = CanvasKitResources.optionalInstance()
+        if (!resource || resource.fontData.length == 0) return
         const paragraphStyle = this.getParagraphStyle()
-        this.builder = this.resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, this.resource.fontMgr)
+        this.builder = resource.canvasKit.ParagraphBuilder.Make(paragraphStyle, resource.fontMgr!)
     }
 
     private setUpParagraph() {
@@ -335,7 +337,7 @@ class PText extends Shape {
         } else {
             this.clearSelection()
         }
-        this.cursor.moveCursor(direction, this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph)
+        this.cursor.moveCursor(direction, this.text, this.textStyle.fontSize, this.textStyle.lineHeight, this.paragraph!)
 
         if (shiftKey) this.selectionEnd = this.cursor.cursorPosIndex
         this.setUpParagraph()

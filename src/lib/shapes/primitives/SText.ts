@@ -2,6 +2,7 @@ import Shape from '../base/Shape'
 import type { Canvas, Font, Typeface, Path } from 'canvaskit-wasm'
 import type { ShapeData } from '@lib/core/EngineStateStore'
 import type PaintManager from '@lib/core/PaintManager'
+import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 
 interface SimpleTextStyle {
     textColor: number[]
@@ -52,9 +53,10 @@ class SText extends Shape {
             this.data.properties = { ...this.data.properties, text: '' }
         }
 
-        if (this.resource && this.resource.canvasKit && this.resource.fontData && this.resource.fontData[0]) {
-            this.typeface = this.resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(this.resource.fontData[0])
-            this.font = new this.resource.canvasKit.Font(this.typeface, this.textStyle.fontSize)
+        const resource = CanvasKitResources.optionalInstance()
+        if (resource && resource.canvasKit && resource.fontData && resource.fontData[0]) {
+            this.typeface = resource.canvasKit.Typeface.MakeFreeTypeFaceFromData(resource.fontData[0])
+            this.font = new resource.canvasKit.Font(this.typeface, this.textStyle.fontSize)
             this.calculateTextDim()
         } else {
             console.warn('SText: Resource or font data not available during initialization')

@@ -10,12 +10,11 @@ export class CanvasKitResources {
     private static fontLoadPromise: Promise<void> | null = null
 
     private cnvsTextStyle: TextStyle | null = null
-    private cnvsParagraphStyle: ParagraphStyle
-    private cnvsFontMgr: FontMgr | null
+    private cnvsParagraphStyle: ParagraphStyle | null = null
+    private cnvsFontMgr: FontMgr | null = null
     private cnvsCanvasKit: CanvasKit
     private cnvsPath: Path
     private pathDisposed = false
-    
 
     private constructor(canvasKit: CanvasKit) {
         this.cnvsCanvasKit = canvasKit
@@ -25,17 +24,19 @@ export class CanvasKitResources {
     get path() {
         return this.cnvsPath
     }
-   
-    get textStyle(): TextStyle | null {
+
+    get textStyle(): TextStyle {
+        if (!this.cnvsTextStyle) throw new Error('CanvasKit styles not set up. Call setUpStyles() first.')
         return this.cnvsTextStyle
     }
-    get paragraphStyle() {
+    get paragraphStyle(): ParagraphStyle {
+        if (!this.cnvsParagraphStyle) throw new Error('CanvasKit styles not set up. Call setUpStyles() first.')
         return this.cnvsParagraphStyle
     }
     get canvasKit() {
         return this.cnvsCanvasKit
     }
-    get fontMgr() {
+    get fontMgr(): FontMgr | null {
         return this.cnvsFontMgr
     }
     get fontData() {
@@ -84,7 +85,7 @@ export class CanvasKitResources {
 
             const SecondFont = []
             for (const family of families) {
-                const urls = fontMap[family]
+                const urls = fontMap[family as keyof typeof fontMap]
                 if (urls) {
                     const fontPromises = urls.map(url => fetch(url).then(res => {
                         if (!res.ok) throw new Error(`Failed to load font: ${url}`);
@@ -131,6 +132,10 @@ export class CanvasKitResources {
         if (!this.instance) {
             throw new Error('CanvasKitResources not initialized. Call CanvasKitResources.initialize(CanvasKit) first.')
         }
+        return this.instance
+    }
+
+    public static optionalInstance(): CanvasKitResources | null {
         return this.instance
     }
 

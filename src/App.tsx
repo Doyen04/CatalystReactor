@@ -3,7 +3,7 @@ import './App.css'
 import Canvas from './component/Canvas'
 import PropertyBar from './component/PropertyBar'
 import SideBar from './component/SideBar'
-import { EditorProvider } from './bridge/EditorProvider'
+import { EditorProvider } from '@/lib/bridge/EditorProvider'
 
 function App() {
     return (

@@ -11,7 +11,7 @@ class TextCursor {
     private textY: number
     private height: number
     private visible: boolean = true
-    private blinkInterval: ReturnType<typeof setTimeout>
+    private blinkInterval: ReturnType<typeof setTimeout> | null = null
     private blinkSpeed: number = 500 // ms
     private cursorIndex: number
     paintManager: PaintManager
@@ -37,14 +37,7 @@ class TextCursor {
         return this.cursorIndex
     }
     get resource(): CanvasKitResources {
-        const resources = CanvasKitResources.getInstance()
-        if (resources) {
-            return resources
-        } else {
-            console.log('resources is null')
-
-            return null
-        }
+        return CanvasKitResources.getInstance()
     }
     setCoord(x: number, y: number) {
         this.x = x
@@ -254,7 +247,7 @@ class TextCursor {
     }
 
     draw(canvas: Canvas): void {
-        if (!this.visible || !this.resource) {
+        if (!this.visible) {
             return
         }
 

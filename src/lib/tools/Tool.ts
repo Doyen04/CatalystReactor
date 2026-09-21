@@ -14,7 +14,7 @@ abstract class Tool {
     protected ctx: ToolContext
     protected isPointerDown: boolean
     protected isDragging: boolean
-    protected dragStart: Coord
+    protected dragStart: Coord | null
 
     constructor(cnvs: HTMLCanvasElement, ctx: ToolContext) {
         this.ctx = ctx
@@ -27,14 +27,7 @@ abstract class Tool {
     }
 
     get resource(): CanvasKitResources {
-        const resources = CanvasKitResources.getInstance()
-        if (resources) {
-            return resources
-        } else {
-            console.log('resources is null')
-
-            return null
-        }
+        return CanvasKitResources.getInstance()
     }
 
     handlePointerUp(_e: MouseEvent) {
