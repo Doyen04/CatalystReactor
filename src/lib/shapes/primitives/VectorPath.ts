@@ -1,7 +1,7 @@
 import type { Canvas, Path, Path as SkPath } from 'canvaskit-wasm'
 import { Coord, PathPoint } from '@lib/types/shapes'
 import Shape from '../base/Shape'
-import { ShapeData } from '@lib/core/EngineStateStore'
+import { ShapeData } from '@lib/types/shapes'
 import type PaintManager from '@lib/core/PaintManager'
 
 class VectorPath extends Shape {

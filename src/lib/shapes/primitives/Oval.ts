@@ -3,7 +3,7 @@ import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { ArcHandleState, ArcSegment, Coord, InitialTransformState, PathData, PathPoint, Properties } from '@lib/types/shapes'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import { normalizeAngle } from '@lib/helper/normalise'
-import { ShapeData } from '@lib/core/EngineStateStore'
+import { ShapeData } from '@lib/types/shapes'
 import type PaintManager from '@lib/core/PaintManager'
 
 class Oval extends Shape {

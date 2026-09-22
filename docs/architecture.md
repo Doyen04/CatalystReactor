@@ -628,6 +628,8 @@ Design (reuses the proven drag pattern; no new command types):
 
 **Landed (Step 10).** `src/lib/tools/PathTool.ts` ships the mode-driven merger (`line`/`path`/`bezier` via `PATH_MODE_CONFIG`); `LineTool`/`PenTool`/`BezierTool` are deleted and `ToolManager` routes all three `ToolType`s to `new PathTool(cnvs, ctx, tool)`. Draws are now journaled: `PathTool.startPath` opens `begin(\`Draw ${mode}\`, null)` before the `addShapeToScene` insert, snapshots `initialProps` before the first point, mutations stay in-place, and finish commits `[insert, propsDiff]` (one undo step removes the whole path) while <2-point finishes / aborts revert via `commandManager.abort()` — no ghost records, no undo noise. `abortTransaction` replays inverted entries through `applyEntry`, which notifies listeners, so `SceneManager` reconciliation tears down the projected node. New headless test `src/engine/__tests__/pathDrawJournal.test.ts` drives the exact sequence (commit/undo/redo, abort-incomplete, no-nested-transaction, distinct undo steps for consecutive draws, exact diff restore). The `commands.test.ts` suite still exercises `TranslateNodes`/`EditPath`/etc. as building blocks for headless use; the interactive app path continues to funnel through `UpdateProperties` snapshots.
 
+**Landed (Step 11).** `EngineStateStore` is deleted; the `DocumentModel` is the whole store. `ShapeData` moved to `src/lib/types/shapes.ts`; `DocumentModel` gained the view API (`createShape`, `getShapeData`, `getAllShapeData`, `makeView`) — views remain live write-through `{ id, type, properties }` windows with a non-enumerable `version`, cached with stable identity and evicted on `remove`; a stale view reads its last snapshot and reports `version: -1`. The vestigial `subscribe`/`notify` listener API and the `removeShapeData` freeze hack died with the store (the bus `document:changed` replaced them). Constructors take one object now: `SceneManager(shapeModifier, shapeManager, doc, paintManager)`, `ShapeFactory.createShape(type, pos, paintManager, doc, image?)`, `CanvasDeps` has no `store`, and the `Editor` handle exposes `{ doc, bus, ... }`. Tests: `engineState.test.ts` → `DocumentModel shape views` (view identity, seed cloning, remove eviction, non-enumerable version, journaled writes); 23 files / 384 tests.
+
 ### 7.4 Registry
 
 ```ts
@@ -871,7 +873,7 @@ Known Step 8 deltas / deferred verification:
 
 - The live app still goes through `CanvasManager` (per-editor instances are Step 9), so `EditorProvider`/`makeEditor` wrap the single existing manager rather than calling `createEditor()`.
 - `LayersPanel`'s click-select and the container/label logic were preserved, but drag-on-canvas and multi-step panel editing have not been manually smoke-tested yet.
-- `EngineStateStore.subscribe`/`notify` still exist (used by engine tests and `LayersPanel`'s predecessor); nothing live calls `notify()` now.
+- `EngineStateStore.subscribe`/`notify` and then the whole store were removed in Step 11; the engine's only outbound channel is the bus (`document:changed`).
 
 Next up: Step 9 (per-editor instances) — **landed**, see the "Step 9 landed" marker below.
 

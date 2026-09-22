@@ -10,9 +10,9 @@ import VectorPath from '../primitives/VectorPath'
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
 import type Shape from './Shape'
 import SimpleRect from '../primitives/SimpleRect'
-import type EngineStateStore from '@lib/core/EngineStateStore'
+import type { ShapeData } from '@lib/types/shapes'
+import type { DocumentModel } from '@lib/engine/document/DocumentModel'
 import type PaintManager from '@lib/core/PaintManager'
-import type { ShapeData } from '@lib/core/EngineStateStore'
 
 export default class ShapeFactory {
     static createShapeFromData(
@@ -60,12 +60,11 @@ export default class ShapeFactory {
         type: ShapeType,
         options: Coord,
         paintManager: PaintManager,
-        store: EngineStateStore,
+        doc: DocumentModel,
         image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }
     ): Shape {
-        const id = crypto.randomUUID()
         const initialProps = this.getDefaultProperties(type, options)
-        const data = store.createShapeData(id, type, initialProps)
+        const data = doc.createShape(type, initialProps)
         return this.createShapeFromData(data, paintManager, image)
     }
 

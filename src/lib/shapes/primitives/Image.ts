@@ -1,7 +1,7 @@
 import Rectangle from './Rect'
 import { ImageFill, SolidFill } from '@lib/types/shapes'
 import type { Image as CanvasKitImage } from 'canvaskit-wasm'
-import { ShapeData } from '@lib/core/EngineStateStore'
+import { ShapeData } from '@lib/types/shapes'
 import type PaintManager from '@lib/core/PaintManager'
 
 class PImage extends Rectangle {

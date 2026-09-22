@@ -1,7 +1,7 @@
 import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { Coord } from '@lib/types/shapes'
 import Shape from '../base/Shape'
-import { ShapeData } from '@lib/core/EngineStateStore'
+import { ShapeData } from '@lib/types/shapes'
 import type PaintManager from '@lib/core/PaintManager'
 
 class SimpleRect extends Shape {

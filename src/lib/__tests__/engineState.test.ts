@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import EngineStateStore from '../core/EngineStateStore'
 import SText from '../shapes/primitives/SText'
 import type PaintManager from '../core/PaintManager'
 import { CanvasKitResources } from '../core/CanvasKitResource'
@@ -14,87 +13,83 @@ import { TranslateNodes } from '@/lib/engine/commands/TranslateNodes'
 
 const props = (marker: string) => ({ marker }) as unknown as Properties
 
-describe('EngineStateStore', () => {
-    let store: EngineStateStore
+describe('DocumentModel shape views', () => {
+    let doc: DocumentModel
 
     beforeEach(() => {
-        store = new EngineStateStore(new DocumentModel())
+        doc = new DocumentModel()
     })
 
-    it('createShapeData stores and returns the data; getShapeData and getAllShapeData include it', () => {
-        const id = 'ess-stores-1'
-        const shape = store.createShapeData(id, 'rect', props('initial'))
+    it('createShape stores a clone and returns a live view; getShapeData/getAllShapeData share its identity', () => {
+        const id = 'dmv-stores-1'
+        const view = doc.createShape('rect', props('initial'), doc.rootId, id)
 
-        expect(shape).toEqual({ id, type: 'rect', properties: props('initial') })
-        expect(store.getShapeData(id)).toEqual(shape)
-        expect(store.getAllShapeData()).toContainEqual(shape)
+        expect(view).toEqual({ id, type: 'rect', properties: props('initial') })
+        expect(doc.getShapeData(id)).toBe(view)
+        expect(doc.getAllShapeData()).toContain(view)
+        expect(doc.get(id)!.version).toBe(1)
+
+        const seed = props('initial') as unknown as { marker: string }
+        seed.marker = 'mutated'
+        expect((doc.get(id)!.properties as unknown as { marker: string }).marker).toBe('initial')
     })
 
     it('getShapeData returns undefined for an unknown id', () => {
-        expect(store.getShapeData('ess-unknown-' + Date.now())).toBeUndefined()
+        expect(doc.getShapeData('dmv-unknown-' + Date.now())).toBeUndefined()
     })
 
-    it('removeShapeData deletes the data and notifies subscribers with an undefined argument', () => {
-        const id = 'ess-removes-1'
-        const shape = store.createShapeData(id, 'rect', props('initial'))
-        const listener = vi.fn()
-        const unsubscribe = store.subscribe(listener)
+    it('remove evicts the cached view; a stale view still reads its last snapshot', () => {
+        const id = 'dmv-remove-1'
+        const view = doc.createShape('rect', props('initial'), doc.rootId, id)
 
-        store.removeShapeData(id)
+        doc.remove(id)
 
-        expect(store.getShapeData(id)).toBeUndefined()
-        expect(store.getAllShapeData()).not.toContainEqual(shape)
-        expect(listener).toHaveBeenCalledTimes(1)
-        expect(listener).toHaveBeenCalledWith(undefined)
-        unsubscribe()
+        expect(doc.getShapeData(id)).toBeUndefined()
+        expect(doc.getAllShapeData()).not.toContain(view)
+        expect(view.properties).toEqual(props('initial'))
+        expect(view.version).toBe(-1)
     })
 
-    it('subscribe returns an unsubscribe that detaches the listener', () => {
-        const id = 'ess-unsub-1'
-        store.createShapeData(id, 'rect', props('initial'))
-        const listener = vi.fn()
-        const unsubscribe = store.subscribe(listener)
+    it('version is non-enumerable so the view looks like a plain shape data', () => {
+        const view = doc.createShape('rect', props('x'), doc.rootId, 'dmv-version-1')
 
-        unsubscribe()
-
-        store.notify(id)
-        store.removeShapeData(id)
-        expect(listener).not.toHaveBeenCalled()
+        expect(Object.keys(view)).not.toContain('version')
+        expect(view.version).toBe(1)
     })
 
-    it('notify(shapeId) calls every listener with that id', () => {
-        const id = 'ess-notify-1'
-        const first = vi.fn()
-        const second = vi.fn()
-        const unsubFirst = store.subscribe(first)
-        const unsubSecond = store.subscribe(second)
+    it('shape writes through the view setter journal into the document and bump the version', () => {
+        const id = 'dmv-write-1'
+        const view = doc.createShape('rect', props('old'), doc.rootId, id)
+        const before = doc.journalLength
 
-        store.notify(id)
+        view.properties = { ...view.properties, marker: 'new' } as Properties
 
-        expect(first).toHaveBeenCalledTimes(1)
-        expect(first).toHaveBeenCalledWith(id)
-        expect(second).toHaveBeenCalledTimes(1)
-        expect(second).toHaveBeenCalledWith(id)
-        unsubFirst()
-        unsubSecond()
+        expect((doc.get(id)!.properties as unknown as { marker: string }).marker).toBe('new')
+        expect(doc.getShapeData(id)!.properties).toEqual({ ...props('old'), marker: 'new' })
+        expect(view.version).toBe(2)
+        expect(doc.journalLength).toBe(before + 1)
     })
 
-    it('shape text setters route through the store view and journal into the document', () => {
+    it('shape text setters route through the view and journal into the document', () => {
         const getInstanceSpy = vi.spyOn(CanvasKitResources, 'getInstance').mockReturnValue(null as never)
-        const id = `ess-stext-${Date.now()}`
-        const data = store.createShapeData(id, 'text', {
-            text: 'initial',
-            transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, anchorPoint: null },
-            size: { width: 0, height: 0 },
-        } as Properties)
-        const doc = store.getDocument()
+        const id = `dmv-stext-${Date.now()}`
+        const data = doc.createShape(
+            'text',
+            {
+                text: 'initial',
+                transform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, anchorPoint: null },
+                size: { width: 0, height: 0 },
+            } as Properties,
+            doc.rootId,
+            id
+        )
         const before = doc.journalLength
 
         const shape = new SText(data, null as unknown as PaintManager)
         shape.setText('hello world')
 
         expect(doc.get(id)!.properties.text).toBe('hello world')
-        expect(store.getShapeData(id)!.properties.text).toBe('hello world')
+        expect(doc.getShapeData(id)!.properties.text).toBe('hello world')
         expect(doc.journalLength).toBe(before + 1)
         getInstanceSpy.mockRestore()
     })

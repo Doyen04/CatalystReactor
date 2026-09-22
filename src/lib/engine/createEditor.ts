@@ -5,7 +5,6 @@ import { EngineBus } from '@/lib/engine/events/EngineBus'
 import type { EngineEvents } from '@lib/core/EngineEvents'
 import type { Command } from '@/lib/engine/commands/Command'
 import type { EntityId } from '@/lib/engine/document/entity'
-import EngineStateStore from '@lib/core/EngineStateStore'
 import { SnapManager } from '@lib/core/SnapManager'
 import PaintManager from '@lib/core/PaintManager'
 import ShapeModifier from '@lib/modifiers/ShapeModifier'
@@ -17,7 +16,6 @@ import type SceneManager from '@lib/core/SceneManager'
 export interface Editor {
     doc: DocumentModel
     bus: EngineBus<EngineEvents>
-    store: EngineStateStore
     sceneManager(): SceneManager | null
     shapeManager(): ShapeManager | null
     isAttached(): boolean
@@ -36,7 +34,6 @@ export interface Editor {
 export function createEditor(): Editor {
     const bus = new EngineBus<EngineEvents>()
     const doc = new DocumentModel()
-    const store = new EngineStateStore(doc)
     const commandManager = new CommandManager(doc, bus)
     const snap = new SnapManager()
 
@@ -46,7 +43,7 @@ export function createEditor(): Editor {
         if (live) throw new Error('editor is already attached')
         const paintManager = new PaintManager()
         const shapeModifier = new ShapeModifier(paintManager)
-        live = new CanvasManager(canvas, { doc, store, bus, commandManager, paintManager, shapeModifier, snap })
+        live = new CanvasManager(canvas, { doc, bus, commandManager, paintManager, shapeModifier, snap })
         return live
     }
 
@@ -58,7 +55,6 @@ export function createEditor(): Editor {
     return {
         doc,
         bus,
-        store,
         sceneManager: () => live?.sceneManager ?? null,
         shapeManager: () => live?.shapeManager ?? null,
         isAttached: () => live !== null,

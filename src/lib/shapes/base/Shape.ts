@@ -2,7 +2,7 @@ import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import { ArcHandleState, BoundingRect, Coord, HandlePos, InitialTransformState, PathData, Properties, ShapeType } from '@lib/types/shapes'
 import type { Canvas, Path as SkPath, Rect } from 'canvaskit-wasm'
 import PaintManager from '@lib/core/PaintManager'
-import { ShapeData } from '@lib/core/EngineStateStore'
+import { ShapeData } from '@lib/types/shapes'
 
 abstract class Shape {
     protected aspectRatio: number = 1

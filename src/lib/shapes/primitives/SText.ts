@@ -1,6 +1,6 @@
 import Shape from '../base/Shape'
 import type { Canvas, Font, Typeface, Path } from 'canvaskit-wasm'
-import type { ShapeData } from '@lib/core/EngineStateStore'
+import type { ShapeData } from '@lib/types/shapes'
 import type PaintManager from '@lib/core/PaintManager'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 

@@ -3,7 +3,6 @@ import SceneManager from './SceneManager'
 import Renderer from './Renderer'
 import ToolManager from './ToolManager'
 import ShapeManager from './ShapeManager'
-import type EngineStateStore from './EngineStateStore'
 import type ShapeModifier from '@lib/modifiers/ShapeModifier'
 import { ToolType } from '@lib/tools/toolTypes'
 import type PaintManager from './PaintManager'
@@ -15,7 +14,6 @@ import type { DocumentModel } from '@/lib/engine/document/DocumentModel'
 
 export interface CanvasDeps {
     doc: DocumentModel
-    store: EngineStateStore
     bus: EngineBus<EngineEvents>
     commandManager: CommandManager
     paintManager: PaintManager
@@ -45,7 +43,7 @@ class CanvasManager {
         // Phase 2: Managers requiring explicit orchestration injection
         this.shapeManager = new ShapeManager(this.shapeModifier, this.bus, this.commandManager, deps.doc, deps.snap)
 
-        this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager, deps.doc, deps.paintManager, deps.store)
+        this.sceneManager = new SceneManager(this.shapeModifier, this.shapeManager, deps.doc, deps.paintManager)
 
         this.inputManager = new InputManager(canvas)
 
@@ -124,7 +122,7 @@ class CanvasManager {
         this.paintManager.destroy()
     }
 
-    render() { }
+    render() {}
 }
 
 export default CanvasManager

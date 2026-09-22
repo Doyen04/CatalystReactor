@@ -1,5 +1,5 @@
 import type { EntityId, EntityRecord } from './entity'
-import type { Properties } from '@lib/types/shapes'
+import type { Properties, ShapeData, ShapeType } from '@lib/types/shapes'
 import type { JournalEntry, JournalListener } from './journal'
 import { invert } from './journal'
 
@@ -33,6 +33,8 @@ export class DocumentModel {
     private journal: JournalEntry[] = []
     private journalListeners = new Set<JournalListener>()
     private pending: JournalEntry[] | null = null
+    private views = new Map<EntityId, ShapeData>()
+    private nextShapeSeq = 1
 
     get(id: EntityId): EntityRecord | undefined {
         return this.entities.get(id)
@@ -81,6 +83,42 @@ export class DocumentModel {
         return this.entities.values()
     }
 
+    /**
+     * Registers a new shape entity at the doc root (or given parent) and
+     * returns its live view. The seed properties are cloned so the caller's
+     * object can never be mutated into the doc.
+     */
+    createShape(type: ShapeType, properties: Properties, parentId: EntityId = this.rootId, id?: EntityId): ShapeData {
+        const record: EntityRecord = {
+            id: id ?? this.nextShapeId(),
+            type,
+            properties: structuredClone(properties),
+            parentId,
+            version: 1,
+        }
+        this.insert(record, parentId)
+        return this.getShapeData(record.id)!
+    }
+
+    /**
+     * Live write-through view of an entity. Same identity is returned for the
+     * same id until the entity is removed (then undefined and the cache entry
+     * is evicted).
+     */
+    getShapeData(id: EntityId): ShapeData | undefined {
+        if (!this.entities.has(id)) return undefined
+        let view = this.views.get(id)
+        if (!view) {
+            view = this.makeView(this.entities.get(id)!)
+            this.views.set(id, view)
+        }
+        return view
+    }
+
+    getAllShapeData(): ShapeData[] {
+        return Array.from(this.all(), rec => this.getShapeData(rec.id)!)
+    }
+
     insert(record: EntityRecord, parentId: EntityId, index?: number): void {
         let order = this.order.get(parentId)
         if (!order) {
@@ -102,6 +140,7 @@ export class DocumentModel {
     remove(id: EntityId): void {
         const record = this.entities.get(id)
         if (!record) return
+        this.views.delete(id)
         const found = this.findParent(id)
         if (found) {
             const [parentId, index] = found
@@ -235,6 +274,7 @@ export class DocumentModel {
             }
             case 'remove': {
                 this.entities.delete(entry.record.id)
+                this.views.delete(entry.record.id)
                 const order = this.order.get(entry.parentId)
                 if (!order) return
                 const existing = order.indexOf(entry.record.id)
@@ -306,6 +346,41 @@ export class DocumentModel {
             this.journal.push(entry)
         }
         for (const listener of [...this.journalListeners]) listener(entry)
+    }
+
+    private makeView(record: EntityRecord): ShapeData {
+        let lastProperties: Properties = record.properties
+        const readProps = () => (this.has(record.id) ? this.get(record.id)!.properties : lastProperties)
+        const writeProps = (next: Properties) => {
+            lastProperties = next
+            this.setProperties(record.id, next)
+        }
+        const view = {
+            id: record.id,
+            type: record.type,
+            get properties(): Properties {
+                return readProps()
+            },
+            set properties(next: Properties) {
+                writeProps(next)
+            },
+        }
+        // version stays hidden so the view keeps looking like a plain
+        // {id, type, properties} shape (the old facade contract).
+        Object.defineProperty(view, 'version', {
+            enumerable: false,
+            configurable: true,
+            get: () => (this.has(record.id) ? this.get(record.id)!.version : -1),
+        })
+        return view as ShapeData
+    }
+
+    private nextShapeId(): EntityId {
+        let id: EntityId
+        do {
+            id = `live-${this.nextShapeSeq++}`
+        } while (this.entities.has(id))
+        return id
     }
 
     private findParent(id: EntityId): [EntityId, number] | null {

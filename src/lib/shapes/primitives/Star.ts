@@ -5,7 +5,7 @@ import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import clamp from '@lib/helper/clamp'
 import computeRoundedCorner from '@lib/helper/roundingUtil'
 import { arcPointAtFraction } from '@lib/helper/pointInArc'
-import { ShapeData } from '@lib/core/EngineStateStore'
+import { ShapeData } from '@lib/types/shapes'
 import type PaintManager from '@lib/core/PaintManager'
 
 class Star extends Shape {

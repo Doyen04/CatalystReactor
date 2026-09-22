@@ -257,13 +257,13 @@ export interface RadialGradient {
 
 export interface ImageFill {
     type: 'image'
-    imageData?: { imageBuffer: ArrayBuffer, name: string }
+    imageData?: { imageBuffer: ArrayBuffer; name: string }
     scaleMode: ScaleMode
 }
 
 export interface PatternFill {
     type: 'pattern'
-    imageData?: { imageBuffer: ArrayBuffer, name: string }
+    imageData?: { imageBuffer: ArrayBuffer; name: string }
     repeat: 'repeat' | 'repeat-x' | 'repeat-y' | 'no-repeat'
 }
 
@@ -315,8 +315,8 @@ export interface SpikesRatio {
 }
 
 export interface PTextStyle {
-    textFill: Fill;
-    textStroke?: Stroke;
+    textFill: Fill
+    textStroke?: Stroke
     fontSize: number
     fontWeight: number
     fontFamilies: string[]
@@ -329,19 +329,19 @@ export interface PTextStyle {
 }
 
 export interface PTextSpan {
-    text: string;                                  
-    start: number;                  
-    end: number;  
-    styleId?: string[]                  
-    children?: PTextSpan[];          
-    metadata?: Record<string, unknown>;  
+    text: string
+    start: number
+    end: number
+    styleId?: string[]
+    children?: PTextSpan[]
+    metadata?: Record<string, unknown>
 }
 
 export interface PathPoint {
     x: number
     y: number
-    cp1?: Coord  // incoming control point (from previous segment)
-    cp2?: Coord  // outgoing control point (to next segment)
+    cp1?: Coord // incoming control point (from previous segment)
+    cp2?: Coord // outgoing control point (to next segment)
     smooth?: boolean
 }
 
@@ -381,19 +381,23 @@ export const CornerPos: HandlePos[] = ['top-left', 'top-right', 'bottom-left', '
 
 export type ShapeType = 'rect' | 'oval' | 'star' | 'polygon' | 'text' | 'img' | 'plainRect' | 'line' | 'path' | 'bezier'
 
+/**
+ * Live write-through view of a document entity. `properties` reads/writes the
+ * DocumentModel record directly: reads always resolve to current doc state,
+ * writes route into `doc.setProperties` (journaled, version-bumped), so the
+ * view is a pointer, not a copy. `version` reflects the entity's document
+ * version and is intentionally non-enumerable; it is absent on plain
+ * (non-document) data.
+ */
+export interface ShapeData {
+    id: string
+    type: ShapeType
+    properties: Properties
+    readonly version?: number
+}
+
 export type HandlePos =
-    | 'top-left'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-right'
-    | 'center'
-    | 'arc-start'
-    | 'arc-end'
-    | 'top'
-    | 'right'
-    | 'between'
-    | 'bottom'
-    | 'left'
+    'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'arc-start' | 'arc-end' | 'top' | 'right' | 'between' | 'bottom' | 'left'
 
 export type ArcHandleState = {
     dragDirection?: number
@@ -415,4 +419,3 @@ export interface InitialTransformState {
     initialMouseAngle?: number
     arcAngle?: { start: number; sweep: number }
 }
-

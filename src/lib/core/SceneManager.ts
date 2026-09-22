@@ -5,7 +5,6 @@ import ContainerNode from '@lib/node/ContainerNode'
 import ShapeNode from '@lib/node/ShapeNode'
 import ShapeFactory from '@lib/shapes/base/ShapeFactory'
 import ShapeManager from './ShapeManager'
-import EngineStateStore from './EngineStateStore'
 import type PaintManager from './PaintManager'
 import type { Coord, ShapeType } from '@lib/types/shapes'
 import type { EntityId } from '@/lib/engine/document/entity'
@@ -17,25 +16,23 @@ class SceneManager {
     private shapeModifier: ShapeModifier
     private shapeManager: ShapeManager
     private paintManager: PaintManager
-    private store: EngineStateStore
     private nodeById = new Map<EntityId, SceneNode>()
     private unsubscribe: (() => void) | null = null
     private destroyed = false
 
-    constructor(shapeModifier: ShapeModifier, shapeManager: ShapeManager, doc: DocumentModel, paintManager: PaintManager, store: EngineStateStore) {
+    constructor(shapeModifier: ShapeModifier, shapeManager: ShapeManager, doc: DocumentModel, paintManager: PaintManager) {
         this.doc = doc
         this.scene = new ContainerNode(null, { type: 'none' }, paintManager)
         this.shapeModifier = shapeModifier
         this.shapeManager = shapeManager
         this.paintManager = paintManager
-        this.store = store
         this.unsubscribe = doc.subscribeJournal(entry => {
             if (entry.kind !== 'props') this.sync()
         })
     }
 
     addShapeToScene(type: ShapeType, pos: Coord, image?: { CanvasKitImage: CanvasKitImage; imageBuffer: ArrayBuffer; name: string }): SceneNode {
-        const shape = ShapeFactory.createShape(type, pos, this.paintManager, this.store, image)
+        const shape = ShapeFactory.createShape(type, pos, this.paintManager, this.doc, image)
 
         const existing = this.nodeById.get(shape.data.id)
         if (existing) {
@@ -77,7 +74,7 @@ class SceneManager {
             currentIds.add(record.id)
             if (this.nodeById.has(record.id)) continue
 
-            const data = this.store.getShapeData(record.id)
+            const data = this.doc.getShapeData(record.id)
             if (!data) continue
             const shape = ShapeFactory.createShapeFromData(data, this.paintManager)
             const node = record.type === 'plainRect' ? new ContainerNode(shape, { type: 'none' }, this.paintManager) : new ShapeNode(shape)

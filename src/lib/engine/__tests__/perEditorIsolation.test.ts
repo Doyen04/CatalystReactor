@@ -15,8 +15,6 @@ describe('per-editor instances', () => {
         const b = createEditor()
 
         expect(a.doc).not.toBe(b.doc)
-        expect(a.doc).toBe(a.store.getDocument())
-        expect(a.store).not.toBe(b.store)
         expect(a.bus).not.toBe(b.bus)
         expect(a.isAttached()).toBe(false)
         expect(a.sceneManager()).toBeNull()

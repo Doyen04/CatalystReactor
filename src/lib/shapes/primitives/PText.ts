@@ -2,7 +2,7 @@ import Shape from '../base/Shape'
 import TextCursor from '../base/TextCursor'
 import { Canvas, Paint, Paragraph, ParagraphBuilder, ParagraphStyle, Path, TextStyle } from 'canvaskit-wasm'
 import { Coord, PaintStyle, PTextStyle } from '@lib/types/shapes'
-import { ShapeData } from '@lib/core/EngineStateStore'
+import { ShapeData } from '@lib/types/shapes'
 import type PaintManager from '@lib/core/PaintManager'
 import { textCache } from '@/lib/engine/render/TextCache'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
@@ -168,12 +168,12 @@ class PText extends Shape {
         const fill = this.paintManager.getPaint({ color: textStyle.textFill.color, opacity: textStyle.textFill.opacity, size: dim })
         const stroke = textStyle.textStroke
             ? this.paintManager.getPaint({
-                color: textStyle.textStroke.color,
-                opacity: textStyle.textStroke.opacity,
-                size: dim,
-                stroke: true,
-                strokeWidth: textStyle.textStroke.width,
-            })
+                  color: textStyle.textStroke.color,
+                  opacity: textStyle.textStroke.opacity,
+                  size: dim,
+                  stroke: true,
+                  strokeWidth: textStyle.textStroke.width,
+              })
             : fill
         const backgroundPaint = this.paintManager.getPaint({ color: background, opacity: 1, size: dim })
 

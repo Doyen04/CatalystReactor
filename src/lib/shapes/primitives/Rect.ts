@@ -2,7 +2,7 @@ import type { Canvas, Path, Rect } from 'canvaskit-wasm'
 import { HandlePos, Coord, InitialTransformState, PathData, PathPoint } from '@lib/types/shapes'
 import { CanvasKitResources } from '@lib/core/CanvasKitResource'
 import SimpleRect from './SimpleRect'
-import { ShapeData } from '@lib/core/EngineStateStore'
+import { ShapeData } from '@lib/types/shapes'
 import type PaintManager from '@lib/core/PaintManager'
 
 class Rectangle extends SimpleRect {
