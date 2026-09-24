@@ -82,7 +82,7 @@ class ShapeModifier {
         const rotationAnchor = this.scene.getRotationAnchorPoint()
         const arcAngle = this.scene.getArcAngles() ?? undefined
 
-        if (!dimension || !position || !worldMat || !localMat || !scale || !rotation || !rotationAnchor) return
+        if (!dimension || !position || !worldMat || !localMat || !scale || rotation == null || !rotationAnchor) return
 
         const Matrix = this.resource.canvasKit.Matrix
         const inverseWorldTransform = Matrix.invert(worldMat)

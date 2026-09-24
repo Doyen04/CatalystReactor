@@ -44,12 +44,6 @@
             ],
             "@node/*": [
                 "src/lib/node/*"
-            ],
-            "@engine/*": [
-                "src/engine/*"
-            ],
-            "@bridge/*": [
-                "src/bridge/*"
             ]
         }
     },
