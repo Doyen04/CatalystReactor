@@ -192,17 +192,20 @@ class ShapeModifier {
         const fixedLocal = getHandleLocalPoint(fixedHandleKey, initial.dimension.width, initial.dimension.height)
         const fixedWorld = transformPoint(initial.localTransform, fixedLocal.x, fixedLocal.y, this.resource)
 
-        const handleNewLocal = getHandleLocalPoint(fixedHandleKey, absW, absH)
-        const zeroTransform = this.scene.buildZeroTransform(absW, absH, initial.rotation, { x: scaleX, y: scaleY }, initial.rotationAnchor)
+        const dimW = Math.round(absW)
+        const dimH = Math.round(absH)
+
+        const handleNewLocal = getHandleLocalPoint(fixedHandleKey, dimW, dimH)
+        const zeroTransform = this.scene.buildZeroTransform(dimW, dimH, initial.rotation, { x: scaleX, y: scaleY }, initial.rotationAnchor)
 
         const offset = transformPoint(zeroTransform, handleNewLocal.x, handleNewLocal.y, this.resource)
         const posX = (fixedWorld ? fixedWorld.x : initial.position.x) - offset.x
         const posY = (fixedWorld ? fixedWorld.y : initial.position.y) - offset.y
 
         this.scene.updateScene({
-            position: { x: Math.round(posX), y: Math.round(posY) },
+            position: { x: posX, y: posY },
             scale: { x: scaleX, y: scaleY },
-            dimension: { width: absW, height: absH },
+            dimension: { width: dimW, height: dimH },
         })
     }
 
